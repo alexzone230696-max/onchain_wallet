@@ -115,9 +115,6 @@ final class ICardanoAddress
   @override
   String? get type => networkAddress.addressType.name;
 
-  @override
-  String get orginalAddress => networkAddress.address;
-
   List<AddressDerivationIndex> get keyIndexes =>
       [keyIndex, if (rewardKeyIndex != null) rewardKeyIndex!];
 

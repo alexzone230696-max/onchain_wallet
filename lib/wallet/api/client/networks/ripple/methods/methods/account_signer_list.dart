@@ -1,4 +1,4 @@
-import 'package:on_chain_wallet/wallet/models/networks/ripple/models/account_object_signer_list.dart';
+import 'package:on_chain_wallet/wallet/models/networks/ripple/models/account.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
 
 class XRPRPCSignerAccountObject
@@ -15,10 +15,7 @@ class XRPRPCSignerAccountObject
 
   @override
   Map<String, dynamic> toJson() {
-    return {
-      "account": account,
-      "type": type.value,
-    };
+    return {"account": account, "type": type.value};
   }
 
   @override

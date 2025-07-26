@@ -9,6 +9,8 @@ import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/permission/models/p
 import 'package:on_chain_wallet/wallet/web3/networks/cosmos/permission/models/permission.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ethereum/permission/models/permission.dart';
 import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/monero/permission/models/permission.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/ripple/permission/models/permission.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/solana/permission/models/permission.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/stellar/stellar.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/substrate/permission/models/permission.dart';
@@ -48,6 +50,12 @@ abstract class Web3Chain<
         break;
       case NetworkType.solana:
         chain = Web3SolanaChain.deserialize(object: decode);
+        break;
+      case NetworkType.xrpl:
+        chain = Web3XRPChain.deserialize(object: decode);
+        break;
+      case NetworkType.monero:
+        chain = Web3MoneroChain.deserialize(object: decode);
         break;
       case NetworkType.ton:
         chain = Web3TonChain.deserialize(object: decode);
@@ -144,7 +152,8 @@ abstract class Web3Chain<
     if (!_accounts.contains(account)) {
       throw Web3RequestExceptionConst.missingPermission;
     }
-    final chainAccount = chain.getAddress(account.addressStr);
+    final chainAccount = chain.addresses.firstWhereOrNull((e) =>
+        e.viewAddress == account.addressStr && e.keyIndex == account.keyIndex);
     if (chainAccount == null) {
       throw Web3RequestExceptionConst.missingPermission;
     }

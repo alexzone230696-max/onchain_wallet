@@ -87,12 +87,12 @@ class _EraseWalletViewState extends State<_EraseWalletView> with SafeState {
                             onPressed: () {
                               context
                                   .openSliverDialog<bool>(
-                                      (p0) => DialogTextView(
+                                      widget: (p0) => DialogTextView(
                                             text: "wallet_deletation_desc".tr,
                                             buttonWidget:
                                                 const DialogDoubleButtonView(),
                                           ),
-                                      "erase_wallet".tr)
+                                      label: "erase_wallet".tr)
                                   .then(onDelete);
                             },
                             child: Text("delete_wallet".tr),

@@ -1,0 +1,64 @@
+import 'package:flutter/material.dart';
+import 'package:on_chain_wallet/crypto/utils/ripple/ripple.dart';
+import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
+import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/controllers/controller.dart';
+import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/widgets/regular_key/regular_key.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/core/fields.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/core/form.dart';
+import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:xrpl_dart/xrpl_dart.dart';
+
+class RippleTransactionSetRegularKeyOperation
+    extends RippleTransactionStateController<SetRegularKey> {
+  RippleTransactionSetRegularKeyOperation._(
+      {required super.walletProvider,
+      required super.account,
+      required super.address});
+  factory RippleTransactionSetRegularKeyOperation(
+      {required WalletProvider walletProvider,
+      required XRPChain account,
+      required IXRPAddress address}) {
+    return RippleTransactionSetRegularKeyOperation._(
+        walletProvider: walletProvider, account: account, address: address);
+  }
+  final LiveFormField<ReceiptAddress<XRPAddress>?, ReceiptAddress<XRPAddress>>
+      regularKey = LiveFormField(
+          title: "regular_key".tr,
+          subtitle: "ripple_regular_key_field_desc".tr,
+          optional: true,
+          value: null);
+
+  void onUpdateRegularKey(ReceiptAddress<XRPAddress>? address) {
+    regularKey.setValue(address);
+    onStateUpdated();
+    estimateFee();
+  }
+
+  @override
+  SetRegularKey buildTransactionInternal() {
+    return SetRegularKey(
+        regularKey: regularKey.value?.networkAddress.address,
+        account: address.networkAddress.toAddress(),
+        sourceTag: address.networkAddress.tag,
+        memos: RippleUtils.toXrplMemos(memos),
+        fee: txFee.fee.fee.balance);
+  }
+
+  @override
+  TransactionStateController cloneController(IXRPAddress address) {
+    return RippleTransactionSetRegularKeyOperation(
+        walletProvider: walletProvider, account: account, address: address);
+  }
+
+  @override
+  Widget widgetBuilder(BuildContext context) {
+    return RippleTransactionSetRegularKeyWidget(form: this);
+  }
+
+  @override
+  SubmittableTransactionType get transactionType =>
+      SubmittableTransactionType.setRegularKey;
+  @override
+  List<LiveFormField<Object?, Object>> get fields => [regularKey];
+}

@@ -39,6 +39,15 @@ class RippleIssueToken extends TokenCore<DecimalBalance, NonDecimalToken> {
         assetCode: assetCode);
   }
   @override
+  RippleIssueToken clone({String? balance}) {
+    return RippleIssueToken.create(
+        balance: balance ?? streamBalance.value.price,
+        token: token,
+        issuer: issuer,
+        assetCode: assetCode);
+  }
+
+  @override
   RippleIssueToken updateToken(Token updateToken) {
     return RippleIssueToken.create(
         balance: streamBalance.value.price,

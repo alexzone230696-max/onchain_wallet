@@ -2,20 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
-import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
 mixin UpdateNetworkProviderState<
-        W extends StatefulWidget,
-        PROVIDER extends APIProvider,
-        NETWORKADDRESS,
-        ADDRESS extends NETWORKCHAINACCOUNT<NETWORKADDRESS>,
-        CL extends NetworkClient,
-        T extends TokenCore,
-        N extends NFTCore,
-        CHAIN extends APPCHAINACCOUNTCLIENT<ADDRESS, CL>>
-    on SafeState<W>, ProgressMixin<W> {
+    W extends StatefulWidget,
+    PROVIDER extends APIProvider,
+    NETWORKADDRESS,
+    ADDRESS extends NETWORKCHAINACCOUNT<NETWORKADDRESS>,
+    CL extends NetworkClient,
+    T extends TokenCore,
+    N extends NFTCore,
+    CHAIN extends Chain> on SafeState<W>, ProgressMixin<W> {
   bool useAuthenticated = false;
   ProviderAuthType auth = ProviderAuthType.header;
   List<ProviderAuthType> supportedAuth = [];

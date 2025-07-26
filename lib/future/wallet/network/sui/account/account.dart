@@ -4,6 +4,7 @@ import 'package:on_chain_wallet/future/state_managment/extension/extension.dart'
 import 'package:on_chain_wallet/future/wallet/global/pages/account_tokens_view.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/select_provider.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/transaction_activity.dart';
+import 'package:on_chain_wallet/future/wallet/network/sui/transaction/operations/transfer_token.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
@@ -14,10 +15,16 @@ class SuiAccountPageView extends StatelessWidget {
   Widget build(BuildContext context) {
     return TabBarView(physics: WidgetConstant.noScrollPhysics, children: [
       _SuiServices(account: chainAccount),
-      AccountTokensView(
-          account: chainAccount,
-          importPage: PageRouter.importSuiToken,
-          transferPage: PageRouter.suiTransfer),
+      AccountTokensView<SuiToken, ISuiAddress>(
+        account: chainAccount,
+        transferBuilder: (p0) {
+          return SuiTransactionTransferTokenOperation(
+              walletProvider: context.wallet,
+              account: chainAccount,
+              address: chainAccount.address,
+              token: p0);
+        },
+      ),
       AccountTransactionActivityView(chainAccount)
     ]);
   }

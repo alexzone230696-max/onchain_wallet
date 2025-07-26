@@ -1,6 +1,7 @@
 part of 'package:on_chain_wallet/wc/wc.dart';
 
-class WalletConnectStorage with NativeSecureStorageImpl, StreamStateController {
+class WalletConnectStorage
+    with DisposableMixin, NativeSecureStorageImpl, StreamStateController {
   static const String _sessionKey = "sessions_";
   static const String _messageKey = "msg_";
   @override

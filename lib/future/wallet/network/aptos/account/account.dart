@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
+import 'package:on_chain_wallet/future/wallet/network/aptos/transaction/transaction.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
@@ -12,10 +13,16 @@ class AptosAccountPageView extends StatelessWidget {
   Widget build(BuildContext context) {
     return TabBarView(physics: WidgetConstant.noScrollPhysics, children: [
       _AptosServices(account: chainAccount),
-      AccountTokensView(
-          account: chainAccount,
-          importPage: PageRouter.importAptosToken,
-          transferPage: PageRouter.aptosTransfer),
+      AccountTokensView<AptosFATokens, IAptosAddress>(
+        account: chainAccount,
+        transferBuilder: (token) {
+          return AptosTransactionTransferTokenOperation(
+              address: chainAccount.address,
+              account: chainAccount,
+              walletProvider: context.wallet,
+              token: token);
+        },
+      ),
       AccountTransactionActivityView(chainAccount)
     ]);
   }

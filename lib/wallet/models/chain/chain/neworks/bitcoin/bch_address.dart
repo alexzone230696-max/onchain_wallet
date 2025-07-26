@@ -111,12 +111,13 @@ final class IBitcoinCashAddress extends IBitcoinAddress {
   @override
   String get type => addressType.value;
 
+  // @override
   @override
-  String get orginalAddress => networkAddress.addressProgram;
+  String get baseAddress => networkAddress.addressProgram;
 
   @override
   bool isEqual(ChainAccount other) {
-    return orginalAddress == other.orginalAddress;
+    return baseAddress == other.baseAddress;
   }
 
   @override
@@ -288,7 +289,7 @@ final class IBitcoinCashMultiSigAddress extends IBitcoinCashAddress
   }
 
   @override
-  String get orginalAddress => networkAddress.addressProgram;
+  String get baseAddress => networkAddress.addressProgram;
 
   @override
   NewAccountParams toAccountParams() {

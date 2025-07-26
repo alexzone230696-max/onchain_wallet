@@ -87,12 +87,13 @@ class RippleUtils {
     }
   }
 
-  static BigInt calculateFee(int netFee, XRPLTransactionType transactionType,
+  static BigInt calculateFee(
+      BigInt netFee, SubmittableTransactionType transactionType,
       {String? fulfillment, int multiSigners = 0}) {
-    int baseFee = netFee;
+    BigInt baseFee = netFee;
 
     /// Check if the transaction type is ESCROW_FINISH.
-    if (transactionType == XRPLTransactionType.escrowFinish) {
+    if (transactionType == SubmittableTransactionType.escrowFinish) {
       /// Cast the transaction as an EscrowFinish to access specific properties.
 
       if (fulfillment != null) {
@@ -100,15 +101,16 @@ class RippleUtils {
         final fulfillmentBytesLength = fulfillment.codeUnits.length;
 
         /// Adjust the base fee based on the fulfillment length.
-        baseFee = (netFee * (33 + (fulfillmentBytesLength / 16)).ceil()).ceil();
+        baseFee =
+            (netFee * BigInt.from((33 + (fulfillmentBytesLength / 16)).ceil()));
       }
     }
 
     // /// Adjust the base fee if the transaction involves multi-signers.
     if (multiSigners > 0) {
-      baseFee += netFee * (1 + multiSigners);
+      baseFee += netFee * BigInt.from((1 + multiSigners));
     }
-    return BigInt.from(baseFee);
+    return baseFee;
   }
 
   static String? ensureIsRippleAddress(String? address) {

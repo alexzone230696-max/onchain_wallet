@@ -30,6 +30,15 @@ class TronTRC10Token extends TronToken {
         tokenID: tokenID,
         updated: updated);
   }
+
+  @override
+  TronTRC10Token clone({BigInt? balance}) {
+    return TronTRC10Token.create(
+        balance: balance ?? streamBalance.value.balance,
+        token: token,
+        tokenID: tokenID);
+  }
+
   @override
   TronTRC10Token updateToken(Token updateToken) {
     return TronTRC10Token.create(

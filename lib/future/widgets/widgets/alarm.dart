@@ -44,7 +44,7 @@ class AlertTextContainer extends StatelessWidget {
                     : null,
                 margin: margin,
                 padding: padding,
-                onRemoveIcon: Icon(icon ?? Icons.error,
+                onRemoveIcon: Icon(icon ?? Icons.warning,
                     color: context.colors.onTertiaryContainer),
                 backgroundColor: context.colors.tertiaryContainer,
                 child: Text(

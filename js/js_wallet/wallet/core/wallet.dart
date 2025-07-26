@@ -17,6 +17,8 @@ import '../networks/aptos.dart';
 import '../networks/bitcoin.dart';
 import '../networks/cosmos.dart';
 import '../networks/ethereum.dart';
+import '../networks/monero.dart';
+import '../networks/ripple.dart';
 import '../networks/solana.dart';
 import '../networks/stellar.dart';
 import '../networks/substrate.dart';
@@ -75,6 +77,12 @@ abstract class Web3JSWalletHandler
         sendMessageToClient: _sendEventToClient,
         sendInternalMessage: _sendInternalWalletMessage),
     JSClientType.bitcoin: BitcoinWeb3JSStateHandler(
+        sendMessageToClient: _sendEventToClient,
+        sendInternalMessage: _sendInternalWalletMessage),
+    JSClientType.xrpl: RippleWeb3JSStateHandler(
+        sendMessageToClient: _sendEventToClient,
+        sendInternalMessage: _sendInternalWalletMessage),
+    JSClientType.monero: MoneroWeb3JSStateHandler(
         sendMessageToClient: _sendEventToClient,
         sendInternalMessage: _sendInternalWalletMessage),
   };

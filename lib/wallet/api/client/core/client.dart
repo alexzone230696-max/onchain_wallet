@@ -4,6 +4,7 @@ import 'package:on_chain_wallet/crypto/models/networks.dart';
 import 'package:on_chain_wallet/wallet/api/provider/core/provider.dart';
 import 'package:on_chain_wallet/wallet/api/services/service.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
+import 'package:on_chain_wallet/wallet/models/token/network/token.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 
 enum NodeClientStatus {
@@ -19,7 +20,7 @@ enum NodeClientStatus {
 typedef ONCLIENTSTATUS = void Function(NodeClientStatus status);
 
 abstract class NetworkClient<TRANSACTION extends ChainTransaction,
-    P extends APIProvider> {
+    P extends APIProvider, TOKEN extends BaseNetworkToken, NETWORKADDRESS> {
   NetworkClient();
   abstract final WalletNetwork? network;
   abstract final NetworkServiceProtocol<P> service;
@@ -27,8 +28,9 @@ abstract class NetworkClient<TRANSACTION extends ChainTransaction,
   ProviderIdentifier get serviceIdentifier => DefaultProviderIdentifier(
       identifier: service.provider.identifier, network: networkType);
   Future<bool> onInit();
-  Future<bool> init({ONCLIENTSTATUS? onStatusChanged}) async {
+  Future<bool> init() async {
     final init = await MethodUtils.call(() async => await onInit());
+
     return init.hasResult && init.result;
   }
 
@@ -100,6 +102,10 @@ abstract class NetworkClient<TRANSACTION extends ChainTransaction,
     runTimer();
 
     return controller!.stream;
+  }
+
+  Stream<List<TOKEN>> getAccountTokensStream(NETWORKADDRESS address) {
+    throw UnimplementedError();
   }
 
   void dispose() {

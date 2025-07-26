@@ -2,9 +2,7 @@ import 'package:bitcoin_base/bitcoin_base.dart' show TaprootUtils;
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:cosmos_sdk/cosmos_sdk.dart';
 import 'package:monero_dart/monero_dart.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
-import 'package:on_chain_wallet/app/serialization/serialization.dart';
-
+import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/crypto/requets/argruments/argruments.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/core/message.dart';
@@ -58,7 +56,7 @@ final class WalletRequestSign
     final indexes = request.getAccountsIndexes();
     final moneroKeys = MoneroAccountKeys(
         account: moneroKey.toMoneroAccount(),
-        network: MoneroNetwork.stagenet,
+        network: MoneroNetwork.mainnet,
         indexes: indexes);
     final spendablePayment = request.utxos.map((e) {
       final unlockedPayment = MoneroTransactionHelper.toUnlockPayment(
@@ -75,6 +73,7 @@ final class WalletRequestSign
         fee: request.fee,
         change: request.change);
     final ser = tx.serialize();
+    // tx.generateProofVar(account: account, index: index)
 
     assert(() {
       final decode = MoneroRctTxBuilder.deserialize(ser);
@@ -85,7 +84,13 @@ final class WalletRequestSign
             txID: tx.txId,
             txKeys: tx.destinationKeys.allTxKeys,
             indexes: indexes),
-        destinations: tx.destinations,
+        destinations: tx.destinations
+            .map((e) => MoneroViewTxDestinationWithProof(
+                destination: e,
+                proof: request.withProof
+                    ? tx.generateProofVar(receiverAddress: e.address).toBase58()
+                    : null))
+            .toList(),
         txHex: tx.transaction.serializeHex());
     return GlobalSignResponse(
         signature: signingResponse.toCbor().encode(),
@@ -100,7 +105,7 @@ final class WalletRequestSign
     final List<int> digest = request.digest;
     final index = request.index;
     switch (request.network) {
-      case SigningRequestNetwork.bitcoinCash:
+      case SigningRequestMode.bitcoinCash:
         final BitcoinSigning bitcoinRequest = request.cast();
         final btcSigner = BitcoinKeySigner.fromKeyBytes(key.privateKeyBytes());
         List<int> sig;
@@ -113,7 +118,7 @@ final class WalletRequestSign
         signature = [...sig, if (sighash != null) sighash];
         return GlobalSignResponse(
             signature: signature, index: index, signerPubKey: key.publicKey);
-      case SigningRequestNetwork.bitcoin:
+      case SigningRequestMode.bitcoin:
         final BitcoinSigning bitcoinRequest = request.cast();
         final btcSigner = BitcoinKeySigner.fromKeyBytes(key.privateKeyBytes());
         final sighash = bitcoinRequest.sighash;
@@ -121,7 +126,7 @@ final class WalletRequestSign
           final taptweak = TaprootUtils.calculateTweek(
               btcSigner.verifierKey.publicKeyPoint().toXonly());
           List<int> schnorrSignature =
-              btcSigner.signBip340(digest: digest, tapTweakHash: taptweak);
+              btcSigner.signBip340Const(digest: digest, tapTweakHash: taptweak);
           if (bitcoinRequest.sighash != 0x00) {
             schnorrSignature = [
               ...schnorrSignature,
@@ -130,26 +135,26 @@ final class WalletRequestSign
           }
           signature = schnorrSignature;
         } else {
-          final sig = btcSigner.signECDSADer(digest);
+          final sig = btcSigner.signECDSADerConst(digest);
           signature = [...sig, if (sighash != null) sighash];
         }
         return GlobalSignResponse(
             signature: signature, index: index, signerPubKey: key.publicKey);
-      case SigningRequestNetwork.tron:
+      case SigningRequestMode.tron:
         final signer = TronSigner.fromKeyBytes(keyBytes);
         signature = signer.signConst(digest);
         break;
-      case SigningRequestNetwork.ripple:
+      case SigningRequestMode.ripple:
         final signer = XrpSigner.fromKeyBytes(
             keyBytes, request.index.currencyCoin.conf.type);
         signature = signer.signConst(digest);
         break;
 
-      case SigningRequestNetwork.eth:
+      case SigningRequestMode.eth:
         final ethsigner = ETHSigner.fromKeyBytes(keyBytes);
         signature = ethsigner.signConst(digest).toBytes();
         break;
-      case SigningRequestNetwork.aptos:
+      case SigningRequestMode.aptos:
         switch (key.coin) {
           case Bip44Coins.aptos:
           case Bip44Coins.aptosEd25519SingleKey:
@@ -166,7 +171,7 @@ final class WalletRequestSign
             throw WalletExceptionConst.invalidCoin;
         }
         break;
-      case SigningRequestNetwork.sui:
+      case SigningRequestMode.sui:
         switch (key.coin) {
           case Bip44Coins.sui:
             final ed25519signer = Ed25519Signer.fromKeyBytes(keyBytes);
@@ -184,17 +189,22 @@ final class WalletRequestSign
             throw WalletExceptionConst.invalidCoin;
         }
         break;
-      case SigningRequestNetwork.stellar:
-      case SigningRequestNetwork.ton:
-      case SigningRequestNetwork.solana:
+      case SigningRequestMode.moneroSpendKey:
+        final moneroKey = key.cast<MoneroPrivateKeyData>();
+        final account = moneroKey.toMoneroAccount();
+        signature = account.privSkey!.privateKey.sign(digest, () => SHA512());
+        break;
+      case SigningRequestMode.stellar:
+      case SigningRequestMode.ton:
+      case SigningRequestMode.solana:
         final solanaSigner = Ed25519Signer.fromKeyBytes(keyBytes);
         signature = solanaSigner.signConst(digest);
         break;
-      case SigningRequestNetwork.cardano:
+      case SigningRequestMode.cardano:
         final cardanoSigner = CardanoSigner.fromKeyBytes(keyBytes);
         signature = cardanoSigner.signConst(digest);
         break;
-      case SigningRequestNetwork.substrate:
+      case SigningRequestMode.substrate:
         switch (key.coin) {
           case Bip44Coins.ethereum:
           case Bip44Coins.ethereumTestnet:
@@ -235,9 +245,9 @@ final class WalletRequestSign
         .keys
         .first;
     return switch (request.network) {
-      SigningRequestNetwork.monero =>
+      SigningRequestMode.monero =>
         moneroSigning(key: key, request: request.cast()),
-      SigningRequestNetwork.cosmos =>
+      SigningRequestMode.cosmos =>
         cosmosSigning(key: key, request: request.cast()),
       _ => globalSigning(key: key, request: request.cast())
     };

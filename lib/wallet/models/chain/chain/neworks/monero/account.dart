@@ -25,7 +25,7 @@ final class MoneroChain extends Chain<
   @override
   MoneroChain copyWith({
     WalletMoneroNetwork? network,
-    StreamValue<IntegerBalance>? totalBalance,
+    InternalStreamValue<IntegerBalance>? totalBalance,
     List<IMoneroAddress>? addresses,
     int? addressIndex,
     MoneroClient? client,

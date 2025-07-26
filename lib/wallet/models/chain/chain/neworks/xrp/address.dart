@@ -90,6 +90,12 @@ final class IXRPAddress extends ChainAccount<XRPAddress, RippleIssueToken,
   @override
   final List<int> publicKey;
 
+  XRPPublicKey toXRPPublicKey() {
+    final algorithm = XRPKeyAlgorithm.values.firstWhere(
+        (element) => element.curveType == keyIndex.currencyCoin.conf.type);
+    return XRPPublicKey.fromBytes(publicKey, algorithm: algorithm);
+  }
+
   @override
   CborTagValue toCbor() {
     return CborTagValue(
@@ -119,7 +125,7 @@ final class IXRPAddress extends ChainAccount<XRPAddress, RippleIssueToken,
   String get type => addressType.value;
 
   @override
-  String get orginalAddress => networkAddress.address;
+  String get baseAddress => networkAddress.address;
 
   @override
   bool isEqual(ChainAccount other) {
@@ -207,6 +213,7 @@ final class IXRPMultisigAddress extends IXRPAddress
   }
 
   final RippleMultiSignatureAddress multiSignatureAccount;
+
   @override
   List<int> get publicKey => throw UnimplementedError();
   @override

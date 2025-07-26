@@ -60,10 +60,10 @@ class _MoneroAccountSyncViewState
     final requestId = status.requestId;
     if (requestId == null) return;
     final accept = await context.openSliverDialog<bool>(
-        (context) => DialogTextView(
+        widget: (context) => DialogTextView(
             buttonWidget: DialogDoubleButtonView(),
             text: "remove_sync_block_request_from_account".tr),
-        'sync_request'.tr);
+        label: 'sync_request'.tr);
     if (accept != true) return;
     progressKey.progressText("removing_request_please_wait".tr);
     final r = await MethodUtils.call(() async {
@@ -159,7 +159,7 @@ class _MoneroAccountSyncViewState
   Future<void> init() async {
     final blockId = await MethodUtils.call(() async {
       final height = await client.getHeight();
-      return height.block;
+      return height;
     });
     if (blockId.hasResult) {
       currentHeight = blockId.result;

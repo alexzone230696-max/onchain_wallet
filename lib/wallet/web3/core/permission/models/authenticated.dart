@@ -14,6 +14,8 @@ import 'package:on_chain_wallet/wallet/web3/networks/aptos/aptos.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/permission/models/permission.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/cosmos/permission/models/permission.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ethereum/permission/models/permission.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/monero/permission/models/permission.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/ripple/permission/models/permission.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/solana/permission/permission.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/stellar/stellar.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/substrate/substrate.dart';
@@ -138,30 +140,39 @@ class Web3APPAuthentication extends Web3RequestAuthentication
       if (relatedChains.isEmpty) continue;
 
       switch (i) {
+        case NetworkType.xrpl:
+          auths.add(web3Chain.createAuthenticated(
+              relatedChains.cast<Web3ChainNetworkData<WalletXRPNetwork>>()));
+          break;
+        case NetworkType.monero:
+          auths.add(web3Chain.createAuthenticated(
+              relatedChains.cast<Web3ChainNetworkData<WalletMoneroNetwork>>()));
+          break;
         case NetworkType.ethereum:
           auths.add(web3Chain.createAuthenticated(relatedChains
               .cast<Web3ChainNetworkData<WalletEthereumNetwork>>()));
-          break;
-        case NetworkType.solana:
-          auths.add(web3Chain.createAuthenticated(
-              relatedChains.cast<Web3ChainNetworkData<WalletSolanaNetwork>>()));
           break;
         case NetworkType.stellar:
           auths.add(web3Chain.createAuthenticated(relatedChains
               .cast<Web3ChainNetworkData<WalletStellarNetwork>>()));
           break;
+        case NetworkType.solana:
+          auths.add(web3Chain.createAuthenticated(
+              relatedChains.cast<Web3ChainNetworkData<WalletSolanaNetwork>>()));
+          break;
         case NetworkType.ton:
           auths.add(web3Chain.createAuthenticated(
               relatedChains.cast<Web3ChainNetworkData<WalletTonNetwork>>()));
-          break;
-        case NetworkType.tron:
-          auths.add(web3Chain.createAuthenticated(
-              relatedChains.cast<Web3ChainNetworkData<WalletTronNetwork>>()));
           break;
         case NetworkType.substrate:
           auths.add(web3Chain.createAuthenticated(relatedChains
               .cast<Web3ChainNetworkData<WalletSubstrateNetwork>>()));
           break;
+        case NetworkType.tron:
+          auths.add(web3Chain.createAuthenticated(
+              relatedChains.cast<Web3ChainNetworkData<WalletTronNetwork>>()));
+          break;
+
         case NetworkType.aptos:
           auths.add(web3Chain.createAuthenticated(
               relatedChains.cast<Web3ChainNetworkData<WalletAptosNetwork>>()));
@@ -247,32 +258,6 @@ class Web3APPAuthentication extends Web3RequestAuthentication
         token: Web3APPAuthenticationKey.fake(),
         protocol: Web3APPProtocol.walletConnect);
   }
-
-  // factory Web3APPAuthentication.create({
-  //   required String applicationKey,
-  //   required String name,
-  //   required APPImage? icon,
-  //   required Web3APPAuthenticationKey token,
-  //   Web3APPProtocol protocol = Web3APPProtocol.injected,
-  //   required String applicationId,
-  //   String? url,
-  // }) {
-  //   if (!protocol.isWalletConnect &&
-  //       toApplicationId(applicationId) != applicationId) {
-  //     throw Web3RequestExceptionConst.invalidHost;
-  //   }
-  //   return Web3APPAuthentication._(
-  //       name: name,
-  //       applicationId: applicationId,
-  //       icon: icon,
-  //       active: true,
-  //       token: token,
-  //       applicationKey: applicationKey,
-  //       chains: {},
-  //       activities: [],
-  //       protocol: protocol,
-  //       url: url);
-  // }
 
   factory Web3APPAuthentication.deserialize(
       {List<int>? bytes, CborObject? object, String? hex}) {
@@ -362,6 +347,12 @@ class Web3APPAuthentication extends Web3RequestAuthentication
         break;
       case NetworkType.solana:
         chain ??= Web3SolanaChain.create();
+        break;
+      case NetworkType.xrpl:
+        chain ??= Web3XRPChain.create();
+        break;
+      case NetworkType.monero:
+        chain ??= Web3MoneroChain.create();
         break;
       case NetworkType.ton:
         chain ??= Web3TonChain.create();

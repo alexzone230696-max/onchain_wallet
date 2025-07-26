@@ -93,12 +93,12 @@ class APIUtils {
         network: network);
   }
 
-  static RippleClient buildRippleProvider({
+  static XRPClient buildRippleProvider({
     required RippleAPIProvider provider,
     required WalletXRPNetwork network,
     APPIsolate isolate = APPIsolate.separate,
   }) {
-    return RippleClient(
+    return XRPClient(
         provider: XRPProvider(
             _buildRippleProvider(provider: provider, isolate: isolate)),
         network: network);

@@ -86,46 +86,6 @@ class BitcoinElectrumClient extends BitcoinClient<IBitcoinAddress> {
     return BigRational(fee.medium) / BigRational.from(1024);
   }
 
-  @override
-  Future<List<PsbtUtxo>> getAccountsUtxos(
-      List<BitcoinSpenderAddress> addresses) async {
-    final utxos = await _getAccountsUtxo(addresses);
-    return utxos.where((e) {
-      final height = e.utxo.blockHeight;
-      return height != null && height > 0;
-    }).toList();
-  }
-
-  Future<List<PsbtUtxo>> _getAccountsUtxo(
-      List<BitcoinSpenderAddress> addresses) async {
-    final utxos = await Future.wait(addresses.map((e) async {
-      return await provider.request(ElectrumRequestScriptHashListUnspent(
-          scriptHash: e.address.baseAddress.pubKeyHash()));
-    }));
-    final utxoss = List.generate(utxos.length, (i) async {
-      final request = addresses[i];
-      final accountUtxos = utxos[i];
-      final er = await Future.wait(accountUtxos
-          .map(
-              (e) => provider.request(ElectrumRequestGetRawTransaction(e.txId)))
-          .toList());
-      return List.generate(
-        accountUtxos.length,
-        (index) {
-          return PsbtUtxo(
-              utxo: accountUtxos[index].toUtxo(request.address.type),
-              p2shRedeemScript: request.p2shreedemScript,
-              p2wshWitnessScript: request.witnessScript,
-              tx: er[index],
-              scriptPubKey: request.address.baseAddress.toScriptPubKey(),
-              xOnlyOrInternalPubKey: request.taprootInternal);
-        },
-      );
-    });
-    final e = await Future.wait(utxoss);
-    return e.expand((e) => e).toList();
-  }
-
   Future<ElectrumHeaderSubscribeResponse> getBlock() async {
     return await provider.request(ElectrumRequestHeaderSubscribe());
   }

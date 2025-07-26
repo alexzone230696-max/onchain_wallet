@@ -66,13 +66,15 @@ class _HistoriesPageState extends State<WebViewHistoriesView> with SafeState {
 
   Future<void> clearHistories() async {
     final accept = await context.openSliverDialog(
-        (context) => DialogTextView(
+        widget: (context) => DialogTextView(
               text: widget.isHistory
                   ? "remove_all_histories".tr
                   : "remove_bookmarks".tr,
               buttonWidget: DialogDoubleButtonView(),
             ),
-        widget.isHistory ? 'remove_histories'.tr : 'remove_all_bookmarks'.tr);
+        label: widget.isHistory
+            ? 'remove_histories'.tr
+            : 'remove_all_bookmarks'.tr);
     if (accept != true) return;
     if (widget.isHistory) {
       widget.model.clearHistory();

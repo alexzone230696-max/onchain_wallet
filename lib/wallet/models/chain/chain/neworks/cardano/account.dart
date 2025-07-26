@@ -83,9 +83,26 @@ final class ADAChain extends Chain<
     await initAddress(address);
     await onClient(onConnect: (client) async {
       final balance = await client.getAccountBalance(address.networkAddress);
-      _internalupdateAddressBalance(
+      _updateAddressBalanceInternal(
           address: address, balance: balance, saveAccount: saveAccount);
     });
+  }
+
+  Future<List<ADAAccountUTXOResponse>> getAddressUtxos(
+      ICardanoAddress address) async {
+    _isAccountAddress(address);
+    final utxos = await onClient(
+        onConnect: (client) async {
+          final utxos =
+              await client.getAccountUtxos(address: address.networkAddress);
+          final balance =
+              utxos.fold(BigInt.zero, (p, c) => p + c.sumOflovelace);
+          _updateAddressBalanceInternal(
+              address: address, balance: balance, saveAccount: true);
+          return utxos;
+        },
+        onError: (err) => throw err);
+    return utxos;
   }
 
   @override

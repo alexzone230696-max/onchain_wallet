@@ -23,6 +23,7 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
   final List<CosmosKeysAlgs> keysAlgs;
   final List<CosmosFeeToken> feeTokens;
   final String? chainRegisteryName;
+  final bool ibcEnabled;
   List<Bip44Coins> coins() {
     return keysAlgs.map((e) => e.coin(chainType)).toList();
   }
@@ -56,6 +57,7 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
     required this.chainId,
     required this.keysAlgs,
     required this.chainRegisteryName,
+    required this.ibcEnabled,
     this.networkConstantUri,
     super.bip32CoinType,
   });
@@ -73,7 +75,8 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
       required List<CosmosKeysAlgs> keysAlgs,
       required String? chainRegisteryName,
       String? networkConstantUri,
-      int? bip32CoinType}) {
+      int? bip32CoinType,
+      bool ibcEnabled = true}) {
     if (feeTokens.isEmpty) {
       throw WalletException("at_least_one_fee_token_required");
     }
@@ -94,7 +97,8 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
         addressExplorer: addressExplorer,
         networkConstantUri: networkConstantUri,
         transactionExplorer: transactionExplorer,
-        chainRegisteryName: chainRegisteryName);
+        chainRegisteryName: chainRegisteryName,
+        ibcEnabled: ibcEnabled);
   }
 
   factory CosmosNetworkParams.fromCborBytesOrObject(
@@ -125,7 +129,8 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
             .toList(),
         transactionExplorer: values.elementAs(13),
         addressExplorer: values.elementAs(14),
-        chainRegisteryName: values.elementAs(15));
+        chainRegisteryName: values.elementAs(15),
+        ibcEnabled: values.elementAs<bool?>(16) ?? true);
   }
 
   @override
@@ -148,7 +153,8 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
               keysAlgs.map((e) => CborStringValue(e.name)).toList()),
           transactionExplorer,
           addressExplorer,
-          chainRegisteryName
+          chainRegisteryName,
+          ibcEnabled
         ]),
         CborTagsConst.cosmosNetworkParams);
   }
@@ -167,7 +173,8 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
       int? bip32CoinType,
       String? networkConstantUri,
       List<CosmosKeysAlgs>? keysAlgs,
-      String? chainRegisteryName}) {
+      String? chainRegisteryName,
+      bool? ibcEnabled}) {
     return CosmosNetworkParams(
         transactionExplorer: transactionExplorer ?? this.transactionExplorer,
         addressExplorer: addressExplorer ?? this.addressExplorer,
@@ -182,7 +189,8 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
         networkConstantUri: networkConstantUri ?? this.networkConstantUri,
         keysAlgs: keysAlgs ?? this.keysAlgs,
         feeTokens: feeTokens ?? this.feeTokens,
-        chainRegisteryName: chainRegisteryName ?? this.chainRegisteryName);
+        chainRegisteryName: chainRegisteryName ?? this.chainRegisteryName,
+        ibcEnabled: ibcEnabled ?? this.ibcEnabled);
   }
 
   String get identifier => chainId;

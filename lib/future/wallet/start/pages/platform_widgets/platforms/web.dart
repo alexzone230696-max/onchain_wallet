@@ -109,8 +109,9 @@ class _AppbarExtentionWidget extends StatelessWidget {
                       onTap: () {
                         wallet.swap?.updateSettings((controller) {
                           return context.openSliverDialog(
-                              (context) => SelectSwapProvidersView(controller),
-                              'swap_settings'.tr);
+                              widget: (context) =>
+                                  SelectSwapProvidersView(controller),
+                              label: 'swap_settings'.tr);
                         });
                       },
                       trailing: const Icon(Icons.swap_horiz_outlined),
@@ -232,8 +233,9 @@ class _AppbarWebWidget extends StatelessWidget {
                       onTap: () {
                         wallet.swap?.updateSettings((controller) {
                           return context.openSliverDialog(
-                              (context) => SelectSwapProvidersView(controller),
-                              'swap_settings'.tr);
+                              widget: (context) =>
+                                  SelectSwapProvidersView(controller),
+                              label: 'swap_settings'.tr);
                         });
                       },
                       trailing: const Icon(Icons.swap_horiz_outlined),

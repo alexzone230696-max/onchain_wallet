@@ -115,7 +115,7 @@ final class ITronAddress extends ChainAccount<TronAddress, TronToken, NFTCore,
 
     address._updateAddressBalance(_account?.balance ?? BigInt.zero);
     if (tronAcc != null) {
-      final trc10Tokens = _tokens.where((e) => e.tronTokenType.isTrc10);
+      final trc10Tokens = tokens.where((e) => e.tronTokenType.isTrc10);
       for (final i in trc10Tokens) {
         final balance =
             tronAcc.assetV2.firstWhereNullable((e) => i.issuer == e.key);
@@ -125,12 +125,9 @@ final class ITronAddress extends ChainAccount<TronAddress, TronToken, NFTCore,
   }
 
   @override
-  String get orginalAddress => networkAddress.toAddress();
-
-  @override
   bool isEqual(ChainAccount other) {
     return multiSigAccount == other.multiSigAccount &&
-        orginalAddress == other.orginalAddress;
+        networkAddress.toAddress() == other.networkAddress.toAddress();
   }
 
   @override

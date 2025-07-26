@@ -1,6 +1,7 @@
 import 'package:blockchain_utils/bip/monero/monero_subaddr.dart';
 
 class MoneroConst {
+  static final BigInt extraTxWeight = BigInt.from(100);
   static const int decimal = 12;
   static const int minSubAddressIndex = 0;
   static const int maxSubAddressIndex = MoneroSubaddressConst.subaddrMaxIdx;

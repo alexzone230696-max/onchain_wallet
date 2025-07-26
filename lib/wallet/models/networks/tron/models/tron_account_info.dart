@@ -164,10 +164,29 @@ class TronAccountInfo with CborSerializable {
       netWindowSize: json['net_window_size'],
       netWindowOptimized: json['net_window_optimized'],
       accountResource: TronAccountResource.fromJson(json['account_resource']),
-      ownerPermission: AccountPermission.fromJson(json['owner_permission']),
-      activePermissions: (json['active_permission'] as List<dynamic>)
-          .map((permission) => AccountPermission.fromJson(permission))
-          .toList(),
+      ownerPermission: json['owner_permission'] == null
+          ? AccountPermission(
+              type: PermissionType.owner,
+              permissionName: "owner",
+              threshold: BigInt.one,
+              keys: [
+                  PermissionKeys(
+                      address: TronAddress(json['address']), weight: BigInt.one)
+                ])
+          : AccountPermission.fromJson(json['owner_permission']),
+      activePermissions: (json['active_permission'] as List<dynamic>?)
+              ?.map((permission) => AccountPermission.fromJson(permission))
+              .toList() ??
+          [
+            AccountPermission(
+                type: PermissionType.active,
+                permissionName: "active",
+                threshold: BigInt.one,
+                keys: [
+                  PermissionKeys(
+                      address: TronAddress(json['address']), weight: BigInt.one)
+                ])
+          ],
       witnessPermission: json["witness_permission"] == null
           ? null
           : AccountPermission.fromJson(json['witness_permission']),

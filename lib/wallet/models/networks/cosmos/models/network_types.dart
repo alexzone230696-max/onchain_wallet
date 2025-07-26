@@ -17,7 +17,7 @@ class CosmosNetworkTypes {
   ];
   factory CosmosNetworkTypes.fromValue(int value) {
     return values.firstWhere((e) => e.value == value,
-        orElse: () => throw const WalletException(
-            "No CosmosNetworkTypes element found for the given value."));
+        orElse: () => throw WalletExceptionConst.invalidData(
+            messsage: "invalid cosmos network type."));
   }
 }

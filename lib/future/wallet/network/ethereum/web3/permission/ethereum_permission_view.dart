@@ -4,10 +4,11 @@ import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/web3/web3.dart';
 import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/web3/core/permission/models/authenticated.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ethereum/etherum.dart';
 import 'package:on_chain/ethereum/src/address/evm_address.dart';
 
-import '../../../../../../wallet/web3/core/permission/models/authenticated.dart';
+// import '../../../../../../../../wallet/web3/core/permission/models/authenticated.dart';
 
 class EthereumWeb3PermissionView extends StatefulWidget {
   const EthereumWeb3PermissionView({required this.application, super.key});

@@ -8,6 +8,8 @@ import 'package:on_chain_wallet/wallet/web3/networks/aptos/permission/models/acc
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/bitcoin.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/cosmos/permission/models/account.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ethereum/permission/models/account.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/monero/permission/models/account.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/ripple/permission/models/account.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/solana/permission/models/account.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/stellar/permission/models/account.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/substrate/permission/models/account.dart';
@@ -103,6 +105,9 @@ abstract class Web3ChainAuthenticated<CHAINACCOUNT extends Web3ChainAccount>
     return switch (type) {
       NetworkType.solana =>
         Web3SolanaChainAuthenticated.deserialize(object: tag),
+      NetworkType.xrpl => Web3XRPChainAuthenticated.deserialize(object: tag),
+      NetworkType.monero =>
+        Web3MoneroChainAuthenticated.deserialize(object: tag),
       NetworkType.ethereum =>
         Web3EthereumChainAuthenticated.deserialize(object: tag),
       NetworkType.ton => Web3TonChainAuthenticated.deserialize(object: tag),

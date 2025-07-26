@@ -15,14 +15,17 @@ class TransactionView extends StatelessWidget {
   Widget build(BuildContext context) {
     return ContainerWithBorder(
       onRemove: () {
-        context.openSliverDialog((context) {
-          return TransactionModalView(transaction: transaction, chain: chain);
-        }, "transaction".tr,
+        context.openSliverDialog(
+            widget: (context) {
+              return TransactionModalView(
+                  transaction: transaction, chain: chain);
+            },
+            label: "transaction".tr,
             content: (c) => [
                   IconButton(
                       onPressed: () {
                         context.openSliverDialog(
-                            (ctx) => DialogTextView(
+                            widget: (ctx) => DialogTextView(
                                 buttonWidget: AsyncDialogDoubleButtonView(
                                     firstButtonPressed: () => chain
                                             .removeTransaction(
@@ -32,7 +35,7 @@ class TransactionView extends StatelessWidget {
                                           ctx.pop();
                                         })),
                                 text: "remove_transaction_from_account".tr),
-                            'remove_transaction'.tr);
+                            label: 'remove_transaction'.tr);
                       },
                       icon: Icon(Icons.delete))
                 ]);

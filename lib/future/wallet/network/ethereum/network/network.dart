@@ -1,2 +1,2 @@
-export 'pages/import.dart';
+export 'import/pages/import.dart';
 export 'pages/update_provider.dart';

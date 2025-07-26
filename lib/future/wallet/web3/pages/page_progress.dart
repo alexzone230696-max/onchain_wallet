@@ -55,19 +55,10 @@ class Web3PageProgressState extends State<Web3PageProgress>
   ScaffoldFeatureController<SnackBar, SnackBarClosedReason>? controller;
   StreamValue<Web3ProgressStatus> _statusLive =
       StreamValue(Web3ProgressStatus.idle);
+  ScaffoldMessengerState? key;
   Web3ProgressStatus get status => _statusLive.value;
   Widget? _responseWidget;
   Widget? _child;
-  ScaffoldMessengerState? key;
-
-  @override
-  void onInitOnce() {
-    super.onInitOnce();
-    _statusLive = StreamValue(widget.initialStatus);
-    _responseWidget = widget.initialWidget;
-    key = ScaffoldMessenger.maybeOf(context);
-    key?.clearSnackBars();
-  }
 
   void _shwoRequestStatus() async {
     controller ??= key?.showSnackBar(_requestStatusView(
@@ -148,6 +139,15 @@ class Web3PageProgressState extends State<Web3PageProgress>
 
   void idle() {
     _update(status: Web3ProgressStatus.idle);
+  }
+
+  @override
+  void onInitOnce() {
+    super.onInitOnce();
+    _statusLive = StreamValue(widget.initialStatus);
+    _responseWidget = widget.initialWidget;
+    key = ScaffoldMessenger.maybeOf(context);
+    key?.clearSnackBars();
   }
 
   @override

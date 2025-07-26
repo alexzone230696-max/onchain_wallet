@@ -141,10 +141,10 @@ class __CosmosImportTokenViewState
                           addressTokens.contains(token.cw20token);
                       final cw20Token = token.cw20token;
                       if (cw20Token != null) {
-                        return TokenDetailsView(
+                        return AccountTokenDetailsView(
                             onSelect: () {
                               context.openSliverDialog(
-                                  (ctx) => DialogTextView(
+                                  widget:   (ctx) => DialogTextView(
                                       buttonWidget: AsyncDialogDoubleButtonView(
                                         firstButtonPressed: () =>
                                             onTap(cw20Token, exist),
@@ -152,7 +152,7 @@ class __CosmosImportTokenViewState
                                       text: exist
                                           ? "remove_token_from_account".tr
                                           : "add_token_to_your_account".tr),
-                                  exist ? "remove_token".tr : "add_token".tr);
+                                 label:  exist ? "remove_token".tr : "add_token".tr);
                             },
                             onSelectIcon: APPCheckBox(
                                 value: exist,
@@ -188,7 +188,7 @@ class __CosmosImportTokenViewState
                         },
                         validate: false,
                         validateText: "update_unknown_token_metadata_desc".tr,
-                        child: TokenDetailsWidget(
+                        child: AccountTokenDetailsWidget(
                             token: token.token,
                             tokenAddress: token.coin.denom,
                             color: context.colors.onPrimaryContainer,

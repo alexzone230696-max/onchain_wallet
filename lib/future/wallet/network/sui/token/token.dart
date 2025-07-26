@@ -104,10 +104,10 @@ class __SuiImportTokensViewState extends SuiAccountState<_SuiImportTokensView> {
                       itemBuilder: (context, index) {
                         final token = tokens.elementAt(index);
                         final bool exist = addressTokens.contains(token);
-                        return TokenDetailsView(
+                        return AccountTokenDetailsView(
                             onSelect: () {
                               context.openSliverDialog(
-                                  (ctx) => DialogTextView(
+                                  widget: (ctx) => DialogTextView(
                                       buttonWidget: AsyncDialogDoubleButtonView(
                                         firstButtonPressed: () =>
                                             onTap(token, exist),
@@ -115,7 +115,9 @@ class __SuiImportTokensViewState extends SuiAccountState<_SuiImportTokensView> {
                                       text: exist
                                           ? "remove_token_from_account".tr
                                           : "add_token_to_your_account".tr),
-                                  exist ? "remove_token".tr : "add_token".tr);
+                                  label: exist
+                                      ? "remove_token".tr
+                                      : "add_token".tr);
                             },
                             onSelectIcon: APPCheckBox(
                                 value: exist,

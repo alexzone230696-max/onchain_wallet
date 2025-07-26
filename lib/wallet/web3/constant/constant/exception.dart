@@ -286,7 +286,9 @@ class Web3RequestExceptionConst {
   static Web3RequestException get invalidRequestStateAccount =>
       Web3RequestExceptionConst.invalidParameters(
           "Invalid account argument. account is not valid wallet account.");
-
+  static Web3RequestException get inactiveAccount =>
+      Web3RequestExceptionConst.message(
+          "Inactive account. account does not active in network.");
   static Web3RequestException get invalidTransaction =>
       Web3RequestExceptionConst.invalidParameters(
           "Invalid transaction: Failed to parse or validate the transaction parameters.");

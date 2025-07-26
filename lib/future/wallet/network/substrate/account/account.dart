@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
-import 'package:on_chain_wallet/future/wallet/network/forms/core/validator/live.dart';
-import 'package:on_chain_wallet/future/wallet/network/forms/substrate/transfer/extrinsic.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/substrate.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
@@ -71,9 +69,11 @@ class _SubstrateServices extends StatelessWidget {
             subtitle: Text("create_and_sign_extrinsic".tr),
             trailing: const Icon(Icons.arrow_forward),
             onTap: () {
-              context.to(PageRouter.substrateTransaction,
-                  argruments:
-                      LiveTransactionForm(validator: SubstrateExtersincForm()));
+              final operation = SubstrateTransactionExtrinsicOperation(
+                  walletProvider: context.wallet,
+                  account: account,
+                  address: account.address);
+              context.to(PageRouter.transaction, argruments: operation);
             },
           ),
         ]),

@@ -24,4 +24,9 @@ class TronUtils {
     return DateTime.now()
         .add(Duration(seconds: (lockPeriod * BigInt.from(3)).toInt()));
   }
+
+  static const List<int> disabledOperation = [51, 52, 53];
+  static final List<TransactionContractType> supportedOperations =
+      List<TransactionContractType>.unmodifiable(TransactionContractType.values
+          .where((e) => !disabledOperation.contains(e.value)));
 }

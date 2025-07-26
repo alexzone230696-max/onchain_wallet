@@ -138,12 +138,12 @@ final class TronChain extends Chain<
       _saveTronAccountInfo(address: address, accountInfo: accountInfo);
       _saveTronAccountResource(
           address: address, accountResource: accountResource);
-      _internalupdateAddressBalance(
+      _updateAddressBalanceInternal(
           address: address,
           balance: accountInfo?.balance ?? BigInt.zero,
           saveAccount: saveAccount);
       if (tokens) {
-        final tokens = address._tokens.whereType<SolidityToken>().toList();
+        final tokens = address.tokens.whereType<SolidityToken>().toList();
         final balances = await Future.wait(tokens.map((e) async {
           try {
             return await client.solidityProvider.getTokenBalance(
@@ -161,6 +161,13 @@ final class TronChain extends Chain<
         }
       }
     });
+  }
+
+  @override
+  ITronAddress? getAddress(String address) {
+    return super.getAddress(address) ??
+        _addresses
+            .firstWhereOrNull((element) => element.baseAddress == address);
   }
 
   @override

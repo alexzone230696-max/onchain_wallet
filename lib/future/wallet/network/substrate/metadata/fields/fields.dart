@@ -227,15 +227,18 @@ class _NumericFieldValidatorView extends StatelessWidget {
                       option: validator.enableDecimal
                           ? _QuickAccessType.numbers
                           : null),
-                  child: BigRationalTextField(
-                      key: validator.textFieldKey,
-                      label: validator.info.viewName ?? '',
-                      onChange: validator.onChangeValue,
-                      defaultValue: value,
-                      validator: validator.validate,
-                      maxScale: validator.maxScale,
-                      max: validator.max,
-                      min: validator.min),
+                  child: KeyWrapper(
+                    key: ValueKey("${validator.max}/${validator.min}"),
+                    child: BigRationalTextField(
+                        key: validator.textFieldKey,
+                        label: validator.info.viewName ?? '',
+                        onChange: validator.onChangeValue,
+                        defaultValue: value,
+                        validator: validator.validate,
+                        maxScale: validator.maxScale,
+                        max: validator.max,
+                        min: validator.min),
+                  ),
                 ),
               ),
             ],
@@ -625,7 +628,7 @@ class _QuickAccessPopupMenuButton extends StatelessWidget {
           case _QuickAccessOptions.storage:
             context.openMaxExtendSliverBottomSheet('storages'.tr,
                 bodyBuilder: (scrollController) =>
-                    SubstrateMetadataRuntimeApiView(
+                    SubstrateMetadataStoragesView(
                         scrollController: scrollController,
                         account: metadata.account));
             break;

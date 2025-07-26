@@ -27,6 +27,11 @@ class CW20Token extends TokenCore<IntegerBalance, Token> {
     return CW20Token._(
         balance: balance, token: token, updated: updated, denom: denom);
   }
+  @override
+  CW20Token clone() {
+    return CW20Token.create(
+        balance: streamBalance.value.balance, token: token, denom: denom);
+  }
 
   @override
   CW20Token updateToken(Token updateToken) {

@@ -41,6 +41,14 @@ class AptosFATokens extends TokenCore<IntegerBalance, Token> {
   }
 
   @override
+  AptosFATokens clone({BigInt? balance}) {
+    return AptosFATokens.create(
+        balance: balance ?? streamBalance.value.balance,
+        token: token,
+        assetType: assetType);
+  }
+
+  @override
   AptosFATokens updateToken(Token updateToken) {
     return AptosFATokens.create(
         balance: streamBalance.value.balance,

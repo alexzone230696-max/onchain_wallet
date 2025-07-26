@@ -1,3 +1,9 @@
-export 'pages/fields.dart';
-export 'controller/controller.dart';
+export 'controllers/controllers.dart';
+export 'controllers/provider.dart';
+export 'operations/send_transaction.dart';
+export 'operations/sign_message.dart';
+export 'operations/sign_psbt_transaction.dart';
+export 'pages/send_transaction.dart';
+export 'pages/sign_transaction.dart';
+export 'types/types.dart';
 export 'permission/permission.dart';

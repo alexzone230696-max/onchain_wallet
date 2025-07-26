@@ -1,6 +1,5 @@
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/app/serialization/serialization.dart';
 import 'package:on_chain_wallet/crypto/models/networks.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
@@ -12,11 +11,16 @@ class AptosWalletTransaction extends ChainTransaction {
       DateTime? time,
       required super.outputs,
       super.web3Client,
-      required super.totalOutput,
+      super.totalOutput,
       required WalletAptosNetwork network,
-      super.type = WalletTransactionType.send,
+      WalletTransactionType? type,
       super.status = WalletTransactionStatus.pending})
-      : super(time: time ?? DateTime.now());
+      : super(
+            time: time ?? DateTime.now(),
+            type: type ??
+                (web3Client == null
+                    ? WalletTransactionType.send
+                    : WalletTransactionType.web3));
 
   factory AptosWalletTransaction.deserialize(WalletAptosNetwork network,
       {List<int>? bytes, String? cborHex, CborObject? object}) {

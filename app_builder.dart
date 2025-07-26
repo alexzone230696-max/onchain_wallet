@@ -742,6 +742,11 @@ void main(List<String> args) async {
     _log("Invalid onchain wallet context.");
     return;
   }
+  final bool release = !args.contains("--debug");
+  if (release) {
+    _log("Make sure app logger is disabled.");
+    _log("Make sure set webview to use with worker");
+  }
   String? outDir;
   try {
     outDir = args
@@ -761,12 +766,3 @@ void main(List<String> args) async {
     await _buildMacos(args, releaseLocation: outDir);
   }
 }
-
-// void main() async {
-//   bool minify = true;
-//   // await _ExtensionAndWebScriptsBuilder.buildBackground(minify: minify);
-//   // await _ExtensionAndWebScriptsBuilder.buildPage(minify: minify);
-//   await _ExtensionAndWebScriptsBuilder.buildContent(minify: minify);
-//   await _ExtensionAndWebScriptsBuilder.buildContent(
-//       minify: minify, isMozila: true);
-// }

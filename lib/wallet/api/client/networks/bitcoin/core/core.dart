@@ -5,14 +5,16 @@ import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/bitcoin/bitcoin.dart';
 import 'package:on_chain_wallet/wallet/models/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
+import 'package:on_chain_wallet/wallet/models/token/network/token.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/networks/bitcoin.dart';
 import 'package:on_chain_swap/on_chain_swap.dart';
 
-abstract class BitcoinClient<T extends IBitcoinAddress>
-    extends NetworkClient<BitcoinWalletTransaction, BaseBitcoinAPIProvider>
-    with HttpImpl
-    implements BaseSwapBitcoinClient {
+abstract class BitcoinClient<T extends IBitcoinAddress> extends NetworkClient<
+    BitcoinWalletTransaction,
+    BaseBitcoinAPIProvider,
+    BaseNetworkToken,
+    BitcoinBaseAddress> with HttpImpl implements BaseSwapBitcoinClient {
   @override
   abstract final WalletBitcoinNetwork network;
 
@@ -27,8 +29,45 @@ abstract class BitcoinClient<T extends IBitcoinAddress>
   @override
   Future<String> genesisHash();
   Future<BtcTransaction> getTx(String txId);
-
   BitcoinClient clone();
+
+  @override
+  Future<List<PsbtUtxo>> getAccountsUtxos(
+      List<BitcoinSpenderAddress> addresses) async {
+    final utxos = await _getAccountsUtxo(addresses);
+    return utxos.where((e) {
+      final height = e.utxo.blockHeight;
+      return height != null && height > 0;
+    }).toList();
+  }
+
+  Future<List<PsbtUtxo>> _getAccountsUtxo(
+      List<BitcoinSpenderAddress> addresses) async {
+    final accountsUtxos = await Future.wait(addresses.map((e) async {
+      return await readUtxos(
+          UtxoAddressDetails.watchOnly(e.address.baseAddress));
+    }));
+    final accountsPsbtUtxos =
+        await Future.wait(List.generate(accountsUtxos.length, (i) async {
+      final request = addresses[i];
+      final accountUtxos = accountsUtxos[i];
+      final psbtUtxos = await Future.wait(
+          accountUtxos.map((e) => getTx(e.utxo.txHash)).toList());
+      return List.generate(
+        accountUtxos.length,
+        (index) {
+          return PsbtUtxo(
+              utxo: accountUtxos[index].utxo,
+              p2shRedeemScript: request.p2shreedemScript,
+              p2wshWitnessScript: request.witnessScript,
+              tx: psbtUtxos[index],
+              scriptPubKey: request.address.baseAddress.toScriptPubKey(),
+              xOnlyOrInternalPubKey: request.taprootInternal);
+        },
+      );
+    }));
+    return accountsPsbtUtxos.expand((e) => e).toList();
+  }
 
   @override
   Future<bool> onInit() async {
@@ -50,7 +89,7 @@ abstract class BitcoinClient<T extends IBitcoinAddress>
   Future<bool> initSwapClient() async {
     final init = await this.init();
     if (!init) {
-      throw WalletException('network_client_initialize_failed');
+      throw WalletException('network_client_initialize_failed'.find);
     }
     return true;
   }

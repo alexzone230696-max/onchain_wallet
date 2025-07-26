@@ -6,6 +6,7 @@ class SolanaConst {
   static const int memoLength = (566 * 2) - 1;
   static const int systemProgramAccountSpace = 129;
   static final BigInt systemProgramRent = BigInt.from(890880);
+  static final BigInt solanaDefaultTxFeePerSignature = BigInt.from(5000);
   static final String systemProgramRentSol = PriceUtils.encodePrice(
       systemProgramRent, decimal,
       amoutDecimal: APPConst.defaultDecimalPlaces);

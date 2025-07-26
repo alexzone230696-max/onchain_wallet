@@ -118,18 +118,18 @@ class __MonitorStellarTokenViewState extends State<_MonitorStellarTokenView>
                   itemBuilder: (context, index) {
                     final token = tokens.elementAt(index);
                     final bool exist = address.tokens.contains(token);
-                    return TokenDetailsView(
+                    return AccountTokenDetailsView(
                       token: token,
                       onSelect: () {
                         context.openSliverDialog(
-                            (ctx) => DialogTextView(
+                            widget: (ctx) => DialogTextView(
                                 buttonWidget: AsyncDialogDoubleButtonView(
                                   firstButtonPressed: () => onTap(token, exist),
                                 ),
                                 text: exist
                                     ? "remove_token_from_account".tr
                                     : "add_token_to_your_account".tr),
-                            exist ? "remove_token".tr : "add_token".tr);
+                            label: exist ? "remove_token".tr : "add_token".tr);
                       },
                       onSelectWidget: APPCheckBox(
                         ignoring: true,

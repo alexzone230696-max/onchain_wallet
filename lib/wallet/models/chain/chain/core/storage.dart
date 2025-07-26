@@ -39,7 +39,7 @@ class ChainStorageManager {
   final String storageId;
   final String chainStorageId;
   final String sharedStorageId;
-  const ChainStorageManager._(
+  ChainStorageManager._(
       {required this.networkId,
       required this.id,
       required this.storageId,
@@ -262,12 +262,20 @@ class ChainStorageManager {
         identifier: identifier);
   }
 
+  int _latestId = 0;
+
   Future<void> saveAccount(Chain chain) async {
     if (chain.network.value != networkId || chain.id != id) {
       throw WalletExceptionConst.invalidData(messsage: "invalid network id.");
     }
+    final data = chain.toCbor().encode();
+    final latestId = Crc32.quickIntDigest(data);
+    if (_latestId == latestId) {
+      return;
+    }
+    _latestId = latestId;
     await AppNativeMethods.platform
-        .writeSecure(storageId, chain.toCbor().toCborHex());
+        .writeSecure(storageId, BytesUtils.toHexString(data));
   }
 
   Future<String?> loadAccount() async {

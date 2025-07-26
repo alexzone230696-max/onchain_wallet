@@ -95,9 +95,27 @@ final class BitcoinChain extends Chain<
     await initAddress(address);
     await onClient(onConnect: (client) async {
       final balance = await client.getAccountBalance(address.networkAddress);
-      _internalupdateAddressBalance(
+      _updateAddressBalanceInternal(
           address: address, balance: balance, saveAccount: saveAccount);
     });
+  }
+
+  Future<List<UtxoWithAddress>> getAccountUtxos(IBitcoinAddress address,
+      {bool includeTokens = false}) async {
+    _isAccountAddress(address);
+    final utxos = await onClient(
+        onConnect: (client) async {
+          final balance = await client.readUtxos(address.toUtxoRequest(),
+              includeTokens && network.coinParam.isBCH);
+          _updateAddressBalanceInternal(
+              address: address,
+              balance: balance.sumOfUtxosValue(),
+              saveAccount: false);
+          return balance;
+        },
+        onError: (err) => throw err);
+
+    return utxos;
   }
 
   @override

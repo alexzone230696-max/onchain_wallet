@@ -237,6 +237,8 @@ class WalletXRPNetwork extends WalletNetwork<RippleNetworkParams> {
   @override
   final RippleNetworkParams coinParam;
   @override
+  bool get supportWeb3 => true;
+  @override
   String get caip =>
       ChainConst.buildCaip2(type, coinParam.networkId.toString());
 
@@ -802,6 +804,9 @@ class WalletMoneroNetwork extends WalletNetwork<MoneroNetworkParams> {
   final int value;
   @override
   final MoneroNetworkParams coinParam;
+
+  @override
+  bool get supportWeb3 => true;
 
   const WalletMoneroNetwork(this.value, this.coinParam);
   factory WalletMoneroNetwork.fromCborBytesOrObject(

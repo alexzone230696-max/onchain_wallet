@@ -1,6 +1,5 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/utils/utils.dart';
-import 'package:on_chain_wallet/wallet/models/networks/bch/models/cash_token_bcmr.dart';
 
 class BCHUtils {
   static final BigRational maximumTokenCashTotalSupply =
@@ -14,13 +13,8 @@ class BCHUtils {
   static const int maxCommitment = 40;
   static final BigInt minimumSatoshiTokenOutput = BigInt.from(900);
   static final BigInt minimumOutput = BigInt.from(900);
+  static final BigInt maxTokenOutputNativAmount = BigInt.from(1000000);
   static const int decimal = 8;
-
-  static Script toBCMIScript(List<CashTokenBCMR> bcmr) {
-    assert(bcmr.isNotEmpty, "should be add at least one bcmr");
-    return Script(
-        script: ["OP_RETURN", bcmr.first.hash, ...bcmr.map((e) => e.uri)]);
-  }
 
   static String cleanUpBCMRUri(String uri) {
     if (uri.startsWith("https://ipfs.io/ipfs/")) {

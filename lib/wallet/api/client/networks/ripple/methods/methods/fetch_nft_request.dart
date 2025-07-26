@@ -1,4 +1,4 @@
-import 'package:on_chain_wallet/wallet/models/networks/ripple/models/nft.dart';
+import 'package:on_chain_wallet/wallet/models/networks/ripple/models/account.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
 
 class XRPRPCAccountNFTs

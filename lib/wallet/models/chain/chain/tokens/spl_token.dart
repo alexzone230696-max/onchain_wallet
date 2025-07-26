@@ -42,12 +42,21 @@ class SolanaSPLToken extends TokenCore<IntegerBalance, Token> {
         updated: updated,
         tokenOwner: SolAddress(tokenOwner));
   }
+  @override
+  SolanaSPLToken clone({BigInt? balance}) {
+    return SolanaSPLToken.create(
+        balance: balance ?? streamBalance.value.balance,
+        token: token,
+        mint: mint,
+        tokenAccount: tokenAccount,
+        tokenOwner: tokenOwner);
+  }
 
   @override
   SolanaSPLToken updateToken(Token updateToken) {
     return SolanaSPLToken.create(
         balance: streamBalance.value.balance,
-        token: token,
+        token: updateToken,
         mint: mint,
         tokenAccount: tokenAccount,
         tokenOwner: tokenOwner);

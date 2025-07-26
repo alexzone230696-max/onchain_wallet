@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
-import 'package:on_chain_wallet/future/wallet/network/stellar/transaction/pages/operations/operations.dart';
+import 'package:on_chain_wallet/future/wallet/network/stellar/transaction/controllers/controller.dart';
+import 'package:on_chain_wallet/future/wallet/network/stellar/transaction/widgets/widgets/extensions.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
@@ -13,10 +14,13 @@ class StellarAccountPageView extends StatelessWidget {
   Widget build(BuildContext context) {
     return TabBarView(physics: WidgetConstant.noScrollPhysics, children: [
       _StellarServices(chainAccount),
-      AccountTokensView(
+      AccountTokensView<StellarIssueToken, IStellarAddress>(
           account: chainAccount,
-          importPage: PageRouter.stellarImportToken,
-          transferPage: PageRouter.stellarTransaction),
+          transferBuilder: (p0) => StellarTransactionStateController(
+              walletProvider: context.wallet,
+              account: chainAccount,
+              address: chainAccount.address,
+              token: p0)),
       AccountTransactionActivityView(chainAccount)
     ]);
   }
@@ -36,7 +40,12 @@ class _StellarServices extends StatelessWidget {
             return AppListTile(
               title: Text(element.translate.tr),
               onTap: () {
-                context.to(PageRouter.stellarTransaction);
+                final operation = StellarTransactionStateController(
+                    walletProvider: context.wallet,
+                    account: account,
+                    address: account.address,
+                    operation: element);
+                context.to(PageRouter.transaction, argruments: operation);
               },
               subtitle: Text(element.description),
               maxLine: 3,

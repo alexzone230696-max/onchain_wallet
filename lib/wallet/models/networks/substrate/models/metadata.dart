@@ -247,6 +247,7 @@ class SubstrateChainMetadata {
   final SubstrateChainType type;
   final bool supportRemarks;
   final bool supportBatch;
+  final BigInt? existentialDeposit;
   bool get supportNativeTransfer => transferTypes.isNotEmpty;
   int get transactionVersion => runtimeVersion.transactionVersion;
   int get specVersion => runtimeVersion.specVersion;
@@ -267,9 +268,14 @@ class SubstrateChainMetadata {
       required this.ss58Prefix,
       required this.type,
       required this.supportBatch,
-      required this.supportRemarks});
+      required this.supportRemarks,
+      this.existentialDeposit});
   factory SubstrateChainMetadata(
       {required String genesis, required MetadataApi metadata}) {
+    final existentialDeposit = BigintUtils.tryParse(metadata.tryGetConstant(
+        APPSubstrateConst.balancePalletName,
+        APPSubstrateConst.existentialDepositStorageName));
+
     final metadataInfos = metadata.metadata.palletsInfos();
     final metadataExtrinsic = metadataInfos.extrinsic.firstWhere(
         (e) =>
@@ -306,7 +312,11 @@ class SubstrateChainMetadata {
             metadata: metadata,
             transferTypes: transferTypes,
             chainType: keyAlgorithms.$1),
-        supportRemarks: _SubstrateChainConst.supportRemark(metadata: metadata));
+        supportRemarks: _SubstrateChainConst.supportRemark(metadata: metadata),
+        existentialDeposit:
+            existentialDeposit != null && existentialDeposit > BigInt.zero
+                ? existentialDeposit
+                : null);
     return chainMetadata;
   }
 
@@ -404,7 +414,6 @@ class SubstrateChainMetadata {
         payload: payload,
         serializedExtrinsic: encodeData,
         version: extrinsic.extrinsicInfo.version,
-        signed: signature != null,
-        signature: encodeSignature);
+        encodeSignature: encodeSignature);
   }
 }

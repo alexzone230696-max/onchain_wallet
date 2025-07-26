@@ -191,8 +191,11 @@ extension QuickContextAccsess on BuildContext {
         slivers: slivers);
   }
 
-  Future<T?> openSliverDialog<T>(WidgetContext widget, String label,
+  Future<T?> openSliverDialog<T>(
       {List<Widget> Function(BuildContext)? content,
+      WidgetContext? widget,
+      WidgetContext? sliver,
+      String? label,
       double? maxWidth,
       bool dismissible = true}) async {
     return await showAdaptiveDialog(
@@ -204,7 +207,8 @@ extension QuickContextAccsess on BuildContext {
             title: label,
             dismissible: dismissible,
             content: content?.call(context) ?? const [],
-            widget: widget(context),
+            widget: widget == null ? null : widget(context),
+            sliver: sliver == null ? null : sliver(context),
             maxWidth: maxWidth);
       },
     );
@@ -220,7 +224,7 @@ extension QuickContextAccsess on BuildContext {
   }) async {
     return await showAdaptiveDialog(
       context: this,
-      useRootNavigator: true,
+      useRootNavigator: false,
       barrierDismissible: true,
       routeSettings: routeName == null ? null : RouteSettings(name: routeName),
       builder: (context) {

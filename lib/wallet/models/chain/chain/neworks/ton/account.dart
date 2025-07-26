@@ -1,6 +1,6 @@
 part of 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 
-final class TheOpenNetworkChain extends Chain<
+final class TonChain extends Chain<
     TonAPIProvider,
     TonNetworkParams,
     TonAddress,
@@ -14,7 +14,7 @@ final class TheOpenNetworkChain extends Chain<
     TonWalletTransaction,
     TonContact,
     TonNewAddressParams> {
-  TheOpenNetworkChain._({
+  TonChain._({
     required super.network,
     required super.addressIndex,
     required super.id,
@@ -23,7 +23,7 @@ final class TheOpenNetworkChain extends Chain<
     required super.addresses,
   }) : super._();
   @override
-  TheOpenNetworkChain copyWith({
+  TonChain copyWith({
     WalletTonNetwork? network,
     List<ITonAddress>? addresses,
     List<ContactCore<TonAddress>>? contacts,
@@ -32,7 +32,7 @@ final class TheOpenNetworkChain extends Chain<
     String? id,
     DefaultChainConfig? config,
   }) {
-    return TheOpenNetworkChain._(
+    return TonChain._(
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
         addresses: addresses ?? _addresses,
@@ -41,11 +41,11 @@ final class TheOpenNetworkChain extends Chain<
         config: config ?? this.config);
   }
 
-  factory TheOpenNetworkChain.setup(
+  factory TonChain.setup(
       {required WalletTonNetwork network,
       required String id,
       TonClient? client}) {
-    return TheOpenNetworkChain._(
+    return TonChain._(
         network: network,
         id: id,
         addressIndex: 0,
@@ -54,7 +54,7 @@ final class TheOpenNetworkChain extends Chain<
         config: DefaultChainConfig());
   }
 
-  factory TheOpenNetworkChain.deserialize(
+  factory TonChain.deserialize(
       {required WalletTonNetwork network,
       required CborListValue cbor,
       TonClient? client}) {
@@ -68,7 +68,7 @@ final class TheOpenNetworkChain extends Chain<
         .map((e) => ITonAddress.deserialize(network, obj: e))
         .toList();
     final int addressIndex = cbor.elementAs(4);
-    return TheOpenNetworkChain._(
+    return TonChain._(
         network: network,
         addresses: accounts,
         addressIndex: addressIndex,
@@ -84,10 +84,10 @@ final class TheOpenNetworkChain extends Chain<
     await initAddress(address);
     await onClient(onConnect: (client) async {
       final balance = await client.getAccountBalance(address.networkAddress);
-      _internalupdateAddressBalance(
+      _updateAddressBalanceInternal(
           address: address, balance: balance, saveAccount: saveAccount);
       if (tokens) {
-        final tokens = address._tokens;
+        final tokens = address.tokens;
         final balances = await Future.wait(tokens.map((e) async {
           try {
             return await client.getJettonWalletData(e.walletAddress);

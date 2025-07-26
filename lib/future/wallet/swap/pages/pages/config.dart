@@ -226,7 +226,8 @@ class RouteInfoView extends StatelessWidget {
                 backgroundColor: context.onPrimaryContainer,
                 onRemove: () {
                   context.openSliverDialog(
-                      (context) => _RouteFeesView(fees: route.fees), 'fees'.tr);
+                      widget: (context) => _RouteFeesView(fees: route.fees),
+                      label: 'fees'.tr);
                 },
                 onRemoveIcon:
                     Icon(Icons.info, color: context.colors.primaryContainer),

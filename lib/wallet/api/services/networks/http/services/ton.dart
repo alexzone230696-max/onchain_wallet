@@ -17,6 +17,9 @@ class TonHTTPService extends HTTPService<TonAPIProvider>
   TonApiType get api => provider.apiType;
 
   @override
+  late final Duration? requestTimeout = const Duration(milliseconds: 500);
+
+  @override
   Future<BaseServiceResponse<T>> doRequest<T>(TonRequestDetails params,
       {Duration? timeout}) async {
     return await serviceRequest<T>(params,

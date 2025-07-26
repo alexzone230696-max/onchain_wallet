@@ -186,6 +186,12 @@ class ChainsHandler {
             NetworkType.cosmos => Web3ChainNetworkData<WalletCosmosNetwork>(
                 network: e.network.toNetwork(),
                 serviceIdentifier: serviceIdentifier),
+            NetworkType.xrpl => Web3ChainNetworkData<WalletXRPNetwork>(
+                network: e.network.toNetwork(),
+                serviceIdentifier: serviceIdentifier),
+            NetworkType.monero => Web3ChainNetworkData<WalletMoneroNetwork>(
+                network: e.network.toNetwork(),
+                serviceIdentifier: serviceIdentifier),
             NetworkType.bitcoinCash ||
             NetworkType.bitcoinAndForked =>
               Web3ChainNetworkData<WalletBitcoinNetwork>(
@@ -204,29 +210,29 @@ class ChainsHandler {
     }
   }
 
-  void _onConnectionStatus(bool isOnline) {
-    final event = ChainWalletConnectionEvent(isOnline);
-    for (final i in _networks.entries) {
-      i.value._onWalletEvent(event);
-    }
-  }
+  // void _onConnectionStatus(bool isOnline) {
+  //   final event = ChainWalletConnectionEvent(isOnline);
+  //   for (final i in _networks.entries) {
+  //     i.value._onWalletEvent(event);
+  //   }
+  // }
 
-  Future<void> _onPing(var _) async {
-    final event = ChainWalletPingEvent();
-    final aciveNetworks = _networks.values.where((e) => e.haveAddress);
-    for (final i in aciveNetworks) {
-      await i._onWalletEvent(event);
-    }
-  }
+  // Future<void> _onPing(var _) async {
+  //   final event = ChainWalletPingEvent();
+  //   final aciveNetworks = _networks.values.where((e) => e.haveAddress);
+  //   for (final i in aciveNetworks) {
+  //     await i._onWalletEvent(event);
+  //   }
+  // }
 
   Future<void> init() async {
     await chain.init();
     assert(_networkStream == null && _ping == null);
-    _networkStream =
-        PlatformInterface.instance.onNetworkStatus.listen(_onConnectionStatus);
-    _ping = Stream.periodic(const Duration(minutes: 10)).listen(_onPing);
-    final emit = ChainWalletChainChangeEvent(prv: null, current: chain);
-    _emitChainChanged(emit);
+    // _networkStream =
+    //     PlatformInterface.instance.onNetworkStatus.listen(_onConnectionStatus);
+    // _ping = Stream.periodic(const Duration(minutes: 10)).listen(_onPing);
+    // final emit = ChainWalletChainChangeEvent(prv: null, current: chain);
+    // _emitChainChanged(emit);
   }
 
   void dispose() {

@@ -37,37 +37,31 @@ class ReceiptAddressView extends StatelessWidget {
           WidgetConstant.height8,
         ],
         ContainerWithBorder(
-            validate: validate ?? (address != null),
-            onRemove: onTap,
-            enableTap: enableTap,
-            onRemoveWidget: onEditWidget,
-            onRemoveIcon: address == null
-                ? Icon(Icons.add, color: context.onPrimaryContainer)
-                : onEditIcon ??
-                    Icon(Icons.edit, color: context.onPrimaryContainer),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                address == null
-                    ? Text(
-                        "tap_to_choose_address".tr,
-                        style: context.onPrimaryTextTheme.bodyMedium,
-                      )
-                    : Row(
-                        children: [
-                          Expanded(
-                              child: ReceiptAddressDetailsView(
-                            address: address!,
-                            color: context.onPrimaryContainer,
-                          )),
-                          CopyTextIcon(
-                              dataToCopy: address?.view ?? "",
-                              color: context.onPrimaryContainer,
-                              isSensitive: false)
-                        ],
-                      ),
-              ],
-            )),
+          validate: validate ?? (address != null),
+          onRemove: onTap,
+          enableTap: enableTap,
+          onRemoveWidget: onEditWidget,
+          onRemoveIcon: address == null
+              ? Icon(Icons.add, color: context.onPrimaryContainer)
+              : onEditIcon ??
+                  Icon(Icons.edit, color: context.onPrimaryContainer),
+          child: APPAnimated(
+            isActive: true,
+            onActive: (context) => ConditionalWidget(
+              key: ValueKey(address),
+              enable: address != null,
+              onDeactive: (context) => FullWidthWrapper(
+                child: Text("tap_to_choose_address".tr,
+                    style: context.onPrimaryTextTheme.bodyMedium),
+              ),
+              onActive: (context) => CopyableTextWidget(
+                  text: address?.view ?? "",
+                  widget: ReceiptAddressDetailsView(
+                      address: address!, color: context.onPrimaryContainer),
+                  color: context.onPrimaryContainer),
+            ),
+          ),
+        )
       ],
     );
   }
@@ -89,8 +83,12 @@ class ReceiptAddressDetailsView extends StatelessWidget {
         if (address.hasContact)
           Text(address.contact!.name,
               style: context.textTheme.labelSmall?.copyWith(color: color))
-        else if (address.isAccount)
+        else if (address.isAccount) ...[
+          if (address.account!.accountName != null)
+            Text(address.account!.accountName!,
+                style: context.textTheme.labelSmall?.copyWith(color: color)),
           AddressDrivationInfo(address.account!.keyIndex, color: color),
+        ],
         OneLineTextWidget(
           address.view,
           style: context.textTheme.bodyMedium?.copyWith(color: color),

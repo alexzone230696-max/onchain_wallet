@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/models/networks.dart';
@@ -14,8 +16,8 @@ import 'package:on_chain_wallet/wallet/models/transaction/networks/aptos.dart';
 import 'package:on_chain/aptos/aptos.dart';
 import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 
-class AptosClient
-    extends NetworkClient<AptosWalletTransaction, AptosAPIProvider> {
+class AptosClient extends NetworkClient<AptosWalletTransaction,
+    AptosAPIProvider, AptosNetworkToken, AptosAddress> {
   final AptosProvider provider;
   @override
   final WalletAptosNetwork? network;
@@ -159,41 +161,16 @@ class AptosClient
     return BigInt.from(r.gasEstimate);
   }
 
-  AptosTransactionAuthenticator _buildSimulateAuthenticator({
-    AptosAddress? feePayer,
-    List<AptosAddress>? secondarySignerAddresses,
-  }) {
-    if (feePayer == null && secondarySignerAddresses == null) {
-      return AptosTransactionAuthenticatorSignleSender(
-          AptosAccountAuthenticatorNoAccountAuthenticator());
-    } else if (feePayer != null) {
-      return AptosTransactionAuthenticatorFeePayer(
-          sender: AptosAccountAuthenticatorNoAccountAuthenticator(),
-          feePayerAddress: feePayer,
-          feePayerAuthenticator:
-              AptosAccountAuthenticatorNoAccountAuthenticator(),
-          secondarySignerAddressess: secondarySignerAddresses ?? [],
-          secondarySigner: secondarySignerAddresses
-                  ?.map(
-                      (e) => AptosAccountAuthenticatorNoAccountAuthenticator())
-                  .toList() ??
-              []);
-    }
-    return AptosTransactionAuthenticatorMultiAgent(
-        sender: AptosAccountAuthenticatorNoAccountAuthenticator(),
-        secondarySignerAddressess: secondarySignerAddresses ?? [],
-        secondarySigner: secondarySignerAddresses
-                ?.map((e) => AptosAccountAuthenticatorNoAccountAuthenticator())
-                .toList() ??
-            []);
+  Future<int> getChainId() async {
+    final chainId = await provider.request(AptosRequestGetLedgerInfo());
+    return chainId.chainId;
   }
 
   Future<AptosApiUserTransaction> simulateTransaction(
       {required AptosRawTransaction rawTransaction,
+      required AptosTransactionAuthenticator authenticator,
       AptosAddress? feePayer,
       List<AptosAddress>? secondarySignerAddresses}) async {
-    final authenticator = _buildSimulateAuthenticator(
-        feePayer: feePayer, secondarySignerAddresses: secondarySignerAddresses);
     final signedTransaction = AptosSignedTransaction(
         rawTransaction: rawTransaction, authenticator: authenticator);
     final r = await provider.request(AptosRequestSimulateTransaction(
@@ -209,11 +186,6 @@ class AptosClient
         AptosRequestSubmitTransaction(signedTransactionData: signedTx.toBcs()));
     final String? txHash = r["hash"]?.toString();
     return (txHash ?? signedTx.txHash(), txHash != null);
-  }
-
-  Future<int> getChainId() async {
-    final chainId = await provider.request(AptosRequestGetLedgerInfo());
-    return chainId.chainId;
   }
 
   Future<int> getCurrenctChainId() async {
@@ -255,6 +227,100 @@ class AptosClient
     } catch (e) {
       return WalletTransactionStatus.unknown;
     }
+  }
+
+  Future<void> _fetchTokenMetadata(List<AptosNetworkToken> tokens) async {
+    final unknowTokens = tokens.where((e) => !e.status.isSuccess);
+    if (unknowTokens.isEmpty) return;
+    for (final i in unknowTokens) {
+      i.setPending();
+    }
+    final metadata = await MethodUtils.call(() async {
+      return await provider.request(AptosGraphQLRequestGetFungibleAssetMetadata(
+          variables: AptosGraphQLPaginatedVariablesParams(whereCondition: {
+        "asset_type": {
+          "_in": unknowTokens.map((e) => e.token.assetType).toList()
+        }
+      })));
+    });
+    final result = metadata.resultOrNull ?? [];
+    for (final i in unknowTokens) {
+      final token =
+          result.firstWhereOrNull((e) => e.assetType == i.token.assetType);
+      if (token != null) {
+        final ftToken = AptosFATokens.create(
+            balance: i.token.balance.balance,
+            token: Token(
+                name: token.name,
+                symbol: token.symbol,
+                decimal: token.decimals,
+                assetLogo: APPImage.network(token.iconUri)),
+            assetType: i.token.assetType,
+            isFreeze: i.token.isFreeze);
+        i.setSuccess(ftToken);
+        continue;
+      }
+      i.setError();
+    }
+  }
+
+  @override
+  Stream<List<AptosNetworkToken>> getAccountTokensStream(AptosAddress address) {
+    final controller = StreamController<List<AptosNetworkToken>>();
+    const limit = 50;
+    int offset = 0;
+
+    List<String> nIn = [AptosConstants.aptosCoinAssetType];
+    Future<void> fetchTokens() async {
+      while (true && !controller.isClosed) {
+        List<AptosNetworkToken> tokens = [];
+        final r = await MethodUtils.call(() async {
+          return await provider.request(
+              AptosGraphQLRequestGetCurrentFungibleAssetBalances(
+                  variables:
+                      AptosGraphQLPaginatedVariablesParams(whereCondition: {
+            "owner_address": {"_eq": address.address},
+            "asset_type": {"_nin": nIn}
+          }, limit: limit, offset: offset)));
+        });
+        if (r.hasError) {
+          controller.addError(r.exception!);
+          return;
+        }
+        for (final i in r.result) {
+          final assetType = i.assetType;
+          if (assetType == null ||
+              assetType == AptosConstants.aptosCoinAssetType) {
+            continue;
+          }
+          final metadat = i.metadata;
+          final token = AptosNetworkToken(
+              status: metadat == null
+                  ? NetworkTokenFetchingStatus.idle
+                  : NetworkTokenFetchingStatus.success,
+              token: AptosFATokens.create(
+                  balance: BigintUtils.tryParse(i.amount) ?? BigInt.zero,
+                  token: Token(
+                      name: metadat?.name ?? assetType,
+                      symbol: metadat?.symbol ?? assetType,
+                      decimal: metadat?.decimals ?? 0),
+                  assetType: assetType));
+
+          tokens.add(token);
+        }
+        controller.add(tokens);
+        _fetchTokenMetadata(tokens);
+        if (r.result.length < limit ||
+            offset * limit > ChainConst.maxAccountTokens) {
+          break;
+        }
+        offset++;
+      }
+      if (!controller.isClosed) controller.close();
+    }
+
+    fetchTokens();
+    return controller.stream;
   }
 
   @override

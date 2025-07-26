@@ -22,8 +22,7 @@ class RippleKeyConversionView extends StatelessWidget {
   const RippleKeyConversionView({super.key});
   @override
   Widget build(BuildContext context) {
-    return NetworkAccountControllerView<RippleClient?, IXRPAddress?,
-        RippleChain>(
+    return NetworkAccountControllerView<XRPClient?, IXRPAddress?, XRPChain>(
       title: "ripple_key_conversion".tr,
       addressRequired: false,
       clientRequired: false,

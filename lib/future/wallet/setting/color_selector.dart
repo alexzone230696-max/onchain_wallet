@@ -14,8 +14,9 @@ class ColorSelectorIconView extends StatelessWidget {
     return IconButton(
         onPressed: () {
           context
-              .openSliverDialog<Color>((ctx) => const ColorSelectorModal(),
-                  "primary_color_palette".tr)
+              .openSliverDialog<Color>(
+                  widget: (ctx) => const ColorSelectorModal(),
+                  label: "primary_color_palette".tr)
               .then(onSelectColor);
         },
         icon: const Icon(Icons.color_lens));

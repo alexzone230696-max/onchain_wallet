@@ -11,6 +11,6 @@ abstract class RippleAccountState<W extends StatefulWidget>
         RippleIssueToken,
         RippleNFToken,
         IXRPAddress,
-        RippleClient,
-        RippleChain,
+        XRPClient,
+        XRPChain,
         XRPWalletTransaction> {}

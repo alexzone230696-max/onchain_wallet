@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart' show APPConst;
 import 'package:on_chain_wallet/app/models/models/typedef.dart'
     show DynamicVoid;
+import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart' show BalanceCore;
-import 'container_with_border.dart';
-import 'widget_constant.dart';
 import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 
 class ErrorTextContainer extends StatelessWidget {
@@ -17,7 +16,8 @@ class ErrorTextContainer extends StatelessWidget {
       this.showErrorIcon = true,
       this.oTapError,
       this.enableTap = true,
-      this.maxLine});
+      this.maxLine,
+      this.copyable = false});
   final EdgeInsets margin;
   final String? error;
   final EdgeInsets verticalMargin;
@@ -26,6 +26,7 @@ class ErrorTextContainer extends StatelessWidget {
   final IconData? errorIcon;
   final bool enableTap;
   final int? maxLine;
+  final bool copyable;
 
   @override
   Widget build(BuildContext context) {
@@ -48,13 +49,10 @@ class ErrorTextContainer extends StatelessWidget {
                 onRemoveIcon: Icon(errorIcon ?? Icons.error,
                     color: context.colors.onErrorContainer),
                 backgroundColor: context.colors.errorContainer,
-                child: Text(
-                  error ?? "",
-                  maxLines: maxLine,
-                  overflow: maxLine == null ? null : TextOverflow.ellipsis,
-                  style: context.textTheme.labelMedium
-                      ?.copyWith(color: context.colors.onErrorContainer),
-                ),
+                child: LargeTextContainer(
+                    color: context.colors.onErrorContainer,
+                    text: error ?? '',
+                    copyable: copyable),
               ),
             ),
     );
@@ -87,9 +85,9 @@ class InsufficientBalanceErrorView extends StatelessWidget {
           onRemoveWidget: const Icon(Icons.error),
           backgroundColor: context.colors.errorContainer,
           child: Text(
-            "insufficient_balance_error".tr.replaceOne(
-                  "$absBalance ${balance.token.symbol}",
-                ),
+            "insufficient_balance_error"
+                .tr
+                .replaceOne("$absBalance ${balance.token.symbol}"),
             style: context.textTheme.labelMedium
                 ?.copyWith(color: context.colors.onErrorContainer),
           )),

@@ -6,10 +6,7 @@ class TonJettonToken extends TokenCore<IntegerBalance, Token> {
       required super.token,
       required this.minterAddress,
       required this.walletAddress,
-      required super.updated,
-      required this.description,
-      required this.uri,
-      required this.verified})
+      required super.updated})
       : super._();
 
   factory TonJettonToken.create({
@@ -17,19 +14,14 @@ class TonJettonToken extends TokenCore<IntegerBalance, Token> {
     required Token token,
     required TonAddress minterAddress,
     required TonAddress walletAddress,
-    required bool verified,
-    String? description,
-    String? uri,
   }) {
     return TonJettonToken._(
-        balance: IntegerBalance.token(balance, token, immutable: true),
-        token: token,
-        minterAddress: minterAddress,
-        walletAddress: walletAddress,
-        updated: DateTime.now(),
-        description: description,
-        uri: uri,
-        verified: verified);
+      balance: IntegerBalance.token(balance, token, immutable: true),
+      token: token,
+      minterAddress: minterAddress,
+      walletAddress: walletAddress,
+      updated: DateTime.now(),
+    );
   }
   factory TonJettonToken.deserialize({List<int>? bytes, CborObject? obj}) {
     final CborListValue cbor = CborSerializable.cborTagValue(
@@ -44,18 +36,11 @@ class TonJettonToken extends TokenCore<IntegerBalance, Token> {
         token: token,
         minterAddress: TonAddress(minterAddress),
         walletAddress: TonAddress(walletAddress),
-        updated: updated,
-        description: cbor.elementAs(5),
-        uri: cbor.elementAs(6),
-        verified: cbor.elementAs(7));
+        updated: updated);
   }
 
   final TonAddress minterAddress;
   final TonAddress walletAddress;
-
-  final String? description;
-  final String? uri;
-  final bool verified;
 
   void _updateBalance([BigInt? updateBalance]) {
     if (streamBalance.value._internalUpdateBalance(updateBalance)) {
@@ -65,15 +50,22 @@ class TonJettonToken extends TokenCore<IntegerBalance, Token> {
   }
 
   @override
+  TonJettonToken clone() {
+    return TonJettonToken.create(
+      balance: streamBalance.value.balance,
+      token: token,
+      minterAddress: minterAddress,
+      walletAddress: walletAddress,
+    );
+  }
+
+  @override
   TonJettonToken updateToken(Token updateToken) {
     return TonJettonToken.create(
       balance: streamBalance.value.balance,
       token: updateToken,
       minterAddress: minterAddress,
       walletAddress: walletAddress,
-      description: description,
-      uri: uri,
-      verified: verified,
     );
   }
 
@@ -86,9 +78,6 @@ class TonJettonToken extends TokenCore<IntegerBalance, Token> {
           walletAddress.toFriendlyAddress(),
           streamBalance.value.balance,
           CborEpochIntValue(_updated),
-          description ?? const CborNullValue(),
-          uri ?? const CborNullValue(),
-          verified
         ]),
         tokenType.tag);
   }

@@ -416,3 +416,39 @@ class Web3SuccessTransactionTextView extends StatelessWidget {
     //     text: successTrText, icon: WidgetConstant.sizedBox);
   }
 }
+
+class StreamPageProgressErrorView extends StatelessWidget {
+  const StreamPageProgressErrorView(
+      {super.key, required this.text, this.controller});
+  final String text;
+  final StreamPageProgressController? controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return _ProgressWithTextView(
+        text: Column(
+          children: [
+            ContainerWithBorder(
+              backgroundColor: context.colors.errorContainer,
+              child: LargeTextContainer(
+                  color: context.colors.onErrorContainer, text: text),
+            ),
+            if (controller != null) ...[
+              WidgetConstant.height20,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  FilledButton.icon(
+                      onPressed: () {
+                        controller?.backToIdle();
+                      },
+                      icon: const Icon(Icons.arrow_back),
+                      label: Text("back_to_the_page".tr))
+                ],
+              )
+            ],
+          ],
+        ),
+        icon: WidgetConstant.errorIconLarge);
+  }
+}

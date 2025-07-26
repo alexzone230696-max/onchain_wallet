@@ -8,18 +8,18 @@ import 'package:on_chain_wallet/wallet/web3/networks/tron/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/tron/params/core/request.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/tron/permission/models/account.dart';
 
-class Web3TronSendTransaction extends Web3TronRequestParam<Transaction> {
+class Web3TronSignTransaction extends Web3TronRequestParam<Transaction> {
   final List<int> transaction;
   final String? txId;
   final Web3TronChainAccount accessAccount;
   @override
   List<Web3TronChainAccount> get requiredAccounts => [accessAccount];
 
-  Web3TronSendTransaction(
+  Web3TronSignTransaction(
       {required List<int> transaction, this.txId, required this.accessAccount})
       : transaction = transaction.asImmutableBytes;
 
-  factory Web3TronSendTransaction.deserialize({
+  factory Web3TronSignTransaction.deserialize({
     List<int>? bytes,
     CborObject? object,
     String? hex,
@@ -30,7 +30,7 @@ class Web3TronSendTransaction extends Web3TronRequestParam<Transaction> {
       hex: hex,
       tags: Web3MessageTypes.walletRequest.tag,
     );
-    return Web3TronSendTransaction(
+    return Web3TronSignTransaction(
         transaction: values.elementAt(1),
         txId: values.elementAt(2),
         accessAccount: Web3TronChainAccount.deserialize(
@@ -53,13 +53,13 @@ class Web3TronSendTransaction extends Web3TronRequestParam<Transaction> {
   }
 
   @override
-  Web3TronRequest<Transaction, Web3TronSendTransaction> toRequest(
+  Web3TronRequest<Transaction, Web3TronSignTransaction> toRequest(
       {required Web3RequestInformation request,
       required Web3RequestAuthentication authenticated,
       required List<Chain> chains}) {
     final chain = super.findRequestChain(
         request: request, authenticated: authenticated, chains: chains);
-    return Web3TronRequest<Transaction, Web3TronSendTransaction>(
+    return Web3TronRequest<Transaction, Web3TronSignTransaction>(
       params: this,
       authenticated: authenticated,
       chain: chain.$1,

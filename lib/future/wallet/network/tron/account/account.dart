@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
+import 'package:on_chain_wallet/future/wallet/network/tron/transaction/tranasction.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
-import 'package:on_chain_wallet/future/wallet/network/forms/forms.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 
@@ -15,10 +15,24 @@ class TronAccountPageView extends StatelessWidget {
       onNotification: (notification) => false,
       child: TabBarView(physics: WidgetConstant.noScrollPhysics, children: [
         _Services(chainAccount),
-        AccountTokensView(
-            account: chainAccount,
-            importPage: PageRouter.importTronToken,
-            transferPage: PageRouter.tronTransfer),
+        AccountTokensView<TronToken, ITronAddress>(
+          account: chainAccount,
+          // importPage: ,
+          transferBuilder: (p0) {
+            if (p0.tronTokenType.isTrc10) {
+              return TronTransactionTransferTRC10TokenOperation(
+                  walletProvider: context.wallet,
+                  account: chainAccount,
+                  address: chainAccount.address,
+                  token: p0 as TronTRC10Token);
+            }
+            return TronTransactionTransferTRC20TokenOperation(
+                walletProvider: context.wallet,
+                account: chainAccount,
+                address: chainAccount.address,
+                token: p0 as TronTRC20Token);
+          },
+        ),
         AccountTransactionActivityView(chainAccount)
       ]),
     );
@@ -48,17 +62,24 @@ class _Services extends StatelessWidget {
             ),
             WidgetConstant.divider,
             AppListTile(
+              title: Text("import_trc20_token".tr),
+              trailing: const Icon(Icons.arrow_forward),
+              onTap: () {
+                context.to(PageRouter.importTronToken);
+              },
+            ),
+            WidgetConstant.divider,
+            AppListTile(
               title: Text("update_account_permission".tr),
               subtitle: Text("update_account_permissions".tr),
               trailing: const Icon(Icons.arrow_forward),
               onTap: () {
-                if (account.accountInfo == null) {
-                  context.showAlert("account_not_found".tr);
-                  return;
-                }
-                final validator = LiveTransactionForm(
-                    validator: TronAccountUpdatePermissionForm());
-                context.to(PageRouter.tronTransaction, argruments: validator);
+                final r =
+                    TronTransactionAccountPermissionUpdateContractOperation(
+                        walletProvider: context.wallet,
+                        account: chainAccount,
+                        address: account);
+                context.to(PageRouter.transaction, argruments: r);
               },
             ),
             AppListTile(
@@ -66,9 +87,11 @@ class _Services extends StatelessWidget {
               subtitle: Text("modify_account_name".tr),
               trailing: const Icon(Icons.arrow_forward),
               onTap: () {
-                final validator =
-                    LiveTransactionForm(validator: TronUpdateAccountForm());
-                context.to(PageRouter.tronTransaction, argruments: validator);
+                final r = TronTransactionAccountUpdateContractOperation(
+                    walletProvider: context.wallet,
+                    account: chainAccount,
+                    address: account);
+                context.to(PageRouter.transaction, argruments: r);
               },
             ),
             WidgetConstant.divider,
@@ -77,9 +100,11 @@ class _Services extends StatelessWidget {
               trailing: const Icon(Icons.arrow_forward),
               subtitle: Text("frozen_balance".tr),
               onTap: () {
-                final validator =
-                    LiveTransactionForm(validator: TronFreezBalanceV2Form());
-                context.to(PageRouter.tronTransaction, argruments: validator);
+                final r = TronTransactionFreezeBalanceV2ContractOperation(
+                    walletProvider: context.wallet,
+                    account: chainAccount,
+                    address: account);
+                context.to(PageRouter.transaction, argruments: r);
               },
             ),
             AppListTile(
@@ -87,9 +112,11 @@ class _Services extends StatelessWidget {
               trailing: const Icon(Icons.arrow_forward),
               subtitle: Text("unfreeze_balance".tr),
               onTap: () {
-                final validator =
-                    LiveTransactionForm(validator: TronUnFreezBalanceV2Form());
-                context.to(PageRouter.tronTransaction, argruments: validator);
+                final r = TronTransactionUnFreezeBalanceV2ContractOperation(
+                    walletProvider: context.wallet,
+                    account: chainAccount,
+                    address: account);
+                context.to(PageRouter.transaction, argruments: r);
               },
             ),
             AppListTile(
@@ -97,9 +124,11 @@ class _Services extends StatelessWidget {
               subtitle: Text("delegate_resource_desc".tr),
               trailing: const Icon(Icons.arrow_forward),
               onTap: () {
-                final validator = LiveTransactionForm(
-                    validator: TronDelegatedResourceV2Form());
-                context.to(PageRouter.tronTransaction, argruments: validator);
+                final r = TronTransactionDelegateResourceContractOperation(
+                    walletProvider: context.wallet,
+                    account: chainAccount,
+                    address: account);
+                context.to(PageRouter.transaction, argruments: r);
               },
             ),
             AppListTile(
@@ -107,9 +136,11 @@ class _Services extends StatelessWidget {
               subtitle: Text("undelegated_resource_desc".tr),
               trailing: const Icon(Icons.arrow_forward),
               onTap: () {
-                final validator = LiveTransactionForm(
-                    validator: TronUnDelegatedResourceV2Form());
-                context.to(PageRouter.tronTransaction, argruments: validator);
+                final r = TronTransactionUnDelegateResourceContractOperation(
+                    walletProvider: context.wallet,
+                    account: chainAccount,
+                    address: account);
+                context.to(PageRouter.transaction, argruments: r);
               },
             ),
             WidgetConstant.divider,
@@ -118,9 +149,11 @@ class _Services extends StatelessWidget {
               subtitle: Text("create_witness_desc".tr),
               trailing: const Icon(Icons.arrow_forward),
               onTap: () {
-                final validator =
-                    LiveTransactionForm(validator: TronCreateWitnessForm());
-                context.to(PageRouter.tronTransaction, argruments: validator);
+                final r = TronTransactionWitnessCreateContractOperation(
+                    walletProvider: context.wallet,
+                    account: chainAccount,
+                    address: account);
+                context.to(PageRouter.transaction, argruments: r);
               },
             ),
             AppListTile(
@@ -128,13 +161,11 @@ class _Services extends StatelessWidget {
               subtitle: Text("update_witness_desc".tr),
               trailing: const Icon(Icons.arrow_forward),
               onTap: () {
-                if (account.accountInfo == null) {
-                  context.showAlert("account_not_found".tr);
-                  return;
-                }
-                final validator =
-                    LiveTransactionForm(validator: TronUpdateWitnessForm());
-                context.to(PageRouter.tronTransaction, argruments: validator);
+                final r = TronTransactionWitnessUpdateContractOperation(
+                    walletProvider: context.wallet,
+                    account: chainAccount,
+                    address: account);
+                context.to(PageRouter.transaction, argruments: r);
               },
             ),
           ],

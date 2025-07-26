@@ -109,9 +109,6 @@ final class ISuiAddress
   String? get type => keyScheme.name;
 
   @override
-  String get orginalAddress => networkAddress.address;
-
-  @override
   bool isEqual(ChainAccount other) {
     if (other is! ISuiAddress) return false;
     return other.networkAddress == networkAddress;

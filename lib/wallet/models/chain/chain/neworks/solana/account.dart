@@ -82,10 +82,10 @@ final class SolanaChain extends Chain<
     await initAddress(address);
     await onClient(onConnect: (client) async {
       final balance = await client.getAccountBalance(address.networkAddress);
-      _internalupdateAddressBalance(
+      _updateAddressBalanceInternal(
           address: address, balance: balance, saveAccount: saveAccount);
       if (tokens) {
-        final tokens = address._tokens;
+        final tokens = address.tokens;
         final balances = await Future.wait(tokens.map((e) async {
           try {
             return await client.getTokenAddressBalance(e.tokenAccount);

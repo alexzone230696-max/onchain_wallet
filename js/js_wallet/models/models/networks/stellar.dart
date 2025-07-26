@@ -102,7 +102,7 @@ extension type JSStellarWalletStandardConnectFeature(JSAny _) implements JSAny {
 
 extension type JSStellarSendOrSignTransactionParams(JSAny _) implements JSAny {
   external String get transaction;
-  external JSTonWalletAccount? account;
+  external JSStellarWalletAccount? account;
   static const List<String> properties = ['account', 'transaction'];
 }
 extension type JSStellarSignTransactionResponse(JSAny _) implements JSAny {
@@ -135,7 +135,7 @@ extension type JSStellarSignMessageResponse(JSAny _) implements JSAny {
 }
 @JS()
 extension type JSStellarSignMessageParams._(JSObject _) implements JSAny {
-  external JSTonWalletAccount? account;
+  external JSStellarWalletAccount? account;
   external APPJSUint8Array get message;
   static const List<String> properties = ['message'];
 }

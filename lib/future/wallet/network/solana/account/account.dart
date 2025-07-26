@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
+import 'package:on_chain_wallet/future/wallet/network/solana/transaction/operations/create_account.dart';
+import 'package:on_chain_wallet/future/wallet/network/solana/transaction/operations/create_associated_token_account.dart';
+import 'package:on_chain_wallet/future/wallet/network/solana/transaction/operations/initialize_mint.dart';
+import 'package:on_chain_wallet/future/wallet/network/solana/transaction/operations/mint_to.dart';
+import 'package:on_chain_wallet/future/wallet/network/solana/transaction/operations/transfer_token.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
-import 'package:on_chain_wallet/future/wallet/network/forms/forms.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 
@@ -13,10 +17,13 @@ class SolanaAccountPageView extends StatelessWidget {
   Widget build(BuildContext context) {
     return TabBarView(physics: WidgetConstant.noScrollPhysics, children: [
       _SolanaServices(chainAccount),
-      AccountTokensView(
+      AccountTokensView<SolanaSPLToken, ISolanaAddress>(
         account: chainAccount,
-        importPage: PageRouter.importSPLTokens,
-        transferPage: PageRouter.solanaTransfer,
+        transferBuilder: (p0) => SolanaTransactionTransferTokenOperation(
+            walletProvider: context.wallet,
+            account: chainAccount,
+            address: chainAccount.address,
+            token: p0),
       ),
       AccountTransactionActivityView(chainAccount)
     ]);
@@ -39,10 +46,12 @@ class _SolanaServices extends StatelessWidget {
               subtitle: Text("create_associated_token_account".tr),
               trailing: const Icon(Icons.arrow_forward),
               onTap: () {
-                final validator =
-                    LiveTransactionForm<SolanaCreateAssociatedTokenAccountForm>(
-                        validator: SolanaCreateAssociatedTokenAccountForm());
-                context.to(PageRouter.solanaTransaction, argruments: validator);
+                final operation =
+                    SolanaTransactionCreateAssociatedTokenAccountOperation(
+                        address: account.address,
+                        account: account,
+                        walletProvider: context.wallet);
+                context.to(PageRouter.transaction, argruments: operation);
               },
             ),
             AppListTile(
@@ -50,9 +59,11 @@ class _SolanaServices extends StatelessWidget {
               subtitle: Text("solana_create_account_desc".tr),
               trailing: const Icon(Icons.arrow_forward),
               onTap: () {
-                final validator = LiveTransactionForm<SolanaCreateAccountForm>(
-                    validator: SolanaCreateAccountForm());
-                context.to(PageRouter.solanaTransaction, argruments: validator);
+                final operation = SolanaTransactionCreateAccountOperation(
+                    address: account.address,
+                    account: account,
+                    walletProvider: context.wallet);
+                context.to(PageRouter.transaction, argruments: operation);
               },
             ),
             AppListTile(
@@ -60,9 +71,11 @@ class _SolanaServices extends StatelessWidget {
               subtitle: Text("initiailize_mint_desc".tr),
               trailing: const Icon(Icons.arrow_forward),
               onTap: () {
-                final validator = LiveTransactionForm<SolanaInitializeMintForm>(
-                    validator: SolanaInitializeMintForm());
-                context.to(PageRouter.solanaTransaction, argruments: validator);
+                final operation = SolanaTransactionInitializeMintOperation(
+                    address: account.address,
+                    account: account,
+                    walletProvider: context.wallet);
+                context.to(PageRouter.transaction, argruments: operation);
               },
             ),
             AppListTile(
@@ -70,9 +83,11 @@ class _SolanaServices extends StatelessWidget {
               subtitle: Text("mint_to_desc".tr),
               trailing: const Icon(Icons.arrow_forward),
               onTap: () {
-                final validator = LiveTransactionForm<SolanaMintToForm>(
-                    validator: SolanaMintToForm());
-                context.to(PageRouter.solanaTransaction, argruments: validator);
+                final operation = SolanaTransactionMintToOperation(
+                    address: account.address,
+                    account: account,
+                    walletProvider: context.wallet);
+                context.to(PageRouter.transaction, argruments: operation);
               },
             ),
             WidgetConstant.divider,

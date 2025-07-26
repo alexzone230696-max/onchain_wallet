@@ -88,7 +88,7 @@ final class StellarChain extends Chain<
               .whereType<StellarNativeBalanceResponse>()
               .fold(BigInt.zero, (p, c) => p + c.unlockedBalance) ??
           BigInt.zero;
-      _internalupdateAddressBalance(
+      _updateAddressBalanceInternal(
           address: address, balance: balance, saveAccount: saveAccount);
       for (final i in address.tokens) {
         final balance = accountInfo?.getAssetByIssueAsset(i);
@@ -113,7 +113,7 @@ final class StellarChain extends Chain<
               .whereType<StellarNativeBalanceResponse>()
               .fold(BigInt.zero, (p, c) => p + c.unlockedBalance) ??
           BigInt.zero;
-      _internalupdateAddressBalance(
+      _updateAddressBalanceInternal(
           address: address, balance: balance, saveAccount: true);
       for (final i in tokens) {
         final balance = accountInfo?.getAssetByIssueAsset(i);

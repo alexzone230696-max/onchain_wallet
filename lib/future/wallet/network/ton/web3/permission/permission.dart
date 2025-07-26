@@ -18,13 +18,8 @@ class TonWeb3PermissionView extends StatefulWidget {
 class _TonWeb3PermissionViewState extends State<TonWeb3PermissionView>
     with
         SafeState,
-        Web3PermissionState<
-            TonWeb3PermissionView,
-            TonAddress,
-            TheOpenNetworkChain,
-            ITonAddress,
-            Web3TonChainAccount,
-            Web3TonChain> {
+        Web3PermissionState<TonWeb3PermissionView, TonAddress, TonChain,
+            ITonAddress, Web3TonChainAccount, Web3TonChain> {
   @override
   Web3APPAuthentication get application => widget.application;
   @override
@@ -47,8 +42,8 @@ class _TonWeb3PermissionViewState extends State<TonWeb3PermissionView>
 
   @override
   Widget build(BuildContext context) {
-    return UpdateChainPermissionWidget<TonAddress, TheOpenNetworkChain,
-            ITonAddress, Web3TonChainAccount>(
+    return UpdateChainPermissionWidget<TonAddress, TonChain, ITonAddress,
+            Web3TonChainAccount>(
         chain: chain,
         chains: chains,
         onUpdateState: updateState,

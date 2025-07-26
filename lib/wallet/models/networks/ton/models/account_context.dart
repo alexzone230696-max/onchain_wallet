@@ -25,12 +25,12 @@ abstract class TonAccountContext with CborSerializable, Equatable {
   const TonAccountContext(
       {required this.type, required this.version, required this.bouncable});
   VersionedWalletContract toWalletContract(
-      {required List<int> publicKey, required TonChain chain});
+      {required List<int> publicKey, required TonChainId chain});
   Cell buildTransaction(
       {required List<OutActionSendMsg> actions,
       required VersionedWalletState state,
       required int seqno,
-      required TonChain chain,
+      required TonChainId chain,
       int? timeOut}) {
     return TonSerializationUtils.serializeMessage(
         actions: actions, state: state, seqno: seqno, timeout: timeOut);
@@ -136,7 +136,7 @@ class TonAccountLegacyContext extends TonAccountContext {
   VersionedWalletContract<VersionedWalletState,
           WalletContractTransferParams<OutAction>>
       toWalletContract(
-          {required List<int> publicKey, required TonChain chain}) {
+          {required List<int> publicKey, required TonChainId chain}) {
     return switch (version) {
       WalletVersion.v1R1 => WalletV1R1.create(
           chain: chain, publicKey: publicKey, bounceableAddress: bouncable),
@@ -187,7 +187,7 @@ class TonAccountSubWalletContext extends TonAccountContext {
   VersionedWalletContract<VersionedWalletState,
           WalletContractTransferParams<OutAction>>
       toWalletContract(
-          {required List<int> publicKey, required TonChain chain}) {
+          {required List<int> publicKey, required TonChainId chain}) {
     return switch (version) {
       WalletVersion.v3R1 => WalletV3R1.create(
           chain: chain,
@@ -240,7 +240,7 @@ class TonAccountV5CustomContext extends TonAccountContext {
 
   @override
   WalletV5R1 toWalletContract(
-      {required List<int> publicKey, required TonChain chain}) {
+      {required List<int> publicKey, required TonChainId chain}) {
     return WalletV5R1.create(
         chain: chain,
         publicKey: publicKey,
@@ -253,7 +253,7 @@ class TonAccountV5CustomContext extends TonAccountContext {
       {required List<OutActionSendMsg> actions,
       required VersionedWalletState state,
       required int seqno,
-      required TonChain chain,
+      required TonChainId chain,
       int? timeOut}) {
     return TonSerializationUtils.sseralizeV5(
         accountSeqno: seqno,
@@ -314,7 +314,7 @@ class TonAccountV5SubWalletContext extends TonAccountContext {
 
   @override
   WalletV5R1 toWalletContract(
-      {required List<int> publicKey, required TonChain chain}) {
+      {required List<int> publicKey, required TonChainId chain}) {
     return WalletV5R1.create(
         chain: chain,
         publicKey: publicKey,
@@ -327,7 +327,7 @@ class TonAccountV5SubWalletContext extends TonAccountContext {
     required List<OutActionSendMsg> actions,
     required VersionedWalletState state,
     required int seqno,
-    required TonChain chain,
+    required TonChainId chain,
     int? timeOut,
   }) {
     return TonSerializationUtils.sseralizeV5(

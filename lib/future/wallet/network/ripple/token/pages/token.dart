@@ -12,7 +12,7 @@ class MonitorRippleTokenView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NetworkAccountControllerView<RippleClient, IXRPAddress, RippleChain>(
+    return NetworkAccountControllerView<XRPClient, IXRPAddress, XRPChain>(
       title: "add_token".tr,
       addressRequired: true,
       clientRequired: true,
@@ -28,8 +28,8 @@ class _MonitorRippleTokenView extends StatefulWidget {
   const _MonitorRippleTokenView(
       {required this.account, required this.wallet, required this.client});
   final WalletProvider wallet;
-  final RippleChain account;
-  final RippleClient client;
+  final XRPChain account;
+  final XRPClient client;
   @override
   RippleAccountState createState() => __MonitorRippleTokenViewState();
 }
@@ -37,9 +37,9 @@ class _MonitorRippleTokenView extends StatefulWidget {
 class __MonitorRippleTokenViewState
     extends RippleAccountState<_MonitorRippleTokenView> {
   @override
-  RippleChain get account => widget.account;
+  XRPChain get account => widget.account;
   @override
-  RippleClient get client => widget.client;
+  XRPClient get client => widget.client;
   final GlobalKey<PageProgressState> progressKey =
       GlobalKey<PageProgressState>(debugLabel: "__MonitorRippleTokenViewState");
   final Set<RippleIssueToken> tokens = {};
@@ -62,13 +62,7 @@ class __MonitorRippleTokenViewState
   }
 
   Future<void> add(RippleIssueToken token) async {
-    return await account.addNewToken(
-        token: RippleIssueToken.create(
-            balance: token.balance.balance.toDecimal(),
-            token: token.token,
-            issuer: token.issuer,
-            assetCode: token.assetCode),
-        address: address);
+    return await account.addNewToken(token: token.clone(), address: address);
   }
 
   Future<void> removeToken(RippleIssueToken token) async {
@@ -84,6 +78,14 @@ class __MonitorRippleTokenViewState
       }
     } finally {
       setState(() {});
+    }
+  }
+
+  @override
+  void safeDispose() {
+    super.safeDispose();
+    for (final i in tokens) {
+      i.streamBalance.dispose();
     }
   }
 
@@ -113,7 +115,7 @@ class __MonitorRippleTokenViewState
                       return ContainerWithBorder(
                         onRemove: () {
                           context.openSliverDialog(
-                              (ctx) => DialogTextView(
+                              widget: (ctx) => DialogTextView(
                                   buttonWidget: AsyncDialogDoubleButtonView(
                                     firstButtonPressed: () =>
                                         onTap(token, exist),
@@ -121,13 +123,14 @@ class __MonitorRippleTokenViewState
                                   text: exist
                                       ? "remove_token_from_account".tr
                                       : "add_token_to_your_account".tr),
-                              exist ? "remove_token".tr : "add_token".tr);
+                              label:
+                                  exist ? "remove_token".tr : "add_token".tr);
                         },
                         onRemoveIcon: Checkbox(
                           value: exist,
                           onChanged: (value) {
                             context.openSliverDialog(
-                                (ctx) => DialogTextView(
+                                widget: (ctx) => DialogTextView(
                                     buttonWidget: AsyncDialogDoubleButtonView(
                                       firstButtonPressed: () =>
                                           onTap(token, exist),
@@ -135,7 +138,8 @@ class __MonitorRippleTokenViewState
                                     text: exist
                                         ? "remove_token_from_account".tr
                                         : "add_token_to_your_account".tr),
-                                exist ? "remove_token".tr : "add_token".tr);
+                                label:
+                                    exist ? "remove_token".tr : "add_token".tr);
                           },
                         ),
                         child: Column(

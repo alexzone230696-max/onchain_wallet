@@ -59,7 +59,8 @@ class _UpdateTokenDetailsViewState extends State<UpdateTokenDetailsView>
   void onInitOnce() {
     super.onInitOnce();
     canChangeDecimal = _canChangeDecimal();
-    if (canChangeDecimal) {
+    if (canChangeDecimal ||
+        widget.account.network.type == NetworkType.stellar) {
       decimal = (widget.token as Token).decimal;
       tokenDecimal = decimal;
     }
@@ -122,7 +123,7 @@ class _UpdateTokenDetailsViewState extends State<UpdateTokenDetailsView>
     if (canChangeDecimal && currectDecimal != decimal) {
       currectDecimal = decimal;
       final alert = await context.openSliverDialog(
-          (ctx) => DialogTextView(
+          widget: (ctx) => DialogTextView(
                 buttonWidget: AsyncDialogDoubleButtonView(
                     firstButtonLabel: "change_decimals".tr),
                 widget: Column(
@@ -140,7 +141,7 @@ class _UpdateTokenDetailsViewState extends State<UpdateTokenDetailsView>
                   ],
                 ),
               ),
-          "token_decimals".tr);
+          label: "token_decimals".tr);
       if (alert != true) return;
     }
     CoingeckoCoin? market = token.market;

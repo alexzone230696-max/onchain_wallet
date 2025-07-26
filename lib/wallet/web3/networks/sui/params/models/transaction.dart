@@ -1040,12 +1040,8 @@ class Web3SuiTransactionGasData {
   final List<Web3SuiTransactionImmOrOwnedObject>? payment;
   bool get hasFee => budget != null && price != null;
 
-  Web3SuiTransactionGasData({
-    this.budget,
-    this.price,
-    this.owner,
-    this.payment,
-  });
+  Web3SuiTransactionGasData(
+      {this.budget, this.price, this.owner, this.payment});
 
   factory Web3SuiTransactionGasData.fromJson(Map<String, dynamic> json) {
     return Web3SuiTransactionGasData(

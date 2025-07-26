@@ -1,16 +1,7 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
-// import 'package:on_chain_wallet/app/utils/utils.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
-
-class MoneroCachedBlockHeight {
-  final int block;
-  final DateTime time;
-  MoneroCachedBlockHeight(this.block) : time = DateTime.now();
-  bool get needFetch =>
-      time.isBefore(DateTime.now().add(MoneroConst.avarageBlockTime));
-}
 
 class MoneroRingOutput with CborSerializable {
   final List<BigInt> orderedIndexes;

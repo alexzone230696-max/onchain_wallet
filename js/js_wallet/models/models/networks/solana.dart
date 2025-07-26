@@ -16,6 +16,8 @@ class SolanaJSConstant {
       ['legacy'.toJS, 0.toJS].toJS;
   static final JSArray<JSString> solanaDefaultAccountFeatures = [
     "solana:signAndSendTransaction".toJS,
+    "solana:signAllTransactions".toJS,
+    "solana:signAndSendAllTransactions".toJS,
     "solana:signTransaction".toJS,
     "solana:signMessage".toJS,
     "solana:signIn".toJS

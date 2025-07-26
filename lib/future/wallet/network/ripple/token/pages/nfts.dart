@@ -12,7 +12,7 @@ class MonitorRippleNFTsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NetworkAccountControllerView<RippleClient, IXRPAddress, RippleChain>(
+    return NetworkAccountControllerView<XRPClient, IXRPAddress, XRPChain>(
       title: "manage_nfts".tr,
       addressRequired: true,
       clientRequired: true,
@@ -27,9 +27,9 @@ class MonitorRippleNFTsView extends StatelessWidget {
 class _MonitorRippleNFTsView extends StatefulWidget {
   const _MonitorRippleNFTsView(
       {required this.account, required this.wallet, required this.provider});
-  final RippleChain account;
+  final XRPChain account;
   final WalletProvider wallet;
-  final RippleClient provider;
+  final XRPClient provider;
 
   @override
   State<_MonitorRippleNFTsView> createState() =>
@@ -110,7 +110,8 @@ class ___MonitorRippleNFTsViewState extends State<_MonitorRippleNFTsView>
               controller: controller,
               itemBuilder: (context, index) {
                 final nft = nfts.elementAt(index);
-                return RippleNFTokenView(nft: nft);
+                return RippleNFTokenView(
+                    nft: nft, address: address, account: widget.account);
               },
               separatorBuilder: (context, index) => WidgetConstant.divider,
               shrinkWrap: true,

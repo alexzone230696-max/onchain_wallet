@@ -80,7 +80,7 @@ mixin TronWeb3StateHandler<
     });
   }
 
-  Web3TronSendTransaction toSignTransactionRequest(
+  Web3TronSignTransaction toSignTransactionRequest(
       {required REQUEST params,
       required STATEACCOUNT state,
       required Web3TronRequestMethods method,
@@ -131,7 +131,7 @@ mixin TronWeb3StateHandler<
         final newTx = TransactionRaw.fromJson(transaction.toJson());
         return BytesUtils.bytesEqual(newTx.toBuffer(), transaction.toBuffer());
       }(), "tron serialization failed");
-      return Web3TronSendTransaction(
+      return Web3TronSignTransaction(
           transaction:
               Transaction(rawData: transaction, signature: []).toBuffer(),
           accessAccount: account);

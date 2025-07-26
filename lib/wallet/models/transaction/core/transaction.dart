@@ -1,13 +1,25 @@
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:blockchain_utils/helper/helper.dart';
 import 'package:blockchain_utils/utils/binary/utils.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
-import 'package:on_chain_wallet/app/euqatable/equatable.dart';
-import 'package:on_chain_wallet/app/models/models/image.dart';
-import 'package:on_chain_wallet/app/serialization/cbor/cbor.dart';
+import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/models/networks.dart';
 import 'package:on_chain_wallet/wallet/constant/constant.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
+import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/networks/ada.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/networks/aptos.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/networks/bitcoin.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/networks/cosmos.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/networks/ethereum.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/networks/monero.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/networks/solana.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/networks/stellar.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/networks/substrate.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/networks/sui.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/networks/ton.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/networks/tron.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/networks/xrp.dart';
 
 enum WalletTransactionType {
   send(0),
@@ -116,7 +128,6 @@ abstract class ChainTransaction with CborSerializable, Equatable {
   final String txId;
   final DateTime time;
   final WalletTransactionAmount? totalOutput;
-
   final List<WalletTransactionOutput> outputs;
   final WalletWeb3ClientTransaction? web3Client;
   WalletTransactionStatus _status;
@@ -382,13 +393,4 @@ class WalletTransactionDecimalsAmount
             [amount.price, token?.toCbor(), tokenIdentifier]),
         type.tag);
   }
-}
-
-class TrackTransactionRequest<T extends ChainTransaction,
-    A extends ChainAccount> {
-  final List<T> transactions;
-  final A account;
-  TrackTransactionRequest(
-      {required List<T> transactions, required this.account})
-      : transactions = transactions.immutable;
 }

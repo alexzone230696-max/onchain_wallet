@@ -14,7 +14,7 @@ import 'widget_constant.dart';
 
 enum _BytesTools {
   ethereum("Ethereum"),
-  substrate("SubstrateApi"),
+  substrate("Substrate"),
   solana("Solana"),
   cosmos("Cosmos"),
   ripple("Ripple"),

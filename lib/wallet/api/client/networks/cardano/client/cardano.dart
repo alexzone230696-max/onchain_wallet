@@ -1,18 +1,16 @@
 import 'package:on_chain_wallet/crypto/models/networks.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/cardano/methods/utxos.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/cardano.dart';
 import 'package:on_chain_wallet/wallet/api/services/service.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 import 'package:on_chain_wallet/wallet/models/network/network.dart';
-import 'package:on_chain_wallet/wallet/models/networks/cardano/models/utxos.dart';
+import 'package:on_chain_wallet/wallet/models/token/network/token.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/networks/ada.dart';
 import 'package:on_chain/ada/src/provider/exception/blockfrost_api_error.dart';
 import 'package:on_chain/on_chain.dart';
 
-class CardanoClient
-    extends NetworkClient<ADAWalletTransaction, CardanoAPIProvider> {
+class CardanoClient extends NetworkClient<ADAWalletTransaction,
+    CardanoAPIProvider, BaseNetworkToken, ADAAddress> {
   CardanoClient({required this.provider, required this.network});
   final BlockFrostProvider provider;
   @override
@@ -34,10 +32,10 @@ class CardanoClient
     }
   }
 
-  Future<List<ADAAccountUTXOs>> getUtxos(
-      {required ICardanoAddress address, required ADAChain chain}) async {
-    final utxos = await provider
-        .request(BlockfrostRequestGetAddressUTXOs(address.networkAddress));
+  Future<List<ADAAccountUTXOResponse>> getAccountUtxos(
+      {required ADAAddress address}) async {
+    final utxos =
+        await provider.request(BlockfrostRequestAddressUTXOs(address));
     return utxos;
   }
 

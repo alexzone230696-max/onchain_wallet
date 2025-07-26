@@ -188,11 +188,7 @@ abstract class Web3Request<RESPONSE, PARAMS extends Web3WalletRequestParams,
     authenticated.addActivity(this);
   }
 
-  void completeResponse(Object? response) {
-    if (response is! RESPONSE) {
-      throw WalletExceptionConst.invalidArgruments(
-          "$RESPONSE", response.runtimeType.toString());
-    }
+  void completeResponse(RESPONSE response) {
     info._completeResponse(response);
   }
 

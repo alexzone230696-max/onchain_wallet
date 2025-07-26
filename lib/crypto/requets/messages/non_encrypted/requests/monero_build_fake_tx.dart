@@ -82,7 +82,7 @@ final class NoneEncryptedRequestFakeMoneroTx
     final MoneroRctTxBuilder tx = MoneroRctTxBuilder(
         account: MoneroAccountKeys(
             account: MoneroAccount.fromSeed(RCT.identity(clone: false)),
-            network: MoneroNetwork.stagenet),
+            network: MoneroNetwork.mainnet),
         destinations: destinations,
         sources: spendablePayment,
         fee: fee,

@@ -33,6 +33,14 @@ class TronTRC20Token extends TronToken implements SolidityToken {
         updated: updated);
   }
   @override
+  TronTRC20Token clone({BigInt? balance}) {
+    return TronTRC20Token.create(
+        balance: balance ?? streamBalance.value.balance,
+        token: token,
+        contractAddress: contractAddress);
+  }
+
+  @override
   TronTRC20Token updateToken(Token updateToken) {
     return TronTRC20Token.create(
         balance: streamBalance.value.balance,

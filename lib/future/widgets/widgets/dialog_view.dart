@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/constant/global/app.dart';
 import 'package:on_chain_wallet/app/core.dart' show MethodUtils;
+import 'package:on_chain_wallet/future/widgets/widgets/conditional_widget.dart';
 import 'package:on_chain_wallet/future/widgets/widgets/progress_bar/widgets/progress.dart';
 import 'package:on_chain_wallet/app/models/models/typedef.dart'
     show DynamicVoid, FutureT;
@@ -11,6 +12,7 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 class DialogView extends StatelessWidget {
   const DialogView(
       {this.widget,
+      this.sliver,
       this.maxWidth,
       this.title,
       this.titleWidget,
@@ -19,6 +21,7 @@ class DialogView extends StatelessWidget {
       this.dismissible = true,
       super.key});
   final Widget? widget;
+  final Widget? sliver;
   final Widget? child;
   final String? title;
   final Widget? titleWidget;
@@ -65,10 +68,14 @@ class DialogView extends StatelessWidget {
                               pinned: true,
                               actions: [...content, const CloseButton()],
                             ),
-                            SliverToBoxAdapter(
-                              child: ConstraintsBoxView(
-                                padding: WidgetConstant.padding20,
-                                child: widget ?? WidgetConstant.sizedBox,
+                            ConditionalWidget(
+                              enable: widget != null,
+                              onDeactive: (context) =>
+                                  sliver ?? WidgetConstant.sliverSizedBox,
+                              onActive: (context) => SliverToBoxAdapter(
+                                child: ConstraintsBoxView(
+                                    padding: WidgetConstant.padding20,
+                                    child: widget ?? WidgetConstant.sizedBox),
                               ),
                             ),
                           ],

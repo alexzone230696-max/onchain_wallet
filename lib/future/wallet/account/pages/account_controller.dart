@@ -12,7 +12,7 @@ typedef PageChainBuilder<CL extends NetworkClient?,
         WalletProvider wallet,
         T account,
         CL client,
-        CHAINACCOUNT? address,
+        CHAINACCOUNT address,
         OnNetworkAccountChange<CHAINACCOUNT> onAccountChanged);
 
 typedef OnNetworkAccountChange<CHAINACCOUNT extends ChainAccount?> = void

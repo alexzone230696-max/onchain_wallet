@@ -104,7 +104,7 @@ abstract final class BaseChain<
     ADDRESSPARAM extends NewAccountParams> with CborSerializable {
   abstract _WalletChainStatus _status;
   abstract final NETWORK network;
-  abstract final StreamValue<IntegerBalance> totalBalance;
+  abstract final InternalStreamValue<IntegerBalance> totalBalance;
   abstract final String id;
   abstract CLIENT? _client;
 
@@ -205,4 +205,88 @@ final class ChainWalletChainChangeEvent extends ChainWalletEvent {
   final Chain current;
   const ChainWalletChainChangeEvent({required this.prv, required this.current})
       : super(type: ChainWalletEventType.chainChanged);
+}
+
+typedef ONSTREAMVALUEDISPOSE = bool Function();
+
+final class InternalStreamValue<T> implements StreamValue<T> {
+  final bool _allowDispose;
+  ONSTREAMVALUEDISPOSE? _disposeCallback;
+  T _value;
+  // InternalStreamValue(T val, {this.immutable = false}) : _value = val;
+  InternalStreamValue.immutable(T val, {bool allowDispose = false})
+      : _value = val,
+        immutable = true,
+        _allowDispose = allowDispose;
+  @override
+  final bool immutable;
+  @override
+  bool get isClosed => _controller.isClosed;
+
+  late final StreamController<T> _controller =
+      StreamController.broadcast(onCancel: () {}, onListen: () {});
+  @override
+  Stream<T> get stream => _controller.stream;
+
+  @override
+  T get value {
+    return _value;
+  }
+
+  @override
+  set silent(T newValue) {
+    assert(!isClosed, 'stream  closed.');
+    assert(!immutable, 'data marked as immutable');
+    if (_value == newValue || immutable) return;
+    _value = newValue;
+  }
+
+  @override
+  set value(T newValue) {
+    assert(!isClosed, 'stream  closed.');
+    assert(!immutable, 'data marked as immutable');
+    if (_value == newValue || immutable) return;
+    _value = newValue;
+    if (_controller.hasListener && !isClosed) {
+      _controller.add(newValue);
+    }
+  }
+
+  @override
+  set updateValue(T newValue) {
+    assert(!isClosed, 'stream  closed.');
+    assert(!immutable, 'data marked as immutable');
+    if (immutable) return;
+    _value = newValue;
+    if (_controller.hasListener && !isClosed) {
+      _controller.add(newValue);
+    }
+  }
+
+  @override
+  void notify() {
+    assert(!isClosed, 'stream  closed.');
+    if (_controller.hasListener && !isClosed) {
+      _controller.add(_value);
+    }
+  }
+
+  void _disposeInternal() {
+    assert(!isClosed, 'stream  closed.');
+    _controller.close();
+  }
+
+  @override
+  void dispose() {
+    assert(_allowDispose, "dispose not allowed.");
+    if (!_allowDispose) return;
+    final callBack = _disposeCallback;
+    if (callBack != null) {
+      if (callBack()) {
+        _disposeInternal();
+      }
+      return;
+    }
+    _disposeInternal();
+  }
 }

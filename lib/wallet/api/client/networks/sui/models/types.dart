@@ -24,7 +24,7 @@ class SuiObjectResponse {
 }
 
 class SuiExcuteTransactionData {
-  final String? digest;
+  final String digest;
   final String? rawTransactionData;
   final String? error;
   final Map<String, dynamic> effects;

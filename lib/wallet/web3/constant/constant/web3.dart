@@ -11,6 +11,8 @@ class Web3Const {
     NetworkType.aptos,
     NetworkType.sui,
     NetworkType.cosmos,
-    NetworkType.bitcoinAndForked
+    NetworkType.bitcoinAndForked,
+    NetworkType.xrpl,
+    NetworkType.monero,
   ];
 }

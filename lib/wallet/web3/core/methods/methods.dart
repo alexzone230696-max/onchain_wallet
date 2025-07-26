@@ -5,6 +5,8 @@ import 'package:on_chain_wallet/wallet/web3/networks/aptos/aptos.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/cosmos/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ethereum/methods/methods.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/monero/methods/methods.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/ripple/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/solana/solana.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/stellar/stellar.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/substrate/substrate.dart';
@@ -88,6 +90,8 @@ abstract class Web3NetworkRequestMethods extends Web3RequestMethods {
       NetworkType.ethereum => Web3EthereumRequestMethods.fromId(tag!.last),
       NetworkType.tron => Web3TronRequestMethods.fromId(tag!.last),
       NetworkType.solana => Web3SolanaRequestMethods.fromId(tag!.last),
+      NetworkType.xrpl => Web3XRPRequestMethods.fromId(tag!.last),
+      NetworkType.monero => Web3MoneroRequestMethods.fromId(tag!.last),
       NetworkType.ton => Web3TonRequestMethods.fromId(tag!.last),
       NetworkType.substrate => Web3SubstrateRequestMethods.fromId(tag!.last),
       NetworkType.stellar => Web3StellarRequestMethods.fromId(tag!.last),
@@ -105,6 +109,8 @@ abstract class Web3NetworkRequestMethods extends Web3RequestMethods {
       NetworkType.ethereum => Web3EthereumRequestMethods.values,
       NetworkType.tron => Web3TronRequestMethods.values,
       NetworkType.solana => Web3SolanaRequestMethods.values,
+      NetworkType.xrpl => Web3XRPRequestMethods.values,
+      NetworkType.monero => Web3MoneroRequestMethods.values,
       NetworkType.ton => Web3TonRequestMethods.values,
       NetworkType.stellar => Web3StellarRequestMethods.values,
       NetworkType.aptos => Web3AptosRequestMethods.values,

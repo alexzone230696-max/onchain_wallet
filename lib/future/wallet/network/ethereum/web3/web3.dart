@@ -1,3 +1,10 @@
-export 'controller/controller.dart';
-export 'pages/fields.dart';
-export 'pages/global.dart';
+export 'controllers/controllers.dart';
+export 'controllers/provider.dart';
+export 'operations/eth_sign.dart';
+export 'operations/send_transaction.dart';
+export 'operations/personal_sign.dart';
+export 'operations/typed_data.dart';
+export 'pages/send_transaction.dart';
+export 'pages/typed_data.dart';
+export 'permission/ethereum_permission_view.dart';
+export 'types/types.dart';

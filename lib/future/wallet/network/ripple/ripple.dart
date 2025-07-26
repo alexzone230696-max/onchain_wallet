@@ -6,3 +6,4 @@ export 'transaction/transaction.dart';
 export 'widgets/nft_info.dart';
 export 'account/state.dart';
 export 'update_provider/update_provider.dart';
+export 'web3/web3.dart';

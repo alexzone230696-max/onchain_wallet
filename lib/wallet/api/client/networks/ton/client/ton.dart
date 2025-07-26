@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:blockchain_utils/exception/exception/rpc_error.dart';
 import 'package:blockchain_utils/utils/utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
@@ -6,12 +8,13 @@ import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/ton/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/ton.dart';
 import 'package:on_chain_wallet/wallet/api/services/service.dart';
+import 'package:on_chain_wallet/wallet/constant/networks/ton.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ton/params/params.dart';
 import 'package:ton_dart/ton_dart.dart';
 
-class TonClient extends NetworkClient<TonWalletTransaction, TonAPIProvider>
-    with HttpImpl {
+class TonClient extends NetworkClient<TonWalletTransaction, TonAPIProvider,
+    TonNetworkToken, TonAddress> with HttpImpl {
   TonClient({required this.provider, required this.network});
   final TonProvider provider;
   @override
@@ -26,12 +29,6 @@ class TonClient extends NetworkClient<TonWalletTransaction, TonAPIProvider>
     return await provider
         .request(TonRquestGetBalance(address: address, api: apiType));
   }
-
-  // Future<void> updateJettonsBalances(List<TonJettonToken> jettons) async {
-  //   for (final i in jettons) {
-  //     await updateJettonBalance(i);
-  //   }
-  // }
 
   Future<AccountStateResponse> getStaticState(TonAddress address) async {
     if (provider.isTonCenter) {
@@ -81,17 +78,11 @@ class TonClient extends NetworkClient<TonWalletTransaction, TonAPIProvider>
       required WalletTonNetwork network,
       MsgForwardPricesResponse? forwardPrice,
       bool isMasterChain = true}) async {
-    forwardPrice ??=
-        await getMsgFrowardPricesConfing(isMasterChain: isMasterChain);
     return await provider.request(TonRquestGetFee(
-        message: message,
-        address: address,
-        forwardPrice: forwardPrice,
-        api: apiType,
-        network: network));
+        message: message, address: address, api: apiType, network: network));
   }
 
-  Future<(String, bool)> sendMessage({required Cell boc}) async {
+  Future<(String, bool)> submitBoc({required Cell boc}) async {
     final txId = StringUtils.decode(boc.hash(), type: StringEncoding.base64);
     try {
       if (provider.isTonCenter) {
@@ -102,9 +93,13 @@ class TonClient extends NetworkClient<TonWalletTransaction, TonAPIProvider>
             TonApiSendBlockchainMessage(batch: [], boc: boc.toBase64()));
       }
       return (txId, true);
-    } on RPCError {
+    } on RPCError catch (e) {
+      appLogger.error(
+          runtime: runtimeType, functionName: "sendMessage", msg: e);
       rethrow;
-    } catch (_) {
+    } catch (e) {
+      appLogger.error(
+          runtime: runtimeType, functionName: "sendMessage", msg: e);
       return (txId, false);
     }
   }
@@ -123,33 +118,6 @@ class TonClient extends NetworkClient<TonWalletTransaction, TonAPIProvider>
     return data.reader().readAddress();
   }
 
-  Future<List<TonAccountJettonResponse>> _getTonCenterAccountJettons(
-      TonAddress address) async {
-    assert(provider.isTonCenter, "incorrect provider.");
-    final Set<TonAccountJettonResponse> jettons = {};
-    int offset = 0;
-    int max = TonCenterV3GetJettonWallets.maximumLimit;
-    while (max == TonCenterV3GetJettonWallets.maximumLimit) {
-      final result = await provider.request(TonCenterV3GetJettonWallets(
-          ownerAddress: address.toFriendlyAddress(),
-          offset: offset,
-          limit: TonCenterV3GetJettonWallets.maximumLimit));
-      offset++;
-      max = result.length;
-      final fetchedJettons = result
-          .map((e) => TonAccountJettonResponse(
-              balance: e.balance,
-              tokenAddress: e.jetton,
-              owner: address,
-              jettonWalletAddress: e.address))
-          .toList();
-      jettons.addAll(fetchedJettons);
-      if (jettons.length != max) break;
-    }
-
-    return jettons.toList();
-  }
-
   Future<JettonWalletState> getJettonWalletData(
       TonAddress jettonWalletAddress) async {
     final data = await getStateStack(
@@ -159,7 +127,7 @@ class TonClient extends NetworkClient<TonWalletTransaction, TonAPIProvider>
 
   Future<TonWeb3TransactionMessageInfo> getWeb3TransactionMessageInfo(
       {required ITonAddress address,
-      required TheOpenNetworkChain account,
+      required TonChain account,
       required Web3TonTransactionMessage message}) async {
     final destination =
         account.getReceiptAddress(message.address.toFriendlyAddress()) ??
@@ -274,23 +242,6 @@ class TonClient extends NetworkClient<TonWalletTransaction, TonAPIProvider>
     return response;
   }
 
-  Future<List<TonAccountJettonResponse>> getAccountJettons(
-      TonAddress address) async {
-    if (provider.isTonCenter) {
-      return _getTonCenterAccountJettons(address);
-    }
-    final result = await provider.request(TonApiGetAccountJettonsBalances(
-        accountId: address.toFriendlyAddress()));
-
-    return result.balances.map((e) {
-      return TonAccountJettonResponse(
-          tokenAddress: e.jetton.address,
-          balance: e.balance,
-          owner: address,
-          jettonWalletAddress: e.walletAddress.address);
-    }).toList();
-  }
-
   Future<MinterWalletState> getJettonData(TonAddress jettonAddress) async {
     final data =
         await getStateStack(method: "get_jetton_data", address: jettonAddress);
@@ -317,7 +268,6 @@ class TonClient extends NetworkClient<TonWalletTransaction, TonAPIProvider>
             symbol: jetton.tokenAddress.toFriendlyAddress(),
             decimal: 0),
         minterAddress: jetton.tokenAddress,
-        verified: false,
         walletAddress: jetton.jettonWalletAddress);
     if (metdata.type == TokenContentType.unknown) {
       return noneVerifiedToken;
@@ -341,17 +291,16 @@ class TonClient extends NetworkClient<TonWalletTransaction, TonAPIProvider>
 
     if (url == null) {
       return TonJettonToken.create(
-          balance: jetton.balance,
-          token: Token(
-              name: onChainMetadata?.name ??
-                  jetton.tokenAddress.toFriendlyAddress(),
-              symbol: onChainMetadata?.symbol ??
-                  jetton.tokenAddress.toFriendlyAddress(),
-              decimal: onChainMetadata?.decimals ?? 9),
-          description: onChainMetadata?.description,
-          minterAddress: jetton.tokenAddress,
-          walletAddress: jetton.jettonWalletAddress,
-          verified: true);
+        balance: jetton.balance,
+        token: Token(
+            name: onChainMetadata?.name ??
+                jetton.tokenAddress.toFriendlyAddress(),
+            symbol: onChainMetadata?.symbol ??
+                jetton.tokenAddress.toFriendlyAddress(),
+            decimal: onChainMetadata?.decimals ?? 9),
+        minterAddress: jetton.tokenAddress,
+        walletAddress: jetton.jettonWalletAddress,
+      );
     }
     final json = await MethodUtils.nullOnException(
       () async {
@@ -362,37 +311,33 @@ class TonClient extends NetworkClient<TonWalletTransaction, TonAPIProvider>
     );
     if (type == TokenContentType.onchain) {
       return TonJettonToken.create(
-          balance: jetton.balance,
-          token: Token(
-              name: json?["name"] ??
-                  onChainMetadata?.name ??
-                  jetton.tokenAddress.toFriendlyAddress(),
-              symbol: json?["symbol"] ??
-                  onChainMetadata?.symbol ??
-                  jetton.tokenAddress.toFriendlyAddress(),
-              decimal: IntUtils.tryParse(json?["decimals"]) ??
-                  onChainMetadata?.decimals ??
-                  9),
-          description: json?["description"] ?? onChainMetadata?.description,
-          uri: url,
-          minterAddress: jetton.tokenAddress,
-          walletAddress: jetton.jettonWalletAddress,
-          verified: true);
+        balance: jetton.balance,
+        token: Token(
+            name: json?["name"] ??
+                onChainMetadata?.name ??
+                jetton.tokenAddress.toFriendlyAddress(),
+            symbol: json?["symbol"] ??
+                onChainMetadata?.symbol ??
+                jetton.tokenAddress.toFriendlyAddress(),
+            decimal: IntUtils.tryParse(json?["decimals"]) ??
+                onChainMetadata?.decimals ??
+                9),
+        minterAddress: jetton.tokenAddress,
+        walletAddress: jetton.jettonWalletAddress,
+      );
     }
     if (json == null) {
       return noneVerifiedToken;
     } else {
       return TonJettonToken.create(
-          balance: jetton.balance,
-          token: Token(
-              name: json["name"] ?? jetton.tokenAddress.toFriendlyAddress(),
-              symbol: json["symbol"] ?? jetton.tokenAddress.toFriendlyAddress(),
-              decimal: IntUtils.tryParse(json["decimals"]) ?? 9),
-          description: json["description"],
-          uri: url,
-          minterAddress: jetton.tokenAddress,
-          walletAddress: jetton.jettonWalletAddress,
-          verified: true);
+        balance: jetton.balance,
+        token: Token(
+            name: json["name"] ?? jetton.tokenAddress.toFriendlyAddress(),
+            symbol: json["symbol"] ?? jetton.tokenAddress.toFriendlyAddress(),
+            decimal: IntUtils.tryParse(json["decimals"]) ?? 9),
+        minterAddress: jetton.tokenAddress,
+        walletAddress: jetton.jettonWalletAddress,
+      );
     }
   }
 
@@ -412,6 +357,90 @@ class TonClient extends NetworkClient<TonWalletTransaction, TonAPIProvider>
       {required String txId}) async {
     return provider
         .request(TonRquestTransactionStatus(txId: txId, api: provider.rpc.api));
+  }
+
+  @override
+  Stream<List<TonNetworkToken>> getAccountTokensStream(TonAddress address) {
+    final controller = StreamController<List<TonNetworkToken>>();
+    void close() {
+      if (!controller.isClosed) controller.close();
+    }
+
+    Future<void> fetchToken() async {
+      try {
+        void add(List<TonAccountJettonResponse> tokens) {
+          final jettons = tokens
+              .map((e) => TonNetworkToken(
+                  status: e.metadata != null
+                      ? NetworkTokenFetchingStatus.success
+                      : NetworkTokenFetchingStatus.failed,
+                  token: TonJettonToken.create(
+                      balance: e.balance,
+                      token: e.token,
+                      minterAddress: e.tokenAddress,
+                      walletAddress: e.jettonWalletAddress)))
+              .toList();
+          if (!controller.isClosed) controller.add(jettons);
+        }
+
+        if (provider.isTonCenter) {
+          int offset = 0;
+          int max = TonCenterV3GetJettonWallets.maximumLimit;
+          while (!controller.isClosed &&
+              max == TonCenterV3GetJettonWallets.maximumLimit) {
+            final result = await provider.request(TonCenterV3GetJettonWallets(
+                ownerAddress: address.toFriendlyAddress(),
+                offset: offset,
+                limit: TonCenterV3GetJettonWallets.maximumLimit));
+            offset++;
+            max = result.jettonWallets.length;
+            final fetchedJettons = result.jettonWallets.map((e) {
+              final metadata = result.metadata
+                  .firstWhereOrNull((t) => t.address == e.jetton)
+                  ?.tokens
+                  .whereType<JettonWalletTokenInfoMaster>()
+                  .firstOrNull;
+              return TonAccountJettonResponse(
+                  balance: e.balance,
+                  tokenAddress: e.jetton,
+                  owner: address,
+                  jettonWalletAddress: e.address,
+                  metadata: metadata == null
+                      ? null
+                      : Token(
+                          name: metadata.name,
+                          symbol: metadata.symbol,
+                          decimal: metadata.decimals ?? TonConst.deciaml,
+                          assetLogo: APPImage.network(metadata.image)));
+            }).toList();
+            add(fetchedJettons);
+          }
+          return;
+        }
+        final result = await provider.request(TonApiGetAccountJettonsBalances(
+            accountId: address.toFriendlyAddress()));
+        final tokens = result.balances.map((e) {
+          return TonAccountJettonResponse(
+              tokenAddress: e.jetton.address,
+              balance: e.balance,
+              owner: address,
+              metadata: Token(
+                  assetLogo: APPImage.network(e.jetton.image),
+                  name: e.jetton.name,
+                  symbol: e.jetton.symbol,
+                  decimal: e.jetton.decimals),
+              jettonWalletAddress: e.walletAddress.address);
+        }).toList();
+        add(tokens);
+      } finally {
+        close();
+      }
+    }
+
+    controller.onListen = fetchToken;
+    controller.onCancel = close;
+
+    return controller.stream;
   }
 
   @override

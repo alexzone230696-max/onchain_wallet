@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:monero_dart/monero_dart.dart';
-import 'package:on_chain_bridge/platform_interface.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/isolate/types/types.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/stream/requests/monero_block_tracking.dart';

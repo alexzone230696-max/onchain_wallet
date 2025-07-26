@@ -39,6 +39,7 @@ class TonRquestGetMsgForwardPricesConfig
       final config = BlockchainConfig24.derserialize(slice);
       return config.msgForwardPrices;
     }
+
     final result = (_request as TonApiGetBlockchainConfig).onResonse(json);
     if (isMasterChan) return result.r24!.msgForwardPrices;
     return result.r25!.msgForwardPrices;

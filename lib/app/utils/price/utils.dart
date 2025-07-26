@@ -35,7 +35,7 @@ class PriceUtils {
       {int amoutDecimal = 8}) {
     if (price == null || decimal == null) return null;
     try {
-      return encodePrice(price, decimal);
+      return encodePrice(price, decimal, amoutDecimal: amoutDecimal);
     } catch (e) {
       return null;
     }

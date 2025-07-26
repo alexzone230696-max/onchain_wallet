@@ -1,4 +1,4 @@
-import 'package:on_chain_wallet/app/isolate/types.dart';
+import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/aptos.dart';
 import 'package:on_chain_wallet/wallet/api/services/impl/http/http.dart';
 import 'package:on_chain/aptos/src/aptos.dart';
@@ -25,10 +25,11 @@ class AptosHTTPService extends HTTPService<AptosAPIProvider>
         params.aptosRequestType == AptosRequestType.fullnode
             ? provider
             : graphQlProvider;
-    return await serviceRequest<T>(params,
+    final result = await serviceRequest<T>(params,
         uri: uri,
         allowStatus: [200, 202, 206],
         timeout: timeout,
         currentProvider: currentProvider);
+    return result;
   }
 }

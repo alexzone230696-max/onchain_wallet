@@ -113,7 +113,7 @@ class __DeleteAccountViewState extends State<_DeleteAccountView>
                                 onPressed: () {
                                   context
                                       .openSliverDialog<bool>(
-                                        (p0) => DialogTextView(
+                                        widget: (p0) => DialogTextView(
                                             buttonWidget:
                                                 DialogDoubleButtonView(
                                               firstButtonLabel: "remove".tr,
@@ -126,7 +126,7 @@ class __DeleteAccountViewState extends State<_DeleteAccountView>
                                                 Text("remove_account_desc".tr),
                                               ],
                                             )),
-                                        "remove_account".tr,
+                                        label: "remove_account".tr,
                                       )
                                       .then(deleteAccount);
                                 },

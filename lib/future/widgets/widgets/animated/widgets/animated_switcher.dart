@@ -93,6 +93,28 @@ class _WrapSliver extends StatelessWidget {
 
 class APPAnimated extends StatelessWidget {
   const APPAnimated(
+      {this.isActive = true,
+      required this.onActive,
+      this.onDeactive,
+      this.duration = APPConst.animationDuraion,
+      this.alignment = Alignment.topCenter,
+      super.key});
+  final bool isActive;
+  final WidgetContextNullable onActive;
+  final WidgetContextNullable? onDeactive;
+  final Duration duration;
+  final Alignment alignment;
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: duration,
+      child: isActive ? onActive(context) : onDeactive?.call(context),
+    );
+  }
+}
+
+class APPSliverAnimated extends StatelessWidget {
+  const APPSliverAnimated(
       {required this.isActive,
       required this.onActive,
       required this.onDeactive,
@@ -100,15 +122,14 @@ class APPAnimated extends StatelessWidget {
       this.alignment = Alignment.topCenter,
       super.key});
   final bool isActive;
-  final WidgetContextNullable onActive;
-  final WidgetContextNullable onDeactive;
+  final WidgetContext onActive;
+  final WidgetContext onDeactive;
   final Duration duration;
   final Alignment alignment;
   @override
   Widget build(BuildContext context) {
-    return AnimatedSwitcher(
-      duration: duration,
-      child: isActive ? onActive(context) : onDeactive(context),
-    );
+    return SliverAnimatedSwitcher(
+        duration: duration,
+        child: isActive ? onActive(context) : onDeactive.call(context));
   }
 }

@@ -113,9 +113,6 @@ final class ICosmosAddress extends ChainAccount<CosmosBaseAddress, CW20Token,
       sequence: BigInt.zero);
 
   @override
-  String get orginalAddress => networkAddress.address;
-
-  @override
   bool isEqual(ChainAccount other) {
     if (other is! ICosmosAddress) return false;
     return other.networkAddress == networkAddress;

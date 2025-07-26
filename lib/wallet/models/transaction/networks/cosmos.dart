@@ -1,7 +1,6 @@
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:cosmos_sdk/cosmos_sdk.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/app/serialization/serialization.dart';
 import 'package:on_chain_wallet/crypto/models/networks.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
@@ -14,9 +13,13 @@ class CosmosWalletTransaction extends ChainTransaction {
       super.web3Client,
       required super.totalOutput,
       required WalletCosmosNetwork network,
-      super.type = WalletTransactionType.send,
+      WalletTransactionType? type,
       super.status = WalletTransactionStatus.block})
-      : super();
+      : super(
+            type: type ??
+                (web3Client != null
+                    ? WalletTransactionType.web3
+                    : WalletTransactionType.send));
 
   factory CosmosWalletTransaction.deserialize(WalletCosmosNetwork network,
       {List<int>? bytes, String? cborHex, CborObject? object}) {

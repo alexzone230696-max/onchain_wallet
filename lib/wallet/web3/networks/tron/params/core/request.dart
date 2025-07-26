@@ -34,7 +34,7 @@ abstract class Web3TronRequestParam<RESPONSE> extends Web3RequestParams<
     final Web3TronRequestParam param;
     switch (method) {
       case Web3TronRequestMethods.signTransaction:
-        param = Web3TronSendTransaction.deserialize(
+        param = Web3TronSignTransaction.deserialize(
             bytes: bytes, object: object, hex: hex);
         break;
       case Web3TronRequestMethods.signMessageV2:

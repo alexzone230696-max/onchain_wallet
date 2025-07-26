@@ -54,7 +54,6 @@ class Web3BitcoinSendTransaction extends Web3BitcoinRequestParam<String> {
   final Web3BitcoinChainAccount accessAccount;
   final List<Web3BitcoinSendTransactionOutput> outputs;
   final Web3BitcoinChainAccount? requiredAccount;
-  // final int? changeIndex;
 
   Web3BitcoinSendTransaction._({
     required List<Web3BitcoinChainAccount> accounts,

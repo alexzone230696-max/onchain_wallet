@@ -43,6 +43,7 @@ class AddressDetailsView extends StatelessWidget {
           CoinAndMarketLivePriceView(
               liveBalance: address.address.balance,
               style: context.textTheme.titleMedium?.copyWith(color: color),
+              showTokenImage: true,
               symbolColor: color),
       ],
     );

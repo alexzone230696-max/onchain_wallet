@@ -18,8 +18,9 @@ List<PopupMenuItem<int>> cardanoAccountMenuButton(
         value: value,
         onTap: () {
           context.openSliverDialog(
-              (context) => _ShowRewardAddress(chainAccount: account.address),
-              "reward_address".tr);
+              widget: (context) =>
+                  _ShowRewardAddress(chainAccount: account.address),
+              label: "reward_address".tr);
         },
         child: AppListTile(
           trailing: const Icon(Icons.north_east_sharp),
@@ -50,8 +51,13 @@ class _CardanoAccountPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AccountTabbarScrollWidget(
-        slivers: [AccountManageProviderIcon(service: chainAccount.service)]);
+    return AccountTabbarScrollWidget(slivers: [
+      AccountManageProviderIcon(service: chainAccount.service),
+      SliverToBoxAdapter(
+          child: Column(
+        children: [],
+      ))
+    ]);
   }
 }
 

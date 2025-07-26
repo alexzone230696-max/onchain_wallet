@@ -73,7 +73,7 @@ enum TonMessageBodyType {
 class TonUtils {
   static VersionedWalletContract fromContext({
     required List<int> publicKey,
-    required TonChain chain,
+    required TonChainId chain,
     required bool bouncable,
     required WalletVersion version,
     int? subWalletId,
@@ -233,6 +233,7 @@ class TonUtils {
       required BigInt forwardTonAmount,
       required TonAddress responseAddress,
       required TonAddress destination,
+      bool bounce = false,
       BigInt? queryId,
       Cell? payload}) {
     final body = beginCell()
@@ -246,6 +247,6 @@ class TonUtils {
         .storeMaybeRef(cell: payload)
         .endCell();
     return TonHelper.internal(
-        destination: walletAddress, amount: amount, bounce: false, body: body);
+        destination: walletAddress, amount: amount, bounce: bounce, body: body);
   }
 }

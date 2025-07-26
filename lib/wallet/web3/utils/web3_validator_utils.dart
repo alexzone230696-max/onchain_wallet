@@ -104,35 +104,6 @@ class Web3ValidatorUtils {
     throw throw Web3RequestExceptionConst.failedToParse(key);
   }
 
-  // static T parseNullableAddress<T, S extends String?>({
-  //   required T Function(S address) onParse,
-  //   required String key,
-  //   required Web3NetworkRequestMethods method,
-  //   required Map<String, dynamic>? json,
-  //   required String network,
-  // }) {
-  //   final value = (json?[key] ?? json?[StrUtils.toSnakeCase(key)])?.toString();
-
-  //   T? addr;
-  //   try {
-  //     if (value == null) {
-  //       if (null is S) addr = onParse(value as S);
-  //     } else {
-  //       addr = onParse(value as S);
-  //     }
-  //   } on Web3RequestException {
-  //     rethrow;
-  //   } catch (_) {
-  //     throw Web3RequestExceptionConst.invalidAddressArgrument(
-  //         key: key, network: network);
-  //   }
-  //   if (addr != null || null is T) {
-  //     return addr as T;
-  //   }
-  //   throw Web3RequestExceptionConst.invalidAddressArgrument(
-  //       key: key, network: network);
-  // }
-
   /// check provider value is hex
   static T parseAddress<T>({
     required T Function(String address) onParse,

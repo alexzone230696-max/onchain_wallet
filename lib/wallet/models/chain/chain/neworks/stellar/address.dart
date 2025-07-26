@@ -119,7 +119,7 @@ final class IStellarAddress extends ChainAccount<StellarAddress,
   String get type => addressType.value;
 
   @override
-  String get orginalAddress => networkAddress.baseAddress;
+  String get baseAddress => networkAddress.baseAddress;
 
   @override
   bool isEqual(ChainAccount other) {

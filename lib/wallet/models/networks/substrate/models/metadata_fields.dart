@@ -112,31 +112,31 @@ class ExtrinsicInfo {
   final int version;
   final ExtrinsicPayloadInfo payload;
   final String serializedExtrinsic;
-  final List<int>? signature;
+  final List<int>? encodeSignature;
   ExtrinsicInfo._({
     required this.payload,
     required this.serializedExtrinsic,
     required this.version,
-    required List<int>? signature,
-  }) : signature = signature?.asImmutableBytes;
+    List<int>? signature,
+  }) : encodeSignature = signature?.asImmutableBytes;
   factory ExtrinsicInfo({
     required int version,
     required ExtrinsicPayloadInfo payload,
     required String serializedExtrinsic,
-    required bool signed,
-    required List<int>? signature,
+    // bool signed = true,
+    required List<int>? encodeSignature,
   }) {
     return ExtrinsicInfo._(
         payload: payload,
-        serializedExtrinsic: serialize_(
+        serializedExtrinsic: _serialize(
             serializedExtrinsic: serializedExtrinsic,
             methodData: payload.method,
             extrinsicVersion: version,
-            signed: signed),
+            signed: encodeSignature != null),
         version: version,
-        signature: signature);
+        signature: encodeSignature);
   }
-  static String serialize_(
+  static String _serialize(
       {required String serializedExtrinsic,
       required String methodData,
       required int extrinsicVersion,

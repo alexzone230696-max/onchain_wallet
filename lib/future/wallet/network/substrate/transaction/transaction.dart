@@ -1,2 +1,11 @@
-export 'controller/controller.dart';
-export 'pages/pages.dart';
+export 'controllers/controller.dart';
+export 'controllers/fee.dart';
+export 'controllers/provider.dart';
+export 'controllers/signer.dart';
+export 'controllers/memo.dart';
+export 'operations/transfer.dart';
+export 'operations/extrinsic.dart';
+export 'types/types.dart';
+export 'widgets/transfer.dart';
+export 'widgets/extrinsic.dart';
+export 'widgets/payload.dart';

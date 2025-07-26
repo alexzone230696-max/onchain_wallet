@@ -55,11 +55,11 @@ class _WalletConnectActiveSessionsState extends State<_ManageWeb3DapssView>
 
   Future<void> resetDappAuthenticated(ShimmerAction<Web3DappInfo> app) async {
     final accept = await context.openSliverDialog<bool>(
-        (context) => DialogTextView(
+        widget: (context) => DialogTextView(
               text: "reset_dapp_desc".tr,
               buttonWidget: DialogDoubleButtonView(),
             ),
-        'clear_dapp_permissions'.tr);
+        label: 'clear_dapp_permissions'.tr);
     if (accept != true) return;
     app.toggleAction();
     updateState();

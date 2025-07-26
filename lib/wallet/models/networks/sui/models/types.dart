@@ -1,10 +1,6 @@
 import 'package:blockchain_utils/bip/bip/conf/bip44/bip44_coins.dart';
 import 'package:blockchain_utils/bip/ecc/bip_ecc.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
-import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
-import 'package:on_chain_wallet/wallet/models/others/models/receipt_address.dart';
-import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 import 'package:on_chain/sui/sui.dart';
 
 enum SuiSupportKeyScheme {
@@ -48,92 +44,4 @@ enum SuiSupportKeyScheme {
           messsage: "Invalid sui drivation coin")
     };
   }
-}
-
-class SuiOutputWithBalance with Equatable {
-  SuiOutputWithBalance({
-    required this.address,
-    required Token token,
-  }) : balance = IntegerBalance.zero(token, allowNegative: false);
-  final IntegerBalance balance;
-  final ReceiptAddress<SuiAddress> address;
-  bool get hasAmount => balance.largerThanZero;
-  bool get isReady => hasAmount;
-
-  void updateBalance(BigInt amount) {
-    balance.updateBalance(amount);
-  }
-
-  @override
-  List get variabels => [address];
-}
-
-class SuiTransactionFee {
-  final bool isSimulate;
-  final BigInt gasPrice;
-  final BigInt budget;
-  final IntegerBalance totalFee;
-  final BigInt requiredFee;
-  const SuiTransactionFee._(
-      {required this.budget,
-      required this.gasPrice,
-      required this.totalFee,
-      required this.isSimulate,
-      required this.requiredFee});
-  factory SuiTransactionFee.fromBudget({
-    required BigInt gasPrice,
-    required WalletSuiNetwork network,
-    required BigInt budget,
-  }) {
-    return SuiTransactionFee._(
-        budget: budget,
-        gasPrice: gasPrice,
-        totalFee: IntegerBalance.token(budget, network.token),
-        isSimulate: true,
-        requiredFee: budget);
-  }
-  factory SuiTransactionFee(
-      {SuiApiGasCostSummary? gasUsed,
-      required BigInt gasPrice,
-      required WalletSuiNetwork network}) {
-    final safeOverHead = SuiTransactionConst.gasSafeOverHead;
-    if (gasUsed != null) {
-      final baseComputationGasOverHead = gasUsed.computationCost + safeOverHead;
-      BigInt gasBudget = baseComputationGasOverHead +
-          gasUsed.storageCost -
-          gasUsed.storageRebate;
-      if (gasBudget < baseComputationGasOverHead) {
-        gasBudget = baseComputationGasOverHead;
-      }
-      return SuiTransactionFee._(
-          budget: gasBudget,
-          gasPrice: gasPrice,
-          totalFee: IntegerBalance.token(gasBudget, network.token),
-          isSimulate: true,
-          requiredFee: gasBudget);
-    }
-    return SuiTransactionFee._(
-        budget: SuiTransactionConst.minGas,
-        gasPrice: gasPrice,
-        totalFee:
-            IntegerBalance.token(SuiTransactionConst.minGas, network.token),
-        isSimulate: false,
-        requiredFee: SuiTransactionConst.minGas);
-  }
-}
-
-class SuiWeb3AccountChangeBalance {
-  final IntegerBalance? amount;
-  final String amountStr;
-  final String coinType;
-  final SuiToken? token;
-  final ReceiptAddress<SuiAddress>? ownerAddres;
-  final String owner;
-  const SuiWeb3AccountChangeBalance(
-      {required this.coinType,
-      required this.amountStr,
-      required this.owner,
-      this.ownerAddres,
-      this.amount,
-      this.token});
 }

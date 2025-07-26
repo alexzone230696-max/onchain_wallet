@@ -2,6 +2,12 @@ import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/app/http/isolate/models/message.dart';
 
+class HttpCallerUtils {
+  static const Map<String, String> applicationJsonContentType = {
+    "Content-type": "application/json"
+  };
+}
+
 class DigestAuthenticatedUtils {
   static const int digestRetrAutheticatedStatusCode = 401;
   static const String digestAuthKey = "www-authenticate";

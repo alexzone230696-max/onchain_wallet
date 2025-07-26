@@ -122,19 +122,21 @@ class PalletConstantsView extends StatelessWidget {
             maxLine: 10,
             trailing: IconButton(
                 onPressed: () {
-                  context.openSliverDialog((context) {
-                    return ContainerWithBorder(
-                      child: CopyableTextWidget(
-                        text: call.value?.toString() ?? '',
-                        color: context.onPrimaryContainer,
-                        maxLines: null,
-                        widget: APPSelectableText(
-                          call.value?.toString() ?? '',
-                          style: context.onPrimaryTextTheme.titleMedium,
-                        ),
-                      ),
-                    );
-                  }, call.name);
+                  context.openSliverDialog(
+                      widget: (context) {
+                        return ContainerWithBorder(
+                          child: CopyableTextWidget(
+                            text: call.value?.toString() ?? '',
+                            color: context.onPrimaryContainer,
+                            maxLines: null,
+                            widget: APPSelectableText(
+                              call.value?.toString() ?? '',
+                              style: context.onPrimaryTextTheme.titleMedium,
+                            ),
+                          ),
+                        );
+                      },
+                      label: call.name);
                 },
                 icon: const Icon(Icons.remove_red_eye)),
             contentPadding: EdgeInsets.zero,

@@ -417,7 +417,7 @@ class Localization {
               "The character count must exceed ___1__ letters.",
           "character_length_max_validator":
               "The character count must be fewer than ___1__ letters.",
-          "transaction_memo": "Transaction mome",
+          "transaction_memo": "Transaction memo",
           "memo_desc1":
               "The transaction fee escalates based on the volume of entered text.",
           "memo": "Memo",
@@ -1179,6 +1179,7 @@ class Localization {
           "minting_nft": "Minting NFT",
           "immutable_nft": "Immutable NFT",
           "select_token_type": "Choose Token Type.",
+          "choose_token": "Choose token",
           "create_token_desc1":
               "Please carefully review this page before proceeding to create a token.",
           "total_supply": "Total supply",
@@ -1255,6 +1256,7 @@ class Localization {
           "initiate_operations": "Initiate operations: send, mint, or burn.",
           "t_amount": "___1__ amount",
           "setup_operation": "Setup Operation",
+          "remaining_token_amount": "Remaining token amount",
           "remaining_token_amount_and_receiver":
               "Remaining token amount of UTXO and receiver address.",
           "remaining_token_amount_desc":
@@ -1280,8 +1282,7 @@ class Localization {
           "none_ordering_transaction_desc":
               "The order of selected UTXOs, added outputs, remaining output, and notes determines the shuffle.",
           "manually": "Manually",
-          "manually_ordering_transaction_desc":
-              "Sort manually before sending; note that changes after may reset to the default (BIP-69) sort algorithm.",
+          "manually_ordering_transaction_desc": "Sort manually before sending.",
           "token_id_choose_desc":
               "Kindly choose a UTXO that you wish to use as the hash for your token ID.",
           "token_id_validator_desc": "The Token ID cannot be null.",
@@ -1925,6 +1926,7 @@ class Localization {
               "The message should be signed using 'personal_sign' method.",
           "message": "Message",
           "sign_message": "Sign message",
+          "sign_messages": "Sign messages",
           "eth_sign_typed_data_desc":
               "The message should be signed using '___1__' method.",
           "version": "Version",
@@ -3145,7 +3147,7 @@ class Localization {
           "monero_sync_block_desc4":
               "This option creates a request starting from the current network block and begins syncing from that point. You can also create multiple requests for specific block ranges.",
           "monero_sync_block_desc5":
-              "Enable this feature only if your account is active. It consumes significant mobile data and CPU resources. Changing this option will disable all processes on the previous network. Use the none option if there is no activity on any Monero network.",
+              "Enable this feature only if your account is active. It consumes significant internet bandwidth and CPU resources. Changing this option will disable all processes on the previous network. Use the none option if there is no activity on any Monero network.",
 
           "monero_create_block_request_desc":
               "To create requests for specific block ranges, you must switch to the currently active network.",
@@ -3255,7 +3257,74 @@ class Localization {
           "page_didnot_work_as_expected":
               "The page didn’t work as expected. Please reload.",
           "client_disabled_desc":
-              "Client is disabled. All requests will be blocked."
+              "Client is disabled. All requests will be blocked.",
+          "field_is_required": "___1__ is required.",
+          "transaction_fee_has_been_updated":
+              "Transaction fee has been updated.",
+          "at_least_one_recipient_required": "At least one recipient required.",
+          "some_amount_fields_not_filled": "Some amounts fields not filled.",
+          "some_required_fields_not_filled": "Some required fields not filled.",
+          "amount_required_for_create_account":
+              "An amount is required to create the account.",
+          "send_to_self_not_allowed":
+              "Sending XRP to your own address is not allowed.",
+          "add_jetton_to_transfer": "Add a jetton to transfer",
+          "message_setting_updated": "Message settings have been updated.",
+          "jetton_transfer_options": "Jetton transfer options",
+          "storage_fee": "Storage fee",
+          "gas_fee": "Gas fee",
+          "action_fee": "Action fee",
+          "simulate_transaction_fee_failed":
+              "Failed to simulate transaction fee.",
+          "no_delegated_resources_found": "No delegated resources found.",
+          "field_filled_incorrectly": "The field ___1__ is filled incorrectly.",
+          "maximum_item_for_field":
+              "A maximum of ___1__ items is allowed for ___2__",
+          "add_stellar_new_operation_desc":
+              "Please fill in all operation fields to add them to the transaction.",
+          "skip_create_operations": "Skip operations?",
+          "skip_operations_desc": "Do you want to skip creating operations?",
+          "enter_valid_address_validator":
+              "Please enter a valid ___1__ address.",
+          "convert_address_to_bytes": "Encode address as hexadecimal bytes.",
+          "transaction_expired": "Transaction has been expired.",
+          "setup_transfer": "Setup transfer",
+          "add_cosmos_new_ibc_transfer_desc":
+              "Please fill in all transfer fields to add them to the transaction.",
+          "skip_transfer_desc": "Do you want to skip creating transfer?",
+          "skip_transfer": "Skip creating transfer?",
+          "transaction_submission_error":
+              "Transaction submission failed: ___1__",
+          "amount_must_be_greater_than_zero":
+              "The amount must be greater than zero",
+          "sending_token_to_non_bitcoin_cash_token_address_desc":
+              "You are sending a Bitcoin Cash token to a non-Bitcoin Cash token address",
+          "sending_large_bch_to_token_address_desc":
+              "You are sending a large BCH amount to a Bitcoin Cash token address",
+          "tap_to_create_burn_operation": "Tap to create burn operation",
+          "tokens_burn_in_transaction_desc":
+              "Tokens will be burned in this transaction.",
+          "update_utxo_durning_build_transaction_desc":
+              "Select all desired UTXOs before building the transaction. Modifying UTXOs during the process may discard your changes.",
+          "n_item_selected": "___1__ item selected.",
+          "ton_jetton_transfer_ton_amount_desc":
+              "This amount is used to process the Jetton transfer. Any remaining amount will be returned to your account. If you want to transfer both TON and Jettons to the recipient address, please use the 'Forward Amount' option.",
+          "creating_transaction": "Creating transaction. Please wait",
+          "broadcast_to_the_network_please_wait":
+              "Broadcast to the network. Please wait",
+          "text": "Text",
+          "total_selected_amount": "Total selected amount",
+          "accept_process": "Process request",
+          "ripple_choose_token_for_trust_path": "Choose Token for Trust Path",
+          "trust_line_limit": "Trust line limit",
+          "token_to_offer": "Token to offer",
+          "offer_amount": "Offer amount",
+          "request_has_been_processed_successfully":
+              "The request has been processed successfully.",
+          "substrate_keep_alive_min_desc":
+              "Insufficient balance: the KeepAlive method requires your account to keep at least ___1__ after fees and transfer.",
+          "account_will_be_deactivated_after_transaction":
+              "Your account will be deactivated after this transaction.",
         }
       };
 }

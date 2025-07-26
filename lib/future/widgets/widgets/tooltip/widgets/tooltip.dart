@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:on_chain_wallet/app/constant/global/app.dart';
 import 'package:on_chain_wallet/future/state_managment/extension/app_extensions/context.dart';
 import 'package:on_chain_wallet/future/state_managment/typdef/typedef.dart';
+import 'package:on_chain_wallet/future/widgets/widgets/widget_constant.dart';
 
 class ToolTipView extends StatelessWidget {
   const ToolTipView(
@@ -90,6 +92,24 @@ class ToolTipView extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               color: backgroundColor ?? theme.colorScheme.tertiaryContainer),
       child: child,
+    );
+  }
+}
+
+class ToolTipConstrainedBox extends StatelessWidget {
+  const ToolTipConstrainedBox({required this.child, super.key});
+  final Widget child;
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: APPConst.tooltipConstrainedWidth),
+      child: Material(
+          borderRadius: WidgetConstant.border8,
+          color: context.colors.inverseSurface,
+          child: ClipRRect(
+            borderRadius: WidgetConstant.border8,
+            child: Padding(padding: WidgetConstant.padding10, child: child),
+          )),
     );
   }
 }

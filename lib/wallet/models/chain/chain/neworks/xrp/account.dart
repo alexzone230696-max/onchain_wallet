@@ -6,7 +6,7 @@ class XRPChainConfig extends DefaultChainConfig {
   DefaultChainStorageKey? get nftStorageKey => DefaultChainStorageKey.nft;
 }
 
-final class RippleChain extends Chain<
+final class XRPChain extends Chain<
     RippleAPIProvider,
     RippleNetworkParams,
     XRPAddress,
@@ -14,13 +14,13 @@ final class RippleChain extends Chain<
     RippleNFToken,
     IXRPAddress,
     WalletXRPNetwork,
-    RippleClient,
+    XRPClient,
     DefaultChainStorageKey,
     XRPChainConfig,
     XRPWalletTransaction,
     RippleContact,
     RippleNewAddressParams> {
-  RippleChain._({
+  XRPChain._({
     required super.network,
     required super.addressIndex,
     required super.id,
@@ -29,16 +29,16 @@ final class RippleChain extends Chain<
     required super.addresses,
   }) : super._();
   @override
-  RippleChain copyWith({
+  XRPChain copyWith({
     WalletXRPNetwork? network,
     List<IXRPAddress>? addresses,
     List<ContactCore<XRPAddress>>? contacts,
     int? addressIndex,
-    RippleClient? client,
+    XRPClient? client,
     String? id,
     XRPChainConfig? config,
   }) {
-    return RippleChain._(
+    return XRPChain._(
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
         addresses: addresses ?? _addresses,
@@ -47,11 +47,11 @@ final class RippleChain extends Chain<
         config: config ?? this.config);
   }
 
-  factory RippleChain.setup(
+  factory XRPChain.setup(
       {required WalletXRPNetwork network,
       required String id,
-      RippleClient? client}) {
-    return RippleChain._(
+      XRPClient? client}) {
+    return XRPChain._(
         network: network,
         id: id,
         addressIndex: 0,
@@ -60,10 +60,10 @@ final class RippleChain extends Chain<
         config: XRPChainConfig());
   }
 
-  factory RippleChain.deserialize(
+  factory XRPChain.deserialize(
       {required WalletXRPNetwork network,
       required CborListValue cbor,
-      RippleClient? client}) {
+      XRPClient? client}) {
     final int networkId = cbor.elementAs(0);
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
@@ -74,7 +74,7 @@ final class RippleChain extends Chain<
         .map((e) => IXRPAddress.deserialize(network, obj: e))
         .toList();
     final int addressIndex = cbor.elementAs(4);
-    return RippleChain._(
+    return XRPChain._(
         network: network,
         addresses: accounts,
         addressIndex: addressIndex < 0 ? 0 : addressIndex,
@@ -84,13 +84,20 @@ final class RippleChain extends Chain<
   }
 
   @override
+  IXRPAddress? getAddress(String address) {
+    return super.getAddress(address) ??
+        _addresses
+            .firstWhereOrNull((element) => element.baseAddress == address);
+  }
+
+  @override
   Future<void> updateAddressBalance(IXRPAddress address,
       {bool tokens = true, bool saveAccount = true}) async {
     _isAccountAddress(address);
     await initAddress(address);
     await onClient(onConnect: (client) async {
       final balance = await client.getAccountBalance(address.networkAddress);
-      _internalupdateAddressBalance(
+      _updateAddressBalanceInternal(
           address: address, balance: balance, saveAccount: saveAccount);
       if (tokens) {
         final tokens = address.tokens;
@@ -100,7 +107,7 @@ final class RippleChain extends Chain<
           try {
             final currentUpdate = balances.firstWhere((element) =>
                 element.issuer.address == i.issuer &&
-                element.symbol == i.assetCode);
+                element.currency == i.assetCode);
             i._updateBalance(BigRational.parseDecimal(currentUpdate.balance));
           } on StateError {
             i._updateBalance(BigRational.zero);
@@ -123,7 +130,7 @@ final class RippleChain extends Chain<
         try {
           final currentUpdate = balances.firstWhere((element) =>
               element.issuer.address == i.issuer &&
-              element.symbol == i.assetCode);
+              element.currency == i.assetCode);
           i._updateBalance(BigRational.parseDecimal(currentUpdate.balance));
         } on StateError {
           i._updateBalance(BigRational.zero);

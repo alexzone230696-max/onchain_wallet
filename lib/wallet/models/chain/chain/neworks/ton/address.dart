@@ -106,13 +106,10 @@ final class ITonAddress extends ChainAccount<TonAddress, TonJettonToken,
   late final String? type =
       "${networkAddress.type.name} (${context.version.name})";
 
-  @override
-  late final String orginalAddress = networkAddress.toRawAddress();
-
   VersionedWalletContract toWalletContract() {
     return context.toWalletContract(
         publicKey: publicKey,
-        chain: TonChain.fromWorkchain(networkAddress.workChain));
+        chain: TonChainId.fromWorkchain(networkAddress.workChain));
   }
 
   @override

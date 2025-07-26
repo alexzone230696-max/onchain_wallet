@@ -15,7 +15,8 @@ abstract final class ChainAccount<X, T extends TokenCore, N extends NFTCore,
   String? get type;
   final X networkAddress;
   final CryptoCoins coin;
-  String get orginalAddress;
+  String get baseAddress => address.toAddress;
+  String get viewAddress => address.toAddress;
   List<int>? get publicKey;
   final String identifier;
 
@@ -39,11 +40,14 @@ abstract final class ChainAccount<X, T extends TokenCore, N extends NFTCore,
   List<T> _tokens = [];
   List<T> get tokens => _tokens;
 
-  void _addToken(T newToken) {
+  T _addToken(T newToken) {
     if (_tokens.contains(newToken)) {
       throw WalletExceptionConst.tokenAlreadyExist;
     }
-    _tokens = [newToken, ..._tokens].immutable;
+    final t = newToken.clone() as T;
+    t.streamBalance._disposeCallback = () => false;
+    _tokens = [t, ..._tokens].immutable;
+    return t;
   }
 
   void _addTx(TRANSACTION tx) {
@@ -54,11 +58,27 @@ abstract final class ChainAccount<X, T extends TokenCore, N extends NFTCore,
     _transaction.removeTx(tx);
   }
 
-  void _removeToken(T token) {
-    if (!tokens.contains(token)) return;
+  T? _updateToken(Token updateToken, T token) {
+    if (_removeToken(token)) {
+      final t = token.updateToken(updateToken) as T;
+      t.streamBalance._disposeCallback = () => false;
+      _tokens = [t, ..._tokens].immutable;
+      return t;
+    }
+    return null;
+  }
+
+  bool _removeToken(T token) {
+    assert(tokens.contains(token), "token not found.");
+    if (!tokens.contains(token)) return false;
     final existTokens = _tokens.clone();
-    existTokens.removeWhere((element) => element == token);
+    final currentToken = existTokens.firstWhereOrNull((e) => e == token);
+    assert(currentToken != null, "token not found.");
+    if (currentToken == null) return false;
+    existTokens.removeWhere((element) => element == currentToken);
     _tokens = existTokens.immutable;
+    currentToken.streamBalance._disposeInternal();
+    return true;
   }
 
   void _addNFT(N newNft) {
@@ -114,6 +134,9 @@ abstract final class ChainAccount<X, T extends TokenCore, N extends NFTCore,
   }) async {
     if (_status.isInit) {
       _transaction = WalletAccountTransactions(transactions: transactions);
+      for (final e in tokens) {
+        e.streamBalance._disposeCallback = () => false;
+      }
 
       _nfts = nfts.immutable;
       _tokens = tokens.immutable;
@@ -153,7 +176,7 @@ class AccountBalance {
     required WalletNetwork network,
     DateTime? updated,
   })  : _updated = updated ?? DateTime.now(),
-        balance = StreamValue.immutable(IntegerBalance.token(
+        balance = InternalStreamValue.immutable(IntegerBalance.token(
             balance ?? BigInt.zero, network.token,
             immutable: true));
 
@@ -173,7 +196,7 @@ class AccountBalance {
     return address;
   }
 
-  final StreamValue<IntegerBalance> balance;
+  final InternalStreamValue<IntegerBalance> balance;
   BigInt get currencyBalance => balance.value.balance;
   bool get hasBalance => balance.value.largerThanZero;
   DateTime _updated;

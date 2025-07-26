@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/models/networks.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
@@ -13,7 +15,8 @@ import 'package:on_chain_wallet/wallet/models/transaction/networks/sui.dart';
 import 'package:on_chain/sui/src/src.dart';
 import 'package:on_chain_wallet/wallet/models/token/token.dart';
 
-class SuiClient extends NetworkClient<SuiWalletTransaction, SuiAPIProvider> {
+class SuiClient extends NetworkClient<SuiWalletTransaction, SuiAPIProvider,
+    SuiNetworkToken, SuiAddress> {
   final SuiProvider provider;
   final Map<SuiAddress, SuiCachedAccountCoins> _cachedAccountCoins = {};
   @override
@@ -133,6 +136,7 @@ class SuiClient extends NetworkClient<SuiWalletTransaction, SuiAPIProvider> {
       }
       final metadata = await provider
           .request(SuiRequestGetCoinMetadata(coinType: i.coinType));
+      if (metadata == null) continue;
       final token = SuiToken.create(
           balance: i.totalBalance,
           token: Token(
@@ -194,8 +198,6 @@ class SuiClient extends NetworkClient<SuiWalletTransaction, SuiAPIProvider> {
 
   Future<List<SuiApiCoinResponse>> getCachedAccountCoins(
       SuiAddress address) async {
-    // final coin = _cachedAccountCoins[address];
-    // if (coin?.isValue ?? false) return coin!.coinData;
     final r = await getAccountCoins(address);
     _cachedAccountCoins[address] = SuiCachedAccountCoins(r);
     return _cachedAccountCoins[address]!.coinData;
@@ -227,9 +229,6 @@ class SuiClient extends NetworkClient<SuiWalletTransaction, SuiAPIProvider> {
     return transaction.copyWith(
         gasData: transaction.gasData.copyWith(payment: filterCoins));
   }
-
-  @override
-  NetworkType get networkType => NetworkType.sui;
 
   Future<bool> validateNetworkIdentifier() async {
     final identifier = await provider.request(SuiRequestGetChainIdentifier());
@@ -263,8 +262,68 @@ class SuiClient extends NetworkClient<SuiWalletTransaction, SuiAPIProvider> {
     }
   }
 
+  Future<void> _fetchTokenMetadata(SuiNetworkToken token) async {
+    if (!token.status.allowRetry) return;
+    token.setPending();
+    final metadata = await MethodUtils.call(() async => await provider
+        .request(SuiRequestGetCoinMetadata(coinType: token.token.assetType)));
+    final result = metadata.resultOrNull;
+    if (result == null) {
+      token.setError();
+      return;
+    }
+    final tokenWithMetadata = SuiToken.create(
+        balance: token.token.balance.balance,
+        token: Token(
+            name: result.name,
+            symbol: result.symbol,
+            decimal: result.decimals,
+            assetLogo: APPImage.network(result.iconUrl)),
+        assetType: token.token.assetType);
+    token.setSuccess(tokenWithMetadata);
+  }
+
+  @override
+  Stream<List<SuiNetworkToken>> getAccountTokensStream(SuiAddress address) {
+    final controller = StreamController<List<SuiNetworkToken>>();
+    Future<void> fetchTokens() async {
+      final tokens = await MethodUtils.call(() async {
+        return await provider.request(SuiRequestGetAllBalances(owner: address));
+      });
+      try {
+        if (tokens.hasError) {
+          controller.addError(tokens.exception!);
+          return;
+        }
+        List<SuiNetworkToken> suiTokens = [];
+        for (final e in tokens.result) {
+          if (e.coinType == SuiTransactionConst.suiTypeArgs) {
+            continue;
+          }
+          final token = Token(name: e.coinType, symbol: e.coinType, decimal: 0);
+          final suiToken = SuiNetworkToken(
+              token: SuiToken.create(
+                  balance: e.totalBalance,
+                  token: token,
+                  assetType: e.coinType));
+          suiTokens.add(suiToken);
+          _fetchTokenMetadata(suiToken);
+        }
+        controller.add(suiTokens);
+      } finally {
+        controller.close();
+      }
+    }
+
+    fetchTokens();
+    return controller.stream;
+  }
+
   @override
   Future<bool> onInit() {
     return validateNetworkIdentifier();
   }
+
+  @override
+  NetworkType get networkType => NetworkType.sui;
 }

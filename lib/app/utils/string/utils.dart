@@ -226,6 +226,10 @@ class StrUtils {
     return result;
   }
 
+  static String stripControlChars(String url) {
+    return url.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '');
+  }
+
   static String _twoDigits(int n) {
     if (n >= 10) {
       return "$n";

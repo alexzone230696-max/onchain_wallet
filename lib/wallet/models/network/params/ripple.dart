@@ -8,44 +8,26 @@ import 'package:on_chain_wallet/wallet/models/network/core/params/params.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 
-enum RippleSupportKeyScheme {
+enum RippleKeyScheme {
   ed25519(value: 0, name: "ED25519"),
   secp256k1(value: 1, name: "Secp256k1");
 
   final int value;
   final String name;
 
-  const RippleSupportKeyScheme({required this.value, required this.name});
-  static RippleSupportKeyScheme fromValue(int? value) {
+  const RippleKeyScheme({required this.value, required this.name});
+  static RippleKeyScheme fromValue(int? value) {
     return values.firstWhere((e) => e.value == value,
         orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: "RippleSupportKeyScheme not found $value"));
+            messsage: "RippleKeyScheme not found $value"));
   }
 
   EllipticCurveTypes get curve {
     return switch (this) {
-      RippleSupportKeyScheme.secp256k1 => EllipticCurveTypes.secp256k1,
+      RippleKeyScheme.secp256k1 => EllipticCurveTypes.secp256k1,
       _ => EllipticCurveTypes.ed25519
     };
   }
-
-  // SuiKeyAlgorithm get suiKeyAlgorithm {
-  //   return switch (this) {
-  //     RippleSupportKeyScheme.secp256k1 => SuiKeyAlgorithm.secp256k1,
-  //     RippleSupportKeyScheme.secp256r1 => SuiKeyAlgorithm.secp256r1,
-  //     _ => SuiKeyAlgorithm.ed25519
-  //   };
-  // }
-
-  // static RippleSupportKeyScheme fromCoin(Bip44Coins coin) {
-  //   return switch (coin) {
-  //     Bip44Coins.sui => RippleSupportKeyScheme.ed25519,
-  //     Bip44Coins.suiSecp256k1 => RippleSupportKeyScheme.secp256k1,
-  //     Bip44Coins.suiSecp256r1 => RippleSupportKeyScheme.secp256r1,
-  //     _ => throw WalletExceptionConst.invalidData(
-  //         messsage: "Invalid sui drivation coin")
-  //   };
-  // }
 }
 
 class RippleNetworkParams extends NetworkCoinParams<RippleAPIProvider> {

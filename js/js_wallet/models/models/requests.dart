@@ -74,11 +74,13 @@ enum JSClientType {
   solana(networkName: "Solana"),
   ton(networkName: "TON"),
   stellar(networkName: "Stellar"),
+  xrpl(networkName: "XRPL"),
   substrate(networkName: "Substrate"),
   aptos(networkName: "Aptos"),
   sui(networkName: "Sui"),
   bitcoin(networkName: "Bitcoin"),
-  cosmos(networkName: "Cosmos");
+  cosmos(networkName: "Cosmos"),
+  monero(networkName: "Monero");
 
   final String networkName;
   const JSClientType({required this.networkName});

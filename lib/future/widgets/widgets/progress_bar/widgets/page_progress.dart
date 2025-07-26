@@ -7,7 +7,7 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 typedef PageProgressStatus = StreamWidgetStatus;
 
 abstract class PageProgressBaseState<T extends StatefulWidget> extends State<T>
-    with SafeState {
+    with SafeState<T> {
   abstract PageProgressStatus _status;
   abstract Widget? _statusWidget;
   abstract final FuncWidgetContext child;
@@ -27,13 +27,6 @@ abstract class PageProgressBaseState<T extends StatefulWidget> extends State<T>
     updateStream(PageProgressStatus.idle, progressWidget: null);
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-    _statusWidget = null;
-    _child = null;
-  }
-
   void updateStream(PageProgressStatus status,
       {Widget? progressWidget, bool backToIdle = true}) {
     if (closed || !mounted) return;
@@ -43,6 +36,13 @@ abstract class PageProgressBaseState<T extends StatefulWidget> extends State<T>
       _listen(status);
     }
     setState(() {});
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _statusWidget = null;
+    _child = null;
   }
 
   @override

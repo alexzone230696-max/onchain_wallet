@@ -12,14 +12,17 @@ import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
 import 'package:on_chain_wallet/wallet/api/services/core/base_service.dart';
 import 'package:on_chain_wallet/wallet/models/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/networks/substrate/substrate.dart';
+import 'package:on_chain_wallet/wallet/models/token/network/token.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/networks/substrate.dart';
 import 'package:on_chain_swap/on_chain_swap.dart';
 import 'package:polkadot_dart/polkadot_dart.dart';
 
-class SubstrateClient
-    extends NetworkClient<SubstrateWalletTransaction, SubstrateAPIProvider>
-    implements BaseSwapSubstrateClient {
+class SubstrateClient extends NetworkClient<
+    SubstrateWalletTransaction,
+    SubstrateAPIProvider,
+    BaseNetworkToken,
+    BaseSubstrateAddress> implements BaseSwapSubstrateClient {
   SubstrateClient({required this.provider, required this.network});
   final SubstrateProvider provider;
   @override
@@ -87,6 +90,13 @@ class SubstrateClient
         block: blockHash,
         era: header.toMortalEra(period: APPSubstrateConst.defaultEraPeriod),
         blockHashBytes: finalizeBlock.bytes);
+  }
+
+  Future<QueryFeeInfoFrame> queryFeeDetails(
+      {required List<int> extrinsic}) async {
+    return await provider.request(
+        SubstrateRequestRuntimeTransactionPaymentApiQueryFeeDetails
+            .fromExtrinsic(exirceBytes: extrinsic));
   }
 
   Future<SubstrateFeeInfos> estimateFee(

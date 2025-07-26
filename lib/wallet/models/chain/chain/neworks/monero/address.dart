@@ -91,9 +91,6 @@ final class IMoneroAddress extends ChainAccount<MoneroAddress, TokenCore,
   String get type => networkAddress.type.name;
 
   @override
-  String get orginalAddress => networkAddress.address;
-
-  @override
   bool isEqual(ChainAccount other) {
     if (other is! IMoneroAddress) return false;
     return networkAddress == other.networkAddress;

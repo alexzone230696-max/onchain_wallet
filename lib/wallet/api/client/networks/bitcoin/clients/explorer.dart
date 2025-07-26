@@ -60,44 +60,6 @@ class BitcoinExplorerApiProvider extends BitcoinClient<IBitcoinAddress> {
   }
 
   @override
-  Future<List<PsbtUtxo>> getAccountsUtxos(
-      List<BitcoinSpenderAddress> addresses) async {
-    final utxos = await _getAccountsUtxo(addresses);
-    return utxos.where((e) {
-      final height = e.utxo.blockHeight;
-      return height != null && height > 0;
-    }).toList();
-  }
-
-  Future<List<PsbtUtxo>> _getAccountsUtxo(
-      List<BitcoinSpenderAddress> addresses) async {
-    final utxos = await Future.wait(addresses.map((e) async {
-      return await readUtxos(
-          UtxoAddressDetails.watchOnly(e.address.baseAddress));
-    }));
-    final utxoss = List.generate(utxos.length, (i) async {
-      final request = addresses[i];
-      final accountUtxos = utxos[i];
-      final er = await Future.wait(
-          accountUtxos.map((e) => getTx(e.utxo.txHash)).toList());
-      return List.generate(
-        accountUtxos.length,
-        (index) {
-          return PsbtUtxo(
-              utxo: accountUtxos[index].utxo,
-              p2shRedeemScript: request.p2shreedemScript,
-              p2wshWitnessScript: request.witnessScript,
-              tx: er[index],
-              scriptPubKey: request.address.baseAddress.toScriptPubKey(),
-              xOnlyOrInternalPubKey: request.taprootInternal);
-        },
-      );
-    });
-    final e = await Future.wait(utxoss);
-    return e.expand((e) => e).toList();
-  }
-
-  @override
   Future<BigInt> getBalance(BitcoinBaseAddress address) async {
     final utxos =
         await provider.getAccountUtxo(UtxoAddressDetails.watchOnly(address));

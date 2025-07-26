@@ -12,13 +12,11 @@ import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart'
 class Web3SolanaChainAccount extends Web3ChainAccount<SolAddress> {
   @override
   final int id;
-  // final SolanaNetworkType network;
   Web3SolanaChainAccount({
     required super.keyIndex,
     required super.address,
     required super.defaultAddress,
     required this.id,
-    // required this.network,
   });
   @override
   Web3SolanaChainAccount clone({

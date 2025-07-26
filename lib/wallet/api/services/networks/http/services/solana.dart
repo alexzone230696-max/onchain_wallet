@@ -11,6 +11,9 @@ class SolanaHTTPService extends HTTPService<SolanaAPIProvider>
   final APPIsolate isolate;
 
   @override
+  Duration? get requestTimeout => const Duration(milliseconds: 400);
+
+  @override
   Future<BaseServiceResponse<T>> doRequest<T>(SolanaRequestDetails params,
       {Duration? timeout}) async {
     return await serviceRequest<T>(params,

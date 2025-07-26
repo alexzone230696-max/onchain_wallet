@@ -13,7 +13,7 @@ import 'widget_constant.dart';
 
 enum _SupportAddresses {
   ethereum("Ethereum"),
-  substrate("SubstrateApi"),
+  substrate("Substrate"),
   tron("Tron"),
   solana("Solana"),
   cosmos("Cosmos"),
@@ -24,9 +24,7 @@ enum _SupportAddresses {
 }
 
 class AddressDecoderView extends StatefulWidget {
-  const AddressDecoderView({
-    super.key,
-  });
+  const AddressDecoderView({super.key});
 
   @override
   State<AddressDecoderView> createState() => _StringWriterViewState();

@@ -35,7 +35,9 @@ abstract class JSBasePageController {
     JSClientType.aptos: AptosPageController(requestController),
     JSClientType.sui: SuiPageController(requestController),
     JSClientType.cosmos: CosmosPageController(requestController),
-    JSClientType.bitcoin: BitcoinPageController(requestController)
+    JSClientType.bitcoin: BitcoinPageController(requestController),
+    JSClientType.xrpl: RipplePageController(requestController),
+    JSClientType.monero: MoneroPageController(requestController)
   };
 
   void _initControllers() {

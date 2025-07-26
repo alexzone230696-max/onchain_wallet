@@ -261,6 +261,7 @@ class CborTagsConst {
   static const List<int> web3SubstrateChainIdentifier = [161, 0, 3];
   static const List<int> web3CosmosChainIdentifier = [161, 0, 6];
   static const List<int> web3BitcoinChainIdentifier = [161, 0, 7];
+  static const List<int> web3MoneroChainIdentifier = [161, 0, 8];
   static const List<int> web3EthereumAccount = [161, 1, 1];
   static const List<int> web3EthereumTransactionAccessList = [161, 1, 1, 0];
 
@@ -278,6 +279,8 @@ class CborTagsConst {
   static const List<int> web3CosmosAccount = [161, 2, 8];
   static const List<int> web3BitcoinAccount = [161, 2, 9];
   static const List<int> web3BitcoinSendTransactionParams = [161, 2, 9, 0];
+  static const List<int> web3XRPAccount = [161, 2, 10];
+  static const List<int> web3MoneroAccount = [161, 2, 11];
 
   /// address params
   static const List<int> bitcoinCashNewAddressParams = [12, 0];

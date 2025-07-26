@@ -4,11 +4,30 @@ import 'package:on_chain_wallet/app/serialization/cbor/cbor.dart';
 import 'package:on_chain_wallet/crypto/utils/utils.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
-class MoneroViewTxDestinationWithProof {
-  final MoneroTxDestination proof;
-  final IntegerBalance amount;
+class MoneroViewTxDestinationWithProof with CborSerializable {
+  final MoneroTxDestination destination;
+  final String? proof;
   const MoneroViewTxDestinationWithProof(
-      {required this.proof, required this.amount});
+      {required this.destination, this.proof});
+  factory MoneroViewTxDestinationWithProof.deserialize(
+      {List<int>? bytes, CborObject? obj, String? hex}) {
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        hex: hex,
+        tags: CborTagsConst.moneroTxDestinationWithProof);
+    return MoneroViewTxDestinationWithProof(
+        destination: MoneroTxDestination.deserialize(values.elementAs(0)),
+        proof: values.elementAs(1));
+  }
+
+  @override
+  CborTagValue toCbor() {
+    return CborTagValue(
+        CborListValue.fixedLength(
+            [CborBytesValue(destination.serialize()), proof]),
+        CborTagsConst.moneroTxDestinationWithProof);
+  }
 }
 
 class MoneroSignedTxData with CborSerializable {
@@ -58,11 +77,11 @@ class MoneroSignedTxData with CborSerializable {
 
 class MoneroSigningTxResponse with CborSerializable {
   final MoneroSignedTxData txData;
-  final List<MoneroTxDestination> destinations;
+  final List<MoneroViewTxDestinationWithProof> destinations;
   final String txBytes;
   MoneroSigningTxResponse({
     required this.txData,
-    required List<MoneroTxDestination> destinations,
+    required List<MoneroViewTxDestinationWithProof> destinations,
     required String txHex,
   })  : destinations = destinations.immutable,
         txBytes = QuickCryptoValidator.asValidHexBytes(txHex);
@@ -76,8 +95,8 @@ class MoneroSigningTxResponse with CborSerializable {
     return MoneroSigningTxResponse(
         txData: MoneroSignedTxData.deserialize(obj: values.getCborTag(0)),
         destinations: values
-            .elementAsListOf<CborBytesValue>(1)
-            .map((e) => MoneroTxDestination.deserialize(e.value))
+            .elementAsListOf<CborTagValue>(1)
+            .map((e) => MoneroViewTxDestinationWithProof.deserialize(obj: e))
             .toList(),
         txHex: String.fromCharCodes(values.elementAs(2)));
   }
@@ -88,7 +107,7 @@ class MoneroSigningTxResponse with CborSerializable {
         CborListValue.fixedLength([
           txData.toCbor(),
           CborListValue.fixedLength(
-              destinations.map((e) => CborBytesValue(e.serialize())).toList()),
+              destinations.map((e) => e.toCbor()).toList()),
           CborBytesValue(txBytes.codeUnits)
         ]),
         CborTagsConst.moneroSigningTxResponse);

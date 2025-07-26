@@ -25,7 +25,7 @@ final class SubstrateChain extends Chain<
   @override
   SubstrateChain copyWith(
       {WalletSubstrateNetwork? network,
-      StreamValue<IntegerBalance>? totalBalance,
+      InternalStreamValue<IntegerBalance>? totalBalance,
       List<ISubstrateAddress>? addresses,
       int? addressIndex,
       SubstrateClient? client,
@@ -84,7 +84,7 @@ final class SubstrateChain extends Chain<
     await initAddress(address);
     await onClient(onConnect: (client) async {
       final balance = await client.getAccountBalance(address.networkAddress);
-      _internalupdateAddressBalance(
+      _updateAddressBalanceInternal(
           address: address, balance: balance, saveAccount: saveAccount);
     });
   }

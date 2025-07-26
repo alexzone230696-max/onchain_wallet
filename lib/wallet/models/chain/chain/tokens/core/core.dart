@@ -25,16 +25,18 @@ enum TokenCoreType {
 abstract class TokenCore<T extends BalanceCore, TOKEN extends APPToken>
     with CborSerializable, Equatable {
   final TOKEN token;
-  final StreamValue<T> streamBalance;
+  final InternalStreamValue<T> streamBalance;
   DateTime _updated;
   DateTime get updated => _updated;
   TokenCore._(
       {required this.token, required T balance, required DateTime updated})
       : _updated = updated,
-        streamBalance = StreamValue<T>.immutable(balance);
+        streamBalance =
+            InternalStreamValue<T>.immutable(balance, allowDispose: true);
   T get balance => streamBalance.value;
   String? get issuer;
   String? get type;
+  TokenCore clone();
   TokenCore updateToken(Token updateToken);
   TokenCoreType get tokenType;
   String get identifier;
@@ -89,10 +91,19 @@ enum TronTokenTypes {
     );
   }
 
+  static TronTokenTypes fromName(String? name) {
+    return values.firstWhere(
+      (e) => e.name == name,
+      orElse: () => throw WalletExceptionConst.invalidTokenInformation,
+    );
+  }
+
   bool get isTrc10 => this == TronTokenTypes.trc10;
 }
 
 abstract class TronToken extends TokenCore<IntegerBalance, Token> {
+  @override
+  TronToken clone({BigInt? balance});
   @override
   TronToken updateToken(Token updateToken);
   void _updateBalance([BigInt? updateBalance]);

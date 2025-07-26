@@ -150,15 +150,13 @@ base mixin BaseChainController<
   }
 
   ADDRESS? getAddress(String address) {
-    return MethodUtils.nullOnException(() => _addresses
-        .firstWhere((element) => element.address.toAddress == address));
+    return _addresses
+        .firstWhereOrNull((element) => element.viewAddress == address);
   }
 
   CONTACT? getContact(String address) {
-    return MethodUtils.nullOnException(() {
-      return _contacts.firstWhere((element) {
-        return element.address == address;
-      });
+    return _contacts.firstWhereOrNull((element) {
+      return element.address == address;
     });
   }
 
@@ -186,7 +184,7 @@ base mixin BaseChainController<
 
   static BigInt _totalBalance(List<ChainAccount> addresses) {
     final Map<String, BigInt> total = {
-      for (final i in addresses) i.orginalAddress: i.address.currencyBalance
+      for (final i in addresses) i.baseAddress: i.address.currencyBalance
     };
     return total.values
         .fold(BigInt.zero, (previousValue, element) => previousValue + element);
@@ -239,15 +237,15 @@ base mixin BaseChainController<
     }
   }
 
-  Future<T?> onClient<T>({
+  Future<T> onClient<T extends Object?>({
     required Future<T> Function(CLIENT client) onConnect,
-    Future<T?> Function(Object err)? onError,
+    Future<T> Function(Object err)? onError,
   }) async {
     try {
       final client = await this.client();
       return await onConnect(client);
     } catch (e) {
-      return onError?.call(e);
+      return onError?.call(e) as T;
     }
   }
 
@@ -417,10 +415,9 @@ base mixin BaseChainController<
     /// before save the token must be exsits in token list
     return _callSynchronized(
         t: () async {
-          address._addToken(token);
+          final newToken = address._addToken(token);
           await _saveToken(address: address, token: token);
-
-          updateTokenBalance(address: address, tokens: [token]);
+          updateTokenBalance(address: address, tokens: [newToken as TOKEN]);
         },
         type: ChainNotify.token,
         saveAccount: false);
@@ -455,16 +452,11 @@ base mixin BaseChainController<
     return _callSynchronized(
         wait: true,
         t: () async {
-          final updateToken = token.updateToken(updatedToken);
-          if (updateToken is! TOKEN ||
-              updateToken.identifier != token.identifier) {
-            throw WalletExceptionConst.invalidTokenInformation;
-          }
-
           /// before save the asset must be exsits in asset list
-          address._removeToken(token);
-          address._addToken(updateToken);
-          await _saveToken(address: address, token: updateToken);
+          final newToken = address._updateToken(updatedToken, token) as TOKEN?;
+          if (newToken != null) {
+            await _saveToken(address: address, token: newToken);
+          }
         },
         type: ChainNotify.token,
         saveAccount: false);
@@ -531,13 +523,12 @@ base mixin BaseChainController<
     );
   }
 
-  Future<void> _internalupdateAddressBalance(
+  Future<void> _updateAddressBalanceInternal(
       {required ADDRESS address,
       required BigInt balance,
       required bool saveAccount}) async {
     _isAccountAddress(address);
     address.address._updateAddressBalance(balance);
-
     _refreshTotalBalance();
     if (saveAccount) await save();
   }

@@ -474,14 +474,15 @@ class _SetupBitcoinMultiSigAddressViewState
                                             onPressed: () {
                                               context
                                                   .openSliverDialog<bool>(
-                                                      (p0) => DialogTextView(
+                                                      widget: (p0) =>
+                                                          DialogTextView(
                                                             text:
                                                                 "backup_multi_sig_address_desc"
                                                                     .tr,
                                                             buttonWidget:
                                                                 const DialogDoubleButtonView(),
                                                           ),
-                                                      "backup".tr)
+                                                      label: "backup".tr)
                                                   .then(onSetupAddress);
                                             },
                                             child: Text("setup_address".tr),
@@ -497,7 +498,7 @@ class _SetupBitcoinMultiSigAddressViewState
                                             label: Text("backup_as_text".tr),
                                             onPressed: () {
                                               context.openSliverDialog(
-                                                  (ctx) => Column(
+                                                  widget: (ctx) => Column(
                                                         children: [
                                                           PageTitleSubtitle(
                                                               title:
@@ -567,7 +568,7 @@ class _SetupBitcoinMultiSigAddressViewState
                                                                   .paddingVertical10)
                                                         ],
                                                       ),
-                                                  "address_details".tr);
+                                                  label: "address_details".tr);
                                             },
                                           )
                                         ],

@@ -82,7 +82,7 @@ final class CosmosChain extends Chain<
   @override
   CosmosChain copyWith(
       {WalletCosmosNetwork? network,
-      StreamValue<IntegerBalance>? totalBalance,
+      InternalStreamValue<IntegerBalance>? totalBalance,
       List<ICosmosAddress>? addresses,
       int? addressIndex,
       CosmosClient? client,
@@ -141,7 +141,7 @@ final class CosmosChain extends Chain<
       final balances = await client.getAddressCoins(address.networkAddress);
       final nativeToken =
           balances.firstWhereOrNull((e) => e.denom == network.coinParam.denom);
-      _internalupdateAddressBalance(
+      _updateAddressBalanceInternal(
           address: address,
           balance: nativeToken?.amount ?? BigInt.zero,
           saveAccount: saveAccount);
@@ -174,13 +174,16 @@ final class CosmosChain extends Chain<
       final balances = await client.getAddressCoins(address.networkAddress);
       final nativeToken =
           balances.firstWhereOrNull((e) => e.denom == network.coinParam.denom);
-      _internalupdateAddressBalance(
+      _updateAddressBalanceInternal(
           address: address,
           balance: nativeToken?.amount ?? BigInt.zero,
           saveAccount: true);
       for (final i in tokens) {
         final balance = balances.firstWhereOrNull((e) => e.denom == i.denom);
+        final addressToken =
+            address.tokens.firstWhereOrNull((e) => e.denom == i.denom);
         i._updateBalance(balance?.amount ?? BigInt.zero);
+        addressToken?._updateBalance(balance?.amount ?? BigInt.zero);
         _saveToken(address: address, token: i);
       }
     });

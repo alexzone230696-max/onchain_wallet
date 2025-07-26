@@ -1,9 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:http/retry.dart' as r;
 import 'package:http/http.dart' as http;
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/app/http/isolate/models/message.dart';
-import 'package:on_chain_wallet/app/http/utils/digest_authenticated.dart';
 
 class HttpClientManagerConst {
   static const Duration idleTimeout = Duration(minutes: 3);
@@ -35,9 +35,10 @@ class HttpClientManager {
     final client = getCashedClient(
         uri: uri, client: clientType, authenticated: authenticated);
     try {
+      final hr = client.toHeaders(method: method, uri: uri, headers: headers);
       final r = await t(
           client: client.client,
-          headers: client.toHeaders(method: method, uri: uri, headers: headers),
+          headers: client.toHeaders(method: method, uri: uri, headers: hr),
           uri: client.toUri(uri));
       return await client.call(
           response: r,
@@ -59,7 +60,16 @@ class HttpClientManager {
       required HTTPClientType client,
       ProviderAuthenticated? authenticated}) {
     if (client == HTTPClientType.single) {
-      final inner = r.RetryClient(http.Client());
+      final inner = r.RetryClient(
+        http.Client(),
+        whenError: (p0, p1) {
+          return p0 is HandshakeException || p0 is http.ClientException;
+        },
+        when: (response) {
+          return HttpClientManagerConst.retryStatusCodes
+              .contains(response.statusCode);
+        },
+      );
       if (authenticated?.type == ProviderAuthType.digest) {
         return _DigestAuthClient(
             authenticated: authenticated as DigestProviderAuthenticated,
@@ -77,6 +87,9 @@ class HttpClientManager {
 
       final newClient = r.RetryClient(
         http.Client(),
+        whenError: (p0, p1) {
+          return p0 is HandshakeException || p0 is http.ClientException;
+        },
         when: (response) {
           return HttpClientManagerConst.retryStatusCodes
               .contains(response.statusCode);

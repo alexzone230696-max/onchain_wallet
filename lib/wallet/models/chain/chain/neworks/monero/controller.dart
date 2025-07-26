@@ -86,10 +86,9 @@ base mixin MoneroChainController
       final accountUtxos = utxos.where((e) => e.index == i.addrDetails.index);
       final addrUtxos = MoneroAccountWithUtxo(
         address: ReceiptAddress(
-          view: i.networkAddress.address,
-          networkAddress: i.networkAddress,
-          account: i,
-        ),
+            view: i.networkAddress.address,
+            networkAddress: i.networkAddress,
+            account: i),
         utxos: accountUtxos
             .map(
               (e) => MoneroViewOutputDetails(
@@ -222,7 +221,7 @@ base mixin MoneroChainController
   void _updateAddressBalance() {
     for (final i in _addresses) {
       final balance = _accountUtxos.getAddressBalance(i.addrDetails);
-      _internalupdateAddressBalance(
+      _updateAddressBalanceInternal(
           address: i, balance: balance, saveAccount: false);
     }
     save();
@@ -331,7 +330,7 @@ base mixin MoneroChainController
           for (final i in requests) {
             final endHeight = i.endHeight;
             final startHeight = i.startHeight;
-            if (endHeight > currentHeight.block) {
+            if (endHeight > currentHeight) {
               throw WalletException(
                 "monero_invalid_end_block_height_validator",
               );
@@ -452,7 +451,7 @@ base mixin MoneroChainController
         if (!syncIsActive || _blockSubscribe != null || !haveAddress) return;
         final height = await client.getHeight();
 
-        await defaultTracker.updateDefaultTrackerHeight(height.block);
+        await defaultTracker.updateDefaultTrackerHeight(height);
 
         await _callSynchronized(
           t: () async {

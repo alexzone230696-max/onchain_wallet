@@ -37,7 +37,7 @@ final class TonNewAddressParams extends NewAccountParams<ITonAddress> {
   }
 
   TonAddress _toAddress(
-      {required List<int> publicKey, required TonChain chain}) {
+      {required List<int> publicKey, required TonChainId chain}) {
     final wallet = context.toWalletContract(publicKey: publicKey, chain: chain);
     return wallet.address;
   }

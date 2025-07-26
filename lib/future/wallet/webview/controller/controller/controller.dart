@@ -34,18 +34,28 @@ class WebViewController
   final bool enableBackForwardKey = PlatformInterface.isMacos;
 
   Future<String> _loadWebViewPageScript() async {
-    if (kDebugMode) {
-      if (PlatformInterface.appPlatform == AppPlatform.android) {
-        return (await httpGet<String>("http://10.0.2.2:3000/webview_page"))
-            .result;
-      } else {
-        return (await httpGet<String>("http://localhost:3000/webview_page"))
-            .result;
+    try {
+      if (kDebugMode) {
+        if (PlatformInterface.appPlatform == AppPlatform.android) {
+          return (await httpGet<String>("http://10.0.2.2:3000/webview_page.js"))
+              .result;
+        } else {
+          return (await httpGet<String>(
+                  "http://localhost:3000/webview_page.js"))
+              .result;
+        }
       }
+      _pageScript ??=
+          await PlatformUtils.loadAssetText(APPConst.assetWebviewPageScript);
+      return _pageScript!;
+    } catch (e, s) {
+      appLogger.error(
+          runtime: runtimeType,
+          functionName: "_loadWebViewPageScript",
+          msg: e,
+          trace: s);
+      rethrow;
     }
-    _pageScript ??=
-        await PlatformUtils.loadAssetText(APPConst.assetWebviewPageScript);
-    return _pageScript!;
   }
 
   Future<String> _loadTronWebScript() async {
@@ -76,9 +86,18 @@ class WebViewController
 
   Future<void> _runPageScripts(String viewId) async {
     final tronWeb = await _loadTronWebScript();
+    appLogger.debug(runtime: runtimeType, functionName: "_runPageScripts");
     await _loadScript(viewType: viewId, script: tronWeb);
+    appLogger.debug(
+        runtime: runtimeType,
+        functionName: "_runPageScripts",
+        msg: "_loadScript");
     final script = await _loadWebViewPageScript();
     await _loadScript(viewType: viewId, script: script);
+    appLogger.debug(
+        runtime: runtimeType,
+        functionName: "_runPageScripts",
+        msg: "_loadWebViewPageScript");
   }
 
   Future<bool> _postEvent(WalletEvent event, {String? viewType}) async {
@@ -138,7 +157,7 @@ class WebViewController
     }
   }
 
-  final bool isWorker = true;
+  final bool isWorker = false;
 
   Future<void> _activeScript(WebViewEvent event) async {
     final auth = tabsAuthenticated[event.viewId];
@@ -146,7 +165,6 @@ class WebViewController
     await _runPageScripts(event.viewId);
     if (isWorker) {
       final script = await _loadWebViewScript();
-
       final responseEvent = toResponseEvent(
           id: auth.viewId,
           type: WalletEventTypes.activation,

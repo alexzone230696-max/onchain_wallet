@@ -53,6 +53,7 @@ mixin ChainRepository<
         .toList()
         .whereType<TOKEN>()
         .toList();
+
     assert(tokens.length == data.length, "some token deserialization failed.");
     return tokens;
   }
@@ -61,7 +62,6 @@ mixin ChainRepository<
       {required ADDRESS address, required TOKEN token}) async {
     final storageKey = _storage.config.tokenStorageKey;
     assert(storageKey != null, "unknown token storage key");
-    assert(address.tokens.contains(token), 'asset not found an account');
     assert(address.network == network.value, "address does not exists");
     if (storageKey == null ||
         !address.tokens.contains(token) ||

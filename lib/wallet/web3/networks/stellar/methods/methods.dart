@@ -14,7 +14,7 @@ class Web3StellarRequestMethods extends Web3NetworkRequestMethods {
   );
   static const Web3StellarRequestMethods signMessage =
       Web3StellarRequestMethods._(
-          id: Web3StellarConst.signMessageV2Tag,
+          id: Web3StellarConst.signMessageTag,
           name: Web3StellarConst.signMessage);
 
   static const Web3StellarRequestMethods sendTransaction =

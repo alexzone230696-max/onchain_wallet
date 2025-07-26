@@ -14,20 +14,20 @@ typedef OnSignRequest = Future<GlobalSignResponse> Function(SignRequest);
 
 abstract final class SignRequest with CborSerializable {
   final AddressDerivationIndex index;
-  final SigningRequestNetwork network;
+  final SigningRequestMode network;
   const SignRequest({required this.index, required this.network});
   factory SignRequest.deserialize(
       {List<int>? bytes, CborObject? object, String? hex}) {
     final CborTagValue tag =
         CborSerializable.decode(cborBytes: bytes, hex: hex, object: object);
-    final network = SigningRequestNetwork.fromTag(tag.tags);
+    final network = SigningRequestMode.fromTag(tag.tags);
     return switch (network) {
-      SigningRequestNetwork.bitcoin ||
-      SigningRequestNetwork.bitcoinCash =>
+      SigningRequestMode.bitcoin ||
+      SigningRequestMode.bitcoinCash =>
         BitcoinSigning.deserialize(object: tag),
-      SigningRequestNetwork.cosmos =>
+      SigningRequestMode.cosmos =>
         CosmosSigningRequest.deserialize(object: tag),
-      SigningRequestNetwork.monero =>
+      SigningRequestMode.monero =>
         MoneroSigningRequest.deserialize(object: tag),
       _ => GlobalSignRequest.deserialize(object: tag)
     };
@@ -40,7 +40,7 @@ abstract final class SignRequest with CborSerializable {
   }
 }
 
-enum SigningRequestNetwork {
+enum SigningRequestMode {
   bitcoin([32, 100]),
   eth([32, 101]),
   ripple([32, 102]),
@@ -54,11 +54,12 @@ enum SigningRequestNetwork {
   monero([32, 110]),
   bitcoinCash([32, 111]),
   aptos([32, 112]),
-  sui([32, 113]);
+  sui([32, 113]),
+  moneroSpendKey([32, 114]);
 
   final List<int> tag;
-  const SigningRequestNetwork(this.tag);
-  static SigningRequestNetwork fromTag(List<int> tag) {
+  const SigningRequestMode(this.tag);
+  static SigningRequestMode fromTag(List<int> tag) {
     return values.firstWhere(
         (element) => BytesUtils.bytesEqual(tag, element.tag),
         orElse: () => throw WalletExceptionConst.dataVerificationFailed);
@@ -77,8 +78,8 @@ final class BitcoinSigning extends GlobalSignRequest {
       required super.network,
       required this.useBchSchnorr})
       : assert(
-            network == SigningRequestNetwork.bitcoin ||
-                network == SigningRequestNetwork.bitcoinCash,
+            network == SigningRequestMode.bitcoin ||
+                network == SigningRequestMode.bitcoinCash,
             "invalid bitcoin network."),
         super._();
 
@@ -89,9 +90,9 @@ final class BitcoinSigning extends GlobalSignRequest {
   }) {
     final CborTagValue tag =
         CborSerializable.decode(cborBytes: bytes, object: object, hex: hex);
-    final network = SigningRequestNetwork.fromTag(tag.tags);
-    if (network != SigningRequestNetwork.bitcoin &&
-        network != SigningRequestNetwork.bitcoinCash) {
+    final network = SigningRequestMode.fromTag(tag.tags);
+    if (network != SigningRequestMode.bitcoin &&
+        network != SigningRequestMode.bitcoinCash) {
       throw WalletExceptionConst.dataVerificationFailed;
     }
     final CborListValue values = tag.getList;
@@ -130,7 +131,7 @@ final class GlobalSignRequest extends SignRequest {
     final CborListValue values = tag.getList;
     final index = AddressDerivationIndex.deserialize(obj: values.getCborTag(0));
     final List<int> digest = values.elementAt(1);
-    final network = SigningRequestNetwork.fromTag(tag.tags);
+    final network = SigningRequestMode.fromTag(tag.tags);
     return GlobalSignRequest._(digest: digest, network: network, index: index);
   }
 
@@ -139,62 +140,66 @@ final class GlobalSignRequest extends SignRequest {
     required Bip32AddressIndex index,
   }) {
     return GlobalSignRequest._(
-        digest: digest, network: SigningRequestNetwork.eth, index: index);
+        digest: digest, network: SigningRequestMode.eth, index: index);
   }
   factory GlobalSignRequest.ripple({
     required List<int> digest,
     required Bip32AddressIndex index,
   }) {
     return GlobalSignRequest._(
-        digest: digest, network: SigningRequestNetwork.ripple, index: index);
+        digest: digest, network: SigningRequestMode.ripple, index: index);
   }
   factory GlobalSignRequest.tron({
     required List<int> digest,
     required Bip32AddressIndex index,
   }) {
     return GlobalSignRequest._(
-        digest: digest, network: SigningRequestNetwork.tron, index: index);
+        digest: digest, network: SigningRequestMode.tron, index: index);
   }
   factory GlobalSignRequest.solana({
     required List<int> digest,
     required Bip32AddressIndex index,
   }) {
     return GlobalSignRequest._(
-        digest: digest, network: SigningRequestNetwork.solana, index: index);
+        digest: digest, network: SigningRequestMode.solana, index: index);
   }
-  factory GlobalSignRequest.aptos({
-    required List<int> digest,
-    required Bip32AddressIndex index,
-  }) {
+  factory GlobalSignRequest.aptos(
+      {required List<int> digest, required Bip32AddressIndex index}) {
     return GlobalSignRequest._(
-        digest: digest, network: SigningRequestNetwork.aptos, index: index);
+        digest: digest, network: SigningRequestMode.aptos, index: index);
   }
   factory GlobalSignRequest.sui({
     required List<int> digest,
     required Bip32AddressIndex index,
   }) {
     return GlobalSignRequest._(
-        digest: digest, network: SigningRequestNetwork.sui, index: index);
+        digest: digest, network: SigningRequestMode.sui, index: index);
   }
   factory GlobalSignRequest.stellar(
       {required List<int> digest, required Bip32AddressIndex index}) {
     return GlobalSignRequest._(
-        digest: digest, network: SigningRequestNetwork.stellar, index: index);
+        digest: digest, network: SigningRequestMode.stellar, index: index);
   }
-
+  factory GlobalSignRequest.moneroSpendKey(
+      {required List<int> digest, required Bip32AddressIndex index}) {
+    return GlobalSignRequest._(
+        digest: digest,
+        network: SigningRequestMode.moneroSpendKey,
+        index: index);
+  }
   factory GlobalSignRequest.ton({
     required List<int> digest,
     required Bip32AddressIndex index,
   }) {
     return GlobalSignRequest._(
-        digest: digest, network: SigningRequestNetwork.ton, index: index);
+        digest: digest, network: SigningRequestMode.ton, index: index);
   }
   factory GlobalSignRequest.cardano({
     required List<int> digest,
     required Bip32AddressIndex index,
   }) {
     return GlobalSignRequest._(
-        digest: digest, network: SigningRequestNetwork.cardano, index: index);
+        digest: digest, network: SigningRequestMode.cardano, index: index);
   }
   factory GlobalSignRequest.substrate(
       {required List<int> digest, required AddressDerivationIndex index}) {
@@ -202,7 +207,7 @@ final class GlobalSignRequest extends SignRequest {
       throw WalletExceptionConst.multiSigDerivationNotSuported;
     }
     return GlobalSignRequest._(
-        digest: digest, network: SigningRequestNetwork.substrate, index: index);
+        digest: digest, network: SigningRequestMode.substrate, index: index);
   }
 
   @override
@@ -234,7 +239,7 @@ final class CosmosSigningRequest extends SignRequest {
     }
     return CosmosSigningRequest._(
         digest: digest,
-        network: SigningRequestNetwork.cosmos,
+        network: SigningRequestMode.cosmos,
         index: index,
         alg: alg);
   }
@@ -244,7 +249,7 @@ final class CosmosSigningRequest extends SignRequest {
         cborBytes: bytes,
         hex: hex,
         object: object,
-        tags: SigningRequestNetwork.cosmos.tag);
+        tags: SigningRequestMode.cosmos.tag);
     final index = AddressDerivationIndex.deserialize(obj: values.getCborTag(0));
     final List<int> digest = values.elementAt(1);
     final CosmosKeysAlgs alg = CosmosKeysAlgs.fromName(values.elementAs(2));
@@ -264,23 +269,25 @@ final class MoneroSigningRequest extends SignRequest {
   final BigInt fee;
   final MoneroTxDestination? change;
   final List<SpendablePayment<MoneroLockedPayment>> utxos;
+  final bool withProof;
 
   MoneroSigningRequest(
       {required List<MoneroTxDestination> destinations,
       required this.fee,
       this.change,
       required List<SpendablePayment<MoneroLockedPayment>> utxos,
-      required super.index})
+      required super.index,
+      this.withProof = false})
       : destinations = destinations.immutable,
         utxos = utxos.immutable,
-        super(network: SigningRequestNetwork.monero);
+        super(network: SigningRequestMode.monero);
   factory MoneroSigningRequest.deserialize(
       {List<int>? bytes, CborObject? object, String? hex}) {
     final CborListValue values = CborSerializable.cborTagValue(
         cborBytes: bytes,
         object: object,
         hex: hex,
-        tags: SigningRequestNetwork.monero.tag);
+        tags: SigningRequestMode.monero.tag);
 
     return MoneroSigningRequest(
         index: Bip32AddressIndex.deserialize(obj: values.getCborTag(0)),
@@ -296,7 +303,8 @@ final class MoneroSigningRequest extends SignRequest {
             .map((e) =>
                 SpendablePayment<MoneroLockedPayment>.deserialize(e.value))
             .toList()
-            .cast());
+            .cast(),
+        withProof: values.elementAs(5));
   }
 
   List<MoneroAccountIndex> getAccountsIndexes() {
@@ -316,6 +324,7 @@ final class MoneroSigningRequest extends SignRequest {
               : CborBytesValue(change!.serialize()),
           CborListValue.fixedLength(
               utxos.map((e) => CborBytesValue(e.serialize())).toList()),
+          withProof
         ]),
         network.tag);
   }

@@ -1,4 +1,3 @@
-// export 'controller/controller.dart';
 export 'pages/extra_options.dart';
 export 'pages/mnemonic_view.dart';
 export 'pages/generate_mnemonic.dart';

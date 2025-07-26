@@ -92,9 +92,6 @@ final class ISubstrateAddress extends ChainAccount<BaseSubstrateAddress,
   String? get type => null;
 
   @override
-  String get orginalAddress => networkAddress.address;
-
-  @override
   bool isEqual(ChainAccount other) {
     if (other is! ISubstrateAddress) return false;
     return other.networkAddress == networkAddress;

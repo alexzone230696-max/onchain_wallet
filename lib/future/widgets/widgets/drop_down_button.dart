@@ -16,6 +16,7 @@ class AppDropDownBottom<T> extends StatelessWidget {
       this.error,
       this.contentPadding,
       this.isExpanded = false,
+      this.isDense = true,
       this.focusColor,
       this.fillColor,
       this.helperText,
@@ -40,6 +41,7 @@ class AppDropDownBottom<T> extends StatelessWidget {
   final InputBorder? border;
   final Color? iconEnabledColor;
   final String? hint;
+  final bool isDense;
   final EdgeInsetsGeometry? contentPadding;
 
   @override
@@ -61,14 +63,11 @@ class AppDropDownBottom<T> extends StatelessWidget {
       onChanged: onChanged,
       validator: validator,
       isExpanded: isExpanded,
-
+      isDense: isDense,
       value: value,
       focusColor: focusColor,
-
       iconEnabledColor: iconEnabledColor,
-
       hint: hint == null ? null : Text(hint!),
-      // focusColor: context.colors.transparent,
       decoration: InputDecoration(
           focusColor: focusColor,
           labelText: label,

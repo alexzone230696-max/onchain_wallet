@@ -1,4 +1,3 @@
-export 'bch/bch.dart';
 export 'bitcoin/bitcoin.dart';
 export 'cardano/cardano.dart';
 export 'cosmos/cosmos.dart';
@@ -7,7 +6,6 @@ export 'ripple/ripple.dart';
 export 'solana/solana.dart';
 export 'ton/ton.dart';
 export 'tron/tron.dart';
-export 'forms/forms.dart';
 export 'substrate/substrate.dart';
 export 'stellar/stellar.dart';
 export 'monero/monero.dart';

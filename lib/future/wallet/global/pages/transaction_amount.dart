@@ -47,10 +47,8 @@ class TransactionAmountView extends StatelessWidget {
                     showTokenImage: true,
                     symbolColor: context.onPrimaryContainer,
                   )
-                : Text(
-                    "tap_to_enter_amount".tr,
-                    style: context.onPrimaryTextTheme.bodyMedium,
-                  ))
+                : Text("tap_to_enter_amount".tr,
+                    style: context.onPrimaryTextTheme.bodyMedium))
       ],
     );
   }

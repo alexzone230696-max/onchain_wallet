@@ -20,12 +20,14 @@ import 'package:on_chain_wallet/wc/wallet/networks/aptos.dart';
 import 'package:on_chain_wallet/wc/wallet/networks/bitcoin.dart';
 import 'package:on_chain_wallet/wc/wallet/networks/cosmos.dart';
 import 'package:on_chain_wallet/wc/wallet/networks/ethereum.dart';
+import 'package:on_chain_wallet/wc/wallet/networks/monero.dart';
 import 'package:on_chain_wallet/wc/wallet/networks/solana.dart';
 import 'package:on_chain_wallet/wc/wallet/networks/stellar.dart';
 import 'package:on_chain_wallet/wc/wallet/networks/substrate.dart';
 import 'package:on_chain_wallet/wc/wallet/networks/sui.dart';
 import 'package:on_chain_wallet/wc/wallet/networks/ton.dart';
 import 'package:on_chain_wallet/wc/wallet/networks/tron.dart';
+import 'package:on_chain_wallet/wc/wallet/networks/xrp.dart';
 import 'package:on_chain_wallet/wc/wallet/types/types.dart';
 import 'package:on_chain_wallet/wc/core/types/types.dart';
 
@@ -67,6 +69,10 @@ class Web3WalletConnectSessionHandler extends Web3WalletHandler<
         sendInternalMessage: _sendInternalWalletMessage),
     NetworkType.bitcoinAndForked: BitcoinWeb3WalletConnectStateHandler(
         sendInternalMessage: _sendInternalWalletMessage),
+    NetworkType.xrpl: XRPWeb3WalletConnectStateHandler(
+        sendInternalMessage: _sendInternalWalletMessage),
+    NetworkType.monero: MoneroWeb3WalletConnectStateHandler(
+        sendInternalMessage: _sendInternalWalletMessage)
   };
 
   Future<(List<WalletConnectAddress>, List<String>)> _getWalletChange() async {

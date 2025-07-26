@@ -163,10 +163,14 @@ class IntegerBalance implements BalanceCore<BigInt, Token> {
   }
 
   IntegerBalance operator -(IntegerBalance other) {
+    assert(token.decimal == other.token.decimal,
+        "- operation failed. different decimals");
     return IntegerBalance.token(_balance - other.balance, token);
   }
 
   IntegerBalance operator +(IntegerBalance other) {
+    assert(token.decimal == other.token.decimal,
+        "+ operation failed. different decimals");
     return IntegerBalance.token(_balance + other.balance, token);
   }
 

@@ -11,8 +11,7 @@ class UpdateTonProvider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NetworkAccountControllerView<TonClient?, ITonAddress?,
-            TheOpenNetworkChain>(
+    return NetworkAccountControllerView<TonClient?, ITonAddress?, TonChain>(
         addressRequired: false,
         clientRequired: false,
         childBulder: (wallet, account, client, address, onAccountChanged) =>
@@ -22,7 +21,7 @@ class UpdateTonProvider extends StatelessWidget {
 
 class _UpdateTonProvider extends StatefulWidget {
   const _UpdateTonProvider(this.account);
-  final TheOpenNetworkChain account;
+  final TonChain account;
 
   @override
   State<_UpdateTonProvider> createState() => _UpdateSolanaProviderState();
@@ -32,17 +31,10 @@ class _UpdateSolanaProviderState extends State<_UpdateTonProvider>
     with
         SafeState<_UpdateTonProvider>,
         ProgressMixin<_UpdateTonProvider>,
-        UpdateNetworkProviderState<
-            _UpdateTonProvider,
-            TonAPIProvider,
-            TonAddress,
-            ITonAddress,
-            TonClient,
-            TokenCore,
-            NFTCore,
-            TheOpenNetworkChain> {
+        UpdateNetworkProviderState<_UpdateTonProvider, TonAPIProvider,
+            TonAddress, ITonAddress, TonClient, TokenCore, NFTCore, TonChain> {
   @override
-  TheOpenNetworkChain get chain => widget.account;
+  TonChain get chain => widget.account;
 
   @override
   TonAPIProvider createProvider(

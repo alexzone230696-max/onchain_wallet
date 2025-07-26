@@ -10,12 +10,12 @@ import 'package:ton_dart/ton_dart.dart' as ton;
 
 class TonNetworkParams extends NetworkCoinParams<TonAPIProvider> {
   final int workchain;
-  ton.TonChain get chain => ton.TonChain.fromWorkchain(workchain);
+  ton.TonChainId get chain => ton.TonChainId.fromWorkchain(workchain);
   String get tonChainIdentifier {
     switch (chain) {
-      case ton.TonChain.testnet:
+      case ton.TonChainId.testnet:
         return "ton:testnet";
-      case ton.TonChain.mainnet:
+      case ton.TonChainId.mainnet:
         return "ton:mainnet";
       default:
         throw UnimplementedError("Invalid ton network.");

@@ -11,8 +11,7 @@ class UpdateRippleProviderView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NetworkAccountControllerView<RippleClient?, IXRPAddress?,
-            RippleChain>(
+    return NetworkAccountControllerView<XRPClient?, IXRPAddress?, XRPChain>(
         addressRequired: false,
         clientRequired: false,
         childBulder: (wallet, account, client, address, onAccountChanged) =>
@@ -22,7 +21,7 @@ class UpdateRippleProviderView extends StatelessWidget {
 
 class _UpdateRippleProvider extends StatefulWidget {
   const _UpdateRippleProvider(this.account);
-  final RippleChain account;
+  final XRPChain account;
 
   @override
   State<_UpdateRippleProvider> createState() => _UpdateRippleProviderState();
@@ -32,17 +31,10 @@ class _UpdateRippleProviderState extends State<_UpdateRippleProvider>
     with
         SafeState<_UpdateRippleProvider>,
         ProgressMixin<_UpdateRippleProvider>,
-        UpdateNetworkProviderState<
-            _UpdateRippleProvider,
-            RippleAPIProvider,
-            XRPAddress,
-            IXRPAddress,
-            RippleClient,
-            TokenCore,
-            NFTCore,
-            RippleChain> {
+        UpdateNetworkProviderState<_UpdateRippleProvider, RippleAPIProvider,
+            XRPAddress, IXRPAddress, XRPClient, TokenCore, NFTCore, XRPChain> {
   @override
-  RippleChain get chain => widget.account;
+  XRPChain get chain => widget.account;
 
   @override
   RippleAPIProvider createProvider(

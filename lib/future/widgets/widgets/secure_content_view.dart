@@ -70,11 +70,11 @@ class _SecureContentView2State extends State<SecureContentView>
                   onActive: (context) => IconButton(
                       onPressed: () {
                         context.openSliverDialog(
-                            (ctx) => GenerateBackupView(
+                            widget: (ctx) => GenerateBackupView(
                                 data: widget.content,
                                 password: widget.password!,
                                 type: widget.backupType!),
-                            "backup_mnemonic".tr);
+                            label: "backup_mnemonic".tr);
                       },
                       icon: Icon(Icons.backup,
                           color: context.onPrimaryContainer))),

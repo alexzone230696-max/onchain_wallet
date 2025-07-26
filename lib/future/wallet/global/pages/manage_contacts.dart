@@ -70,7 +70,7 @@ class __ManageAccountContactsState extends State<_ManageAccountContacts> {
                             onRemoveIcon: IconButton(
                                 onPressed: () {
                                   context.openSliverDialog(
-                                      (ctx) => DialogTextView(
+                                      widget: (ctx) => DialogTextView(
                                           buttonWidget:
                                               AsyncDialogDoubleButtonView(
                                                   firstButtonPressed: () =>
@@ -78,7 +78,7 @@ class __ManageAccountContactsState extends State<_ManageAccountContacts> {
                                                           contact)),
                                           text:
                                               "remove_contact_from_account".tr),
-                                      'remove_contact'.tr);
+                                      label: 'remove_contact'.tr);
                                 },
                                 icon: Icon(Icons.delete,
                                     color: context.onPrimaryContainer)),

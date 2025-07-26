@@ -10,7 +10,7 @@ class CosmosConst {
   static final BigInt maxGasLimit = maxU64;
   static const String ibcChannelRegex = r'^channel-\d+$';
   static const String transferIbcPort = 'transfer';
-
+  static final BigInt defaultGasLimit = BigInt.from(200000);
   static String extractFactoryTokenName(String name) {
     if (name.startsWith("factory/")) return name.split("/").last;
     return name;

@@ -14,7 +14,7 @@ class Web3TonChainAccount extends Web3ChainAccount<TonAddress> {
   final int id;
   final TonAccountContext accountContext;
   final List<int> publicKey;
-  final TonChain network;
+  final TonChainId network;
 
   Web3TonChainAccount._({
     required super.keyIndex,
@@ -32,7 +32,7 @@ class Web3TonChainAccount extends Web3ChainAccount<TonAddress> {
     bool? defaultAddress,
     int? id,
     List<int>? publicKey,
-    TonChain? network,
+    TonChainId? network,
     TonAccountContext? accountContext,
   }) {
     return Web3TonChainAccount._(
@@ -49,7 +49,7 @@ class Web3TonChainAccount extends Web3ChainAccount<TonAddress> {
       {required ITonAddress address,
       required int id,
       required bool isDefault,
-      required TonChain network}) {
+      required TonChainId network}) {
     return Web3TonChainAccount._(
         keyIndex: address.keyIndex,
         address: address.networkAddress,
@@ -75,9 +75,9 @@ class Web3TonChainAccount extends Web3ChainAccount<TonAddress> {
         accountContext: TonAccountContext.deserialize(
             object: values.elementAs<CborTagValue>(4)),
         publicKey: values.elementAs(5),
-        network: TonChain.fromWorkchain(values.elementAs(6)));
+        network: TonChainId.fromWorkchain(values.elementAs(6)));
   }
-  VersionedWalletContract toWalletContract(TonChain chain) {
+  VersionedWalletContract toWalletContract(TonChainId chain) {
     return accountContext.toWalletContract(publicKey: publicKey, chain: chain);
   }
 

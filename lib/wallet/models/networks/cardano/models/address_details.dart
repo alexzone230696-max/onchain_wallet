@@ -6,7 +6,7 @@ import 'package:on_chain_wallet/crypto/keys/keys.dart';
 import 'package:on_chain/ada/src/address/address.dart';
 import 'package:on_chain/ada/src/models/ada_models.dart';
 
-class CardanoAddrDetails with Equatable, CborSerializable {
+final class CardanoAddrDetails with Equatable, CborSerializable {
   final List<int> publicKey;
   final List<int>? stakePubkey;
   final List<int>? chainCode;

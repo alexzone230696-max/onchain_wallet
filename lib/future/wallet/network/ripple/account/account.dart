@@ -1,48 +1,53 @@
 import 'package:flutter/material.dart';
-import 'package:on_chain_wallet/future/wallet/network/forms/forms.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
+import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/operations/operations.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 
 class RippleAccountPageView extends StatelessWidget {
-  const RippleAccountPageView({required this.chainAccount, super.key});
-  final RippleChain chainAccount;
+  const RippleAccountPageView({required this.account, super.key});
+  final XRPChain account;
   @override
   Widget build(BuildContext context) {
     return TabBarView(physics: WidgetConstant.noScrollPhysics, children: [
-      _RippleServicesView(chainAccount: chainAccount),
-      AccountTokensView(
-        account: chainAccount,
-        transferPage: PageRouter.rippleTransfer,
-        importPage: PageRouter.rippleAddToken,
+      _RippleServicesView(account: account),
+      AccountTokensView<RippleIssueToken, IXRPAddress>(
+        account: account,
+        transferBuilder: (p0) {
+          return RippleTransactionPaymentOperation(
+              walletProvider: context.wallet,
+              account: account,
+              address: account.address,
+              token: p0);
+        },
       ),
-      AccountTransactionActivityView(chainAccount)
+      AccountTransactionActivityView(account)
     ]);
   }
 }
 
 class _RippleServicesView extends StatelessWidget {
-  const _RippleServicesView({required this.chainAccount});
-  final RippleChain chainAccount;
+  const _RippleServicesView({required this.account});
+  final XRPChain account;
   @override
   Widget build(BuildContext context) {
     return AccountTabbarScrollWidget(
       slivers: [
-        AccountManageProviderIcon(service: chainAccount.service),
+        AccountManageProviderIcon(service: account.service),
         SliverToBoxAdapter(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (!chainAccount.address.multiSigAccount) ...[
+              if (!account.address.multiSigAccount) ...[
                 AppListTile(
                   title: Text("multi_sig_addr".tr),
                   subtitle: Text("establishing_multi_sig_addr".tr),
                   trailing: const Icon(Icons.arrow_forward),
                   onTap: () {
                     context.to(PageRouter.rippleMultisigAddress,
-                        argruments: chainAccount);
+                        argruments: account);
                   },
                 ),
                 WidgetConstant.divider
@@ -52,10 +57,12 @@ class _RippleServicesView extends StatelessWidget {
                 subtitle: Text("tust_line_desc".tr),
                 trailing: const Icon(Icons.arrow_forward),
                 onTap: () {
-                  final validator = LiveTransactionForm<RippleTrustSetForm>(
-                      validator: RippleTrustSetForm());
-                  context.to(PageRouter.rippleTransaction,
-                      argruments: validator);
+                  final operation = RippleTransactionTrustSetOperation(
+                    address: account.address,
+                    account: account,
+                    walletProvider: context.wallet,
+                  );
+                  context.to(PageRouter.transaction, argruments: operation);
                 },
               ),
               WidgetConstant.divider,
@@ -64,10 +71,11 @@ class _RippleServicesView extends StatelessWidget {
                 subtitle: Text("account_set_desc".tr),
                 trailing: const Icon(Icons.arrow_forward),
                 onTap: () {
-                  final validator = LiveTransactionForm<RippleAccountSetForm>(
-                      validator: RippleAccountSetForm());
-                  context.to(PageRouter.rippleTransaction,
-                      argruments: validator);
+                  final operation = RippleTransactionAccountSetOperation(
+                      address: account.address,
+                      account: account,
+                      walletProvider: context.wallet);
+                  context.to(PageRouter.transaction, argruments: operation);
                 },
               ),
               WidgetConstant.divider,
@@ -83,10 +91,12 @@ class _RippleServicesView extends StatelessWidget {
                 subtitle: Text("ripple_mint_nftoken_desc".tr),
                 trailing: const Icon(Icons.arrow_forward),
                 onTap: () {
-                  final validator = LiveTransactionForm<RippleMintTokenForm>(
-                      validator: RippleMintTokenForm());
-                  context.to(PageRouter.rippleTransaction,
-                      argruments: validator);
+                  final operation = RippleTransactionNFTokenMintOperation(
+                    address: account.address,
+                    account: account,
+                    walletProvider: context.wallet,
+                  );
+                  context.to(PageRouter.transaction, argruments: operation);
                 },
               ),
               AppListTile(
@@ -94,10 +104,12 @@ class _RippleServicesView extends StatelessWidget {
                 subtitle: Text("ripple_nftoken_burn_desc".tr),
                 trailing: const Icon(Icons.arrow_forward),
                 onTap: () {
-                  final validator = LiveTransactionForm<RippeBurnTokenForm>(
-                      validator: RippeBurnTokenForm());
-                  context.to(PageRouter.rippleTransaction,
-                      argruments: validator);
+                  final operation = RippleTransactionNFTokenBurnOperation(
+                    address: account.address,
+                    account: account,
+                    walletProvider: context.wallet,
+                  );
+                  context.to(PageRouter.transaction, argruments: operation);
                 },
               ),
               AppListTile(
@@ -105,10 +117,12 @@ class _RippleServicesView extends StatelessWidget {
                 subtitle: Text("ripple_create_nftoken_offer_desc".tr),
                 trailing: const Icon(Icons.arrow_forward),
                 onTap: () {
-                  final validator = LiveTransactionForm<RippleCreateOfferForm>(
-                      validator: RippleCreateOfferForm());
-                  context.to(PageRouter.rippleTransaction,
-                      argruments: validator);
+                  final operation =
+                      RippleTransactionNFTokenCreateOfferOperation(
+                          address: account.address,
+                          account: account,
+                          walletProvider: context.wallet);
+                  context.to(PageRouter.transaction, argruments: operation);
                 },
               ),
               AppListTile(
@@ -116,10 +130,25 @@ class _RippleServicesView extends StatelessWidget {
                 subtitle: Text("ripple_nftoken_cancel_offer_desc".tr),
                 trailing: const Icon(Icons.arrow_forward),
                 onTap: () {
-                  final validator = LiveTransactionForm<RippleCancelOfferForm>(
-                      validator: RippleCancelOfferForm());
-                  context.to(PageRouter.rippleTransaction,
-                      argruments: validator);
+                  final operation =
+                      RippleTransactionNFTokenCancelOfferOperation(
+                          address: account.address,
+                          account: account,
+                          walletProvider: context.wallet);
+                  context.to(PageRouter.transaction, argruments: operation);
+                },
+              ),
+              AppListTile(
+                title: const Text("NFTokenAcceptOffer"),
+                subtitle: Text("ripple_accept_offer_desc".tr),
+                trailing: const Icon(Icons.arrow_forward),
+                onTap: () {
+                  final operation = RippleTransactionNFTAcceptOfferOperation(
+                    address: account.address,
+                    account: account,
+                    walletProvider: context.wallet,
+                  );
+                  context.to(PageRouter.transaction, argruments: operation);
                 },
               ),
               WidgetConstant.divider,
@@ -128,10 +157,11 @@ class _RippleServicesView extends StatelessWidget {
                 subtitle: Text("ripple_escrow_create_desc".tr),
                 trailing: const Icon(Icons.arrow_forward),
                 onTap: () {
-                  final validator = LiveTransactionForm<RippleEscrowCreateForm>(
-                      validator: RippleEscrowCreateForm());
-                  context.to(PageRouter.rippleTransaction,
-                      argruments: validator);
+                  final operation = RippleTransactionEscrowCreateOperation(
+                      address: account.address,
+                      account: account,
+                      walletProvider: context.wallet);
+                  context.to(PageRouter.transaction, argruments: operation);
                 },
               ),
               AppListTile(
@@ -139,10 +169,12 @@ class _RippleServicesView extends StatelessWidget {
                 subtitle: Text("ripple_escrow_finish_desc".tr),
                 trailing: const Icon(Icons.arrow_forward),
                 onTap: () {
-                  final validator = LiveTransactionForm<RippleEscrowFinishForm>(
-                      validator: RippleEscrowFinishForm());
-                  context.to(PageRouter.rippleTransaction,
-                      argruments: validator);
+                  final operation = RippleTransactionEscrowFinishOperation(
+                    address: account.address,
+                    account: account,
+                    walletProvider: context.wallet,
+                  );
+                  context.to(PageRouter.transaction, argruments: operation);
                 },
               ),
               AppListTile(
@@ -150,10 +182,11 @@ class _RippleServicesView extends StatelessWidget {
                 subtitle: Text("ripple_escrow_cancel_desc".tr),
                 trailing: const Icon(Icons.arrow_forward),
                 onTap: () {
-                  final validator = LiveTransactionForm<RippleEscrowCancelForm>(
-                      validator: RippleEscrowCancelForm());
-                  context.to(PageRouter.rippleTransaction,
-                      argruments: validator);
+                  final operation = RippleTransactionEscrowCancelOperation(
+                      address: account.address,
+                      account: account,
+                      walletProvider: context.wallet);
+                  context.to(PageRouter.transaction, argruments: operation);
                 },
               ),
               WidgetConstant.divider,
@@ -162,10 +195,11 @@ class _RippleServicesView extends StatelessWidget {
                 subtitle: Text("ripple_regular_key_desc".tr),
                 trailing: const Icon(Icons.arrow_forward),
                 onTap: () {
-                  final validator = LiveTransactionForm<RippleRegularKeyForm>(
-                      validator: RippleRegularKeyForm());
-                  context.to(PageRouter.rippleTransaction,
-                      argruments: validator);
+                  final operation = RippleTransactionSetRegularKeyOperation(
+                      address: account.address,
+                      account: account,
+                      walletProvider: context.wallet);
+                  context.to(PageRouter.transaction, argruments: operation);
                 },
               ),
               WidgetConstant.divider,
@@ -174,10 +208,11 @@ class _RippleServicesView extends StatelessWidget {
                 subtitle: Text("ripple_set_signer_list_desc".tr),
                 trailing: const Icon(Icons.arrow_forward),
                 onTap: () {
-                  final validator = LiveTransactionForm<RippleSignerListForm>(
-                      validator: RippleSignerListForm());
-                  context.to(PageRouter.rippleTransaction,
-                      argruments: validator);
+                  final operation = RippleTransactionSignerListSetOperation(
+                      address: account.address,
+                      account: account,
+                      walletProvider: context.wallet);
+                  context.to(PageRouter.transaction, argruments: operation);
                 },
               ),
               WidgetConstant.divider,

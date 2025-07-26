@@ -8,6 +8,7 @@ class TonTransactionFeeDetails {
   final IntegerBalance actionPhase;
   final IntegerBalance fee;
   final IntegerBalance totalFee;
+  final IntegerBalance internalFee;
   final bool isEstimated;
   final List<TonEmulatedMessage> internalMessages;
   bool get hasInternalFee => internalMessages.isNotEmpty;
@@ -20,6 +21,7 @@ class TonTransactionFeeDetails {
       required this.fee,
       required this.isEstimated,
       required this.totalFee,
+      required this.internalFee,
       this.resultDescription,
       required this.success,
       List<TonEmulatedMessage>? internalMessages})
@@ -52,6 +54,8 @@ class TonTransactionFeeDetails {
         internalFess + fee.balance, network.token,
         immutable: true, decimalPlaces: 2);
 
+    /// 0.06718794 0.06 0.09568163 0.16
+    /// 2.016930
     return TonTransactionFeeDetails._(
         storageFee: storageFeeP,
         gasFee: gasFeeP,
@@ -61,6 +65,7 @@ class TonTransactionFeeDetails {
         internalMessages: internalMessages,
         success: success,
         resultDescription: resultDescription,
+        internalFee: IntegerBalance.token(internalFess, network.token),
         totalFee: totalFees);
   }
   factory TonTransactionFeeDetails.nonEstimate(WalletTonNetwork network) {

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:blockchain_utils/exception/exceptions.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/app/error/exception.dart';
 
 class MethodUtils {
   static Future<void> wait(
@@ -112,6 +111,9 @@ class MethodResult<T> {
     if (exception is BlockchainUtilsException) {
       return exception.message;
     }
+    if (exception is ApiProviderException) {
+      return exception.message;
+    }
     if (exception is FormatException) return "format_exception";
     if (exception is TimeoutException) return "timeout_exception";
     if (exception is SocketException) return "socket_exception";
@@ -129,8 +131,13 @@ class MethodResult<T> {
   factory MethodResult.success(T result) {
     return MethodResult._succsess(result);
   }
-  factory MethodResult.error(Object exception, Object? trace) {
+  factory MethodResult.error(Object exception, StackTrace? trace) {
     final errorMessage = _errorMessage(exception);
+    appLogger.error(
+        runtime: "MethodResult",
+        functionName: "error",
+        msg: errorMessage.$1,
+        trace: trace);
     return MethodResult._error(
         error: errorMessage.$1,
         trace: trace,
@@ -156,11 +163,11 @@ class MethodResult<T> {
         exception is ArgumentError) {
       return (exception.toString(), false);
     }
-    return (exception.toString(), true);
+    return (findErrorMessage(exception), true);
   }
 
   final Object? exception;
-  final Object? trace;
+  final StackTrace? trace;
   final String? error;
 
   bool get hasError => exception != null;

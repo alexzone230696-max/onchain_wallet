@@ -123,12 +123,12 @@ class _BackupWalletState extends State<_BackupWallet>
         passphrase: usePassphrase ? passphrase : null,
         newPassword: setupPassword ? password : null);
     await context.openSliverDialog(
-        (ctx) => GenerateBackupView(
+        widget: (ctx) => GenerateBackupView(
             data: "",
             password: widget.password,
             walletBackupOptions: options,
             type: WalletBackupTypes.walletV3),
-        "backup_wallet".tr);
+        label: "backup_wallet".tr);
   }
 
   @override

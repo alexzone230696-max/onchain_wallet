@@ -17,11 +17,11 @@ class SetupRippleAddressView extends StatefulWidget {
 
 class _SetupRippleAddressViewState extends State<SetupRippleAddressView>
     with SafeState<SetupRippleAddressView> {
-  RippleSupportKeyScheme algorithm = RippleSupportKeyScheme.ed25519;
+  RippleKeyScheme algorithm = RippleKeyScheme.ed25519;
 
-  late final Map<RippleSupportKeyScheme, Widget> algorithmTypesWidget;
+  late final Map<RippleKeyScheme, Widget> algorithmTypesWidget;
 
-  void onChangeAlgorithm(RippleSupportKeyScheme? alg) {
+  void onChangeAlgorithm(RippleKeyScheme? alg) {
     algorithm = alg ?? algorithm;
     updateState();
   }
@@ -70,7 +70,7 @@ class _SetupRippleAddressViewState extends State<SetupRippleAddressView>
   void onInitOnce() {
     super.onInitOnce();
     algorithmTypesWidget = {
-      for (final i in RippleSupportKeyScheme.values) i: Text(i.name)
+      for (final i in RippleKeyScheme.values) i: Text(i.name)
     };
   }
 

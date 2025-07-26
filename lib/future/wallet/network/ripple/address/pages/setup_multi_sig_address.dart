@@ -19,7 +19,7 @@ class SetupRippleMutlisigAddressView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NetworkAccountControllerView<RippleClient, IXRPAddress, RippleChain>(
+    return NetworkAccountControllerView<XRPClient, IXRPAddress, XRPChain>(
       title: "multi_sig_addr".tr,
       addressRequired: true,
       clientRequired: true,
@@ -34,8 +34,8 @@ class SetupRippleMutlisigAddressView extends StatelessWidget {
 class _SetupRippleMutlisigAddressView extends StatefulWidget {
   const _SetupRippleMutlisigAddressView(
       {required this.account, required this.client});
-  final RippleChain account;
-  final RippleClient client;
+  final XRPChain account;
+  final XRPClient client;
   @override
   State<_SetupRippleMutlisigAddressView> createState() =>
       _SetupRippleMutlisigAddressViewState();

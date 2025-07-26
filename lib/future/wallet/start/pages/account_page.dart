@@ -4,7 +4,6 @@ import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/controller/tabs/tabs.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
 import 'package:on_chain_wallet/future/wallet/network/aptos/account/account.dart';
-import 'package:on_chain_wallet/future/wallet/network/bch/account/account.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/account/account.dart';
 import 'package:on_chain_wallet/future/wallet/network/cardano/account/account.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/cosmos.dart';
@@ -176,12 +175,11 @@ class _AccountPageView extends StatelessWidget {
   Widget build(BuildContext context) {
     final network = account.network;
     switch (network.type) {
-      case NetworkType.bitcoinCash:
-        return BitcoinCashAccountPageView(chainAccount: account.cast());
       case NetworkType.bitcoinAndForked:
+      case NetworkType.bitcoinCash:
         return BitcoinAccountPageView(chainAccount: account.cast());
       case NetworkType.xrpl:
-        return RippleAccountPageView(chainAccount: account.cast());
+        return RippleAccountPageView(account: account.cast());
       case NetworkType.solana:
         return SolanaAccountPageView(chainAccount: account.cast());
       case NetworkType.monero:
@@ -195,7 +193,7 @@ class _AccountPageView extends StatelessWidget {
       case NetworkType.cardano:
         return CardanoAccountPageView(chainAccount: account.cast());
       case NetworkType.ton:
-        return TonAccountPageView(chainAccount: account.cast());
+        return TonAccountPageView(account: account.cast());
       case NetworkType.substrate:
         return SubstrateAccountPageView(chainAccount: account.cast());
       case NetworkType.cosmos:

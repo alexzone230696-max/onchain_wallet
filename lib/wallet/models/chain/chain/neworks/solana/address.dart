@@ -85,9 +85,6 @@ final class ISolanaAddress extends ChainAccount<SolAddress, SolanaSPLToken,
   @override
   String? get type => null;
 
-  @override
-  String get orginalAddress => networkAddress.address;
-
   SolAddress associatedTokenAccount(
           {required SolAddress mint,
           SolAddress tokenProgramId = SPLTokenProgramConst.tokenProgramId}) =>

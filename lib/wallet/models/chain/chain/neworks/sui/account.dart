@@ -85,7 +85,7 @@ final class SuiChain extends Chain<
       final balance = await client.getAcountBalances(address.networkAddress);
       final native = balance.firstWhereOrNull(
           (e) => e.coinType == SuiTransactionConst.suiTypeArgs);
-      _internalupdateAddressBalance(
+      _updateAddressBalanceInternal(
           address: address,
           balance: native?.totalBalance ?? BigInt.zero,
           saveAccount: saveAccount);
@@ -106,7 +106,7 @@ final class SuiChain extends Chain<
       final balance = await client.getAcountBalances(address.networkAddress);
       final native = balance.firstWhereOrNull(
           (e) => e.coinType == SuiTransactionConst.suiTypeArgs);
-      _internalupdateAddressBalance(
+      _updateAddressBalanceInternal(
           address: address,
           balance: native?.totalBalance ?? BigInt.zero,
           saveAccount: true);
@@ -114,6 +114,7 @@ final class SuiChain extends Chain<
         final asset =
             balance.firstWhereOrNull((e) => e.coinType == token.assetType);
         token._updateBalance(asset?.totalBalance ?? BigInt.zero);
+        if (!address.tokens.contains(token)) continue;
         _saveToken(address: address, token: token);
       }
     });

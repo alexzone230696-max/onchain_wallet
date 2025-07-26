@@ -1,5 +1,3 @@
-import 'package:blockchain_utils/utils/binary/utils.dart';
-import 'package:blockchain_utils/utils/numbers/utils/int_utils.dart';
 import 'package:monero_dart/monero_dart.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/impl/worker_impl.dart';
@@ -7,55 +5,37 @@ import 'package:on_chain_wallet/crypto/models/networks.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/monero.dart';
 import 'package:on_chain_wallet/wallet/api/services/service.dart';
+import 'package:on_chain_wallet/wallet/constant/networks/monero.dart';
 import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 import 'package:on_chain_wallet/wallet/models/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/networks/monero/monero.dart';
+import 'package:on_chain_wallet/wallet/models/others/models/cached_object.dart';
+import 'package:on_chain_wallet/wallet/models/token/network/token.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/networks/monero.dart';
 
-class MoneroClient
-    extends NetworkClient<MoneroWalletTransaction, MoneroAPIProvider>
-    with CryptoWokerImpl {
+class MoneroClient extends NetworkClient<MoneroWalletTransaction,
+    MoneroAPIProvider, BaseNetworkToken, MoneroAddress> with CryptoWokerImpl {
   MoneroClient({required this.provider, required this.network});
-  // MoneroWalletClient? _walletClient;
-  // MoneroWalletClient? get walletClient => _walletClient;
   final MoneroProvider provider;
   @override
   final WalletMoneroNetwork? network;
-  MoneroCachedBlockHeight? _height;
-  MoneroCachedBlockHeight? get currentHeight => _height;
+  late final CachedObject<int> _height =
+      CachedObject(interval: MoneroConst.avarageBlockTime);
+
+  CachedObject<int> get currentHeight => _height;
 
   String? _genesis;
 
   @override
   MoneroHTTPService get service => provider.rpc as MoneroHTTPService;
 
-  Future<MoneroCachedBlockHeight> getHeight({bool refresh = false}) async {
-    if (refresh || (_height?.needFetch ?? true)) {
-      final h = await provider.request(DaemonRequestGetLastBlockHeader());
-      _height = MoneroCachedBlockHeight(h.blockHeader.height);
-    }
-    return _height!;
+  Future<int> getHeight() async {
+    return _height.get(onFetch: () async {
+      final block = await provider.request(DaemonRequestGetLastBlockHeader());
+      return block.blockHeader.height;
+    });
   }
-
-  // Future<void> _updateBalance(IMoneroAddress address, MoneroChain chain) async {
-  //   final walletTransfers = await MethodUtils.call(
-  //       () async => _walletClient?.getAvailableTxes(address));
-  //   if (walletTransfers.hasResult) {
-  //     final relatedTxes = walletTransfers.result;
-  //     if (relatedTxes != null) {
-  //       await chain.updatePendingTxes(relatedTxes);
-  //     }
-  //   }
-  // }
-
-  // @override
-  // Future<void> updateBalance(IMoneroAddress address,
-  //     {MoneroChain? chain}) async {
-  //   if (chain == null) return;
-  //   // await _updateBalance(address, chain.cast());
-  //   // await updateAccountUtxos(address: address, account: chain.cast());
-  // }
 
   Future<DaemonGetBlocksByHeightResponse> getBlockByRange(
       int start, int end) async {
@@ -161,112 +141,9 @@ class MoneroClient
     return outs;
   }
 
-  Future<List<SpendablePayment<T>>>
-      generatePaymentOutputs<T extends MoneroPayment>(
-          {required List<T> payments,
-          int fakeOutsLength = 15,
-          required List<BigInt> outKeysRequestOrder,
-          required List<BigInt> outKeysRequests}) async {
-    if (fakeOutsLength <= 0) {
-      throw const DartMoneroPluginException(
-          "fake outs length should be greather than zero.");
-    }
-    final List<List<OutsEntery>> outs = [];
-    final int baseRequestCount = ((fakeOutsLength + 1) * 1.5 + 1).ceil();
-    final List<OutKeyResponse> outKeysResponse = [];
-    int offset = 0;
-    while (offset < outKeysRequests.length) {
-      const int size = 1000;
-      final int outChunSize =
-          IntUtils.min(outKeysRequests.length - offset, size);
-      final List<DaemonGetOutRequestParams> chunkRequest = List.generate(
-          outChunSize,
-          (i) => DaemonGetOutRequestParams(
-              amount: BigInt.zero, index: outKeysRequests[offset + i]));
-      offset += size;
-      final outs = await getOuts(chunkRequest);
-      outKeysResponse.addAll(outs.outs);
-    }
-    int base = 0;
-    for (final payment in payments) {
-      const defaultOutCount =
-          MoneroNetworkConst.cryptonoteMinedMoneyUnlockWindow -
-              MoneroNetworkConst.cryptonoteDefaultTxSpendableAge;
-      final int outputsCount = baseRequestCount + defaultOutCount;
-      final List<OutsEntery> out = [];
-      final mask = RCT.commitVar(
-          xmrAmount: payment.output.amount, mask: payment.output.mask);
-      bool hasRealOut = false;
-      for (int n = 0; n < outputsCount; ++n) {
-        final int i = base + n;
-        if (outKeysRequests[i] == payment.globalIndex) {
-          if (BytesUtils.bytesEqual(
-              outKeysResponse[i].key, payment.output.outputPublicKey)) {
-            if (BytesUtils.bytesEqual(outKeysResponse[i].mask, mask)) {
-              if (outKeysResponse[i].unlocked) {
-                hasRealOut = true;
-              }
-            }
-          }
-        }
-      }
-      if (!hasRealOut) {
-        throw const DartMoneroPluginException(
-            "Daemon response did not include the requested real output");
-      }
-      out.add(OutsEntery(
-          index: payment.globalIndex,
-          key: CtKey(dest: payment.output.outputPublicKey, mask: mask)));
-
-      for (int idx = base;
-          idx < base + outputsCount && out.length < fakeOutsLength + 1;
-          ++idx) {
-        final attemptedOutput = outKeysRequestOrder[idx];
-        int i;
-        for (i = base; i < base + outputsCount; ++i) {
-          if (outKeysRequests[i] == attemptedOutput) {
-            break;
-          }
-        }
-        if (i == base + outputsCount) {
-          throw const DartMoneroPluginException(
-              "Could not find index of picked output in requested outputs");
-        }
-        final fakeOutResponse = outKeysResponse[i];
-        final fakeOutRequest = outKeysRequests[i];
-        final fakeEntry = OutsEntery(
-            index: fakeOutRequest,
-            key: CtKey(dest: fakeOutResponse.key, mask: fakeOutResponse.mask));
-        if (fakeOutResponse.unlocked &&
-            fakeOutRequest != payment.globalIndex &&
-            !out.contains(fakeEntry)) {
-          out.add(fakeEntry);
-        }
-      }
-      out.sort((a, b) => a.index.compareTo(b.index));
-      outs.add(out);
-      if (out.length < fakeOutsLength + 1) {
-        throw const DartMoneroPluginException("not enough outs to mix.");
-      }
-
-      base += outputsCount;
-    }
-    return List.generate(payments.length, (i) {
-      final payment = payments[i];
-      final sourceOuts = outs[i];
-      final index =
-          sourceOuts.indexWhere((e) => e.index == payment.globalIndex);
-      if (index.isNegative) {
-        throw const DartMoneroPluginException("Index not found.");
-      }
-      return SpendablePayment<T>(
-          payment: payment, outs: sourceOuts, realOutIndex: index);
-    });
-  }
-
-  Future<void> sendTx(String txHex,
+  Future<DaemonSendRawTxResponse> sendTx(String txHex,
       {bool doNotRelay = false, bool doSanityChecks = true}) async {
-    await provider.request(DaemonRequestSendRawTransaction(
+    return await provider.request(DaemonRequestSendRawTransaction(
         txAsHex: txHex,
         doNotRelay: doNotRelay,
         doSanityChecks: doSanityChecks));
@@ -298,9 +175,8 @@ class MoneroClient
   NetworkType get networkType => NetworkType.monero;
 }
 
-class MoneroWalletClient
-    extends NetworkClient<MoneroWalletTransaction, MoneroAPIProvider>
-    with CryptoWokerImpl {
+class MoneroWalletClient extends NetworkClient<MoneroWalletTransaction,
+    MoneroAPIProvider, BaseNetworkToken, MoneroAddress> with CryptoWokerImpl {
   final MoneroProvider provider;
   List<MoneroWalletRPCAddress>? _addresses;
   MoneroWalletClient(MoneroAPIProvider provider, this.network)

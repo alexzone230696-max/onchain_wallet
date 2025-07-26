@@ -25,8 +25,7 @@ class GenerateTonMnemonicView extends StatelessWidget {
   const GenerateTonMnemonicView({super.key});
   @override
   Widget build(BuildContext context) {
-    return NetworkAccountControllerView<TonClient?, ITonAddress?,
-        TheOpenNetworkChain>(
+    return NetworkAccountControllerView<TonClient?, ITonAddress?, TonChain>(
       title: "ton_mnemonic".tr,
       addressRequired: false,
       clientRequired: false,

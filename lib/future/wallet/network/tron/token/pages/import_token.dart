@@ -221,11 +221,11 @@ class _TRC10TokenViewState extends State<_TRC10TokenView>
                   final token = widget.state.tokens.elementAt(0);
                   final bool exist =
                       widget.state.address.tokens.contains(token);
-                  return TokenDetailsView(
+                  return AccountTokenDetailsView(
                     token: token,
                     onSelect: () {
                       context.openSliverDialog(
-                          (ctx) => DialogTextView(
+                          widget: (ctx) => DialogTextView(
                               buttonWidget: AsyncDialogDoubleButtonView(
                                 firstButtonPressed: () =>
                                     widget.state.onTap(token, exist),
@@ -233,7 +233,7 @@ class _TRC10TokenViewState extends State<_TRC10TokenView>
                               text: exist
                                   ? "remove_token_from_account".tr
                                   : "add_token_to_your_account".tr),
-                          exist ? "remove_token".tr : "add_token".tr);
+                          label: exist ? "remove_token".tr : "add_token".tr);
                     },
                     onSelectIcon: APPCheckBox(
                         value: exist, ignoring: true, onChanged: (e) {}),
@@ -278,7 +278,7 @@ class _TRC20TokenViewState extends State<_TRC20TokenView>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    TokenDetailsView(token: widget.state.token!),
+                    AccountTokenDetailsView(token: widget.state.token!),
                     FixedElevatedButton(
                         padding: WidgetConstant.paddingVertical40,
                         onPressed: widget.state.onNewToken,

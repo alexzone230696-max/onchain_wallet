@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/core/form.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 
@@ -9,20 +11,22 @@ import 'package:on_chain_wallet/wallet/wallet.dart';
 
 enum TokenAction { delete, transfer }
 
-class TokenDetailsModalView<NETWORKADDRESS, TOKEN extends TokenCore,
+typedef TOKENTRANSFERBUILDER<T extends TokenCore> = TransactionStateController
+    Function(T);
+
+class TokenDetailsModalView<TOKEN extends TokenCore,
     CHAINACCOUNT extends ChainAccount> extends StatelessWidget {
-  const TokenDetailsModalView(
-      {super.key,
-      required this.token,
-      required this.address,
-      required this.transferPath,
-      required this.account,
-      this.transferArgruments});
+  const TokenDetailsModalView({
+    super.key,
+    required this.token,
+    required this.address,
+    required this.account,
+    required this.transferBuilder,
+  });
+  final TOKENTRANSFERBUILDER<TOKEN> transferBuilder;
   final TOKEN token;
   final CHAINACCOUNT address;
   final APPCHAINACCOUNT<CHAINACCOUNT> account;
-  final String transferPath;
-  final Object? transferArgruments;
   @override
   Widget build(BuildContext context) {
     return ChainStreamBuilder(
@@ -60,7 +64,7 @@ class TokenDetailsModalView<NETWORKADDRESS, TOKEN extends TokenCore,
                   IconButton(
                       onPressed: () {
                         context.openSliverDialog(
-                            (ctx) => DialogTextView(
+                            widget: (ctx) => DialogTextView(
                                 buttonWidget: AsyncDialogDoubleButtonView(
                                   firstButtonPressed: () => account
                                       .removeToken(
@@ -70,7 +74,7 @@ class TokenDetailsModalView<NETWORKADDRESS, TOKEN extends TokenCore,
                                   }).catchError((_) {}),
                                 ),
                                 text: "remove_token_from_account".tr),
-                            "remove_token".tr);
+                            label: "remove_token".tr);
                       },
                       icon: Icon(Icons.delete, color: context.colors.error)),
                   const CloseButton(),
@@ -80,11 +84,10 @@ class TokenDetailsModalView<NETWORKADDRESS, TOKEN extends TokenCore,
               SliverToBoxAdapter(
                 child: ConstraintsBoxView(
                   padding: WidgetConstant.padding20,
-                  child: _TokenDetailsView(
+                  child: _TokenDetailsView<TOKEN>(
                     token: currentToken,
                     address: address,
-                    transferPath: transferPath,
-                    transferArgruments: transferArgruments,
+                    transferBuilder: transferBuilder,
                   ),
                 ),
               ),
@@ -95,16 +98,14 @@ class TokenDetailsModalView<NETWORKADDRESS, TOKEN extends TokenCore,
   }
 }
 
-class _TokenDetailsView extends StatelessWidget {
+class _TokenDetailsView<T extends TokenCore> extends StatelessWidget {
   const _TokenDetailsView(
       {required this.token,
       required this.address,
-      required this.transferPath,
-      this.transferArgruments});
-  final TokenCore token;
+      required this.transferBuilder});
+  final T token;
   final ChainAccount address;
-  final String transferPath;
-  final Object? transferArgruments;
+  final TOKENTRANSFERBUILDER<T> transferBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -131,8 +132,9 @@ class _TokenDetailsView extends StatelessWidget {
           children: [
             FloatingActionButton(
               onPressed: () {
-                context.offTo(transferPath,
-                    argruments: transferArgruments ?? token);
+                final builder = transferBuilder;
+                final operation = builder(token);
+                context.offTo(PageRouter.transaction, argruments: operation);
               },
               child: const Icon(Icons.upload),
             ),

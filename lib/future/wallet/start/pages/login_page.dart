@@ -76,11 +76,11 @@ class _WalletLoginPageViewState extends State<WalletLoginPageView>
             onPressed: () {
               context
                   .openSliverDialog<HDWallet>(
-                      (c) => SwitchWalletView(
+                      widget: (c) => SwitchWalletView(
                             wallets: wallet.wallet.wallets,
                             selectedWallet: wallet.wallet.wallet,
                           ),
-                      "switch_wallets".tr,
+                      label: "switch_wallets".tr,
                       content: (c) => [
                             IconButton(
                                 onPressed: () {

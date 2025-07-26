@@ -107,9 +107,6 @@ final class IAptosAddress extends ChainAccount<AptosAddress, AptosFATokens,
   String? get type => keyScheme.name;
 
   @override
-  String get orginalAddress => networkAddress.address;
-
-  @override
   bool isEqual(ChainAccount other) {
     if (other is! IAptosAddress) return false;
     return other.networkAddress == networkAddress;

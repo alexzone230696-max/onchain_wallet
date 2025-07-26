@@ -136,7 +136,7 @@ class _ImportAccountState extends State<_ImportAccount> with SafeState {
                                 onPressed: () {
                                   context
                                       .openSliverDialog<bool>(
-                                    (p0) => DialogTextView(
+                                    widget: (p0) => DialogTextView(
                                         buttonWidget: DialogDoubleButtonView(
                                           firstButtonLabel: "remove".tr,
                                           secoundButtonLabel: "cancel".tr,
@@ -154,7 +154,7 @@ class _ImportAccountState extends State<_ImportAccount> with SafeState {
                                             )
                                           ],
                                         )),
-                                    "remove_account".tr,
+                                    label: "remove_account".tr,
                                   )
                                       .then((value) {
                                     if (value == true && context.mounted) {

@@ -53,7 +53,7 @@ class NumberTextField extends StatefulWidget {
   final FocusNode? nextFocus;
   final bool readOnly;
   final Color? iconColor;
-  final double maxWidth;
+  final double? maxWidth;
   // final TextStyle? labelStyle;
 
   @override
@@ -218,13 +218,14 @@ class BigNumberTextField extends StatefulWidget {
       this.error,
       this.validator,
       this.defaultValue,
-      required this.max,
+      this.max,
       required this.min,
       this.focusNode,
       this.nextFocus,
       this.readOnly = false,
       this.showPasteIcon = false,
-      this.iconColor});
+      this.iconColor,
+      this.maxWidth = 350});
   final bool showPasteIcon;
   final BigInt min;
   final BigInt? max;
@@ -240,6 +241,7 @@ class BigNumberTextField extends StatefulWidget {
   final FocusNode? nextFocus;
   final bool readOnly;
   final Color? iconColor;
+  final double? maxWidth;
   @override
   State<BigNumberTextField> createState() => BigNumberTextFieldState();
 }
@@ -366,6 +368,7 @@ class BigNumberTextFieldState extends State<BigNumberTextField> with SafeState {
       onSubmitField: onSubmitField,
       onPaste: onPaste,
       iconColor: widget.iconColor,
+      maxWidth: widget.maxWidth,
       inputFormatters: [
         FilteringTextInputFormatter.digitsOnly,
         BigRangeTextInputFormatter(min: widget.min, max: widget.max)
@@ -417,7 +420,7 @@ class _NumberTextFieldView extends StatelessWidget {
   final StringVoid onSubmitField;
   final StringVoid onPaste;
   final Color? iconColor;
-  final double maxWidth;
+  final double? maxWidth;
 
   @override
   Widget build(BuildContext context) {

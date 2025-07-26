@@ -5,18 +5,18 @@ packages:
     dependency: transitive
     description:
       name: _fe_analyzer_shared
-      sha256: e55636ed79578b9abca5fecf9437947798f5ef7456308b5cb85720b793eac92f
+      sha256: da0d9209ca76bde579f2da330aeb9df62b6319c834fa7baae052021b0462401f
       url: "https://pub.dev"
     source: hosted
-    version: "82.0.0"
+    version: "85.0.0"
   analyzer:
     dependency: transitive
     description:
       name: analyzer
-      sha256: "904ae5bb474d32c38fb9482e2d925d5454cda04ddd0e55d2e6826bc72f6ba8c0"
+      sha256: "974859dc0ff5f37bc4313244b3218c791810d03ab3470a579580279ba971a48d"
       url: "https://pub.dev"
     source: hosted
-    version: "7.4.5"
+    version: "7.7.1"
   archive:
     dependency: transitive
     description:
@@ -45,10 +45,10 @@ packages:
     dependency: "direct main"
     description:
       name: bitcoin_base
-      sha256: d12f8c4f25640616332c6bd067d18cd492f0046c10ec3bbfacc8f3113f534268
+      sha256: "3de225565a5447d616b4f3dce9f6740ba898e70211ab77f48e2aac3cabdf86c3"
       url: "https://pub.dev"
     source: hosted
-    version: "6.6.0"
+    version: "6.7.0"
   blockchain_utils:
     dependency: "direct main"
     description:
@@ -73,14 +73,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
-  checked_yaml:
-    dependency: transitive
-    description:
-      name: checked_yaml
-      sha256: feb6bed21949061731a7a75fc5d2aa727cf160b91af9a3e464c5e3a32e28b5ff
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.3"
   cli_config:
     dependency: transitive
     description:
@@ -141,10 +133,10 @@ packages:
     dependency: transitive
     description:
       name: coverage
-      sha256: "4b8701e48a58f7712492c9b1f7ba0bb9d525644dd66d023b62e1fc8cdb560c8a"
+      sha256: "5da775aa218eaf2151c721b16c01c7676fbfdd99cebba2bf64e8b807a28ff94d"
       url: "https://pub.dev"
     source: hosted
-    version: "1.14.0"
+    version: "1.15.0"
   crypto:
     dependency: transitive
     description:
@@ -288,14 +280,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.2"
-  json_annotation:
-    dependency: transitive
-    description:
-      name: json_annotation
-      sha256: "1ce844379ca14835a50d2f019a3099f419082cfdd231cd86a142af94dd5c6bb1"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.9.0"
   leak_tracker:
     dependency: transitive
     description:
@@ -372,10 +356,10 @@ packages:
     dependency: "direct main"
     description:
       name: monero_dart
-      sha256: "6a044a43bdd76e942f46a6d4ec030b629caf9f9a1f9b6d113d60412896278d92"
+      sha256: "1e76a3d2f93c9ca17fa2c1d19d4caecb937dd44d35d55749656bc2dbfa13d422"
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.0"
+    version: "1.3.0"
   msix:
     dependency: "direct dev"
     description:
@@ -396,10 +380,10 @@ packages:
     dependency: "direct main"
     description:
       name: on_chain
-      sha256: "342ee08a06d2cbc297c9fe363c9921961294e3f4397065b0a9c8d7d5eca2f937"
+      sha256: "835290a644a9a9367a428c0bab796c04972f71aa9b7119c8857e28caeec9592e"
       url: "https://pub.dev"
     source: hosted
-    version: "6.8.0"
+    version: "6.9.0"
   on_chain_bridge:
     dependency: "direct main"
     description:
@@ -414,7 +398,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "163a7eda9ed730e5955e5850cd74c4a11a32ca03"
+      resolved-ref: ca4e82caad30207e0b5a7b457d7a8e3fc65d185d
       url: "https://github.com/mrtnetwork/onchain_swap.git"
     source: git
     version: "0.1.0"
@@ -454,10 +438,10 @@ packages:
     dependency: "direct main"
     description:
       name: polkadot_dart
-      sha256: "144669ca28b4023f98dd6db60144181cb5055810f952acf32f9a5ec4c6ceef66"
+      sha256: f4acdb3779af935702c478d4f32579f58c3169a295198c08674669b7ca610c95
       url: "https://pub.dev"
     source: hosted
-    version: "3.9.0"
+    version: "4.0.0"
   pool:
     dependency: transitive
     description:
@@ -470,10 +454,10 @@ packages:
     dependency: transitive
     description:
       name: posix
-      sha256: f0d7856b6ca1887cfa6d1d394056a296ae33489db914e365e2044fdada449e62
+      sha256: "6323a5b0fa688b6a010df4905a56b00181479e6d10534cecfecede2aa55add61"
       url: "https://pub.dev"
     source: hosted
-    version: "6.0.2"
+    version: "6.0.3"
   pub_semver:
     dependency: transitive
     description:
@@ -482,14 +466,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.0"
-  pubspec_parse:
-    dependency: transitive
-    description:
-      name: pubspec_parse
-      sha256: "0560ba233314abbed0a48a2956f7f022cce7c3e1e73df540277da7544cad4082"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.5.0"
   shelf:
     dependency: transitive
     description:
@@ -563,10 +539,10 @@ packages:
     dependency: "direct main"
     description:
       name: stellar_dart
-      sha256: "86e268759622f0f2c4098126f234cfedf57538ab0db6adf5f27fe019624b149a"
+      sha256: "926664204e12297dd9d9e04536023b924bd3b6b48ef476d1c007d2f941a5d1f4"
       url: "https://pub.dev"
     source: hosted
-    version: "1.8.0"
+    version: "1.9.0"
   stream_channel:
     dependency: transitive
     description:
@@ -619,10 +595,10 @@ packages:
     dependency: "direct main"
     description:
       name: ton_dart
-      sha256: "44d3517515cc8f517d7b7f8f41245a838d40db080c0e3bf204c9c1ab89baf8cb"
+      sha256: dd551012f40dcd6d4967603c49aaf97518c31a27249cda3adb3f0dc5e7a3ccdf
       url: "https://pub.dev"
     source: hosted
-    version: "1.8.0"
+    version: "1.9.0"
   typed_data:
     dependency: transitive
     description:
@@ -651,10 +627,10 @@ packages:
     dependency: transitive
     description:
       name: watcher
-      sha256: "69da27e49efa56a15f8afe8f4438c4ec02eff0a117df1b22ea4aad194fe1c104"
+      sha256: "0b7fd4a0bbc4b92641dbf20adfd7e3fd1398fe17102d94b674234563e110088a"
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.1"
+    version: "1.1.2"
   web:
     dependency: transitive
     description:
@@ -698,11 +674,12 @@ packages:
   xrpl_dart:
     dependency: "direct main"
     description:
-      name: xrpl_dart
-      sha256: "3e3e7b1d4775f41531ddf60e6a61130619979abc93e1008363ed23883890f46f"
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.0.0"
+      path: "."
+      ref: main
+      resolved-ref: "3982f0de82b5c957b6b1bfbfed3901fafd1e4ca6"
+      url: "https://github.com/mrtnetwork/xrpl_dart.git"
+    source: git
+    version: "7.0.0"
   yaml:
     dependency: transitive
     description:

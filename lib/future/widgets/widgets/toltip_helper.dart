@@ -13,10 +13,6 @@ class TooltipHelper extends StatelessWidget {
   Widget build(BuildContext context) {
     return ToolTipView(
         message: message,
-        child: Icon(
-          Icons.help,
-          color: iconColor,
-          size: iconSize,
-        ));
+        child: Icon(Icons.help, color: iconColor, size: iconSize));
   }
 }

@@ -34,6 +34,7 @@ typedef ONUPDATEPROVIDERS = Future<APPSwapSettings?> Function(
 
 class SwapStateController
     with
+        DisposableMixin,
         StreamStateController,
         SwapSourceController,
         SwapDestinationController,

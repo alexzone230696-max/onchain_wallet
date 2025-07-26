@@ -42,6 +42,16 @@ class StellarIssueToken extends TokenCore<IntegerBalance, Token> {
         assetCode: assetCode);
   }
   @override
+  StellarIssueToken clone() {
+    return StellarIssueToken.create(
+        balance: balance.balance,
+        token: token,
+        issuer: issuer,
+        assetType: assetType,
+        assetCode: assetCode);
+  }
+
+  @override
   StellarIssueToken updateToken(Token updateToken) {
     if (updateToken.decimal != token.decimal) {
       throw WalletExceptionConst.invalidTokenInformation;

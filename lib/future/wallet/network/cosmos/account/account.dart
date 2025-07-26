@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
-import 'package:on_chain_wallet/future/wallet/network/forms/forms.dart';
+import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/operations/ibc.dart';
+import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/operations/transfer.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
@@ -15,8 +16,12 @@ class CosmosAccountPageView extends StatelessWidget {
       _CosmosAccountPageView(chainAccount),
       AccountTokensView(
           account: chainAccount,
-          importPage: PageRouter.importCosmosTokens,
-          transferPage: PageRouter.cosmosTransfer),
+          transferBuilder: (p0) {
+            return CosmosTransactionTransferOperation(
+                walletProvider: context.wallet,
+                account: chainAccount,
+                address: chainAccount.address);
+          }),
       AccountTransactionActivityView(chainAccount)
     ]);
   }
@@ -37,9 +42,11 @@ class _CosmosAccountPageView extends StatelessWidget {
             subtitle: Text("ibc_desc".tr),
             trailing: const Icon(Icons.arrow_forward),
             onTap: () {
-              context.to(PageRouter.cosmosTransaction,
-                  argruments:
-                      LiveTransactionForm(validator: CosmosIbcTransferForm()));
+              final operation = CosmosTransactionIbcTransferOperation(
+                  walletProvider: context.wallet,
+                  account: chainAccount,
+                  address: chainAccount.address);
+              context.to(PageRouter.transaction, argruments: operation);
             },
           )
         ]),

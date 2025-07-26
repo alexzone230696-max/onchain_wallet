@@ -1,3 +1,9 @@
-export 'pages/fields.dart';
-export 'controller/controller.dart';
+export 'controllers/controllers.dart';
+export 'controllers/provider.dart';
+export 'operations/import_network.dart';
+export 'operations/sign_transaction.dart';
+export 'operations/sign_message.dart';
+export 'pages/import_network.dart';
+export 'pages/sign_transaction.dart';
+export 'types/types.dart';
 export 'permission/permission.dart';

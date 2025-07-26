@@ -89,14 +89,16 @@ class _SetupNetworkAmountState extends State<SetupNetworkAmount>
   }
 
   void onTapMax() {
-    final p = PriceUtils.tryEncodePrice(maxValue, widget.token.decimal);
+    final p = PriceUtils.tryEncodePrice(maxValue, widget.token.decimal,
+        amoutDecimal: widget.token.decimal);
     if (p != null) {
       controller.text = p;
     }
   }
 
   void onTapMin() {
-    final p = PriceUtils.tryEncodePrice(widget.min, widget.token.decimal);
+    final p = PriceUtils.tryEncodePrice(widget.min, widget.token.decimal,
+        amoutDecimal: widget.token.decimal);
     if (p != null) {
       controller.text = p;
     }
@@ -168,10 +170,12 @@ class _SetupNetworkAmountState extends State<SetupNetworkAmount>
                               decimal: true, signed: false),
                           textAlign: TextAlign.start,
                           controller: controller,
-                          enableInteractiveSelection: false,
+                          enableInteractiveSelection: true,
+                          maxLines: 1,
                           constraints: BoxConstraints(minHeight: 70),
                           inputFormatters: [
-                            BigRetionalWithSeperatorTextInputFormatter()
+                            BigRetionalWithSeperatorTextInputFormatter(
+                                maxScale: balance.value.token.decimal)
                           ],
                           validator: validator,
                         ),

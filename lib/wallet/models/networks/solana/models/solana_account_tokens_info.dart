@@ -14,6 +14,22 @@ class SolanaAccountSPLTokenInfo {
       required this.pubkey,
       required this.tokenOwner,
       required this.token});
+  SolanaAccountSPLTokenInfo copyWith({
+    SolAddress? mintAddress,
+    BigInt? amount,
+    Token? token,
+    SolAddress? pubkey,
+    SolAddress? tokenOwner,
+  }) {
+    return SolanaAccountSPLTokenInfo(
+      mintAddress: mintAddress ?? this.mintAddress,
+      amount: amount ?? this.amount,
+      token: token ?? this.token,
+      pubkey: pubkey ?? this.pubkey,
+      tokenOwner: tokenOwner ?? this.tokenOwner,
+    );
+  }
+
   SolanaSPLToken get toSplToken {
     return SolanaSPLToken.create(
         balance: amount,
@@ -31,6 +47,24 @@ class SolanaTokenInfo {
   final int? decimal;
   final String symbol;
   final String? logoURI;
+  SolanaTokenInfo copyWith({
+    int? chainId,
+    String? address,
+    String? name,
+    int? decimal,
+    String? symbol,
+    String? logoURI,
+  }) {
+    return SolanaTokenInfo(
+      chainId: chainId ?? this.chainId,
+      address: address ?? this.address,
+      name: name ?? this.name,
+      decimal: decimal ?? this.decimal,
+      symbol: symbol ?? this.symbol,
+      logoURI: logoURI ?? this.logoURI,
+    );
+  }
+
   factory SolanaTokenInfo.fromJson(Map<String, dynamic> json) {
     return SolanaTokenInfo(
         chainId: json["chainId"],

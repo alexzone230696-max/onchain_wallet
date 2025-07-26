@@ -93,50 +93,6 @@ class StellarWeb3JSStateHandler extends Web3JSStateHandler<
             JSWalletNetworkEvent> {
   StellarWeb3JSStateHandler(
       {required super.sendMessageToClient, required super.sendInternalMessage});
-  // @override
-  // Web3StellarSignMessage toSignMessageRequest(
-  //     {required Web3JsClientRequest params,
-  //     required StellarWeb3JSStateAccount state,
-  //     required Web3StellarRequestMethods method,
-  //     Web3ChainDefaultIdnetifier? network}) {
-  //   return Web3ValidatorUtils.parseParams2(() {
-  //     final param = params.elementAsJsObject<JSStellarSignMessageParams>(0,
-  //         keys: JSStellarSignMessageParams.properties);
-  //     List<int> message = params.objectAsBytes(param.message, "message",
-  //         encoding: [
-  //           StringEncoding.hex,
-  //           StringEncoding.base64,
-  //           StringEncoding.utf8
-  //         ]);
-  //     Web3StellarChainAccount account =
-  //         state.getJsAddressChainAccountOrThrow(param.account);
-  //     return Web3StellarSignMessage(
-  //         accessAccount: account,
-  //         challeng: BytesUtils.toHexString(message),
-  //         content: StringUtils.tryDecode(message));
-  //   });
-  // }
-
-  // @override
-  // Web3StellarSendTransaction toSignTransactionRequest(
-  //     {required Web3JsClientRequest params,
-  //     required StellarWeb3JSStateAccount state,
-  //     required Web3StellarRequestMethods method,
-  //     Web3ChainDefaultIdnetifier? network}) {
-  //   return Web3ValidatorUtils.parseParams2(() {
-  //     final param =
-  //         params.elementAsJsObject<JSStellarSendOrSignTransactionParams>(0,
-  //             keys: JSStellarSendOrSignTransactionParams.properties);
-  //     final account = state.getJsAddressChainAccountOrThrow(param.account);
-  //     List<int> txBytes =
-  //         params.objectAsBytes(param.transaction, "transaction", encoding: [
-  //       StringEncoding.hex,
-  //       StringEncoding.base64,
-  //     ]);
-  //     return Web3StellarSendTransaction(
-  //         account: account, transaction: txBytes, method: method);
-  //   }, error: Web3RequestExceptionConst.invalidTransaction);
-  // }
 
   @override
   Future<Web3MessageCore> request(Web3JsClientRequest params,

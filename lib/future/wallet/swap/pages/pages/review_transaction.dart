@@ -25,10 +25,10 @@ class TransactionReviewView extends StatelessWidget {
           onPopInvokedWithResult: (didPop, result) async {
             final close = await controller.onPop(() async {
               return context.openSliverDialog<bool>(
-                (context) => DialogTextView(
+                widget: (context) => DialogTextView(
                     text: "close_swap_page_desc".tr,
                     buttonWidget: DialogDoubleButtonView()),
-                'close_page'.tr,
+                label: 'close_page'.tr,
               );
             });
             if (close == true && context.mounted) context.popToHome();

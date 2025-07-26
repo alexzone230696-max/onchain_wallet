@@ -150,7 +150,7 @@ abstract class TonWeb3TransactionPayload {
     final walletV5 = MethodUtils.nullOnException(() =>
         VersionedWalletV5Operaion.deserialize(
             slice: slice,
-            chain: TonChain.fromWorkchain(destination.workChain)));
+            chain: TonChainId.fromWorkchain(destination.workChain)));
     if (walletV5 != null) {
       BigInt tonAmount = BigInt.zero;
       if (walletV5.type == VersionedWalletV5OperaionType.internal) {

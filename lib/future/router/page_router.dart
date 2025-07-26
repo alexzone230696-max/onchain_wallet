@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/wallet/setup/pages/setup_wallet.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/pages/transaction_state_builder.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network.dart';
 import 'package:on_chain_wallet/crypto/models/networks.dart';
 
 class PageRouter {
+  ///TransactionStateBuilder
+  static const String transaction = "/transaction";
+
+  static const String manageTokens = "/account/tokens";
+
   /// bitcoin casah
   static const String bitcoinCashTransaction = "/bitcoincash/transaction";
 
@@ -137,7 +143,7 @@ class PageRouter {
 
   /// WalletConnectView
   /// web3
-  static const String web3 = "web3/";
+  static const String web3Request = "web3/";
   static const String walletConnect = "web3/wallet_connect";
   static const String manageDaps = "web3/manage_dapps";
   static const String walletConnectPairing = "web3/wallet_connect/pairing";
@@ -146,12 +152,13 @@ class PageRouter {
   static const String web3Solana = "web3/solana";
   static const String web3Ton = "web3/ton";
   static const String web3Stellar = "web3/stellar";
+  static const String web3Ripple = "web3/ripple";
   static const String web3Substrate = "web3/substrate";
   static const String web3Aptos = "web3/aptos";
   static const String web3Sui = "web3/sui";
   static const String web3Cosmos = "web3/cosmos";
   static const String web3Bitcoin = "web3/bitcoin";
-  static const String web3Permission = "web3/permission";
+  static const String web3Permission_ = "web3/permission";
   static const String web3Global = "web3/connect";
   static const String web3WalletConnect = "web3/wallet_connect";
 
@@ -162,22 +169,16 @@ class PageRouter {
 
   static Widget _page(String? name) {
     switch (name) {
+      case web3Request:
+        return const Web3StatePageBuilder();
+      case manageTokens:
+        return const ManageAccountTokenView();
+      case transaction:
+        return const TransactionStateBuilder();
       case setup:
         return const SetupWallet();
-      case solanaTransfer:
-        return const SolanaTransferTransactionView();
-      case aptosTransfer:
-        return const AptosTransferTransactionView();
-      case suiTransfer:
-        return const SuiTransferTransactionView();
       case suiMultisigAddress:
         return const SetupSuiMultisigAddress();
-      case tonTransfer:
-        return const TonTransferTransactionView();
-      case bitcoinTransaction:
-        return const SendBitcoinTransactionView();
-      case bitcoinCashTransaction:
-        return const SendBitcoinCashTransactionView();
       case setupBitcoinMultsig:
         return const SetupBitcoinMultiSigAddressView();
       case exportSeed:
@@ -200,39 +201,24 @@ class PageRouter {
         return const BackupWalletView();
       case manageImportedKey:
         return const ManageImportedKeysView();
-
       case setupGenericAddress:
         return const NetworkGenericAddressDerivationView();
-      case rippleTransfer:
-        return const RippleTransferTransactionView();
-      case stellarTransaction:
-        return const StellarTransferTransactionView();
-      case ethereumTransaction:
-        return const EthereumTransferTransactionView();
-      case tronTransfer:
-        return const TronTransferTransactionView();
       case rippleAddToken:
         return const MonitorRippleTokenView();
       case stellarImportToken:
         return const MonitorStellarTokenView();
       case rippleAddNfts:
         return const MonitorRippleNFTsView();
-      case rippleTransaction:
-        return const RippleTransactionFieldsView();
       case rippleMultisigAddress:
         return const SetupRippleMutlisigAddressView();
       case importERC20Token:
         return const ImportERC20TokenView();
-
       case importTronToken:
         return const MonitorTronTokenView();
       case tronMultiSigAddress:
         return const SetupTronMultiSigAddressView();
-      case tronTransaction:
-        return const TronTransactionFieldsView();
       case importEthereumNetwork:
         return const ImportEthereumNetwork();
-
       case updateElectrumProviders:
         return const ImportElectrumProviderView();
       case updateCardanoProviders:
@@ -249,16 +235,6 @@ class PageRouter {
         return const CosmosImportTokenView();
       case importCosmosNetwork:
         return const CosmosImportNetworkView();
-      case importJettons:
-        return const TonImportJettonsView();
-      case cardanoTransaction:
-        return const SendCardanoTransactionView();
-      case cosmosTransfer:
-        return const CosmosTransferTransactionView();
-      case cosmosTransaction:
-        return const CosmosTransactionFieldsView();
-      case solanaTransaction:
-        return const SolanaTransactionFieldsView();
       case updateSolanaProviders:
         return const UpdateSolanaProvider();
       case updateSuiProviders:
@@ -305,30 +281,6 @@ class PageRouter {
         return const WalletSetupPageWidget();
       case barcodeScanner:
         return const BarcodeScannerView();
-      case substrateTransfer:
-        return const SubstrateTransferTransactionView();
-      case substrateTransaction:
-        return const SubstrateTransactionFieldsView();
-      case web3Ethereum:
-        return const EthereumWeb3FieldsView();
-      case web3Tron:
-        return const TronWeb3FieldsView();
-      case web3Ton:
-        return const TonWeb3FieldsView();
-      case web3Stellar:
-        return const StellarWeb3FieldsView();
-      case web3Substrate:
-        return const SubstrateWeb3FieldsView();
-      case web3Aptos:
-        return const AptosWeb3FieldsView();
-      case web3Sui:
-        return const SuiWeb3FieldsView();
-      case web3Cosmos:
-        return const CosmosWeb3FieldsView();
-      case web3Bitcoin:
-        return const BitcoinWeb3FieldsView();
-      case web3Solana:
-        return const SolanaWeb3FieldsView();
       case updateEthereumProvider:
         return const UpdateEthereumProvider();
       case updateTonProviders:
@@ -339,9 +291,6 @@ class PageRouter {
         return ManageWeb3DapssView();
       case updateTronProviders:
         return const UpdateTronProvider();
-
-      // case webview:
-      //   return const WebView();
       case moneroSettings:
         return const MoneroSettingsView();
       case moneroSyncOptions:
@@ -352,8 +301,6 @@ class PageRouter {
         return const MoneroVerifyTxProofView();
       case moneroAccountSync:
         return const MoneroAccountSyncView();
-      case moneroTransfer:
-        return const MoneroTransferTransactionView();
       case moneroMnemonic:
         return const GenerateMoneroMnemonicView();
       case importSubstrateNetwork:
@@ -429,68 +376,8 @@ class PageRouter {
     }
   }
 
-  static String transactionPage(WalletNetwork network) {
-    switch (network.type) {
-      case NetworkType.bitcoinCash:
-      case NetworkType.bitcoinAndForked:
-        return bitcoinTransaction;
-      case NetworkType.ethereum:
-        return ethereumTransaction;
-      case NetworkType.tron:
-        return tronTransfer;
-      case NetworkType.solana:
-        return solanaTransfer;
-      case NetworkType.aptos:
-        return aptosTransfer;
-      case NetworkType.sui:
-        return suiTransfer;
-
-      case NetworkType.ton:
-        return tonTransfer;
-      case NetworkType.cardano:
-        return cardanoTransaction;
-      case NetworkType.cosmos:
-        return cosmosTransfer;
-      case NetworkType.substrate:
-        return substrateTransfer;
-      case NetworkType.stellar:
-        return stellarTransaction;
-      case NetworkType.monero:
-        return moneroTransfer;
-      case NetworkType.xrpl:
-        return rippleTransfer;
-
-      default:
-        throw UnimplementedError();
-    }
-  }
-
   static String? web3Page(WalletNetwork network) {
-    switch (network.type) {
-      case NetworkType.ethereum:
-        return web3Ethereum;
-      case NetworkType.solana:
-        return web3Solana;
-      case NetworkType.tron:
-        return web3Tron;
-      case NetworkType.ton:
-        return web3Ton;
-      case NetworkType.stellar:
-        return web3Stellar;
-      case NetworkType.substrate:
-        return web3Substrate;
-      case NetworkType.aptos:
-        return web3Aptos;
-      case NetworkType.sui:
-        return web3Sui;
-      case NetworkType.cosmos:
-        return web3Cosmos;
-      case NetworkType.bitcoinCash:
-      case NetworkType.bitcoinAndForked:
-        return web3Bitcoin;
-      default:
-        return null;
-    }
+    return web3Request;
   }
 
   static String? importNetwork(NetworkType type) {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:cosmos_sdk/cosmos_sdk.dart';
 import 'package:on_chain_wallet/app/core.dart';
@@ -121,50 +123,6 @@ mixin CosmosCustomRequest on HttpImpl {
     });
   }
 
-  Future<CosmosNetworkParams> buildNetwork(
-      {required CosmosAPIProvider provider,
-      required CosmosNetworkParams param}) async {
-    final service = CosmosClient(
-        provider: TendermintProvider(TendermintHTTPService(
-            provider: provider, isolate: APPIsolate.separate)),
-        network: WalletCosmosNetwork(-1, param));
-    String hrp = param.hrp;
-    final bech32 = await MethodUtils.call(() => service.networkBech32());
-    if (bech32.hasError) {
-      if (hrp.isEmpty) {
-        throw WalletException("unable_to_retrieve_hrp");
-      }
-    } else {
-      if (hrp.isNotEmpty && hrp != bech32.result) {
-        throw WalletException("different_network_hrp");
-      }
-      hrp = bech32.result;
-    }
-    final nativeToken = await MethodUtils.call(() => service.provider.request(
-        TendermintRequestAbciQuery(
-            request: QueryDenomMetadataRequest(denom: param.denom))));
-    if (!nativeToken.hasResult) {
-      await service.totalSupply(param.denom);
-    }
-    await service.totalSupply(param.denom);
-    for (final i in param.feeTokens) {
-      if (i.denom == param.denom) continue;
-      await service.totalSupply(i.denom);
-    }
-    final chainId = await service.chainId();
-    CosmosNetworkTypes networkTypes = param.networkType;
-    final isEthermint = await service.isEthermint();
-    if (isEthermint) {
-      networkTypes = CosmosNetworkTypes.ethermint;
-    }
-    param = param.copyWith(
-        chainId: chainId,
-        hrp: hrp,
-        providers: [provider],
-        networkType: networkTypes);
-    return param;
-  }
-
   Future<CCRAsset?> findAsset(
       {required String denom,
       required String? chainName,
@@ -181,8 +139,8 @@ mixin CosmosCustomRequest on HttpImpl {
   }
 }
 
-class CosmosClient
-    extends NetworkClient<CosmosWalletTransaction, CosmosAPIProvider>
+class CosmosClient extends NetworkClient<CosmosWalletTransaction,
+        CosmosAPIProvider, BaseNetworkToken, CosmosBaseAddress>
     with HttpImpl, CosmosCustomRequest
     implements BaseSwapCosmosClient {
   CosmosClient({required this.provider, required this.network});
@@ -191,12 +149,6 @@ class CosmosClient
   final WalletCosmosNetwork network;
   @override
   TendermintHTTPService get service => provider.rpc as TendermintHTTPService;
-
-  Future<List<Coin>> _updateAndGetAccountBalances(
-      ICosmosAddress account) async {
-    final balances = await getAddressCoins(account.networkAddress);
-    return balances;
-  }
 
   Future<IbcChannelChannel?> getTransferChannel(String channelName) async {
     try {
@@ -220,16 +172,15 @@ class CosmosClient
     final denomUnit = result.metadata.denomUnits
         .firstWhere((e) => e.denom == result.metadata.display);
     return CW20Token.create(
-      balance: amount ?? BigInt.zero,
-      token: Token(
-          name: CosmosConst.extractFactoryTokenName(result.metadata.name ??
-              result.metadata.symbol ??
-              denomUnit.denom),
-          symbol: CosmosConst.extractFactoryTokenName(
-              result.metadata.symbol ?? denomUnit.denom),
-          decimal: denomUnit.exponent ?? 0),
-      denom: denom,
-    );
+        balance: amount ?? BigInt.zero,
+        token: Token(
+            name: CosmosConst.extractFactoryTokenName(result.metadata.name ??
+                result.metadata.symbol ??
+                denomUnit.denom),
+            symbol: CosmosConst.extractFactoryTokenName(
+                result.metadata.symbol ?? denomUnit.denom),
+            decimal: denomUnit.exponent ?? 0),
+        denom: denom);
   }
 
   Future<List<CosmosChainAsset>> getAddressTokens(
@@ -303,12 +254,6 @@ class CosmosClient
         TendermintRequestAbciQuery(request: const GetLatestBlockRequest()));
   }
 
-  Future<CosmosWeb3SimulateInfos> simulateTransaction(List<int> txBytes,
-      {List<CosmosMessage> txMessages = const []}) async {
-    final r = await simulateTx(txBytes);
-    return CosmosWeb3SimulateInfos(simulate: r, txMessages: txMessages);
-  }
-
   @override
   Future<BigRational> getEthermintBaseFee() async {
     final chainStatus = await provider.request(TendermintRequestAbciQuery(
@@ -328,62 +273,6 @@ class CosmosClient
       );
     }
     return result.hash;
-  }
-
-  Future<CosmosTransactionRequirment> getTransactionRequirment(
-      {required ICosmosAddress address, required CosmosChain account}) async {
-    List<Coin> balances = [];
-    final cosmosAccount = await getBaseAccount(address.networkAddress);
-    BigInt? fixedFee;
-    if (network.coinParam.networkType == CosmosNetworkTypes.thorAndForked) {
-      final fee = await MethodUtils.call(() async {
-        final networkConst = await getThorNodeConstants();
-        return BigInt.from(networkConst.nativeTransactionFee);
-      });
-      assert(fee.hasResult,
-          "failed to fetch ${network.networkName} native trasaction fee: ${fee.error}");
-      if (fee.hasResult) {
-        fixedFee = fee.result;
-      } else {
-        fixedFee = network.coinParam.getFeeToken().averageGasPrice.balance;
-      }
-    }
-    BigRational? ethermintTxFee;
-    if (network.coinParam.networkType.isEthermint) {
-      final fee = await MethodUtils.call(() {
-        return getEthermintBaseFee();
-      });
-      assert(fee.hasResult,
-          "failed to fetch ${network.networkName} base gas fee: ${fee.error}");
-      if (fee.hasResult) {
-        ethermintTxFee = fee.result;
-      } else {
-        ethermintTxFee = BigRational.parseDecimal(
-            network.coinParam.getFeeToken().averageGasPrice.price);
-      }
-    }
-    if (cosmosAccount != null) {
-      balances = await _updateAndGetAccountBalances(address);
-    }
-    final List<CW20Token> feeTokens =
-        List.generate(network.coinParam.feeTokens.length, (i) {
-      final token = network.coinParam.feeTokens[i];
-      return address.tokens.firstWhere(
-        (e) => e.denom == token.denom,
-        orElse: () => CW20Token.create(
-            balance: balances
-                    .firstWhereNullable((e) => e.denom == token.denom)
-                    ?.amount ??
-                BigInt.zero,
-            token: token.token,
-            denom: token.denom),
-      );
-    });
-    return CosmosTransactionRequirment(
-        account: cosmosAccount,
-        feeTokens: feeTokens,
-        fixedNativeGas: fixedFee,
-        ethermintTxFee: ethermintTxFee);
   }
 
   @override
@@ -543,6 +432,92 @@ class CosmosClient
     final block = await provider
         .request(TendermintRequestAbciQuery(request: GetLatestBlockRequest()));
     return block.block?.header.height;
+  }
+
+  Future<void> _fetchTokenMetadata(CosmosNetworkToken token) async {
+    if (!token.status.allowRetry) return;
+    token.setPending();
+    final metadata = await MethodUtils.call(() async {
+      final request = QueryDenomMetadataRequest(denom: token.token.denom);
+      final result =
+          await provider.request(TendermintRequestAbciQuery(request: request));
+      final denomUnit = result.metadata.denomUnits
+          .firstWhere((e) => e.denom == result.metadata.display);
+      return Token(
+          name: CosmosConst.extractFactoryTokenName(result.metadata.name ??
+              result.metadata.symbol ??
+              denomUnit.denom),
+          symbol: CosmosConst.extractFactoryTokenName(
+              result.metadata.symbol ?? denomUnit.denom),
+          decimal: denomUnit.exponent ?? 0);
+    });
+    if (metadata.hasResult) {
+      token.updaetTokenMetadata(metadata.result);
+      return;
+    }
+    final asset = await findAsset(
+        denom: token.token.denom,
+        chainName: network.coinParam.chainRegisteryName,
+        chainType: network.coinParam.chainType);
+    final decimal =
+        asset?.denomUnits.firstWhereOrNull((e) => e.denom == asset.display);
+    if (asset != null && decimal != null) {
+      final updateToken = Token(
+          name: asset.name, symbol: asset.symbol, decimal: decimal.exponent);
+      token.updaetTokenMetadata(updateToken);
+      return;
+    }
+    token.setError();
+  }
+
+  @override
+  Stream<List<BaseNetworkToken>> getAccountTokensStream(
+      CosmosBaseAddress address) {
+    final controller = StreamController<List<CosmosNetworkToken>>();
+
+    void add(List<CW20Token> tokens) {
+      if (!controller.isClosed) {
+        final cTokens =
+            tokens.map((e) => CosmosNetworkToken(token: e)).toList();
+        controller.add(cTokens);
+        for (final i in cTokens) {
+          _fetchTokenMetadata(i);
+        }
+      }
+    }
+
+    void error(Object err) {
+      if (!controller.isClosed) controller.addError(err);
+    }
+
+    void close() {
+      if (!controller.isClosed) controller.close();
+    }
+
+    Future<void> fetchTokens() async {
+      final result = await MethodUtils.call(() async {
+        return getAddressCoins(address);
+      });
+
+      if (result.hasError) {
+        error(result.exception!);
+        close();
+        return;
+      }
+      final balances = result.result
+          .where((e) => e.denom != network.coinParam.denom)
+          .map((e) => CW20Token.create(
+              balance: e.amount,
+              token: Token(name: e.denom, symbol: e.denom, decimal: 6),
+              denom: e.denom))
+          .toList();
+      add(balances);
+      close();
+    }
+
+    controller.onListen = fetchTokens;
+    controller.onCancel = close;
+    return controller.stream;
   }
 
   @override

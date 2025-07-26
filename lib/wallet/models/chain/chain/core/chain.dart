@@ -62,7 +62,7 @@ abstract final class Chain<
   @override
   int _addressIndex;
   @override
-  final StreamValue<IntegerBalance> totalBalance;
+  final InternalStreamValue<IntegerBalance> totalBalance;
   @override
   List<CONTACT> _contacts;
   @override
@@ -119,7 +119,7 @@ abstract final class Chain<
             client: APIUtils.createApiClient(network),
             id: id);
       case NetworkType.xrpl:
-        return RippleChain.setup(
+        return XRPChain.setup(
             network: network.toNetwork(),
             client: APIUtils.createApiClient(network),
             id: id);
@@ -145,7 +145,7 @@ abstract final class Chain<
             client: APIUtils.createApiClient(network),
             id: id);
       case NetworkType.ton:
-        return TheOpenNetworkChain.setup(
+        return TonChain.setup(
             network: network.toNetwork(),
             client: APIUtils.createApiClient(network),
             id: id);
@@ -159,6 +159,7 @@ abstract final class Chain<
             network: network.toNetwork(),
             client: APIUtils.createApiClient(network),
             id: id);
+
       case NetworkType.bitcoinAndForked:
       case NetworkType.bitcoinCash:
         return BitcoinChain.setup(
@@ -212,7 +213,7 @@ abstract final class Chain<
             client: APIUtils.createApiClient(network, identifier: provider));
         break;
       case NetworkType.ton:
-        chain = TheOpenNetworkChain.deserialize(
+        chain = TonChain.deserialize(
             network: network.toNetwork(),
             cbor: values,
             client: APIUtils.createApiClient(network, identifier: provider));
@@ -224,7 +225,7 @@ abstract final class Chain<
             client: APIUtils.createApiClient(network, identifier: provider));
         break;
       case NetworkType.xrpl:
-        chain = RippleChain.deserialize(
+        chain = XRPChain.deserialize(
             network: network.toNetwork(),
             cbor: values,
             client: APIUtils.createApiClient(network, identifier: provider));
@@ -287,7 +288,7 @@ abstract final class Chain<
         _contacts = [],
         _client = client,
         _config = config,
-        totalBalance = StreamValue.immutable(IntegerBalance.token(
+        totalBalance = InternalStreamValue.immutable(IntegerBalance.token(
             BaseChainController._totalBalance(addresses), network.token,
             immutable: true)),
         _storage =

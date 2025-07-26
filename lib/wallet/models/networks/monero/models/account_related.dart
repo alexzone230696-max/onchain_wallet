@@ -1440,51 +1440,8 @@ class MoneroUnlockedPaymentRequestDetails with CborSerializable {
   }
 }
 
-// class MoneroProcessTxesResponse with CborSerializable {
-//   final MoneroViewPrimaryAccountDetails address;
-//   final List<MoneroUnlockedPaymentRequestDetails> responses;
-
-//   MoneroProcessTxesResponse(
-//       {required List<MoneroUnlockedPaymentRequestDetails> responses,
-//       required this.address})
-//       : responses = responses.immutable;
-//   factory MoneroProcessTxesResponse.deserialize(
-//       {List<int>? bytes, CborObject? cbor, String? hex}) {
-//     final CborListValue values = CborSerializable.cborTagValue(
-//         cborBytes: bytes,
-//         object: cbor,
-//         hex: hex,
-//         tags: CborTagsConst.moneroProcessTxesResponse);
-//     return MoneroProcessTxesResponse(
-//         responses: values
-//             .elementAsListOf<CborTagValue>(0)
-//             .map(
-//                 (e) => MoneroUnlockedPaymentRequestDetails.deserialize(cbor: e))
-//             .toList(),
-//         address: MoneroViewPrimaryAccountDetails.deserialize(
-//             object: values.getCborTag(1)));
-//   }
-
-//   @override
-//   CborTagValue toCbor() {
-//     return CborTagValue(
-//         CborListValue.fixedLength([
-//           CborListValue.fixedLength(responses.map((e) => e.toCbor()).toList()),
-//           address.toCbor()
-//         ]),
-//         CborTagsConst.moneroProcessTxesResponse);
-//   }
-// }
-
 class MoneroBatchProcessTxesResponse with CborSerializable {
   final List<MoneroAccountPendingTxes> payments;
-
-  // List<MoneroUpdatePaymentRequest> successPaymets() {
-  //   return payments
-  //       .map((e) => e.toPayment())
-  //       .whereType<MoneroUpdatePaymentRequest>()
-  //       .toList();
-  // }
 
   MoneroBatchProcessTxesResponse(List<MoneroAccountPendingTxes> payments)
       : payments = payments.immutable;
@@ -1591,15 +1548,6 @@ class MoneroChainTrackerResponse with CborSerializable {
         CborTagsConst.moneroChainTrackingResponse);
   }
 }
-
-// class MoneroUpdatePaymentRequest {
-//   final List<MoneroOutputDetails> payments;
-//   final MoneroViewPrimaryAccountDetails primaryAddress;
-//   MoneroUpdatePaymentRequest(
-//       {required List<MoneroOutputDetails> payments,
-//       required this.primaryAddress})
-//       : payments = payments.imutable;
-// }
 
 class MoneroAccountPendingTxes with CborSerializable, Equatable {
   final MoneroViewPrimaryAccountDetails primaryAddress;

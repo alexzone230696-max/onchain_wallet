@@ -9,6 +9,7 @@ class APPSubstrateConst {
   static const String systemPalletName = "System";
   static const String extrinsicFailedMethodName = "ExtrinsicFailed";
   static const String systemRemarkVariantName = "remark";
+  static const String existentialDepositStorageName = "existentialDeposit";
   static const int defaultEraPeriod = 155;
   static const int maxDecimals = 38;
 }

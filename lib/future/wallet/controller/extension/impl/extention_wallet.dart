@@ -296,8 +296,8 @@ mixin ExtentionWalletHandler on Web3RequestControllerImpl {
     final exists = await _getAllActiveIntance();
     if (exists.isEmpty) return;
     await navigatorKey.currentContext?.openSliverDialog<bool>(
-        (context) => DuplicateExtensionInstanceAlert(),
-        'duplicate_wallet_instance'.tr,
+        widget: (context) => DuplicateExtensionInstanceAlert(),
+        label: 'duplicate_wallet_instance'.tr,
         dismissible: false);
     _closeSelf();
     throw WalletException('initialize_app_failed');

@@ -31,6 +31,13 @@ class ETHERC20Token extends SolidityToken {
         contractAddress: contractAddress,
         updated: updated);
   }
+  @override
+  ETHERC20Token clone({BigInt? balance}) {
+    return ETHERC20Token.create(
+        balance: balance ?? streamBalance.value.balance,
+        token: token,
+        contractAddress: contractAddress);
+  }
 
   @override
   ETHERC20Token updateToken(Token updateToken) {

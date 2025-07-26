@@ -9,13 +9,8 @@ import 'package:on_chain_wallet/wallet/web3/networks/ton/permission/models/accou
 import 'package:on_chain_wallet/wallet/web3/networks/ton/permission/models/permission.dart';
 import 'package:ton_dart/ton_dart.dart';
 
-abstract class Web3TonRequestParam<RESPONSE> extends Web3RequestParams<
-    RESPONSE,
-    TonAddress,
-    TheOpenNetworkChain,
-    ITonAddress,
-    Web3TonChainAccount,
-    Web3TonChain> {
+abstract class Web3TonRequestParam<RESPONSE> extends Web3RequestParams<RESPONSE,
+    TonAddress, TonChain, ITonAddress, Web3TonChainAccount, Web3TonChain> {
   @override
   abstract final Web3TonRequestMethods method;
 
@@ -49,7 +44,7 @@ abstract class Web3TonRequestParam<RESPONSE> extends Web3RequestParams<
 }
 
 class Web3TonRequest<RESPONSE, PARAMS extends Web3TonRequestParam<RESPONSE>>
-    extends Web3NetworkRequest<RESPONSE, TonAddress, TheOpenNetworkChain,
+    extends Web3NetworkRequest<RESPONSE, TonAddress, TonChain,
         Web3TonChainAccount, ITonAddress, Web3TonChain, PARAMS> {
   Web3TonRequest(
       {required super.params,

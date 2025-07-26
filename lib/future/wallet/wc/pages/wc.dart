@@ -49,11 +49,13 @@ class _WalletConnectViewState extends State<WalletConnectView>
   Future<void> onRemoveSession(ShimmerAction<Web3ClientInfo> session) async {
     session.setAction(true);
     updateState();
-    final accept = await context.openSliverDialog((context) {
-      return DialogTextView(
-          text: "remove_session_desc".tr,
-          buttonWidget: DialogDoubleButtonView());
-    }, "remove_session".tr);
+    final accept = await context.openSliverDialog(
+        widget: (context) {
+          return DialogTextView(
+              text: "remove_session_desc".tr,
+              buttonWidget: DialogDoubleButtonView());
+        },
+        label: "remove_session".tr);
     if (accept != true) return;
     await walletConnect.removeSession(session.object);
     sessions.remove(session);

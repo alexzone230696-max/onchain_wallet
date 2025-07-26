@@ -44,7 +44,8 @@ class _DrawerViewState extends State<DrawerView> with SafeState<DrawerView> {
   Future<void> swapSetting() async {
     wallet.swap?.updateSettings((controller) {
       return context.openSliverDialog(
-          (context) => SelectSwapProvidersView(controller), 'swap_settings'.tr);
+          widget: (context) => SelectSwapProvidersView(controller),
+          label: 'swap_settings'.tr);
     });
   }
 
@@ -69,11 +70,11 @@ class _DrawerViewState extends State<DrawerView> with SafeState<DrawerView> {
   Future<void> switchOrCreateWallet() async {
     context
         .openSliverDialog<HDWallet>(
-            (c) => SwitchWalletView(
+            widget: (c) => SwitchWalletView(
                   wallets: wallet.wallet.wallets,
                   selectedWallet: wallet.wallet.wallet,
                 ),
-            "switch_wallets".tr,
+            label: "switch_wallets".tr,
             content: (c) => [
                   IconButton(
                       onPressed: () {

@@ -9,8 +9,7 @@ class TonSettingsView extends StatelessWidget {
   const TonSettingsView({super.key});
   @override
   Widget build(BuildContext context) {
-    return NetworkAccountControllerView<TonClient?, ITonAddress?,
-        TheOpenNetworkChain>(
+    return NetworkAccountControllerView<TonClient?, ITonAddress?, TonChain>(
       title: "settings".tr,
       addressRequired: false,
       clientRequired: false,

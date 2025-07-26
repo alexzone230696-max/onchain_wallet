@@ -85,7 +85,7 @@ final class AptosChain extends Chain<
     await initAddress(address);
     await onClient(onConnect: (client) async {
       final balance = await client.getAccountBalance(address.networkAddress);
-      _internalupdateAddressBalance(
+      _updateAddressBalanceInternal(
           address: address, balance: balance, saveAccount: saveAccount);
       if (tokens) {
         final accountTokens = address.tokens;
@@ -117,6 +117,7 @@ final class AptosChain extends Chain<
             .firstWhereOrNull((e) => e.assetType == token.assetType);
         token._updateBalance(balance?.balance ?? BigInt.zero);
         token.setFreeze(balance?.frozen ?? false);
+        if (!address.tokens.contains(token)) continue;
         _saveToken(address: address, token: token);
       }
     });

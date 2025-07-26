@@ -92,7 +92,7 @@ class _MoneroSyncOptionsViewState
     final provider = walletProvider;
     if (walletRpcSync && provider != null) {
       final accept = await context.openSliverDialog<bool>(
-          (p0) => DialogTextView(
+          widget: (p0) => DialogTextView(
               buttonWidget: DialogDoubleButtonView(),
               widget: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,7 +100,7 @@ class _MoneroSyncOptionsViewState
                   Text("disconnect_from_monero_wallet_rpc_desc".tr),
                 ],
               )),
-          "disconnect_from_wallet_rpc".tr);
+          label: "disconnect_from_wallet_rpc".tr);
       if (accept != true) {
         return;
       }
@@ -285,7 +285,7 @@ class _MoneroSyncOptionsViewState
             'sync_request'.tr,
             child: _CreateSyncHeightRequest(
               account: account,
-              curretBlock: client.currentHeight?.block,
+              curretBlock: client.currentHeight.value,
               existsRanges: ranges,
             ));
     if (request == null) return;

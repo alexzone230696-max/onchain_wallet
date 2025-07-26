@@ -119,7 +119,8 @@ class WalletExceptionConst {
       WalletException("unsuported_backup_version");
   static const WalletException featureUnavailableForMultiSignature =
       WalletException("feature__unavailable_for_multi_signature");
-
+  static const WalletException insufficientBalance =
+      WalletException("insufficient_balance");
   static const WalletException decryptionFailed =
       WalletException("decryption_failed");
 

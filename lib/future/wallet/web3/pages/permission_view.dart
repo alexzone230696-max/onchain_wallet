@@ -6,6 +6,9 @@ import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/aptos/web3/web3.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/web3/permission/permission.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/web3/permission/permission.dart';
+import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/permission/ethereum_permission_view.dart';
+import 'package:on_chain_wallet/future/wallet/network/monero/web3/permission/permission.dart';
+import 'package:on_chain_wallet/future/wallet/network/ripple/web3/permission/permission.dart';
 import 'package:on_chain_wallet/future/wallet/network/solana/web3/web3.dart';
 import 'package:on_chain_wallet/future/wallet/network/stellar/web3/permission/permission.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/web3/permission/permission.dart';
@@ -14,7 +17,6 @@ import 'package:on_chain_wallet/future/wallet/network/ton/web3/permission/permis
 import 'package:on_chain_wallet/future/wallet/network/tron/web3/web3.dart';
 import 'package:on_chain_wallet/future/wallet/security/pages/password_checker.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/client_info.dart';
-import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/permission/ethereum_permission_view.dart';
 import 'package:on_chain_wallet/future/wallet/web3/types/types.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
@@ -160,14 +162,14 @@ class __Web3APPPermissionViewState extends State<_Web3ApplicationPermissionView>
     final requiredChains = authenticated.requiredChainPermissions(permission);
     if (requiredChains.isNotEmpty) {
       final accept = await context.openSliverDialog(
-          (context) => DialogTextView(
+          widget: (context) => DialogTextView(
                 text: "web3_dapp_update_permission_alert".tr.replaceOne(
                     requiredChains
                         .map((e) => e.network.networkName)
                         .join(", ")),
                 buttonWidget: DialogDoubleButtonView(),
               ),
-          'update_permission'.tr);
+          label: 'update_permission'.tr);
       if (accept != true) return;
     }
     if (requiredChains.isEmpty) {
@@ -175,12 +177,12 @@ class __Web3APPPermissionViewState extends State<_Web3ApplicationPermissionView>
           authenticated.requiredNetworkPermissions(permission);
       if (requiredNetworks.isNotEmpty) {
         final accept = await context.openSliverDialog(
-            (context) => DialogTextView(
+            widget: (context) => DialogTextView(
                   text: "web3_dapp_update_permission_alert".tr.replaceOne(
                       requiredNetworks.map((e) => e.name).join(", ")),
                   buttonWidget: DialogDoubleButtonView(),
                 ),
-            'update_permission'.tr);
+            label: 'update_permission'.tr);
         if (accept != true) return;
       }
     }
@@ -234,11 +236,11 @@ class __Web3APPPermissionViewState extends State<_Web3ApplicationPermissionView>
   Future<void> clearActivities() async {
     final application = this.application;
     final r = await context.openSliverDialog<bool>(
-        (context) => DialogTextView(
+        widget: (context) => DialogTextView(
               text: "delete_all_activities_desc2".tr,
               buttonWidget: DialogDoubleButtonView(),
             ),
-        'remove_activities'.tr);
+        label: 'remove_activities'.tr);
     if (r != true) return;
 
     progressKey.progressText("updating_permission".tr);
@@ -279,6 +281,10 @@ class __Web3APPPermissionViewState extends State<_Web3ApplicationPermissionView>
     9: GlobalKey<Web3PermissionState>(debugLabel: "Web3PermissionState_cosmos"),
     10: GlobalKey<Web3PermissionState>(
         debugLabel: "Web3PermissionState_bitcoin"),
+    11: GlobalKey<Web3PermissionState>(
+        debugLabel: "Web3PermissionState_ripple"),
+    12: GlobalKey<Web3PermissionState>(
+        debugLabel: "Web3PermissionState_monero"),
   };
 
   @override
@@ -348,6 +354,12 @@ class __Web3APPPermissionViewState extends State<_Web3ApplicationPermissionView>
                                 image: APPConst.btc,
                                 disabled: chainDisabled(
                                     NetworkType.bitcoinAndForked)),
+                            _NavigationRailDestination(
+                                image: APPConst.xrp,
+                                disabled: chainDisabled(NetworkType.xrpl)),
+                            _NavigationRailDestination(
+                                image: APPConst.monero,
+                                disabled: chainDisabled(NetworkType.monero)),
                           ],
                           selectedIndex: _selectedIndex,
                         ),
@@ -423,7 +435,11 @@ class _APPPermissionWidget extends StatelessWidget {
                 9: (context) => CosmosWeb3PermissionView(
                     key: state.permissionState[9], application: application),
                 10: (context) => BitcoinWeb3PermissionView(
-                    key: state.permissionState[10], application: application)
+                    key: state.permissionState[10], application: application),
+                11: (context) => RippleWeb3PermissionView(
+                    key: state.permissionState[11], application: application),
+                12: (context) => MoneroWeb3PermissionView(
+                    key: state.permissionState[12], application: application),
               }),
           WidgetConstant.sliverPaddingVertial40,
         ],

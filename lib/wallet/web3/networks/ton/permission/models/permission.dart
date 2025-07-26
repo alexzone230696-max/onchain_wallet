@@ -9,8 +9,8 @@ import 'package:on_chain_wallet/wallet/web3/models/models/network.dart';
 import 'package:ton_dart/ton_dart.dart';
 import 'account.dart';
 
-class Web3TonChain extends Web3Chain<TonAddress, TheOpenNetworkChain,
-    ITonAddress, Web3TonChainAccount, WalletTonNetwork> {
+class Web3TonChain extends Web3Chain<TonAddress, TonChain, ITonAddress,
+    Web3TonChainAccount, WalletTonNetwork> {
   Web3TonChain._({
     required super.accounts,
     required super.id,

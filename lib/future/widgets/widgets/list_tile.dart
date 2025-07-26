@@ -100,10 +100,12 @@ class AppRadioListTile<T> extends StatelessWidget {
       this.onChanged,
       required this.value,
       this.title,
-      this.subtitle});
+      this.subtitle,
+      this.secondary});
   final void Function(T? value)? onChanged;
   final T value;
   final Widget? title;
+  final Widget? secondary;
   final Widget? subtitle;
   final T? groupValue;
   @override
@@ -112,6 +114,7 @@ class AppRadioListTile<T> extends StatelessWidget {
       onChanged: onChanged,
       groupValue: groupValue,
       value: value,
+      secondary: secondary,
       title: title == null
           ? null
           : DefaultTextStyle(
@@ -180,6 +183,7 @@ class AppSwitchListTile extends StatelessWidget {
 class APPExpansionListTile extends StatelessWidget {
   const APPExpansionListTile(
       {required this.title,
+      this.margin = EdgeInsets.zero,
       this.subtitle,
       this.trailing,
       this.children = const <Widget>[],
@@ -188,33 +192,40 @@ class APPExpansionListTile extends StatelessWidget {
       this.color,
       this.reverse,
       this.initiallyExpanded = false,
+      this.enabled = true,
       super.key});
   final Widget title;
   final Widget? subtitle;
   final Widget? trailing;
   final List<Widget> children;
   final EdgeInsetsGeometry? tilePadding;
+  final EdgeInsetsGeometry margin;
   final BoolVoid? onExpansionChanged;
   final Color? color;
   final Color? reverse;
   final bool initiallyExpanded;
+  final bool enabled;
   @override
   Widget build(BuildContext context) {
-    return ExpansionTile(
-        shape: RoundedRectangleBorder(borderRadius: WidgetConstant.border8),
-        collapsedShape:
-            RoundedRectangleBorder(borderRadius: WidgetConstant.border8),
-        backgroundColor: context.primaryContainer,
-        collapsedBackgroundColor: context.primaryContainer,
-        tilePadding: tilePadding,
-        collapsedIconColor: context.onPrimaryContainer,
-        iconColor: context.onPrimaryContainer,
-        initiallyExpanded: initiallyExpanded,
-        title: title,
-        subtitle: subtitle,
-        trailing: trailing,
-        onExpansionChanged: onExpansionChanged,
-        children: children);
+    return Padding(
+      padding: margin,
+      child: ExpansionTile(
+          enabled: enabled,
+          shape: RoundedRectangleBorder(borderRadius: WidgetConstant.border8),
+          collapsedShape:
+              RoundedRectangleBorder(borderRadius: WidgetConstant.border8),
+          backgroundColor: color ?? context.primaryContainer,
+          collapsedBackgroundColor: color ?? context.primaryContainer,
+          tilePadding: tilePadding,
+          collapsedIconColor: reverse ?? context.onPrimaryContainer,
+          iconColor: reverse ?? context.onPrimaryContainer,
+          initiallyExpanded: initiallyExpanded,
+          title: title,
+          subtitle: subtitle,
+          trailing: trailing,
+          onExpansionChanged: onExpansionChanged,
+          children: children),
+    );
   }
 }
 

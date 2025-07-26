@@ -82,8 +82,8 @@ class WebView extends StatelessWidget {
                                                       () {
                                                         return context.openDialogPage<
                                                                 String>('',
-                                                            routeName:
-                                                                PageRouter.web3,
+                                                            routeName: PageRouter
+                                                                .web3Permission_,
                                                             fullWidget: (context) =>
                                                                 WebViewSearchBarView(
                                                                     model));

@@ -99,3 +99,15 @@ class SliverPageConstraintsBoxView extends StatelessWidget {
     );
   }
 }
+
+class FullWidthWrapper extends StatelessWidget {
+  const FullWidthWrapper({required this.child, super.key});
+  final Widget child;
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: child,
+    );
+  }
+}

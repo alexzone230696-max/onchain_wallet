@@ -3,6 +3,7 @@ import '../../../js_wallet.dart';
 import 'aptos.dart';
 import 'bitcoin.dart';
 import 'cosmos.dart';
+import 'monero.dart';
 import 'substrate.dart';
 import 'sui.dart';
 
@@ -74,6 +75,35 @@ extension type JSWalletStandardFeature(JSAny _) implements JSAny {
   external set stellarEvents(JSWalletStandardEventsFeature _);
   @JS("stellar:disconnect")
   external set stellarDisconnect(JSWalletStandardDisconnectFeature _);
+
+  /// stellar
+  @JS("monero:signAndSendTransaction")
+  external set moneroSignAndSendTransaction(
+      MoneroWalletAdapterMoneroSignAndSendTransactionFeature _);
+  @JS("monero:signMessage")
+  external set moneroSignMessage(MoneroWalletAdapterMoneroSignMessageFeature _);
+  @JS("monero:connect")
+  external set moneroConnect(JSMoneroWalletStandardConnectFeature _);
+  @JS("monero:events")
+  external set moneroEvents(JSWalletStandardEventsFeature _);
+  @JS("monero:disconnect")
+  external set moneroDisconnect(JSWalletStandardDisconnectFeature _);
+
+  /// ripple
+  @JS("xrpl:signAndSendTransaction")
+  external set rippleSignAndSendTransaction(
+      RippleWalletAdapterRippleSignAndSendTransactionFeature _);
+  @JS("xrpl:signTransaction")
+  external set rippleSignTransaction(
+      RippleWalletAdapterRippleSignTransactionFeature _);
+  @JS("xrpl:signMessage")
+  external set rippleSignMessage(RippleWalletAdapterRippleSignMessageFeature _);
+  @JS("xrpl:connect")
+  external set rippleConnect(JSRippleWalletStandardConnectFeature _);
+  @JS("xrpl:events")
+  external set rippleEvents(JSWalletStandardEventsFeature _);
+  @JS("xrpl:disconnect")
+  external set rippleDisconnect(JSWalletStandardDisconnectFeature _);
 
   /// bitcoin
   @JS("bitcoin:connect")

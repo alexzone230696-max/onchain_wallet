@@ -37,6 +37,13 @@ class SuiToken extends TokenCore<IntegerBalance, Token> {
         assetType: assetType,
         isFreeze: isFreez);
   }
+  @override
+  SuiToken clone({BigInt? balance}) {
+    return SuiToken.create(
+        balance: balance ?? streamBalance.value.balance,
+        token: token,
+        assetType: assetType);
+  }
 
   @override
   SuiToken updateToken(Token updateToken) {

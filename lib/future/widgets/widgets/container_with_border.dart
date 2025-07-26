@@ -145,3 +145,17 @@ class EditOrRemoveIconWidget extends StatelessWidget {
     };
   }
 }
+
+class AddOrRemoveIconWidget extends StatelessWidget {
+  const AddOrRemoveIconWidget(this.remove, {this.color, super.key});
+  final bool remove;
+  final Color? color;
+  @override
+  Widget build(BuildContext context) {
+    return switch (remove) {
+      true =>
+        Icon(Icons.remove_circle, color: color ?? context.onPrimaryContainer),
+      _ => Icon(Icons.add_box, color: color ?? context.onPrimaryContainer)
+    };
+  }
+}

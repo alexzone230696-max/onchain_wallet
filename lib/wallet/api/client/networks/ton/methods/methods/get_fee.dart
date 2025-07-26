@@ -1,3 +1,4 @@
+import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network.dart';
 import 'package:on_chain_wallet/wallet/models/networks/ton/ton.dart';
 import 'package:ton_dart/ton_dart.dart';
@@ -6,12 +7,10 @@ class TonRquestGetFee extends TonApiRequest<TonTransactionFeeDetails, dynamic> {
   final Message message;
   final TonAddress address;
   final TonApiType api;
-  final MsgForwardPricesResponse forwardPrice;
   final WalletTonNetwork network;
   TonRquestGetFee(
       {required this.message,
       required this.address,
-      required this.forwardPrice,
       required this.api,
       required this.network});
   TonApiRequest? _request;
@@ -22,7 +21,7 @@ class TonRquestGetFee extends TonApiRequest<TonTransactionFeeDetails, dynamic> {
           ignoreSignatureCheck: true);
     }
     return TonCenterEstimateFee(
-        address: address.toString(),
+        address: address.toFriendlyAddress(),
         body: message.body.toBase64(),
         initCode: message.init?.code?.toBase64() ?? "",
         initData: message.init?.data?.toBase64() ?? "");
@@ -39,47 +38,56 @@ class TonRquestGetFee extends TonApiRequest<TonTransactionFeeDetails, dynamic> {
 
   @override
   TonTransactionFeeDetails onResonse(result) {
-    final externalMessageFee = TonFeeUtils.computeExternalMessageFees(
-        forwardPrice, message.serialize());
     if (api.isTonCenter) {
       final r = (_request as TonCenterEstimateFee).onResonse(result);
       return TonTransactionFeeDetails(
-          actionPhase:
-              r.sourceFees.inFwdFee + r.sourceFees.fwdFee + externalMessageFee,
+          actionPhase: r.sourceFees.inFwdFee + r.sourceFees.fwdFee,
           storageFee: r.sourceFees.storageFee,
           gasFee: r.sourceFees.gasFee,
           success: true,
           network: network);
     }
     final r = (_request as TonApiEmulateMessageToTrace).onResonse(result);
-
+    final messages = r.children.expand(emulateMessages);
+    final succes = r.transaction.success && messages.every((e) => e.success);
+    final error = r.transaction.actionPhase?.resultCodeDescription ??
+        messages
+            .firstWhereNullable(
+                (e) => !e.success && e.resultDescription != null)
+            ?.resultDescription;
     return TonTransactionFeeDetails(
-        actionPhase: ((r.transaction.actionPhase?.fwdFees ?? BigInt.zero) +
-            externalMessageFee),
+        actionPhase: r.transaction.actionPhase?.fwdFees ?? BigInt.zero,
         gasFee: r.transaction.computePhase?.gasFees ?? BigInt.zero,
         storageFee: r.transaction.storagePhase?.feesCollected ?? BigInt.zero,
-        success: r.transaction.success,
+        success: succes,
         network: network,
-        resultDescription: r.transaction.actionPhase?.resultCodeDescription,
-        internalMessages: r.children.map(
-          (e) {
-            final bool success =
-                e.transaction.actionPhase?.success ?? e.transaction.success;
-            String? errorMessage;
-            if (!success) {
-              errorMessage = e.transaction.actionPhase?.resultCodeDescription ??
-                  e.transaction.computePhase?.exitCodeDescription ??
-                  e.transaction.computePhase?.exitCode?.toString();
-            }
-            return TonEmulatedMessage(
-                destination: e.transaction.inMsg!.destination?.address,
-                actionPhase: r.internalActionFees + e.internalActionFees,
-                gasFee: r.internalGasFees + e.internalGasFees,
-                storageFee: r.internalStorageFeees + e.internalStorageFeees,
-                success: success,
-                resultDescription: errorMessage,
-                network: network);
-          },
-        ).toList());
+        resultDescription: error,
+        internalMessages: messages.toList());
+  }
+
+  List<TonEmulatedMessage> emulateMessages(TraceResponse e) {
+    final computePhase = e.transaction.computePhase?.success ?? true;
+    final actionPhase = e.transaction.actionPhase?.success ?? true;
+    final tx = e.transaction.success;
+
+    final bool success = computePhase && actionPhase && tx;
+    String? errorMessage;
+    if (!success) {
+      if (!computePhase) {
+        errorMessage = e.transaction.computePhase?.exitCodeDescription ??
+            e.transaction.computePhase?.exitCode?.toString();
+      } else if (!actionPhase) {
+        errorMessage = e.transaction.actionPhase?.resultCodeDescription;
+      }
+    }
+    final msg = TonEmulatedMessage(
+        destination: e.transaction.inMsg?.destination?.address,
+        actionPhase: e.transaction.actionPhase?.fwdFees ?? BigInt.zero,
+        gasFee: e.transaction.computePhase?.gasFees ?? BigInt.zero,
+        storageFee: e.transaction.storagePhase?.feesCollected ?? BigInt.zero,
+        success: success,
+        resultDescription: errorMessage,
+        network: network);
+    return [msg, ...e.children.expand((e) => emulateMessages(e))];
   }
 }

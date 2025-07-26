@@ -11,6 +11,8 @@ import 'package:on_chain_wallet/wallet/web3/networks/ethereum/params/core/reques
 import 'package:on_chain_wallet/wallet/web3/core/permission/permission.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/global/global.dart';
 import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/monero/params/core/request.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/ripple/params/core/request.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/solana/solana.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/stellar/stellar.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/substrate/params/core/request.dart';
@@ -158,6 +160,14 @@ abstract class Web3RequestParams<
         break;
       case NetworkType.solana:
         param = Web3SolanaRequestParam.deserialize(
+            bytes: bytes, object: object, hex: hex);
+        break;
+      case NetworkType.xrpl:
+        param = Web3XRPRequestParam.deserialize(
+            bytes: bytes, object: object, hex: hex);
+        break;
+      case NetworkType.monero:
+        param = Web3MoneroRequestParam.deserialize(
             bytes: bytes, object: object, hex: hex);
         break;
       case NetworkType.ton:

@@ -126,9 +126,7 @@ class BigRetionalRangeTextInputFormatter extends TextInputFormatter {
         BigRational.tryParseDecimaal(oldValue.text);
     if (enteredNumber == null) {
       return const TextEditingValue(
-        text: "",
-        selection: TextSelection.collapsed(offset: 0),
-      );
+          text: "", selection: TextSelection.collapsed(offset: 0));
     }
     return oldValue;
   }
@@ -238,14 +236,18 @@ class BigRetionalWithSeperatorTextInputFormatter extends TextInputFormatter {
   final bool allowDecimal;
   final bool allowSign;
   final String sperator;
+  static final leadingZero = RegExp(r'^0{2,}');
+  final RegExp? scale;
+  static final RegExp speratorRegex = RegExp(',');
 
-  BigRetionalWithSeperatorTextInputFormatter(
-      {this.min,
-      this.max,
-      this.maxScale,
-      this.allowSign = true,
-      this.allowDecimal = true,
-      this.sperator = ','});
+  BigRetionalWithSeperatorTextInputFormatter({
+    this.min,
+    this.max,
+    this.maxScale,
+    this.allowSign = true,
+    this.allowDecimal = true,
+    this.sperator = ',',
+  }) : scale = maxScale == null || maxScale == 0 ? null : RegExp(r'\.(\d+)$');
 
   static TextEditingValue _buildOldValue(TextEditingValue oldValue,
       {String sperator = ','}) {
@@ -261,11 +263,23 @@ class BigRetionalWithSeperatorTextInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
       TextEditingValue oldValue, TextEditingValue newValue) {
-    final String newString = newValue.text.replaceAll(sperator, '');
+    bool isEnd = newValue.text.length == newValue.selection.end;
+    String newString = newValue.text.replaceAll(sperator, '');
     if (newString.isNotEmpty) {
       final BigRational? enteredNumber =
           BigRational.tryParseDecimaal(newString);
-      if (enteredNumber != null) {
+      if (newString == ".") {
+        newString = "0.";
+      } else if (enteredNumber != null) {
+        final match = scale?.firstMatch(newString);
+        if (match != null) {
+          if (match.group(1)!.length > maxScale!) {
+            return _buildOldValue(oldValue);
+          }
+        }
+        if (leadingZero.hasMatch(newString)) {
+          return _buildOldValue(oldValue);
+        }
         if (min != null && enteredNumber < min!) {
           return _buildOldValue(oldValue);
         } else if (max != null && enteredNumber > max!) {
@@ -282,10 +296,19 @@ class BigRetionalWithSeperatorTextInputFormatter extends TextInputFormatter {
         return _buildOldValue(oldValue);
       }
     }
-
     final newTxt = StrUtils.to3Digits(newString,
         allowEmptyFractional: true, separator: sperator);
-
+    if (!isEnd) {
+      final current = newValue.text.substring(0, newValue.selection.end);
+      final commaCount = speratorRegex.allMatches(current).length;
+      final s = newTxt.substring(0, newValue.selection.end);
+      final scommaCount = speratorRegex.allMatches(s).length;
+      final ss = scommaCount - commaCount;
+      return TextEditingValue(
+          text: newTxt,
+          selection:
+              TextSelection.collapsed(offset: newValue.selection.end + ss));
+    }
     return TextEditingValue(
         text: newTxt,
         selection: TextSelection.collapsed(offset: newTxt.length));

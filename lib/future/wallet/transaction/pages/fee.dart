@@ -1,0 +1,230 @@
+import 'package:flutter/material.dart';
+import 'package:on_chain_wallet/app/models/models/typedef.dart';
+import 'package:on_chain_wallet/app/utils/list/extension.dart';
+import 'package:on_chain_wallet/future/future.dart';
+import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/core/form.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+
+class TransactionFeeView extends StatelessWidget {
+  const TransactionFeeView(
+      {super.key,
+      this.onTapManual,
+      required this.controller,
+      this.onRetryFeeEstimate});
+  final TransactionStateController controller;
+  final DynamicVoid? onTapManual;
+  final DynamicVoid? onRetryFeeEstimate;
+  TransactionFeeData get fee => controller.txFee;
+  @override
+  Widget build(BuildContext context) {
+    return TransactionFeeWidget(
+        fee: fee,
+        onTapManual: onTapManual,
+        getMaxFeeInput: controller.getMaxFeeInput,
+        onRetryFeeEstimate: onRetryFeeEstimate);
+  }
+}
+
+class TransactionFeeWidget extends StatelessWidget {
+  const TransactionFeeWidget(
+      {super.key,
+      required this.fee,
+      required this.getMaxFeeInput,
+      this.onTapManual,
+      this.onRetryFeeEstimate});
+  final TransactionFeeData fee;
+  final DynamicVoid? onTapManual;
+  final GETMAXFEEINPUT getMaxFeeInput;
+  final DynamicVoid? onRetryFeeEstimate;
+
+  @override
+  Widget build(BuildContext context) {
+    bool initiallyExpanded = false;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("transaction_fee".tr, style: context.textTheme.titleMedium),
+        WidgetConstant.height8,
+        APPStreamBuilder(
+            value: fee.notifier,
+            builder: (context, value) {
+              return Shimmer(
+                  onActive: (enable, context) {
+                    return ConditionalWidget(
+                      enable: fee.fee.isDefault,
+                      onActive: (context) => ContainerWithBorder(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            CoinAndMarketPriceView(
+                                balance: fee.fee.fee,
+                                style: context.onPrimaryTextTheme.titleMedium,
+                                symbolColor: context.onPrimaryContainer,
+                                showTokenImage: true),
+                            ConditionalWidget(
+                                enable: fee.fee.description != null,
+                                onActive: (context) => Text(
+                                    fee.fee.description ?? '',
+                                    style:
+                                        context.onPrimaryTextTheme.bodySmall)),
+                            ErrorTextContainer(
+                                error: fee.fee.error,
+                                errorIcon: onRetryFeeEstimate == null
+                                    ? Icons.error
+                                    : Icons.refresh,
+                                enableTap: false,
+                                oTapError: onRetryFeeEstimate)
+                          ],
+                        ),
+                      ),
+                      onDeactive: (context) {
+                        final dynamicFee = (fee as TransactionDynamicFeeData);
+                        return APPAnimated(
+                            isActive: true,
+                            onActive: (context) => APPExpansionListTile(
+                                  key: ValueKey(fee.fee),
+                                  initiallyExpanded: initiallyExpanded,
+                                  onExpansionChanged: (p0) {
+                                    initiallyExpanded = p0;
+                                  },
+                                  enabled: dynamicFee.allowChangeFee,
+                                  title: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: [
+                                      Text(fee.fee.type.value.tr,
+                                          style: context
+                                              .onPrimaryTextTheme.titleMedium),
+                                      WidgetConstant.height8,
+                                      ContainerWithBorder(
+                                        backgroundColor:
+                                            context.onPrimaryContainer,
+                                        child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              CoinAndMarketPriceView(
+                                                  balance: fee.fee.fee,
+                                                  style: context
+                                                      .primaryTextTheme
+                                                      .titleMedium,
+                                                  symbolColor:
+                                                      context.primaryContainer,
+                                                  showTokenImage: true),
+                                              ConditionalWidget(
+                                                  enable: fee.fee.description !=
+                                                      null,
+                                                  onActive: (context) => Text(
+                                                      fee.fee.description ?? '',
+                                                      style: context
+                                                          .primaryTextTheme
+                                                          .bodySmall)),
+                                              ErrorTextContainer(
+                                                  error: fee.fee.error,
+                                                  enableTap: false,
+                                                  errorIcon:
+                                                      onRetryFeeEstimate == null
+                                                          ? Icons.error
+                                                          : Icons.refresh,
+                                                  oTapError: onRetryFeeEstimate)
+                                            ]),
+                                      )
+                                    ],
+                                  ),
+                                  children: [
+                                    ConditionalWidget(
+                                        enable:
+                                            (fee as TransactionDynamicFeeData)
+                                                .allowChangeFee,
+                                        onActive: (context) => _Fees(
+                                            fee: fee
+                                                as TransactionDynamicFeeData,
+                                            onTapManual: onTapManual,
+                                            getMaxFeeInput: getMaxFeeInput))
+                                  ],
+                                ));
+                      },
+                    );
+                  },
+                  enable: fee.fee.isManual || !fee.isPending);
+            }),
+      ],
+    );
+  }
+}
+
+typedef GETMAXFEEINPUT = BigInt Function();
+
+class _Fees extends StatelessWidget {
+  final TransactionDynamicFeeData fee;
+  final GETMAXFEEINPUT getMaxFeeInput;
+  final DynamicVoid? onTapManual;
+  const _Fees(
+      {required this.fee, required this.getMaxFeeInput, this.onTapManual});
+
+  @override
+  Widget build(BuildContext context) {
+    final selectableFees = fee.fees.where((e) => !e.isManual).toList();
+    final manual = fee.fees.firstWhereOrNull((e) => e.isManual);
+    return Column(children: [
+      ...selectableFees.map((e) => AppRadioListTile(
+            groupValue: fee.fee,
+            value: e,
+            onChanged: (v) {
+              fee.setFee(e);
+            },
+            secondary: e.error == null
+                ? null
+                : TappedTooltipView(
+                    triggerOnHover: true,
+                    tooltipWidget: ToolTipView(
+                      message: e.error,
+                      child: Icon(Icons.error),
+                    )),
+            title: Text(e.type.value.tr,
+                style: context.onPrimaryTextTheme.labelLarge),
+            subtitle: CoinAndMarketPriceView(
+                balance: e.fee,
+                style: context.onPrimaryTextTheme.titleMedium,
+                symbolColor: context.onPrimaryContainer),
+          )),
+      InkWell(
+        onTap: () {
+          final onTapManual = this.onTapManual;
+          if (onTapManual != null) {
+            onTapManual();
+            return;
+          }
+          final max = getMaxFeeInput();
+          context
+              .setupAmount(
+                  token: fee.feeToken,
+                  title: "setup_transaction_fee".tr,
+                  max: max)
+              .then((value) {
+            if (value == null) return;
+            fee.setupManualFee(value);
+          });
+        },
+        child: IgnorePointer(
+          child: AppRadioListTile(
+            groupValue: fee.fee,
+            value: manual,
+            onChanged: (v) {},
+            subtitle: manual == null
+                ? null
+                : CoinAndMarketPriceView(
+                    balance: manual.fee,
+                    style: context.onPrimaryTextTheme.titleMedium,
+                    symbolColor: context.onPrimaryContainer),
+            title: Text(TxFeeTypes.manually.value.tr,
+                style: context.onPrimaryTextTheme.labelLarge),
+          ),
+        ),
+      )
+    ]);
+  }
+}

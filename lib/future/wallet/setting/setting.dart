@@ -207,8 +207,8 @@ class _AppSettingViewState extends State<_AppSettingView>
                 onTap: () {
                   context
                       .openSliverDialog<Color>(
-                          (ctx) => const ColorSelectorModal(),
-                          "primary_color_palette".tr)
+                          widget: (ctx) => const ColorSelectorModal(),
+                          label: "primary_color_palette".tr)
                       .then(changeColor);
                 },
                 leading: const Icon(Icons.color_lens),

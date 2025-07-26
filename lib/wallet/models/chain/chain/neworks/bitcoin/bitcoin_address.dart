@@ -132,12 +132,13 @@ final class IBitcoinAddress extends ChainAccount<BitcoinBaseAddress, TokenCore,
   @override
   String get type => addressType.value;
 
-  @override
-  String get orginalAddress => address.toAddress;
+  // @override
+  // String get orginalAddress => address.toAddress;
 
   @override
   bool isEqual(ChainAccount other) {
-    return network == other.network && orginalAddress == other.orginalAddress;
+    return network == other.network &&
+        address.toAddress == other.address.toAddress;
   }
 
   Script? witnessScript() {

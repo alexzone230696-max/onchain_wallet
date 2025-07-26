@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:on_chain_wallet/app/dev/logger.dart';
 import 'package:on_chain_wallet/app/models/models/typedef.dart';
 
 mixin _LiveListenable {
@@ -55,6 +56,13 @@ class StreamListenable<T> {
     return _value;
   }
 
+  set silent(T newValue) {
+    assert(!isClosed, 'stream  closed.');
+    assert(!immutable, 'data marked as immutable');
+    if (_value == newValue || immutable) return;
+    _value = newValue;
+  }
+
   set value(T newValue) {
     assert(!isClosed, 'stream  closed.');
     assert(!immutable, 'data marked as immutable');
@@ -93,8 +101,13 @@ class StreamValue<T> extends StreamListenable<T> {
   StreamValue.immutable(super.val) : super(immutable: true);
 }
 
-mixin StreamStateController {
+mixin DisposableMixin {
+  void dispose() {}
+}
+
+mixin StreamStateController on DisposableMixin {
   bool _closed = false;
+  bool get closed => _closed;
   final StreamValue<void> notifier = StreamValue(null);
   Stream<void> get stream => notifier.stream;
   void notify() {
@@ -102,9 +115,12 @@ mixin StreamStateController {
     notifier.notify();
   }
 
+  @override
   void dispose() {
+    super.dispose();
     if (_closed) return;
     _closed = true;
     notifier.dispose();
+    appLogger.debug(runtime: runtimeType, functionName: "dispose");
   }
 }

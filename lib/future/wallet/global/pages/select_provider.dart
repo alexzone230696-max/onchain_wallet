@@ -23,7 +23,8 @@ class AccountManageProviderIcon extends StatelessWidget {
                   title: Text("service_provider".tr),
                   onTap: () {
                     context.openSliverDialog<ProviderIdentifier>(
-                        (ctx) => SelectProviderView(), "service_provider".tr);
+                        widget: (ctx) => SelectProviderView(),
+                        label: "service_provider".tr);
                   },
                   subtitle: Text("manage_network_service_providers".tr),
                   trailing: Icon(service?.tracker.icon ?? Icons.error),
@@ -34,8 +35,8 @@ class AccountManageProviderIcon extends StatelessWidget {
                       title: Text("service_provider".tr),
                       onTap: () {
                         context.openSliverDialog<ProviderIdentifier>(
-                            (ctx) => SelectProviderView(),
-                            "service_provider".tr);
+                            widget: (ctx) => SelectProviderView(),
+                            label: "service_provider".tr);
                       },
                       subtitle: Text("manage_network_service_providers".tr),
                       trailing: TappedTooltipView(

@@ -73,8 +73,9 @@ class _AppbarExtentionWidget extends StatelessWidget {
                 onTap: () {
                   wallet.swap?.updateSettings((controller) {
                     return context.openSliverDialog(
-                        (context) => SelectSwapProvidersView(controller),
-                        'swap_settings'.tr);
+                        widget: (context) =>
+                            SelectSwapProvidersView(controller),
+                        label: 'swap_settings'.tr);
                   });
                 },
                 child: AppListTile(
