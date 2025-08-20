@@ -224,7 +224,7 @@ class EthereumWeb3WalletConnectStateHandler
         final error = Web3RequestExceptionConst.disconnectProvider;
         final disconnect = WalletConnectEthereumEIPProviderRpcError(
             message: error.message,
-            code: error.code,
+            code: error.type.code,
             chainIds: [
               if (previousState.defaultChain != null)
                 previousState.defaultChain!

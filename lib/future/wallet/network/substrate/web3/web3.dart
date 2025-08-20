@@ -6,4 +6,4 @@ export 'operations/sign_message.dart';
 export 'pages/import_network.dart';
 export 'pages/sign_transaction.dart';
 export 'types/types.dart';
-export 'permission/permission.dart';
+export 'permission/web3_permission.dart';

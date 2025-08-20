@@ -2,7 +2,6 @@ import 'package:on_chain_wallet/wallet/web3/networks/ripple/methods/methods.dart
 import 'package:on_chain_wallet/wallet/web3/networks/ripple/params/models/sign_message.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ripple/params/models/transaction.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ripple/permission/models/account.dart';
-import 'package:on_chain_wallet/wallet/web3/networks/ripple/permission/models/permission.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/serialization/cbor/cbor.dart';
 import 'package:on_chain_wallet/wallet/models/chain/account.dart';
@@ -11,7 +10,7 @@ import 'package:on_chain_wallet/wallet/web3/core/core.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
 
 abstract class Web3XRPRequestParam<RESPONSE> extends Web3RequestParams<RESPONSE,
-    XRPAddress, XRPChain, IXRPAddress, Web3XRPChainAccount, Web3XRPChain> {
+    XRPAddress, XRPChain, IXRPAddress, Web3XRPChainAccount> {
   @override
   abstract final Web3XRPRequestMethods method;
 
@@ -24,7 +23,7 @@ abstract class Web3XRPRequestParam<RESPONSE> extends Web3RequestParams<RESPONSE,
         object: object,
         hex: hex,
         tags: Web3MessageTypes.walletRequest.tag);
-    final method = Web3NetworkRequestMethods.fromTag(values.elementAt(0));
+    final method = Web3NetworkRequestMethods.fromTag(values.elementAs(0));
     final Web3XRPRequestParam param;
     switch (method) {
       case Web3XRPRequestMethods.signTransaction:
@@ -46,7 +45,7 @@ abstract class Web3XRPRequestParam<RESPONSE> extends Web3RequestParams<RESPONSE,
 
 class Web3XRPRequest<RESPONSE, PARAMS extends Web3XRPRequestParam<RESPONSE>>
     extends Web3NetworkRequest<RESPONSE, XRPAddress, XRPChain,
-        Web3XRPChainAccount, IXRPAddress, Web3XRPChain, PARAMS> {
+        Web3XRPChainAccount, IXRPAddress, PARAMS> {
   Web3XRPRequest(
       {required super.params,
       required super.info,

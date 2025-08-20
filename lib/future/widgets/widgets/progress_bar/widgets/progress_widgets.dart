@@ -208,75 +208,87 @@ class SuccessTransactionTextView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final txUrl = account.network.getTransactionExplorer(txId);
-    final status = transaction?.status;
+
     return ChainStreamBuilder(
-        builder: (context, account, _) => _ProgressWithTextView(
-            text: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                CircleTokenImageView(account.network.coinParam.token,
-                    radius: APPConst.double80),
-                Text(account.network.coinParam.token.name,
-                    style: context.textTheme.labelLarge),
-                WidgetConstant.height20,
-                ContainerWithBorder(
-                  enableTap: false,
-                  onRemove: () {},
-                  onRemoveWidget:
-                      Row(mainAxisSize: MainAxisSize.min, children: [
-                    ConditionalWidget(
-                        enable: txUrl != null,
-                        onActive: (context) => IconButton(
-                              icon: Icon(Icons.open_in_new,
-                                  color: context.colors.onPrimaryContainer),
-                              color: context.colors.onPrimaryContainer,
-                              onPressed: () {
-                                final url = txUrl;
-                                if (url != null) {
-                                  UriUtils.lunch(url);
-                                }
-                              },
-                            )),
-                    ConditionalWidgets<
-                        WalletTransactionStatus>(enable: status, widgets: {
-                      null: (context) => Icon(Icons.check_circle),
-                      WalletTransactionStatus.block: (context) =>
-                          TappedTooltipView(
-                              tooltipWidget: ToolTipView(
-                                  message: "transaction_confirmed_in_block".tr,
-                                  child: Icon(Icons.check_circle,
-                                      color: context.onPrimaryContainer))),
-                      WalletTransactionStatus.failed: (context) =>
-                          TappedTooltipView(
-                              tooltipWidget: ToolTipView(
-                                  message: "transaction_submission_failed".tr,
-                                  child: Icon(Icons.error,
-                                      color: context.onPrimaryContainer))),
-                      WalletTransactionStatus.unknown: (context) =>
-                          TappedTooltipView(
-                              tooltipWidget: ToolTipView(
-                                  message: "unable_to_confirm_transaction".tr,
-                                  child: Icon(Icons.warning,
-                                      color: context.onPrimaryContainer))),
-                      WalletTransactionStatus.pending: (context) =>
-                          TappedTooltipView(
-                              tooltipWidget: ToolTipView(
-                                  message:
-                                      "transaction_pending_confirmation_desc"
-                                          .tr,
-                                  child: APPCircularProgressIndicator(
-                                      color: context.onPrimaryContainer))),
-                    })
-                  ]),
-                  child: CopyableTextWidget(
-                      text: txId, color: context.onPrimaryContainer),
-                ),
-                WidgetConstant.height20,
-                if (additionalWidget != null) additionalWidget!(context),
-                AlertTextContainer(message: warning),
-              ],
-            ),
-            icon: WidgetConstant.sizedBox),
+        debugName: "SuccessTransactionTextView",
+        allowNotify: [DefaultChainNotify.transaction],
+        builder: (context, account, _) {
+          final status = transaction?.status;
+          return _ProgressWithTextView(
+              text: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CircleTokenImageView(account.network.coinParam.token,
+                      radius: APPConst.double80),
+                  Text(account.network.coinParam.token.name,
+                      style: context.textTheme.labelLarge),
+                  WidgetConstant.height20,
+                  Shimmer(
+                      ignoring: false,
+                      onActive: (_, context) => ContainerWithBorder(
+                            enableTap: false,
+                            onRemove: () {},
+                            onRemoveWidget:
+                                Row(mainAxisSize: MainAxisSize.min, children: [
+                              ConditionalWidget(
+                                  enable: txUrl != null,
+                                  onActive: (context) => IconButton(
+                                        icon: Icon(Icons.open_in_new,
+                                            color: context
+                                                .colors.onPrimaryContainer),
+                                        color:
+                                            context.colors.onPrimaryContainer,
+                                        onPressed: () {
+                                          final url = txUrl;
+                                          if (url != null) {
+                                            UriUtils.lunch(url);
+                                          }
+                                        },
+                                      )),
+                              ConditionalWidgets<WalletTransactionStatus>(
+                                  enable: status,
+                                  widgets: {
+                                    null: (context) => Icon(Icons.check_circle),
+                                    WalletTransactionStatus.block: (context) =>
+                                        TappedTooltipView(
+                                            tooltipWidget: ToolTipView(
+                                                message:
+                                                    "transaction_confirmed_in_block"
+                                                        .tr,
+                                                child: Icon(Icons.check_circle,
+                                                    color: context
+                                                        .onPrimaryContainer))),
+                                    WalletTransactionStatus.failed: (context) =>
+                                        TappedTooltipView(
+                                            tooltipWidget: ToolTipView(
+                                                message:
+                                                    "transaction_submission_failed"
+                                                        .tr,
+                                                child: Icon(Icons.error,
+                                                    color: context
+                                                        .onPrimaryContainer))),
+                                    WalletTransactionStatus.unknown:
+                                        (context) => TappedTooltipView(
+                                            tooltipWidget: ToolTipView(
+                                                message:
+                                                    "unable_to_confirm_transaction"
+                                                        .tr,
+                                                child: Icon(Icons.warning,
+                                                    color: context
+                                                        .onPrimaryContainer))),
+                                  })
+                            ]),
+                            child: CopyableTextWidget(
+                                text: txId, color: context.onPrimaryContainer),
+                          ),
+                      enable: status != WalletTransactionStatus.pending),
+                  WidgetConstant.height20,
+                  if (additionalWidget != null) additionalWidget!(context),
+                  AlertTextContainer(message: warning),
+                ],
+              ),
+              icon: WidgetConstant.sizedBox);
+        },
         account: account);
   }
 }
@@ -342,7 +354,7 @@ class ProgressMultipleTextView extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChainStreamBuilder(
       account: account,
-      allowNotify: [ChainNotify.transaction],
+      allowNotify: [DefaultChainNotify.transaction],
       builder: (context, account, notify) => Center(
         child: SingleChildScrollView(
           child: ConstraintsBoxView(
@@ -361,72 +373,72 @@ class ProgressMultipleTextView extends StatelessWidget {
                       if (tx.isSuccess) {
                         final sucessTx = tx as ProgressTxStatusSuccessView;
                         final status = sucessTx.transaction?.status;
-                        return ContainerWithBorder(
-                          enableTap: false,
-                          onRemove: () {},
-                          onRemoveWidget:
-                              Row(mainAxisSize: MainAxisSize.min, children: [
-                            ConditionalWidget(
-                                enable: tx.openUrl != null,
-                                onActive: (context) => IconButton(
-                                      icon: Icon(Icons.open_in_new,
-                                          color: context
-                                              .colors.onPrimaryContainer),
-                                      color: context.colors.onPrimaryContainer,
-                                      onPressed: () {
-                                        final url = tx.openUrl;
-                                        if (url != null) {
-                                          UriUtils.lunch(url);
-                                        }
-                                      },
-                                    )),
-                            ConditionalWidgets<WalletTransactionStatus>(
-                                enable: status,
-                                widgets: {
-                                  null: (context) => Icon(Icons.check_circle),
-                                  WalletTransactionStatus.block: (context) =>
-                                      TappedTooltipView(
-                                          tooltipWidget: ToolTipView(
-                                              message:
-                                                  "transaction_confirmed_in_block"
-                                                      .tr,
-                                              child: Icon(Icons.check_circle,
-                                                  color: context
-                                                      .onPrimaryContainer))),
-                                  WalletTransactionStatus.failed: (context) =>
-                                      TappedTooltipView(
-                                          tooltipWidget: ToolTipView(
-                                              message:
-                                                  "transaction_submission_failed"
-                                                      .tr,
-                                              child: Icon(Icons.error,
-                                                  color: context
-                                                      .onPrimaryContainer))),
-                                  WalletTransactionStatus.unknown: (context) =>
-                                      TappedTooltipView(
-                                          tooltipWidget: ToolTipView(
-                                              message:
-                                                  "unable_to_confirm_transaction"
-                                                      .tr,
-                                              child: Icon(Icons.warning,
-                                                  color: context
-                                                      .onPrimaryContainer))),
-                                  WalletTransactionStatus.pending: (context) =>
-                                      TappedTooltipView(
-                                          tooltipWidget: ToolTipView(
-                                              message:
-                                                  "transaction_pending_confirmation_desc"
-                                                      .tr,
-                                              child:
-                                                  APPCircularProgressIndicator(
-                                                      color: context
-                                                          .onPrimaryContainer))),
-                                })
-                          ]),
-                          child: CopyableTextWidget(
-                              text: tx.message,
-                              color: context.onPrimaryContainer),
-                        );
+                        return Shimmer(
+                            ignoring: false,
+                            onActive: (_, context) => ContainerWithBorder(
+                                enableTap: false,
+                                onRemove: () {},
+                                onRemoveWidget: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      ConditionalWidget(
+                                          enable: tx.openUrl != null,
+                                          onActive: (context) => IconButton(
+                                                icon: Icon(Icons.open_in_new,
+                                                    color: context.colors
+                                                        .onPrimaryContainer),
+                                                color: context
+                                                    .colors.onPrimaryContainer,
+                                                onPressed: () {
+                                                  final url = tx.openUrl;
+                                                  if (url != null) {
+                                                    UriUtils.lunch(url);
+                                                  }
+                                                },
+                                              )),
+                                      ConditionalWidgets<
+                                              WalletTransactionStatus>(
+                                          enable: status,
+                                          widgets: {
+                                            null: (context) => Icon(
+                                                Icons.check_circle,
+                                                color:
+                                                    context.onPrimaryContainer),
+                                            WalletTransactionStatus.block:
+                                                (context) => TappedTooltipView(
+                                                    tooltipWidget: ToolTipView(
+                                                        message:
+                                                            "transaction_confirmed_in_block"
+                                                                .tr,
+                                                        child: Icon(
+                                                            Icons.check_circle,
+                                                            color: context
+                                                                .onPrimaryContainer))),
+                                            WalletTransactionStatus.failed:
+                                                (context) => TappedTooltipView(
+                                                    tooltipWidget: ToolTipView(
+                                                        message:
+                                                            "transaction_submission_failed"
+                                                                .tr,
+                                                        child: Icon(Icons.error,
+                                                            color: context
+                                                                .onPrimaryContainer))),
+                                            WalletTransactionStatus.unknown:
+                                                (context) => TappedTooltipView(
+                                                    tooltipWidget: ToolTipView(
+                                                        message:
+                                                            "unable_to_confirm_transaction"
+                                                                .tr,
+                                                        child: Icon(
+                                                            Icons.warning,
+                                                            color: context
+                                                                .onPrimaryContainer))),
+                                          })
+                                    ]),
+                                child: CopyableTextWidget(
+                                    text: tx.message,
+                                    color: context.onPrimaryContainer)),
+                            enable: status?.inMempool ?? true);
                       }
                       return ContainerWithBorder(
                         enableTap: false,
@@ -452,9 +464,10 @@ class ProgressMultipleTextView extends StatelessWidget {
 
 class StreamPageProgressErrorView extends StatelessWidget {
   const StreamPageProgressErrorView(
-      {super.key, required this.text, this.controller});
+      {super.key, required this.text, this.onTapBackButton, this.controller});
   final String text;
   final StreamPageProgressController? controller;
+  final DynamicVoid? onTapBackButton;
 
   @override
   Widget build(BuildContext context) {
@@ -474,6 +487,7 @@ class StreamPageProgressErrorView extends StatelessWidget {
                   FilledButton.icon(
                       onPressed: () {
                         controller?.backToIdle();
+                        if (onTapBackButton != null) onTapBackButton!();
                       },
                       icon: const Icon(Icons.arrow_back),
                       label: Text("back_to_the_page".tr))

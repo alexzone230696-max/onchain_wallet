@@ -48,7 +48,7 @@ class StellarNetworkParams extends NetworkCoinParams<StellarAPIProvider> {
         cborBytes: bytes, object: obj, tags: CborTagsConst.stellarNetworkParam);
 
     return StellarNetworkParams(
-        token: Token.deserialize(obj: values.getCborTag(2)),
+        token: Token.deserialize(obj: values.elementAsCborTag(2)),
         providers: values
             .elementAsListOf<CborTagValue>(3)
             .map((e) => StellarAPIProvider.fromCborBytesOrObject(obj: e))
@@ -83,11 +83,12 @@ class StellarNetworkParams extends NetworkCoinParams<StellarAPIProvider> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           const CborNullValue(),
           const CborNullValue(),
           token.toCbor(),
-          CborListValue.fixedLength(providers.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              providers.map((e) => e.toCbor()).toList()),
           chainType.name,
           const CborNullValue(),
           addressExplorer,

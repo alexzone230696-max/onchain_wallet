@@ -28,12 +28,12 @@ class Web3SubstrateSignMessage
       hex: hex,
       tags: Web3MessageTypes.walletRequest.tag,
     );
-    final List<int> challeng = values.elementAt(2);
+    final List<int> challeng = values.elementAs(2);
     return Web3SubstrateSignMessage(
         accessAccount: Web3SubstrateChainAccount.deserialize(
             object: values.elementAs<CborTagValue>(1)),
         challeng: BytesUtils.toHexString(challeng, prefix: "0x"),
-        content: values.elementAt(3));
+        content: values.elementAs(3));
   }
 
   @override
@@ -43,7 +43,7 @@ class Web3SubstrateSignMessage
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
           accessAccount.toCbor(),
           CborBytesValue(BytesUtils.fromHexString(challeng)),
@@ -57,14 +57,18 @@ class Web3SubstrateSignMessage
   }
 
   @override
-  Web3SubstrateRequest<Web3SubstrateSendTransactionResponse,
-          Web3SubstrateSignMessage>
-      toRequest(
-          {required Web3RequestInformation request,
-          required Web3RequestAuthentication authenticated,
-          required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+  Future<
+      Web3SubstrateRequest<Web3SubstrateSendTransactionResponse,
+          Web3SubstrateSignMessage>> toRequest(
+      {required Web3RequestInformation request,
+      required Web3RequestAuthentication authenticated,
+      required WEB3REQUESTNETWORKCONTROLLER<ISubstrateAddress, SubstrateChain,
+              Web3SubstrateChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3SubstrateRequest<Web3SubstrateSendTransactionResponse,
         Web3SubstrateSignMessage>(
       params: this,

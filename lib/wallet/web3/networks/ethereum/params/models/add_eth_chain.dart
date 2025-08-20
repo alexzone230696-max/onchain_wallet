@@ -4,6 +4,7 @@ import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 import 'package:on_chain_wallet/wallet/web3/core/core.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ethereum/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ethereum/params/core/request.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/ethereum/permission/models/account.dart';
 
 class Web3EthereumAddNewChain extends Web3EthereumRequestParam<String> {
   final BigInt newChainId;
@@ -56,14 +57,15 @@ class Web3EthereumAddNewChain extends Web3EthereumRequestParam<String> {
         hex: hex,
         tags: Web3MessageTypes.walletRequest.tag);
     return Web3EthereumAddNewChain(
-        newChainId: values.elementAt(1),
-        chainName: values.elementAt(2),
-        name: values.elementAt(3),
-        symbol: values.elementAt(4),
-        rpcUrls: values.getElement<CborListValue>(5).cast<String>(),
-        blockExplorerUrls: values.getElement<CborListValue?>(6)?.cast<String>(),
-        iconUrls: values.getElement<CborListValue?>(7)?.cast<String>(),
-        decimals: values.elementAt(8));
+        newChainId: values.elementAs(1),
+        chainName: values.elementAs(2),
+        name: values.elementAs(3),
+        symbol: values.elementAs(4),
+        rpcUrls: values.elementAs<CborListValue>(5).castValue<String>(),
+        blockExplorerUrls:
+            values.elementAs<CborListValue?>(6)?.castValue<String>(),
+        iconUrls: values.elementAs<CborListValue?>(7)?.castValue<String>(),
+        decimals: values.elementAs(8));
   }
 
   @override
@@ -73,31 +75,35 @@ class Web3EthereumAddNewChain extends Web3EthereumRequestParam<String> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
           newChainId,
           chainName,
           name,
           symbol,
-          CborListValue.fixedLength(rpcUrls),
+          CborSerializable.fromDynamic(rpcUrls),
           blockExplorerUrls == null
               ? const CborNullValue()
-              : CborListValue.fixedLength(blockExplorerUrls!),
+              : CborSerializable.fromDynamic(blockExplorerUrls!),
           iconUrls == null
               ? const CborNullValue()
-              : CborListValue.fixedLength(blockExplorerUrls!),
+              : CborSerializable.fromDynamic(blockExplorerUrls!),
           decimals
         ]),
         type.tag);
   }
 
   @override
-  Web3EthereumRequest<String, Web3EthereumAddNewChain> toRequest(
+  Future<Web3EthereumRequest<String, Web3EthereumAddNewChain>> toRequest(
       {required Web3RequestInformation request,
       required Web3RequestAuthentication authenticated,
-      required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+      required WEB3REQUESTNETWORKCONTROLLER<IEthAddress, EthereumChain,
+              Web3EthereumChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3EthereumRequest<String, Web3EthereumAddNewChain>(
       params: this,
       authenticated: authenticated,

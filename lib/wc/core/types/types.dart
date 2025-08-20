@@ -66,11 +66,11 @@ class WcMetadata with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           name,
           description,
           url,
-          CborListValue.fixedLength(icons),
+          CborSerializable.fromDynamic(icons),
           verifyUrl,
           redirect?.toCbor()
         ]),
@@ -115,7 +115,7 @@ class WcRedirect with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([native, universal, linkMode]),
+        CborSerializable.fromDynamic([native, universal, linkMode]),
         CborTagsConst.wcRedirect);
   }
 }
@@ -140,7 +140,7 @@ class WCChainNamespace with Equatable, CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([identifier, namespace.toCbor()]),
+        CborSerializable.fromDynamic([identifier, namespace.toCbor()]),
         CborTagsConst.wcChainNamespace);
   }
 
@@ -208,8 +208,9 @@ class WCSessionNamespaces with Equatable, CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
-          CborListValue.fixedLength(namespaces.map((e) => e.toCbor()).toList()),
+        CborSerializable.fromDynamic([
+          CborSerializable.fromDynamic(
+              namespaces.map((e) => e.toCbor()).toList()),
         ]),
         CborTagsConst.wcSessionNamespace);
   }
@@ -310,11 +311,11 @@ class WCNamespace with Equatable, CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
-          CborListValue.fixedLength(chains),
-          CborListValue.fixedLength(accounts),
-          CborListValue.fixedLength(methods),
-          CborListValue.fixedLength(events),
+        CborSerializable.fromDynamic([
+          CborSerializable.fromDynamic(chains),
+          CborSerializable.fromDynamic(accounts),
+          CborSerializable.fromDynamic(methods),
+          CborSerializable.fromDynamic(events),
         ]),
         CborTagsConst.wcNamespace);
   }
@@ -417,7 +418,7 @@ class SessionData with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           symkey,
           topic,
           relay.toCbor(),
@@ -1082,7 +1083,7 @@ class PublishRequest with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [message, ttl, topic, tag, correlationId, id]),
         CborTagsConst.wcPendigMessage);
   }
@@ -1296,13 +1297,13 @@ class WcProposer with CborSerializable {
         cborBytes: bytes, hex: hex, object: obj, tags: CborTagsConst.wcRelay);
     return WcProposer(
         publicKey: values.elementAs(0),
-        metadata: WcMetadata.deserialize(obj: values.getCborTag(1)));
+        metadata: WcMetadata.deserialize(obj: values.elementAsCborTag(1)));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([publicKey, metadata.toCbor()]),
+        CborSerializable.fromDynamic([publicKey, metadata.toCbor()]),
         CborTagsConst.wcRelay);
   }
 
@@ -1343,7 +1344,7 @@ class WcProtocolOptions with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([data, protocol]), CborTagsConst.wcRelay);
+        CborSerializable.fromDynamic([data, protocol]), CborTagsConst.wcRelay);
   }
 
   factory WcProtocolOptions.fromJson(Map<String, dynamic> json) {

@@ -9,10 +9,12 @@ class Web3XRPExceptionConstant {
 
   static final Web3RequestException accountDoesNotSupportSignMessage =
       Web3RequestExceptionConst.message(
-          'The provided address does not support message signing.');
+          'The provided address does not support message signing.',
+          errorType: Web3ErrorCode.refused);
   static final Web3RequestException insufficientAccountPermissions =
       Web3RequestExceptionConst.message(
-          'Signing failed: insufficient account permissions.');
+          'Signing failed: insufficient account permissions.',
+          errorType: Web3ErrorCode.refused);
   static Web3RequestException unSuportedTransactionType(
           SubmittableTransactionType type) =>
       Web3RequestExceptionConst.unsuportedfeatures(

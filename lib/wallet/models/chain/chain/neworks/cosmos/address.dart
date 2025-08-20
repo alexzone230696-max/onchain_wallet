@@ -42,10 +42,10 @@ final class ICosmosAddress extends ChainAccount<CosmosBaseAddress, CW20Token,
     final CryptoCoins coin =
         CustomCoins.getSerializationCoin(values.elementAs(0));
     final keyIndex =
-        AddressDerivationIndex.deserialize(obj: values.getCborTag(1));
+        AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(1));
     final List<int> publicKey = values.elementAs(2);
     final AccountBalance address =
-        AccountBalance.deserialize(network, obj: values.getCborTag(3));
+        AccountBalance.deserialize(network, obj: values.elementAsCborTag(3));
     final CosmosBaseAddress cosmosAddr = CosmosBaseAddress(address.address,
         forceHrp: network.toNetwork<WalletCosmosNetwork>().coinParam.hrp);
     final int networkId = values.elementAs(4);
@@ -80,7 +80,7 @@ final class ICosmosAddress extends ChainAccount<CosmosBaseAddress, CW20Token,
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           coin.toCbor(),
           keyIndex.toCbor(),
           publicKey,
@@ -111,12 +111,6 @@ final class ICosmosAddress extends ChainAccount<CosmosBaseAddress, CW20Token,
               .toAny(),
       modeInfo: const ModeInfo(ModeInfoSignle(SignMode.signModeDirect)),
       sequence: BigInt.zero);
-
-  @override
-  bool isEqual(ChainAccount other) {
-    if (other is! ICosmosAddress) return false;
-    return other.networkAddress == networkAddress;
-  }
 
   @override
   CosmosNewAddressParams toAccountParams() {

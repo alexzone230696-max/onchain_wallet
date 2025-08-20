@@ -26,7 +26,7 @@ class WalletScreen extends StatelessWidget {
               child: APPAnimatedSwitcher(enable: status.status, widgets: {
                 APPStatusType.ready: (context) => _APPPage(wallet),
                 APPStatusType.init: (context) => ProgressWithAPPLogo(),
-                APPStatusType.failed: (context) => Text(status.error!),
+                APPStatusType.failed: (context) => Text(status.error!)
               }),
             );
           },

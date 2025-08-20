@@ -1,6 +1,6 @@
 import 'package:blockchain_utils/helper/extensions/extensions.dart';
 import 'package:on_chain/ada/src/builder/builder/certificate_builder.dart';
-import 'package:on_chain/ada/src/models/certificate/core/types.dart';
+import 'package:on_chain/ada/src/models/certificate/certificates/types.dart';
 import 'package:on_chain/ada/src/provider/blockfrost/models/models/epoch_parameters.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/cardano/transaction/types/types.dart';

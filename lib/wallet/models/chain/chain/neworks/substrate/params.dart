@@ -25,7 +25,7 @@ final class SubstrateNewAddressParams
         tags: NewAccountParamsType.substrateNewAddressParams.tag);
     return SubstrateNewAddressParams(
       deriveIndex:
-          AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
+          AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(0)),
     );
   }
 
@@ -67,7 +67,7 @@ final class SubstrateNewAddressParams
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([deriveIndex.toCbor()]), type.tag);
+        CborSerializable.fromDynamic([deriveIndex.toCbor()]), type.tag);
   }
 
   @override

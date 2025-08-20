@@ -36,7 +36,7 @@ void main(List<String> args) async {
   }
 
   final applicationId =
-      Web3APPAuthentication.toApplicationId(jsWindow.location.origin);
+      Web3ApplicationAuthentication.toApplicationId(jsWindow.location.origin);
   if (applicationId == null) {
     throw Web3RequestExceptionConst.invalidHost;
   }
@@ -66,7 +66,7 @@ void main(List<String> args) async {
       switch (workerEvent.eventType) {
         case JSWorkerType.ready:
           if (workerEvent.clientId == null) {
-            throw JSWalletError(message: "Invalid request. missing client ID");
+            throw JSError(message: "Invalid request. missing client ID");
           }
           postToWallet(
               data: JSWorkerWalletData(

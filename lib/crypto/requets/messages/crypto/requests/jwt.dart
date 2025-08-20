@@ -20,7 +20,7 @@ final class CryptoRequestGenerateJwt
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([aud]), method.tag);
+    return CborTagValue(CborSerializable.fromDynamic([aud]), method.tag);
   }
 
   @override

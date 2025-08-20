@@ -106,12 +106,10 @@ abstract class Web3StateController<
         CHAIN extends APPCHAINADDRESSACCOUNTCLIENTNETWORK<NETWORKADDRESS,
             WALLETACCOUNT, CLIENT, NETWORK>,
         CHANACCOUNT extends Web3ChainAccount,
-        WEB3CHAIN extends Web3Chain<NETWORKADDRESS, CHAIN, WALLETACCOUNT,
-            CHANACCOUNT, WalletNetwork>,
         PARAMS extends Web3RequestParams<RESPONSE, NETWORKADDRESS, CHAIN,
-            WALLETACCOUNT, CHANACCOUNT, WEB3CHAIN>,
+            WALLETACCOUNT, CHANACCOUNT>,
         WEB3REQUEST extends Web3NetworkRequest<RESPONSE, NETWORKADDRESS, CHAIN,
-            CHANACCOUNT, WALLETACCOUNT, WEB3CHAIN, PARAMS>,
+            CHANACCOUNT, WALLETACCOUNT, PARAMS>,
         FINALRESULT extends Web3RequestResponseData<RESPONSE>,
         T extends ChainTransaction>
     with
@@ -252,6 +250,9 @@ abstract class Web3StateController<
   void dispose() {
     super.dispose();
     stateStatus.dispose();
-    appLogger.debug(runtime: runtimeType, functionName: "Web3StateController");
+    appLogger.debug(
+      runtime: runtimeType,
+      functionName: "dispose",
+    );
   }
 }

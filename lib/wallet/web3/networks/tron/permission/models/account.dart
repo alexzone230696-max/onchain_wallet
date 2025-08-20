@@ -17,22 +17,24 @@ class Web3TronChainAccount extends Web3ChainAccount<TronAddress> {
       required super.address,
       required super.defaultAddress,
       required this.id,
+      required super.identifier,
       required List<int>? publicKey})
       : publicKey = publicKey?.asImmutableBytes;
   @override
-  Web3TronChainAccount clone({
-    AddressDerivationIndex? keyIndex,
-    TronAddress? address,
-    bool? defaultAddress,
-    int? id,
-    List<int>? publicKey,
-  }) {
+  Web3TronChainAccount clone(
+      {AddressDerivationIndex? keyIndex,
+      TronAddress? address,
+      bool? defaultAddress,
+      int? id,
+      List<int>? publicKey,
+      String? identifier}) {
     return Web3TronChainAccount(
         keyIndex: keyIndex ?? this.keyIndex,
         address: address ?? this.address,
         defaultAddress: defaultAddress ?? this.defaultAddress,
         id: id ?? this.id,
-        publicKey: publicKey ?? this.publicKey);
+        publicKey: publicKey ?? this.publicKey,
+        identifier: identifier ?? this.identifier);
   }
 
   factory Web3TronChainAccount.fromChainAccount(
@@ -44,7 +46,8 @@ class Web3TronChainAccount extends Web3ChainAccount<TronAddress> {
         address: address.networkAddress,
         id: id,
         defaultAddress: isDefault,
-        publicKey: address.multiSigAccount ? null : address.publicKey);
+        publicKey: address.multiSigAccount ? null : address.publicKey,
+        identifier: address.identifier);
   }
 
   factory Web3TronChainAccount.deserialize(
@@ -55,22 +58,25 @@ class Web3TronChainAccount extends Web3ChainAccount<TronAddress> {
         hex: hex,
         tags: CborTagsConst.web3TronAccount);
     return Web3TronChainAccount(
-        keyIndex: AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
-        address: TronAddress(values.elementAt(1)),
-        id: values.elementAt(2),
-        defaultAddress: values.elementAt(3),
-        publicKey: values.elementAs(4));
+        keyIndex: AddressDerivationIndex.deserialize(
+            obj: values.indexAs<CborTagValue>(0)),
+        address: TronAddress(values.valueAs(1)),
+        id: values.valueAs(2),
+        defaultAddress: values.valueAs(3),
+        publicKey: values.valueAs(4),
+        identifier: values.valueAs(5));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           keyIndex.toCbor(),
           address.toAddress(),
           id,
           defaultAddress,
-          publicKey == null ? null : CborBytesValue(publicKey!)
+          publicKey == null ? null : CborBytesValue(publicKey!),
+          identifier
         ]),
         CborTagsConst.web3TronAccount);
   }
@@ -109,7 +115,7 @@ class Web3TronChainIdnetifier extends Web3ChainIdnetifier {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-      CborListValue.fixedLength(
+      CborSerializable.fromDynamic(
           [chainId, id, fullNode, solidityNode, wsIdentifier, caip2]),
       CborTagsConst.web3TronChainIdentifier,
     );

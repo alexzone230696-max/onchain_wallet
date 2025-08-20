@@ -173,22 +173,22 @@ final class WalletMasterKeys with CborSerializable {
   CborTagValue toCbor({bool backup = false}) {
     if (backup) {
       return CborTagValue(
-          CborListValue.fixedLength([
+          CborSerializable.fromDynamic([
             CborBytesValue(_mnemonic),
-            CborListValue.fixedLength(
+            CborSerializable.fromDynamic(
                 _customKeys.map((e) => e.toCbor()).toList()),
             CborBytesValue(_checksum),
             _language.value,
-            CborListValue.fixedLength(
+            CborSerializable.fromDynamic(
                 _subWallets.map((e) => e.toCbor()).toList()),
           ]),
           CryptoKeyConst.backupMasterKey);
     }
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(_mnemonic),
           CborBytesValue(_seed),
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               _customKeys.map((e) => e.toCbor()).toList()),
           const CborNullValue(),
           CborBytesValue(_cardanoLegacyByronSeed),
@@ -196,7 +196,7 @@ final class WalletMasterKeys with CborSerializable {
           CborBytesValue(_checksum),
           CborBytesValue(_entopySeed),
           _language.value,
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               _subWallets.map((e) => e.toCbor()).toList()),
         ]),
         CryptoKeyConst.mnemonic);
@@ -324,7 +324,7 @@ final class WalletMasterKeys with CborSerializable {
     final List<int> nonce = WorkerCryptoUtils.generateNonce(key);
     final encrypt = WorkerCryptoUtils.encryptChacha(
         key: key, nonce: nonce, data: this.toCbor().encode());
-    final toCbor = CborListValue.dynamicLength([
+    final toCbor = CborListValue<CborObject>.inDefinite([
       CborIntValue(version),
       CborBytesValue(encrypt),
     ]);
@@ -339,7 +339,7 @@ final class WalletMasterKeys with CborSerializable {
     final List<int> nonce = QuickCrypto.generateRandom(12);
     final List<int> encrypt = WorkerCryptoUtils.encryptChacha(
         key: key, nonce: nonce, data: walletData);
-    final toCbor = CborListValue.dynamicLength([
+    final toCbor = CborListValue<CborObject>.inDefinite([
       CborIntValue(version),
       CborBytesValue(nonce),
       CborBytesValue(encrypt)
@@ -390,7 +390,7 @@ final class Bip39WalletMasterKeys extends SubWalletMasterKeys {
   @override
   CborTagValue toCbor({bool backup = false}) {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(_mnemonic),
           CborBytesValue(_seed),
           _passphrase == null ? null : CborBytesValue(_passphrase),

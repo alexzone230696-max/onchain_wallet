@@ -11,7 +11,6 @@ import 'package:on_chain_wallet/wallet/api/client/client.dart';
 import 'package:on_chain_wallet/wallet/models/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/networks/monero.dart';
-import 'package:on_chain_wallet/wallet/web3/networks/monero/monero.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
 
 abstract class Web3MoneroStateController<RESPONSE, CLIENT extends MoneroClient?,
@@ -25,7 +24,6 @@ abstract class Web3MoneroStateController<RESPONSE, CLIENT extends MoneroClient?,
         IMoneroAddress,
         MoneroChain,
         Web3MoneroChainAccount,
-        Web3MoneroChain,
         T,
         Web3MoneroRequest<RESPONSE, T>,
         Web3RequestResponseData<RESPONSE>,
@@ -67,7 +65,6 @@ abstract class BaseWeb3MoneroTransactionStateController<RESPONSE,
         WalletMoneroNetwork,
         MoneroChain,
         Web3MoneroChainAccount,
-        Web3MoneroChain,
         T,
         Web3MoneroRequest<RESPONSE, T>,
         IMoneroTransactionData,

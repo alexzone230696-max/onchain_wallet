@@ -40,6 +40,12 @@ class NetworkAccountPageView extends StatelessWidget {
     final bool isReady = wallet.wallet.homePageStatus.isReady;
     final bool isOpen = wallet.wallet.isOpen;
     return ChainStreamBuilder(
+        allowNotify: [
+          DefaultChainNotify.account,
+          DefaultChainNotify.address,
+          DefaultChainNotify.client,
+          DefaultChainNotify.config
+        ],
         builder: (context, chain, lastNotify) {
           return Shimmer(
               onActive: (enable, context) => Scaffold(
@@ -128,7 +134,7 @@ class NetworkAccountPageView extends StatelessWidget {
                                 WebView(wallet.webviewContoller!)
                             ],
                           ))),
-              enable: lastNotify != ChainNotify.address);
+              enable: lastNotify != DefaultChainNotify.address);
         },
         account: account);
   }
@@ -228,7 +234,7 @@ class WalletPageFloatingActionButton extends StatelessWidget {
               .then(
             (value) {
               if (value == null) return;
-              if (value is int) {
+              if (value is Chain) {
                 wallet.wallet.switchNetwork(value);
               } else {
                 context.mybeTo(PageRouter.importNetwork(value));

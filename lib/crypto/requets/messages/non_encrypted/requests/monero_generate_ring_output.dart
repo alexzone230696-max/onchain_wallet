@@ -144,9 +144,9 @@ final class NoneEncryptedRequestGenerateRingOutput
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(rctOffsetData),
-          CborListValue.fixedLength(payments
+          CborSerializable.fromDynamic(payments
               .map((e) => CborBytesValue(e.toVariantSerialize()))
               .toList()),
           fakeOutsLength,

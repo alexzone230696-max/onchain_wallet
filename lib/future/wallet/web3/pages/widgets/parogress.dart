@@ -6,6 +6,7 @@ import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 import 'package:on_chain_wallet/wallet/web3/core/exception/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/request/web_request.dart';
 
@@ -73,7 +74,9 @@ class StreamWeb3PageProgressController extends StreamValue<Web3ProgressStatus> {
   }
 
   void responseTx(
-      {required List<SubmitTransactionResult> txIds, required Chain account}) {
+      {required List<SubmitTransactionResult> txIds,
+      required List<ChainTransaction> transactions,
+      required Chain account}) {
     response(
         widget: ProgressMultipleTextView(
             account: account,
@@ -87,10 +90,7 @@ class StreamWeb3PageProgressController extends StreamValue<Web3ProgressStatus> {
                   txId: txId.txId,
                   warning: txId.warning,
                   openUrl: account.network.getTransactionExplorer(txId.txId),
-                  transaction: account.addresses
-                      .firstWhereOrNull((e) =>
-                          e == txId.signedTransaction.transaction.account)
-                      ?.transactions
+                  transaction: transactions
                       .firstWhereOrNull((e) => e.txId == txId.txId));
             }).toList(),
             logo: account.network.token.assetLogo,

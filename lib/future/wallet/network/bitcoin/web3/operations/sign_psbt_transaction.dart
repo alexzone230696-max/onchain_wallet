@@ -21,7 +21,7 @@ import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/params/models/trans
 class Web3BitcoinSignTransactionStateController
     extends Web3BitcoinTransactionStateController<
         String,
-        Web3BitcoinSignTransaction,
+        BaseWeb3BitcoinSignTransaction,
         IWeb3BitcoinSignPsbtTransactionData,
         IWeb3BitcoinPsbtTransaction,
         IWeb3BitcoinSignedPSBTTransaction>

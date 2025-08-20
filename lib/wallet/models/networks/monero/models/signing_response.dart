@@ -24,7 +24,7 @@ class MoneroViewTxDestinationWithProof with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [CborBytesValue(destination.serialize()), proof]),
         CborTagsConst.moneroTxDestinationWithProof);
   }
@@ -64,11 +64,11 @@ class MoneroSignedTxData with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(txID.codeUnits),
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               txKeys.map((e) => CborBytesValue(e.key)).toList()),
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               indexes.map((e) => CborBytesValue(e.serialize())).toList()),
         ]),
         CborTagsConst.moneroSignedTxData);
@@ -93,7 +93,7 @@ class MoneroSigningTxResponse with CborSerializable {
         hex: hex,
         tags: CborTagsConst.moneroSigningTxResponse);
     return MoneroSigningTxResponse(
-        txData: MoneroSignedTxData.deserialize(obj: values.getCborTag(0)),
+        txData: MoneroSignedTxData.deserialize(obj: values.elementAsCborTag(0)),
         destinations: values
             .elementAsListOf<CborTagValue>(1)
             .map((e) => MoneroViewTxDestinationWithProof.deserialize(obj: e))
@@ -104,9 +104,9 @@ class MoneroSigningTxResponse with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           txData.toCbor(),
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               destinations.map((e) => e.toCbor()).toList()),
           CborBytesValue(txBytes.codeUnits)
         ]),

@@ -9,14 +9,16 @@ mixin BaseRepository {
       int storageId = APPDatabaseConst.defaultStorageId,
       String? key,
       String? keyA,
-      required CborSerializable value}) async {
+      required CborSerializable value,
+      DateTime? createdAt}) async {
     final statement = ITableInsertOrUpdateStructA(
         storage: storage,
         storageId: storageId,
         key: key,
         keyA: keyA,
         data: value.toCbor().encode(),
-        tableName: tableId);
+        tableName: tableId,
+        createdAt: createdAt);
     return await AppNativeMethods.platform.writeDb(statement);
   }
 

@@ -25,7 +25,7 @@ final class WalletRequestReadMnemonic
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([]), method.tag);
+    return CborTagValue(CborSerializable.fromDynamic([]), method.tag);
   }
 
   @override

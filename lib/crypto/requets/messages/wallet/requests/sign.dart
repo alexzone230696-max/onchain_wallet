@@ -26,13 +26,13 @@ final class WalletRequestSign
         hex: hex,
         tags: WalletRequestMethod.sign.tag);
     return WalletRequestSign(
-        SignRequest.deserialize(object: values.getCborTag(0)));
+        SignRequest.deserialize(object: values.elementAsCborTag(0)));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([request.toCbor()]), method.tag);
+        CborSerializable.fromDynamic([request.toCbor()]), method.tag);
   }
 
   @override

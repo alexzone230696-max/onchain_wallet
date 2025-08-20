@@ -6,6 +6,7 @@ import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/wallet/web3/core/core.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/cosmos/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/cosmos/params/core/request.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/cosmos/permission/models/account.dart';
 import 'package:on_chain_wallet/wallet/web3/utils/web3_validator_utils.dart';
 
 class Web3CosmosAddNewChain extends Web3CosmosRequestParam<bool> {
@@ -108,7 +109,7 @@ class Web3CosmosAddNewChain extends Web3CosmosRequestParam<bool> {
         hex: hex,
         tags: Web3MessageTypes.walletRequest.tag);
     return Web3CosmosAddNewChain(
-        chainId: values.elementAt(1),
+        chainId: values.elementAs(1),
         rpc: values.elementAs(2),
         name: values.elementAs(3),
         nativeToken: values.elemetMybeAs<CosmosFeeToken, CborTagValue>(
@@ -129,27 +130,31 @@ class Web3CosmosAddNewChain extends Web3CosmosRequestParam<bool> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
           chainId,
           rpc,
           name,
           nativeToken?.toCbor(),
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               feeTokens?.map((e) => e.toCbor()).toList() ?? []),
-          CborListValue.fixedLength(keyAlgorithm ?? []),
+          CborSerializable.fromDynamic(keyAlgorithm ?? []),
           hrp
         ]),
         type.tag);
   }
 
   @override
-  Web3CosmosRequest<bool, Web3CosmosAddNewChain> toRequest(
+  Future<Web3CosmosRequest<bool, Web3CosmosAddNewChain>> toRequest(
       {required Web3RequestInformation request,
       required Web3RequestAuthentication authenticated,
-      required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+      required WEB3REQUESTNETWORKCONTROLLER<ICosmosAddress, CosmosChain,
+              Web3CosmosChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3CosmosRequest<bool, Web3CosmosAddNewChain>(
       params: this,
       authenticated: authenticated,

@@ -24,10 +24,10 @@ class CryptoRequestGenerateBip39Mnemonic
         tags: CryptoRequestMethod.generateBip39Mnemonic.tag);
     return CryptoRequestGenerateBip39Mnemonic(
       language: Bip39Languages.values.firstWhere(
-          (e) => e.name == values.elementAt<String?>(0),
+          (e) => e.name == values.elementAs<String?>(0),
           orElse: () => throw WalletExceptionConst.dataVerificationFailed),
       wordNums: Bip39WordsNum.values.firstWhere(
-          (e) => e.value == values.elementAt<int?>(1),
+          (e) => e.value == values.elementAs<int?>(1),
           orElse: () => throw WalletExceptionConst.dataVerificationFailed),
     );
   }
@@ -35,7 +35,8 @@ class CryptoRequestGenerateBip39Mnemonic
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([language.name, wordNums.value]), method.tag);
+        CborSerializable.fromDynamic([language.name, wordNums.value]),
+        method.tag);
   }
 
   @override

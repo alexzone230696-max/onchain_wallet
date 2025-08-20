@@ -180,4 +180,7 @@ class WalletExceptionConst {
 
   static const WalletException verificationWalletDataFailed =
       WalletException("wallet_data_verification_failed");
+
+  static const WalletException storageIsNotAvailable =
+      WalletException("storage_is_not_available");
 }

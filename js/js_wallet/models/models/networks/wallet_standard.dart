@@ -1,7 +1,7 @@
 import 'dart:js_interop';
 import '../../../js_wallet.dart';
+import 'ada.dart';
 import 'aptos.dart';
-import 'bitcoin.dart';
 import 'cosmos.dart';
 import 'monero.dart';
 import 'substrate.dart';
@@ -69,14 +69,79 @@ extension type JSWalletStandardFeature(JSAny _) implements JSAny {
   @JS("stellar:signMessage")
   external set stellarSignMessage(
       StellarWalletAdapterStellarSignMessageFeature _);
-  @JS("stellar:connect")
-  external set stellarConnect(JSStellarWalletStandardConnectFeature _);
+
   @JS("stellar:events")
   external set stellarEvents(JSWalletStandardEventsFeature _);
   @JS("stellar:disconnect")
   external set stellarDisconnect(JSWalletStandardDisconnectFeature _);
+  @JS("stellar:connect")
+  external set stellarConnect(JSStellarWalletStandardConnectFeature _);
 
-  /// stellar
+  /// cardano
+  @JS("cardano:disconnect")
+  external set cardanoDisconnect(JSWalletStandardDisconnectFeature _);
+  @JS("cardano:connect")
+  external set cardanoConnect(JSStellarWalletStandardConnectFeature _);
+  @JS("cardano:events")
+  external set cardanoEvents(JSWalletStandardEventsFeature _);
+  @JS("cardano:getNetworkId")
+  external set cardanoGetNetworkId(JSWalletStandardADAGetNetworkIdFeature _);
+  @JS("cardano:getBalance")
+  external set cardanoGetBalance(JSWalletStandardADAGetBalanceFeature _);
+  @JS("cardano:getUtxos")
+  external set cardanoGetUtxos(JSWalletStandardADAGetUtxosFeature _);
+  @JS("cardano:getAddressUtxos")
+  external set cardanoGetAddressUtxos(
+      JSWalletStandardADAGetAddressUtxosFeature _);
+
+  @JS("cardano:getCollateral")
+  external set cardanoGetCollateral(JSWalletStandardADAGetCollateralFeature _);
+  @JS("cardano:getUsedAddresses")
+  external set cardanoGetUsedAddresses(
+      JSWalletStandardADAGetUsedAddressesFeature _);
+  @JS("cardano:getUnusedAddresses")
+  external set cardanoGetUnusedAddresses(
+      JSWalletStandardADAGetUnusedAddressesFeature _);
+  @JS("cardano:getChangeAddress")
+  external set cardanoGetChangeAddress(
+      JSWalletStandardADAGetChangeAddressFeature _);
+
+  @JS("cardano:getRewardAddresses")
+  external set cardanoGetRewardAddresses(
+      JSWalletStandardADAGetRewardAddressesFeature _);
+  @JS("cardano:signTx")
+  external set cardanoSignTx(JSWalletStandardADASignTxFeature _);
+  @JS("cardano:signData")
+  external set cardanoSignData(JSWalletStandardADASignDataFeature _);
+  @JS("cardano:signMessage")
+  external set cardanoSignMessage(JSWalletStandardADASignMessageFeature _);
+  @JS("cardano:signTransaction")
+  external set cardanoSignTransaction(
+      JSWalletStandardADASignTransactionFeature _);
+  @JS("cardano:signAndSendTransaction")
+  external set cardanoSignAndTransaction(
+      JSWalletStandardADASignAndSendTransactionFeature _);
+  @JS("cardano:isEnabled")
+  external set cardanoIsEnabled(JSWalletStandardADAIsEnabledFeature _);
+  @JS("cardano:submitTx")
+  external set cardanoSubmitTx(JSWalletStandardADASubmitTxFeature _);
+  @JS("cardano:getScript")
+  external set cardanoGetScript(JSWalletStandardADAGetScriptFeature _);
+
+  @JS("cardano:submitTxs")
+  external set cardanoSubmitTxs(JSWalletStandardADASubmitTxsFeature _);
+  @JS("cardano:signTxs")
+  external set cardanoSignTxs(JSWalletStandardADASignTxsFeature _);
+  @JS("cardano:getAccountPub")
+  external set cardanoGetAccountPub(JSWalletStandardADAGetAccountPubFeature _);
+  @JS("cardano:getScriptRequirements")
+  external set cardanoGetScriptRequirements(
+      JSWalletStandardADAGetScriptRequirementsFeature _);
+  @JS("cardano:submitUnsignedTx")
+  external set cardanoSubmitUnsignedTx(
+      JSWalletStandardADASubmitUnsignedTxFeature _);
+
+  /// monero
   @JS("monero:signAndSendTransaction")
   external set moneroSignAndSendTransaction(
       MoneroWalletAdapterMoneroSignAndSendTransactionFeature _);
@@ -115,7 +180,6 @@ extension type JSWalletStandardFeature(JSAny _) implements JSAny {
       JSWalletStandardSignPersonalMessageFeature _);
   @JS("bitcoin:signTransaction")
   external set bitcoinSignTransaction(JSWalletStandardSignTransactionFeature _);
-
   @JS("bitcoin:getAccountAddresses")
   external set bitcoingetAccountAddresses(
       JSWalletStandardGetAccountAddressesFeature _);
@@ -126,6 +190,28 @@ extension type JSWalletStandardFeature(JSAny _) implements JSAny {
 
   @JS("bitcoin:events")
   external set bitcoinEvents(JSWalletStandardEventsFeature _);
+
+  /// bitcoin cash
+  @JS("bch:connect")
+  external set bitcoinCashConnect(JSWalletStandardConnectFeature _);
+  @JS("bch:account")
+  external set bitcoinCashAccount(JSWalletStandardAccountFeature _);
+  @JS("bch:signPersonalMessage")
+  external set bitcoinCashSignPersonalMessage(
+      JSWalletStandardSignPersonalMessageFeature _);
+  @JS("bch:signTransaction")
+  external set bitcoinCashSignTransaction(
+      JSWalletStandardSignTransactionFeature _);
+  @JS("bch:getAccountAddresses")
+  external set bitcoinCashGetAccountAddresses(
+      JSWalletStandardGetAccountAddressesFeature _);
+  @JS("bch:sendTransaction")
+  external set bitcoinCashSendTransaction(
+      JSWalletStandardSendTransactionFeature _);
+  @JS("bch:disconnect")
+  external set bitcoinCashDisconnect(JSWalletStandardDisconnectFeature _);
+  @JS("bch:events")
+  external set bitcoinCashEvents(JSWalletStandardEventsFeature _);
 
   /// sui
   @JS("sui:connect")
@@ -360,16 +446,16 @@ extension type JSWalletStandardSignPersonalMessageFeature(JSAny _)
   external set version(String version);
   external set signPersonalMessage(JSFunction _);
 }
-typedef SNN = JSPromise<JSBitcoinSignTransactionResponse> Function(
-    JSBitcoinSignTransactionResponse);
+// typedef SNN = JSPromise<JSBitcoinSignTransactionResponse> Function(
+//     JSBitcoinSignTransactionResponse);
 @JS()
 extension type JSWalletStandardSignTransactionFeature(JSAny _)
     implements JSAny {
   factory JSWalletStandardSignTransactionFeature.setup(
-      {required SNN signTransaction,
+      {required JSFunction signTransaction,
       String version = JSWalletStandardConst.defaultVersion}) {
     return JSWalletStandardSignTransactionFeature(JSObject())
-      ..signTransaction = signTransaction.toJS
+      ..signTransaction = signTransaction
       ..version = version;
   }
   external set version(String version);

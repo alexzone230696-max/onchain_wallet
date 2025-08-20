@@ -41,6 +41,6 @@ class Web3StellarSignMessageStateController extends Web3StellarStateController<
         controller: this,
         message: message,
         content: content,
-        isPersonalSign: true);
+        isPersonalSign: false);
   }
 }

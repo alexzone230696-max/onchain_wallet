@@ -12,7 +12,8 @@ final class ImportCustomKeys with CborSerializable {
     final key = IPrivateKey.fromBytes(privateKey, coin.conf.type);
     return ImportCustomKeys._fromBytes(
         privateKey: key.raw,
-        publicKey: CryptoKeyUtils.toPublicBytes(key.publicKey),
+        publicKey: CryptoKeyUtils.toPublicBytes(
+            key.publicKey.compressed, coin.conf.type),
         coin: coin);
   }
   factory ImportCustomKeys._fromBytes(
@@ -38,7 +39,7 @@ final class ImportCustomKeys with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([privateKey, publicKey, coin.toCbor()]),
+        CborSerializable.fromDynamic([privateKey, publicKey, coin.toCbor()]),
         CryptoKeyConst.importCustomKeys);
   }
 }

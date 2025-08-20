@@ -10,7 +10,7 @@ import 'package:on_chain_wallet/wc/core/types/types.dart';
 import 'session.dart';
 
 typedef SENDWEB3WALLETCONNECTREQUEST = Future<Web3MessageCore> Function(
-    Web3RequestWalletConnectpplicationInformation);
+    Web3RequestWalletConnectApplicationInformation);
 typedef LOCALAUTH = Future<Web3APPData> Function();
 typedef AUTHREQUEST = Future<Web3DappInfo?> Function(
     Web3ClientInfo onAuthRequest, bool create);
@@ -20,7 +20,7 @@ class Web3WalletConnectHandler {
   final AUTHREQUEST authRequest;
   final LOCALAUTH defaultAuth;
   final Map<String, Web3WalletConnectSessionHandler> sessions = {};
-  final Map<String, Web3RequestWalletConnectpplicationInformation> __requests =
+  final Map<String, Web3RequestWalletConnectApplicationInformation> __requests =
       {};
   final WalletConnectStorage _storage;
   final SynchronizedLock _lock = SynchronizedLock();
@@ -89,33 +89,8 @@ class Web3WalletConnectHandler {
     List<WCChainNamespace> wcNamespaces = [];
     for (final i in localAuth.chains) {
       final method = Web3NetworkRequestMethods.getMethods(i.networkType);
-      final methodNames =
-          method.expand((e) => e.walletConnectMethodNames).toList();
       final eventsNames =
           Web3NetworkEvent.getEvents(i.networkType).map((e) => e.name).toList();
-      if (i.networkType.isBitcoin) {
-        final bchNetworks =
-            i.networks.cast<Web3BitcoinChainIdnetifier>().where((e) => e.isBch);
-        final btcNetwork = i.networks
-            .cast<Web3BitcoinChainIdnetifier>()
-            .where((e) => !e.isBch);
-        final bch = WCChainNamespace(
-            identifier: NetworkType.bitcoinCash.caip2,
-            namespace: WCNamespace(
-                chains: bchNetworks.map((e) => e.caip2).toList(),
-                accounts: [],
-                methods: methodNames,
-                events: eventsNames));
-        final btc = WCChainNamespace(
-            identifier: NetworkType.bitcoinAndForked.caip2,
-            namespace: WCNamespace(
-                chains: btcNetwork.map((e) => e.caip2).toList(),
-                accounts: [],
-                methods: methodNames,
-                events: eventsNames));
-        wcNamespaces.addAll([bch, btc]);
-        continue;
-      }
       final namespace = WCChainNamespace(
           identifier: i.networkType.caip2,
           namespace: WCNamespace(
@@ -134,9 +109,8 @@ class Web3WalletConnectHandler {
   Future<void> _sendMessage(WalletMessageRequest request) async {
     final session = sessions[request.topic];
     assert(session != null, "session not found.");
-    // request.
     if (session == null) return;
-    final r = Web3RequestWalletConnectpplicationInformation(
+    final r = Web3RequestWalletConnectApplicationInformation(
         info: session.client,
         request: request.message,
         requestId: request.requestId);
@@ -193,7 +167,7 @@ class Web3WalletConnectHandler {
         client: client,
         session: session);
     sessions[clientId] = handler;
-    handler.updateAuthenticated(auth.dappData);
+    await handler.updateAuthenticated(auth.dappData);
     return handler;
   }
 
@@ -290,7 +264,6 @@ class Web3WalletConnectHandler {
   Future<void> _onSessionRequest(SessionRequest request) async {
     await _lock.synchronized(() async {
       final session = await _getInternalSession(request.session.topic);
-
       final timeout = request.timout();
       if (timeout == null) return;
       if (session == null) {

@@ -13,11 +13,10 @@ class Web3WalletResponseMessage extends Web3MessageCore {
   final NetworkType network;
   Web3WalletResponseMessage._(
       {this.result, required this.network, required this.authenticated});
-  factory Web3WalletResponseMessage({
-    Object? result,
-    required NetworkType network,
-    Web3APPData? authenticated,
-  }) {
+  factory Web3WalletResponseMessage(
+      {Object? result,
+      required NetworkType network,
+      Web3APPData? authenticated}) {
     return Web3WalletResponseMessage._(
         result: result, authenticated: authenticated, network: network);
   }
@@ -30,18 +29,18 @@ class Web3WalletResponseMessage extends Web3MessageCore {
         object: object,
         tags: Web3MessageTypes.walletResponse.tag);
     final Map<String, dynamic> result =
-        StringUtils.toJson(values.elementAt<String>(0));
+        StringUtils.toJson(values.elementAs<String>(0));
     return Web3WalletResponseMessage._(
         result: result["result"],
         authenticated: values.elemetMybeAs<Web3APPData, CborTagValue>(
             1, (p0) => Web3APPData.deserialize(object: p0)),
-        network: NetworkType.fromTag(values.elementAt(2)));
+        network: NetworkType.fromTag(values.elementAs(2)));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           StringUtils.fromJson({"result": result}),
           authenticated?.toCbor(),
           CborBytesValue(network.tag),

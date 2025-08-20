@@ -11,7 +11,7 @@ final class MultiSigAddressIndex extends AddressDerivationIndex {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([keyName]),
+    return CborTagValue(CborSerializable.fromDynamic([keyName]),
         CryptoKeyConst.multiSigAccountKeyIndex);
   }
 

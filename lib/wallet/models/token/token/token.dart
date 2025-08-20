@@ -93,7 +93,7 @@ class Token extends APPToken {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           name,
           symbol,
           decimal,
@@ -173,7 +173,7 @@ class NonDecimalToken extends APPToken {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           name,
           symbol,
           assetLogo?.toCbor() ?? const CborNullValue(),

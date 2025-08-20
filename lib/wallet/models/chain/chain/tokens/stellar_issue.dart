@@ -26,7 +26,7 @@ class StellarIssueToken extends TokenCore<IntegerBalance, Token> {
   factory StellarIssueToken.deserialize({List<int>? bytes, CborObject? obj}) {
     final CborListValue values = CborSerializable.cborTagValue(
         cborBytes: bytes, object: obj, tags: TokenCoreType.stellar.tag);
-    final Token token = Token.deserialize(obj: values.getCborTag(0));
+    final Token token = Token.deserialize(obj: values.elementAsCborTag(0));
     final String issuer = values.elementAs(1);
     final IntegerBalance balance =
         IntegerBalance.token(values.elementAs(2), token, immutable: true);
@@ -71,17 +71,19 @@ class StellarIssueToken extends TokenCore<IntegerBalance, Token> {
 
   final String assetCode;
 
-  void _updateBalance([BigInt? updateBalance]) {
+  bool _updateBalance([BigInt? updateBalance]) {
     if (streamBalance.value._internalUpdateBalance(updateBalance)) {
       _updated = DateTime.now().toLocal();
       streamBalance.notify();
+      return true;
     }
+    return false;
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           token.toCbor(),
           issuer,
           streamBalance.value.balance,

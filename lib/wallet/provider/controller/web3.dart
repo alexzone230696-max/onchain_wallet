@@ -14,63 +14,64 @@ mixin Web3Impl on WalletManager {
     if (!create) {
       final auth = await _getAuthenticated(info.identifier);
       if (auth == null) return null;
-      final dappInfo = auth.createAuth(_appChains.getWeb3NetworkData());
+      final dappInfo = await _appChains.createAuth(auth);
       return Web3DappInfo(
           authentication: auth,
           dappData: dappInfo,
           clientInfo: auth.toClient());
     }
     final auth = await _getOrCreateDappAuthenticated(info);
-    final dappInfo = auth.createAuth(_appChains.getWeb3NetworkData());
+    final dappInfo = await _appChains.createAuth(auth);
     return Web3DappInfo(
         authentication: auth, dappData: dappInfo, clientInfo: auth.toClient());
   }
 
   @override
-  Future<List<Web3APPAuthentication>> _getAllWeb3Authenticated() async {
+  Future<List<Web3ApplicationAuthentication>> _getAllWeb3Authenticated() async {
     final keys = await _core._readAllPermission(_wallet);
     final auhts = keys
         .map((e) => MethodUtils.nullOnException(
-            () => Web3APPAuthentication.deserialize(bytes: e)))
-        .whereType<Web3APPAuthentication>()
+            () => Web3ApplicationAuthentication.deserialize(bytes: e)))
+        .whereType<Web3ApplicationAuthentication>()
         .toList();
     return auhts;
   }
 
   Future<List<Web3DappInfo>> _getAllWeb3Applications() async {
-    final web3Chains = _appChains.getWeb3NetworkData();
     final auhts = await _getAllWeb3Authenticated();
-    return auhts
-        .map((e) => Web3DappInfo(
+    return Future.wait(auhts
+        .map((e) async => Web3DappInfo(
             authentication: e,
             clientInfo: e.toClient(),
-            dappData: e.createAuth(web3Chains)))
-        .toList();
+            dappData: await _appChains.createAuth(e)))
+        .toList());
   }
 
-  Future<Web3DappInfo> _getWeb3Dapp(Web3ClientInfo clientInfo) async {
+  Future<Web3DappInfo> _getWeb3Dapp(Web3ClientInfo clientInfo,
+      {List<NetworkType>? networks}) async {
     final authentication = await _getOrCreateDappAuthenticated(clientInfo);
-    final dappData = authentication.createAuth(_appChains.getWeb3NetworkData());
+    final dappData =
+        await _appChains.createAuth(authentication, networks: networks);
     return Web3DappInfo(
         authentication: authentication,
         dappData: dappData,
         clientInfo: clientInfo);
   }
 
-  Future<Web3APPAuthenticationKey> _getDappAuthenticatedKey(
+  Future<Web3ApplicationAuthentication> _getDappApplication(
       Web3ClientInfo clientInfo) async {
     final authentication = await _getOrCreateDappAuthenticated(clientInfo);
-    return authentication.token;
+    return authentication;
   }
 
-  Future<Web3APPAuthentication?> _getAuthenticated(String identifier,
+  Future<Web3ApplicationAuthentication?> _getAuthenticated(String identifier,
       {Web3APPProtocol? protocol}) async {
     final dataBytes = await _core._readWeb3Permission(
         identifier: identifier, wallet: _wallet);
 
     final appAuth = MethodUtils.nullOnException(() {
       if (dataBytes == null) return null;
-      return Web3APPAuthentication.deserialize(bytes: dataBytes);
+      return Web3ApplicationAuthentication.deserialize(bytes: dataBytes);
     });
     if (protocol != null && appAuth?.protocol != protocol) {
       return null;
@@ -78,7 +79,7 @@ mixin Web3Impl on WalletManager {
     return appAuth;
   }
 
-  Future<Web3APPAuthentication> _getOrCreateDappAuthenticated(
+  Future<Web3ApplicationAuthentication> _getOrCreateDappAuthenticated(
       Web3ClientInfo info) async {
     final toPermission = await _getAuthenticated(info.identifier);
     if (toPermission == null) {
@@ -106,7 +107,7 @@ mixin Web3Impl on WalletManager {
 
   Future<Web3MessageCore> _handleGlobalRequest(
       {required Web3GlobalRequestParams requestParams,
-      required Web3APPAuthentication authenticated,
+      required Web3ApplicationAuthentication authenticated,
       required Web3RequestInformation walletRequest}) async {
     Web3GlobalRequest request = Web3GlobalRequest(
         authenticated: authenticated,
@@ -116,36 +117,45 @@ mixin Web3Impl on WalletManager {
     switch (requestParams.method) {
       case Web3GlobalRequestMethods.disconnect:
         final disconnect = requestParams.cast<Web3DisconnectApplication>();
-        authenticated.disconnectChain(disconnect.chain);
+        await _appChains
+            .disconnectWeb3Chain(authenticated, networks: [disconnect.chain]);
         result = [disconnect.chain];
+        break;
+      case Web3GlobalRequestMethods.connectSilent:
+        final disconnect = requestParams.cast<Web3SilentConnectApplication>();
+        final chains =
+            disconnect.chain == null ? NetworkType.values : [disconnect.chain!];
+        result = chains;
         break;
       default:
         result = await _getWalletOwnerResult(request);
         break;
     }
-    final chains = _appChains.getWeb3NetworkData();
-    final auth = authenticated.createAuth(chains, web3Networks: result);
-    request.updateActivity();
+    final activity = request.createActivity();
+    _core._saveWeb3ApplicationActivity(
+        wallet: _wallet, permission: authenticated, activity: activity);
+    appLogger.debug(
+        runtime: runtimeType,
+        functionName: "_handleGlobalRequest: ${requestParams.method.name}",
+        msg: result.join(", "));
+    final auth = await _appChains.createAuth(authenticated, networks: result);
     return Web3GlobalResponseMessage(authenticated: auth);
-  }
-
-  List<Chain> _getRequestChains(NetworkType network) {
-    return _appChains.chains(type: network);
   }
 
   Future<Web3MessageCore> _handleChainRequest(
       {required Web3RequestParams requestParams,
-      required Web3APPAuthentication authenticated,
+      required Web3ApplicationAuthentication authenticated,
       required Web3RequestInformation walletRequest}) async {
-    final request = requestParams.toRequest(
+    final request = await requestParams.toRequest(
         request: walletRequest,
-        chains: _getRequestChains(requestParams.method.network),
+        chainController: _appChains.controller(requestParams.method.network),
         authenticated: authenticated);
 
     await request.chain.init();
-
     final Object? result = await _getWalletOwnerResult(request);
-    request.updateActivity();
+    final activity = request.createActivity();
+    _core._saveWeb3ApplicationActivity(
+        wallet: _wallet, permission: authenticated, activity: activity);
     Object? walletResponse;
     if (authenticated.protocol.isWalletConnect) {
       walletResponse = request.params.toWalletConnectResponse(result);
@@ -155,9 +165,7 @@ mixin Web3Impl on WalletManager {
     //
     Web3APPData? auth;
     if (request.params.method.reloadAuthenticated) {
-      final chains = _appChains.getWeb3NetworkData();
-      auth = authenticated
-          .createAuth(chains, web3Networks: [request.chain.network.type]);
+      auth = await _appChains.createAuth(authenticated);
     }
     return Web3WalletResponseMessage(
         result: walletResponse,
@@ -170,9 +178,9 @@ mixin Web3Impl on WalletManager {
     final requestId = await crypto.generateHashString(
         type: CryptoRequestHashingType.generateUuid);
 
-    final request = params.toRequest(
+    final request = await params.toRequest(
         request: Web3RequestLocalInformation(requestId),
-        chains: _getRequestChains(params.method.network),
+        chainController: _appChains.controller(params.method.network),
         authenticated: Web3LocalAuthentication(
             icon: APPConst.logo,
             applicationId: APPConst.name,
@@ -183,7 +191,7 @@ mixin Web3Impl on WalletManager {
 
   Future<Web3MessageCore> _web3GetResponse(
       {required Web3MessageCore requestParams,
-      required Web3APPAuthentication authenticated,
+      required Web3ApplicationAuthentication authenticated,
       required Web3RequestInformation walletRequest}) async {
     Web3MessageCore response;
     try {
@@ -216,26 +224,27 @@ mixin Web3Impl on WalletManager {
         case Web3RequestExceptionConst.bannedHost:
         case Web3RequestExceptionConst.invalidNetwork:
         case Web3RequestExceptionConst.internalError:
-          auth = authenticated.createAuth(_appChains.getWeb3NetworkData());
+          auth = await _appChains.createAuth(authenticated);
           break;
         default:
       }
       response = e.toResponseMessage(
           requestId: walletRequest.requestId, authenticated: auth);
+      appLogger.error(
+          runtime: runtimeType, functionName: "_web3GetResponse", msg: e);
     } catch (e) {
       const exception = Web3RequestExceptionConst.internalError;
       response = exception.toResponseMessage(
           requestId: walletRequest.requestId,
-          authenticated:
-              authenticated.createAuth(_appChains.getWeb3NetworkData()));
-    } finally {
-      await _core._savePermission(wallet: _wallet, permission: authenticated);
+          authenticated: await _appChains.createAuth(authenticated));
+      appLogger.error(
+          runtime: runtimeType, functionName: "_web3GetResponse", msg: e);
     }
     return response;
   }
 
   Future<Web3MessageCore> _web3WalletConnectRequest(
-      Web3RequestWalletConnectpplicationInformation walletRequest) async {
+      Web3RequestWalletConnectApplicationInformation walletRequest) async {
     final authenticated =
         await _getAuthenticated(walletRequest.info.identifier);
     if (authenticated == null) {
@@ -259,11 +268,13 @@ mixin Web3Impl on WalletManager {
         walletRequest: walletRequest);
   }
 
-  Future<Web3DappInfo> _updateWeb3Application(Web3APPAuthentication application,
-      {List<NetworkType>? web3Networks}) async {
+  Future<Web3DappInfo> _updateWeb3Application(
+      {required Web3ApplicationAuthentication application,
+      required List<Web3InternalChain> chains}) async {
     await _core._savePermission(wallet: _wallet, permission: application);
-    final dappData = application.createAuth(_appChains.getWeb3NetworkData(),
-        web3Networks: web3Networks);
+    await _appChains.updateWeb3InternalChains(app: application, chains: chains);
+    final dappData = await _appChains.createAuth(application,
+        networks: chains.map((e) => e.type).toList());
     return Web3DappInfo(
         authentication: application,
         dappData: dappData,
@@ -271,24 +282,39 @@ mixin Web3Impl on WalletManager {
   }
 
   Future<void> _removeWeb3Authenticated(
-      Web3APPAuthentication application) async {
+      Web3ApplicationAuthentication application) async {
     await _core._removeWeb3Permission(wallet: _wallet, permission: application);
   }
 
   Future<Web3APPData> _getDefaultAuth() async {
-    final application = Web3APPAuthentication.local();
-    final permission = application.createAuth(_appChains.getWeb3NetworkData());
+    final application = Web3ApplicationAuthentication.local();
+    final permission = _appChains.createAuth(application);
     return permission;
+  }
+
+  Future<List<Web3InternalChain>> _getWeb3InternalChains(
+      Web3ApplicationAuthentication authenticated,
+      {List<NetworkType>? networks}) {
+    return _appChains.getWeb3InternalChains(authenticated, networks: networks);
+  }
+
+  Future<List<Web3AccountAcitvity>> _getWeb3ApplicationActivities(
+      Web3ApplicationAuthentication permission) async {
+    final data = await _core._readWeb3ApplicationActivities(
+        wallet: _wallet, permission: permission);
+    return data.map((e) => Web3AccountAcitvity.deserialize(bytes: e)).toList();
+  }
+
+  Future<void> _removeWeb3ApplicationActivities(
+      Web3ApplicationAuthentication permission) async {
+    await _core._removeWeb3ApplicationActivities(
+        wallet: _wallet, permission: permission);
   }
 
   @override
   Future<void> _onInitController() async {
-    try {
-      await super._onInitController();
-      await walletConnectHandler.init();
-    } catch (e) {
-      rethrow;
-    }
+    await super._onInitController();
+    await walletConnectHandler.init();
   }
 
   @override

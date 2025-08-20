@@ -8,8 +8,7 @@ class BitcoinMultiSigSignerDetais
     with Equatable, CborSerializable
     implements MultiSignatureSigner {
   BitcoinMultiSigSignerDetais._(
-      {required this.publicKey, required int weight, required this.keyIndex})
-      : _wieght = weight;
+      {required this.publicKey, required this.weight, required this.keyIndex});
 
   factory BitcoinMultiSigSignerDetais(
       {required List<int> publicKey,
@@ -35,15 +34,16 @@ class BitcoinMultiSigSignerDetais
 
     final List<int> publicKey = cbor.elementAs(0);
     final int weight = cbor.elementAs(1);
-    final keyIndex = Bip32AddressIndex.deserialize(obj: cbor.getCborTag(2));
+    final keyIndex =
+        Bip32AddressIndex.deserialize(obj: cbor.elementAsCborTag(2));
     return BitcoinMultiSigSignerDetais(
         publicKey: publicKey, weight: weight, keyIndex: keyIndex);
   }
   @override
   final String publicKey;
-  int _wieght;
+  // int _wieght;
   @override
-  int get weight => _wieght;
+  final int weight;
 
   final Bip32AddressIndex keyIndex;
   String get path => keyIndex.toString();
@@ -51,7 +51,7 @@ class BitcoinMultiSigSignerDetais
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(BytesUtils.fromHexString(publicKey)),
           weight,
           keyIndex.toCbor()
@@ -121,10 +121,13 @@ class BitcoinMultiSignatureAddress
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
-          CborListValue.fixedLength(signers.map((e) => e.toCbor()).toList()),
+        CborSerializable.fromDynamic([
+          CborSerializable.fromDynamic(signers.map((e) => e.toCbor()).toList()),
           threshold,
-          CborListValue<String>.fixedLength(multiSigScript.script.cast())
+          CborListValue<CborStringValue>.definite(multiSigScript.script
+              .cast<String>()
+              .map((e) => CborStringValue(e))
+              .toList())
         ]),
         CborTagsConst.bitcoinMultiSignaturAddress);
   }

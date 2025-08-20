@@ -16,8 +16,10 @@ import 'package:on_chain_wallet/wallet/web3/networks/global/methods/methods.dart
 import 'package:on_chain_wallet/wallet/web3/networks/global/params/connect.dart';
 import 'package:on_chain_wallet/wallet/web3/utils/web3_validator_utils.dart';
 import 'package:on_chain_wallet/wc/wallet/core/network.dart';
+import 'package:on_chain_wallet/wc/wallet/networks/ada.dart';
 import 'package:on_chain_wallet/wc/wallet/networks/aptos.dart';
 import 'package:on_chain_wallet/wc/wallet/networks/bitcoin.dart';
+import 'package:on_chain_wallet/wc/wallet/networks/bitcoin_cash.dart';
 import 'package:on_chain_wallet/wc/wallet/networks/cosmos.dart';
 import 'package:on_chain_wallet/wc/wallet/networks/ethereum.dart';
 import 'package:on_chain_wallet/wc/wallet/networks/monero.dart';
@@ -69,9 +71,13 @@ class Web3WalletConnectSessionHandler extends Web3WalletHandler<
         sendInternalMessage: _sendInternalWalletMessage),
     NetworkType.bitcoinAndForked: BitcoinWeb3WalletConnectStateHandler(
         sendInternalMessage: _sendInternalWalletMessage),
+    NetworkType.bitcoinCash: BitcoinCashWeb3WalletConnectStateHandler(
+        sendInternalMessage: _sendInternalWalletMessage),
     NetworkType.xrpl: XRPWeb3WalletConnectStateHandler(
         sendInternalMessage: _sendInternalWalletMessage),
     NetworkType.monero: MoneroWeb3WalletConnectStateHandler(
+        sendInternalMessage: _sendInternalWalletMessage),
+    NetworkType.cardano: ADAWeb3WalletConnectStateHandler(
         sendInternalMessage: _sendInternalWalletMessage)
   };
 
@@ -148,13 +154,10 @@ class Web3WalletConnectSessionHandler extends Web3WalletHandler<
   }
 
   Future<void> updateAuthenticated(Web3APPData authenticated) async {
-    List<WalletConnectClientEvent> events = [];
-    for (final i in authenticated.networks) {
-      final event = await _networks[i]?.initChain(authenticated);
-      if (event == null) continue;
-      events.add(event);
-    }
-    await _sendEventToClient(events);
+    final events = await Future.wait(authenticated.networks
+        .map((e) async => await _networks[e]?.initChain(authenticated)));
+    await _sendEventToClient(
+        events.whereType<WalletConnectClientEvent>().toList());
   }
 
   Future<Web3MessageCore> _sendInternalWalletMessage(
@@ -343,8 +346,6 @@ class Web3WalletConnectSessionHandler extends Web3WalletHandler<
     if (_session.isActive) {
       throw Web3RequestExceptionConst.internalError;
     }
-    // final request = WalletConnectNetworkRequest(
-    //     method: Web3GlobalRequestMethods.connect.name, requestId: requestId);
     final response = await _requestCompleter(request);
     final isActive =
         response.type == WalletConnectWalletMessageResponseType.success;

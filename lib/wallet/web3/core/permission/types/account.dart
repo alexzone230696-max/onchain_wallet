@@ -6,6 +6,8 @@ import 'package:on_chain_wallet/crypto/models/networks.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/aptos/permission/models/account.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/bitcoin.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/bitcoin_cash/permission/models/account.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/cardano/permission/models/account.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/cosmos/permission/models/account.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ethereum/permission/models/account.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/monero/permission/models/account.dart';
@@ -22,18 +24,16 @@ abstract class Web3ChainAccount<NETWORKADDRESS>
   int get id;
   final AddressDerivationIndex keyIndex;
   final NETWORKADDRESS address;
-  bool _defaultAddress;
-  bool get defaultAddress => _defaultAddress;
+  final String identifier;
+  final bool defaultAddress;
   String get addressStr;
+
   Web3ChainAccount({
     required this.keyIndex,
     required this.address,
-    required bool defaultAddress,
-  }) : _defaultAddress = defaultAddress;
-
-  void changeDefault(bool defaultAddress) {
-    _defaultAddress = defaultAddress;
-  }
+    required this.identifier,
+    required this.defaultAddress,
+  });
 
   Web3ChainAccount<NETWORKADDRESS> clone();
 
@@ -81,7 +81,7 @@ class Web3ChainDefaultIdnetifier extends Web3ChainIdnetifier {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([id, wsIdentifier, caip2]),
+    return CborTagValue(CborSerializable.fromDynamic([id, wsIdentifier, caip2]),
         CborTagsConst.web3ChainIdentifier);
   }
 }
@@ -108,6 +108,7 @@ abstract class Web3ChainAuthenticated<CHAINACCOUNT extends Web3ChainAccount>
       NetworkType.xrpl => Web3XRPChainAuthenticated.deserialize(object: tag),
       NetworkType.monero =>
         Web3MoneroChainAuthenticated.deserialize(object: tag),
+      NetworkType.cardano => Web3ADAChainAuthenticated.deserialize(object: tag),
       NetworkType.ethereum =>
         Web3EthereumChainAuthenticated.deserialize(object: tag),
       NetworkType.ton => Web3TonChainAuthenticated.deserialize(object: tag),
@@ -122,6 +123,8 @@ abstract class Web3ChainAuthenticated<CHAINACCOUNT extends Web3ChainAccount>
         Web3CosmosChainAuthenticated.deserialize(object: tag),
       NetworkType.bitcoinAndForked =>
         Web3BitcoinChainAuthenticated.deserialize(object: tag),
+      NetworkType.bitcoinCash =>
+        Web3BitcoinCashChainAuthenticated.deserialize(object: tag),
       _ => throw WalletExceptionConst.invalidData(
           messsage: "unsuported web3 network")
     } as Web3ChainAuthenticated<CHAINACCOUNT>;
@@ -137,10 +140,12 @@ abstract class Web3ChainAuthenticated<CHAINACCOUNT extends Web3ChainAccount>
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
-          CborListValue.fixedLength(accounts.map((e) => e.toCbor()).toList()),
-          CborListValue.fixedLength(networks.map((e) => e.toCbor()).toList()),
-          currentNetwork.toCbor()
+        CborSerializable.fromDynamic([
+          CborSerializable.fromDynamic(
+              accounts.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              networks.map((e) => e.toCbor()).toList()),
+          currentNetwork.toCbor(),
         ]),
         networkType.tag);
   }

@@ -131,7 +131,7 @@ final class Bip32AddressIndex extends AddressDerivationIndex {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.dynamicLength([
+        CborSerializable.fromDynamic([
           purpose,
           coin,
           accountLevel,

@@ -26,7 +26,7 @@ final class CryptoRequestGenerateWalletConnectSymKeyInfo
         hex: hex,
         tags: CryptoRequestMethod.symkey.tag);
     return CryptoRequestGenerateWalletConnectSymKeyInfo._(
-        publicKey: values.elementAt(0), privateKey: values.elementAs(1));
+        publicKey: values.elementAs(0), privateKey: values.elementAs(1));
   }
 
   @override
@@ -47,7 +47,7 @@ final class CryptoRequestGenerateWalletConnectSymKeyInfo
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([publicKey, privateKey]), method.tag);
+        CborSerializable.fromDynamic([publicKey, privateKey]), method.tag);
   }
 
   @override
@@ -81,7 +81,7 @@ final class CryptoRequestGenerateX25519Key
         object: object,
         hex: hex,
         tags: CryptoRequestMethod.x25519.tag);
-    return CryptoRequestGenerateX25519Key(seed: values.elementAt(0));
+    return CryptoRequestGenerateX25519Key(seed: values.elementAs(0));
   }
 
   @override
@@ -101,7 +101,7 @@ final class CryptoRequestGenerateX25519Key
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([seed]), method.tag);
+    return CborTagValue(CborSerializable.fromDynamic([seed]), method.tag);
   }
 
   @override

@@ -12,7 +12,7 @@ import 'js_wallet/models/models/requests.dart';
 
 void main() async {
   final applicationId =
-      Web3APPAuthentication.toApplicationId(jsWindow.location.origin);
+      Web3ApplicationAuthentication.toApplicationId(jsWindow.location.origin);
   if (applicationId == null) {
     throw Web3RequestExceptionConst.invalidHost;
   }

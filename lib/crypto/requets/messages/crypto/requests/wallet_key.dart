@@ -27,13 +27,13 @@ class CryptoRequestWalletKey
         hex: hex,
         tags: CryptoRequestMethod.walletKey.tag);
     return CryptoRequestWalletKey._(
-        key: values.elementAt(0), checksum: values.elementAt(1));
+        key: values.elementAs(0), checksum: values.elementAs(1));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [CborBytesValue(key), CborBytesValue(checksum)]),
         method.tag);
   }

@@ -42,18 +42,24 @@ class AptosMultisigAccountPublicKeyInfo with CborSerializable, Equatable {
     return AptosMultisigAccountPublicKeyInfo._(
         publicKey: values.elementAs(0),
         keyScheme: AptosSupportKeyScheme.fromValue(values.elementAs(1)),
-        keyIndex: Bip32AddressIndex.deserialize(obj: values.getCborTag(2)));
+        keyIndex:
+            Bip32AddressIndex.deserialize(obj: values.elementAsCborTag(2)));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        [CborBytesValue(publicKey), keyScheme.value, keyIndex.toCbor()],
+        CborListValue<CborObject>.definite([
+          CborBytesValue(publicKey),
+          CborIntValue(keyScheme.value),
+          keyIndex.toCbor()
+        ]),
         CborTagsConst.aptosMultisigAccountPublicKey);
   }
 
   String toHex() {
-    return CryptoKeyUtils.toPublicKeyHex(publicKey, keyIndex.currencyCoin);
+    return CryptoKeyUtils.toPublicKeyHex(
+        publicKey, keyIndex.currencyCoin.conf.type);
   }
 
   @override
@@ -214,10 +220,13 @@ class AptosMultisigAccountInfo with CborSerializable {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue([
-      CborListValue.fixedLength(publicKeys.map((e) => e.toCbor()).toList()),
-      requiredSignature,
-      keyScheme.value
-    ], CborTagsConst.aptosMultisigAccountInfo);
+    return CborTagValue(
+        CborListValue<CborObject>.definite([
+          CborSerializable.fromDynamic(
+              publicKeys.map((e) => e.toCbor()).toList()),
+          CborIntValue(requiredSignature),
+          CborIntValue(keyScheme.value)
+        ]),
+        CborTagsConst.aptosMultisigAccountInfo);
   }
 }

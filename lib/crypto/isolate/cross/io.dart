@@ -285,6 +285,7 @@ class _WorkerConnection {
   }
 
   static void _startStreamRemoteIsolate(_IoEncryptedInitialRequest request) {
+    // WidgetsFlutterBinding.
     final receivePort = ReceivePort();
     request.sendPort.send(receivePort.sendPort);
     _handleStreamCommandsToIsolate(
@@ -345,6 +346,8 @@ class _WorkerConnection {
         throw WalletExceptionConst.dataVerificationFailed;
       }
       return result;
+    } catch (e) {
+      rethrow;
     } finally {
       _requests.remove(next);
     }
@@ -389,15 +392,6 @@ class _SyncWorkerConnection extends _WorkerConnection {
       Duration? timeout}) async {
     return await super
         .getResult(args: args, encryptPart: encryptPart, timeout: timeout);
-    // return await _lock.synchronized(() async {
-    //   try {
-    //     status = IsolateStatus.busy;
-    // return await super
-    //     .getResult(args: args, encryptPart: encryptPart, timeout: timeout);
-    //   } finally {
-    //     status = IsolateStatus.idle;
-    //   }
-    // });
   }
 
   @override
@@ -488,10 +482,6 @@ class _IoEncryptedIsolateInitialData {
       {required CborMessageResponseArgs request,
       required bool encrypted,
       required int requestId}) {
-    // if (request.type == CryptoArgsType.cbor) {
-    //   return WorkerCborMessage(
-    //       message: request as MessageArgsCbor, id: requestId);
-    // }
     if (encrypted) {
       final nonce = QuickCrypto.generateRandom(16);
       final enc = chacha.encrypt(nonce, request.toCbor().encode());

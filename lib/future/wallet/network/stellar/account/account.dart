@@ -21,7 +21,8 @@ class StellarAccountPageView extends StatelessWidget {
               account: chainAccount,
               address: chainAccount.address,
               token: p0)),
-      AccountTransactionActivityView(chainAccount)
+      AccountTransactionActivityView<IStellarAddress, StellarWalletTransaction>(
+          account: chainAccount, address: chainAccount.address)
     ]);
   }
 }

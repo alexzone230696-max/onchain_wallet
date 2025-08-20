@@ -23,6 +23,7 @@ class Web3AptosChainAccount extends Web3ChainAccount<AptosAddress> {
       {required super.keyIndex,
       required super.address,
       required super.defaultAddress,
+      required super.identifier,
       required this.id,
       required this.signingScheme,
       required List<int> publicKey})
@@ -39,7 +40,8 @@ class Web3AptosChainAccount extends Web3ChainAccount<AptosAddress> {
         id: id,
         defaultAddress: isDefault,
         publicKey: address.aptosPublicKey().toBytes(),
-        signingScheme: address.keyScheme.toSigningScheme.value);
+        signingScheme: address.keyScheme.toSigningScheme.value,
+        identifier: address.identifier);
   }
 
   factory Web3AptosChainAccount.deserialize(
@@ -50,24 +52,27 @@ class Web3AptosChainAccount extends Web3ChainAccount<AptosAddress> {
         hex: hex,
         tags: CborTagsConst.web3AptosAccount);
     return Web3AptosChainAccount(
-        keyIndex: AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
-        address: AptosAddress(values.elementAt(1)),
-        id: values.elementAt(2),
-        defaultAddress: values.elementAt(3),
-        publicKey: values.elementAs(4),
-        signingScheme: values.elementAs(5));
+        keyIndex: AddressDerivationIndex.deserialize(
+            obj: values.indexAs<CborTagValue>(0)),
+        address: AptosAddress(values.valueAs(1)),
+        id: values.valueAs(2),
+        defaultAddress: values.valueAs(3),
+        publicKey: values.valueAs(4),
+        signingScheme: values.valueAs(5),
+        identifier: values.valueAs(6));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborListValue<CborObject>.definite([
           keyIndex.toCbor(),
-          address.address,
-          id,
-          defaultAddress,
+          CborStringValue(address.address),
+          CborIntValue(id),
+          CborBoleanValue(defaultAddress),
           CborBytesValue(publicKey),
-          signingScheme
+          CborIntValue(signingScheme),
+          CborStringValue(identifier)
         ]),
         CborTagsConst.web3AptosAccount);
   }
@@ -83,14 +88,16 @@ class Web3AptosChainAccount extends Web3ChainAccount<AptosAddress> {
       int? id,
       int? signingScheme,
       AptosChainType? network,
-      List<int>? publicKey}) {
+      List<int>? publicKey,
+      String? identifier}) {
     return Web3AptosChainAccount(
         keyIndex: keyIndex ?? this.keyIndex,
         address: address ?? this.address,
         defaultAddress: defaultAddress ?? this.defaultAddress,
         id: id ?? this.id,
         signingScheme: signingScheme ?? this.signingScheme,
-        publicKey: publicKey ?? this.publicKey);
+        publicKey: publicKey ?? this.publicKey,
+        identifier: identifier ?? this.identifier);
   }
 }
 
@@ -119,7 +126,7 @@ class Web3AptosChainIdnetifier extends Web3ChainIdnetifier {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-      CborListValue.fixedLength([chainId, id, wsIdentifier, caip2]),
+      CborSerializable.fromDynamic([chainId, id, wsIdentifier, caip2]),
       CborTagsConst.web3AptosChainIdentifier,
     );
   }

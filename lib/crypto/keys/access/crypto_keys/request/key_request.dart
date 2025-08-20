@@ -20,7 +20,8 @@ final class AccessCryptoPrivateKeysRequest with CborSerializable {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(indexes.map((e) => e.toCbor()).toList(),
+    return CborTagValue(
+        CborListValue.definite(indexes.map((e) => e.toCbor()).toList()),
         CryptoKeyConst.accessPrivateKeysRequest);
   }
 }
@@ -42,13 +43,15 @@ final class AccessCryptoPrivateKeyRequest with CborSerializable {
         bytes, obj, CryptoKeyConst.accessPrivateKeyRequest);
 
     return AccessCryptoPrivateKeyRequest._(
-        index: AddressDerivationIndex.deserialize(obj: cbor.getCborTag(0)),
-        maxLevel: cbor.elementAt(1));
+        index:
+            AddressDerivationIndex.deserialize(obj: cbor.elementAsCborTag(0)),
+        maxLevel: cbor.elementAs(1));
   }
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([index.toCbor(), maxLevel]),
+    return CborTagValue(
+        CborSerializable.fromDynamic([index.toCbor(), maxLevel]),
         CryptoKeyConst.accessPrivateKeyRequest);
   }
 }

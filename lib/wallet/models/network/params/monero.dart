@@ -17,7 +17,7 @@ class MoneroNetworkParams extends NetworkCoinParams<MoneroAPIProvider> {
         bytes, obj, CborTagsConst.moneroNetworkParams);
 
     return MoneroNetworkParams(
-        token: Token.deserialize(obj: values.getCborTag(2)),
+        token: Token.deserialize(obj: values.elementAsCborTag(2)),
         providers: values
             .elementAsListOf<CborObject>(3)
             .map((e) => MoneroAPIProvider.fromCborBytesOrObject(obj: e))
@@ -40,11 +40,12 @@ class MoneroNetworkParams extends NetworkCoinParams<MoneroAPIProvider> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           const CborNullValue(),
           const CborNullValue(),
           token.toCbor(),
-          CborListValue.fixedLength(providers.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              providers.map((e) => e.toCbor()).toList()),
           chainType.name,
           network.name,
           const CborNullValue(),

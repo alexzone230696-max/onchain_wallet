@@ -217,7 +217,8 @@ class BlockchainAddressUtils {
   static ADAAddress? validatorCardanoAddress(
       String address, WalletCardanoNetwork network) {
     return MethodUtils.nullOnException(() {
-      return ADAAddress.fromAddress(address, network: network.toCardanoNetwork);
+      return ADAAddress.fromAddress(address,
+          network: network.coinParam.networkType);
     });
   }
 

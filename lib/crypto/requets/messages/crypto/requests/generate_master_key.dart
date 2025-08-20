@@ -36,8 +36,8 @@ class CryptoRequestGenerateMasterKey extends CryptoRequest<
       final CborListValue values =
           CborSerializable.decode(cborBytes: dataBytes);
       return CryptoRequestGenerateMasterKey._(
-          version: values.elementAt(0),
-          walletData: values.elementAt(1),
+          version: values.elementAs(0),
+          walletData: values.elementAs(1),
           key: key,
           newKey: newKey);
     } catch (e) {
@@ -55,8 +55,8 @@ class CryptoRequestGenerateMasterKey extends CryptoRequest<
       final CborListValue values =
           CborSerializable.decode(cborBytes: dataBytes);
       return CryptoRequestGenerateMasterKey._(
-          version: values.elementAt(0),
-          walletData: values.elementAt(1),
+          version: values.elementAs(0),
+          walletData: values.elementAs(1),
           newKey: newKey,
           keyString: StringUtils.encode(key),
           keyChecksum: checksum);
@@ -73,12 +73,12 @@ class CryptoRequestGenerateMasterKey extends CryptoRequest<
         hex: hex,
         tags: CryptoRequestMethod.generateMasterKey.tag);
     return CryptoRequestGenerateMasterKey._(
-      version: values.elementAt(0),
-      walletData: values.elementAt(1),
-      key: values.elementAt(2),
-      newKey: values.elementAt(3),
-      keyString: values.elementAt(4),
-      keyChecksum: values.elementAt(5),
+      version: values.elementAs(0),
+      walletData: values.elementAs(1),
+      key: values.elementAs(2),
+      newKey: values.elementAs(3),
+      keyString: values.elementAs(4),
+      keyChecksum: values.elementAs(5),
     );
   }
 
@@ -172,7 +172,7 @@ class CryptoRequestGenerateMasterKey extends CryptoRequest<
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           version,
           CborBytesValue(walletData),
           key == null ? const CborNullValue() : CborBytesValue(key!),

@@ -1,17 +1,9 @@
 part of 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 
 final class MoneroPublicKeyData extends CryptoPublicKeyData {
-  @override
-  final String? extendedKey;
-  @override
-  final String comprossed;
-  @override
-  final String? uncomprossed = null;
   final MoneroPublicKey spendPublicKey;
   final MoneroPublicKey viewPublicKey;
   final MoneroPrivateKey viewPrivateKey;
-  @override
-  final String? chainCode;
   @override
   final String keyName;
 
@@ -27,18 +19,22 @@ final class MoneroPublicKeyData extends CryptoPublicKeyData {
       keyType: type);
 
   MoneroPublicKeyData.__(
-      {required this.extendedKey,
+      {required super.extendedKey,
       required this.keyName,
       required this.spendPublicKey,
       required this.viewPublicKey,
       required this.viewPrivateKey,
-      required this.chainCode,
-      required this.comprossed})
-      : super._();
+      required super.chainCode,
+      required super.comprossed})
+      : super._(
+            type: CryptoPublicKeyDataType.monero,
+            uncomprossed: null,
+            curve: EllipticCurveTypes.ed25519Monero);
   factory MoneroPublicKeyData._fromBip32(
       {required Bip32Base account, required String keyName}) {
     final moneroAccount =
         MoneroAccount.fromBip44PrivateKey(account.privateKey.raw);
+    // account.curveType;
     return MoneroPublicKeyData.__(
         extendedKey: account.publicKey.toExtended,
         keyName: keyName,
@@ -66,19 +62,19 @@ final class MoneroPublicKeyData extends CryptoPublicKeyData {
         object: obj,
         tags: CryptoKeyConst.accessMoneroPublicKeyResponse);
     return MoneroPublicKeyData.__(
-        extendedKey: values.elementAs(0),
-        keyName: values.elementAs(1),
-        chainCode: values.elementAs(2),
-        spendPublicKey: MoneroPublicKey.fromBytes(values.elementAs(3)),
-        viewPrivateKey: MoneroPrivateKey.fromBytes(values.elementAs(4)),
-        viewPublicKey: MoneroPublicKey.fromBytes(values.elementAs(5)),
-        comprossed: values.elementAs(6));
+        extendedKey: values.valueAs(0),
+        keyName: values.valueAs(1),
+        chainCode: values.valueAs(2),
+        spendPublicKey: MoneroPublicKey.fromBytes(values.valueAs(3)),
+        viewPrivateKey: MoneroPrivateKey.fromBytes(values.valueAs(4)),
+        viewPublicKey: MoneroPublicKey.fromBytes(values.valueAs(5)),
+        comprossed: values.valueAs(6));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           extendedKey,
           keyName,
           chainCode,

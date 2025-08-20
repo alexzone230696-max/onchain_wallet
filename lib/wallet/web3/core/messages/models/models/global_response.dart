@@ -24,7 +24,7 @@ class Web3GlobalResponseMessage extends Web3MessageCore {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([authenticated?.toCbor()]), type.tag);
+        CborSerializable.fromDynamic([authenticated?.toCbor()]), type.tag);
   }
 
   @override

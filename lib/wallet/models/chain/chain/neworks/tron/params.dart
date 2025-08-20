@@ -24,8 +24,8 @@ final class TronNewAddressParams extends NewAccountParams<ITronAddress> {
         tags: NewAccountParamsType.tronNewAddressParams.tag);
     return TronNewAddressParams(
       deriveIndex:
-          AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
-      coin: CustomCoins.getSerializationCoin(values.elementAt(1)),
+          AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(0)),
+      coin: CustomCoins.getSerializationCoin(values.elementAs(1)),
     );
   }
   @override
@@ -51,7 +51,7 @@ final class TronNewAddressParams extends NewAccountParams<ITronAddress> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([deriveIndex.toCbor(), coin.toCbor()]),
+        CborSerializable.fromDynamic([deriveIndex.toCbor(), coin.toCbor()]),
         type.tag);
   }
 
@@ -94,16 +94,15 @@ final class TronMultisigNewAddressParams implements TronNewAddressParams {
         tags: NewAccountParamsType.tronMultisigNewAddressParams.tag);
     return TronMultisigNewAddressParams(
       masterAddress: TronAddress(values.elementAs(0)),
-      multiSigAccount: values
-          .getCborTag(1)!
-          .to((e) => TronMultiSignatureAddress.deserialize(obj: e)),
+      multiSigAccount: TronMultiSignatureAddress.deserialize(
+          obj: values.elementAs<CborTagValue>(1)),
       coin: CustomCoins.getSerializationCoin(values.elementAs(2)),
     );
   }
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           masterAddress.toAddress(),
           multiSigAccount.toCbor(),
           coin.toCbor()
@@ -120,7 +119,8 @@ final class TronMultisigNewAddressParams implements TronNewAddressParams {
     return ITronMultisigAddress._newAccount(
         address: masterAddress,
         coin: coin,
-        identifier: NewAccountParams.toIdentifier(masterAddress.toAddress()),
+        identifier: NewAccountParams.toIdentifier(masterAddress.toAddress(),
+            multisigAddress: multiSigAccount.toCbor().encode()),
         multiSigAccount: multiSigAccount,
         network: network);
   }

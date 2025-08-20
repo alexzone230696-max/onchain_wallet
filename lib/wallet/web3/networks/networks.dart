@@ -10,3 +10,6 @@ export 'sui/sui.dart';
 export 'cosmos/cosmos.dart';
 export 'bitcoin/bitcoin.dart';
 export 'ripple/ripple.dart';
+export 'cardano/cardano.dart';
+export 'monero/monero.dart';
+export 'bitcoin_cash/bitcoin_cash.dart';

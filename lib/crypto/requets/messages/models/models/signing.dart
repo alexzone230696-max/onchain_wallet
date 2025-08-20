@@ -95,19 +95,19 @@ final class BitcoinSigning extends GlobalSignRequest {
         network != SigningRequestMode.bitcoinCash) {
       throw WalletExceptionConst.dataVerificationFailed;
     }
-    final CborListValue values = tag.getList;
+    final CborListValue values = tag.valueAs();
     return BitcoinSigning(
-        digest: values.elementAt(1),
-        sighash: values.elementAt(2),
-        useTaproot: values.elementAt(3),
-        index: Bip32AddressIndex.deserialize(obj: values.getCborTag(0)),
+        digest: values.elementAs(1),
+        sighash: values.elementAs(2),
+        useTaproot: values.elementAs(3),
+        index: Bip32AddressIndex.deserialize(obj: values.elementAsCborTag(0)),
         network: network,
         useBchSchnorr: values.elementAs(4));
   }
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [index.toCbor(), digest, sighash, useTaproot, useBchSchnorr]),
         network.tag);
   }
@@ -128,9 +128,10 @@ final class GlobalSignRequest extends SignRequest {
   }) {
     final CborTagValue tag =
         CborSerializable.decode(cborBytes: bytes, hex: hex, object: object);
-    final CborListValue values = tag.getList;
-    final index = AddressDerivationIndex.deserialize(obj: values.getCborTag(0));
-    final List<int> digest = values.elementAt(1);
+    final CborListValue values = tag.valueAs();
+    final index =
+        AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(0));
+    final List<int> digest = values.elementAs(1);
     final network = SigningRequestMode.fromTag(tag.tags);
     return GlobalSignRequest._(digest: digest, network: network, index: index);
   }
@@ -213,7 +214,7 @@ final class GlobalSignRequest extends SignRequest {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([index.toCbor(), digest]), network.tag);
+        CborSerializable.fromDynamic([index.toCbor(), digest]), network.tag);
   }
 }
 
@@ -250,8 +251,9 @@ final class CosmosSigningRequest extends SignRequest {
         hex: hex,
         object: object,
         tags: SigningRequestMode.cosmos.tag);
-    final index = AddressDerivationIndex.deserialize(obj: values.getCborTag(0));
-    final List<int> digest = values.elementAt(1);
+    final index =
+        AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(0));
+    final List<int> digest = values.elementAs(1);
     final CosmosKeysAlgs alg = CosmosKeysAlgs.fromName(values.elementAs(2));
     return CosmosSigningRequest(digest: digest, index: index, alg: alg);
   }
@@ -259,7 +261,7 @@ final class CosmosSigningRequest extends SignRequest {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([index.toCbor(), digest, alg.name]),
+        CborSerializable.fromDynamic([index.toCbor(), digest, alg.name]),
         network.tag);
   }
 }
@@ -290,7 +292,7 @@ final class MoneroSigningRequest extends SignRequest {
         tags: SigningRequestMode.monero.tag);
 
     return MoneroSigningRequest(
-        index: Bip32AddressIndex.deserialize(obj: values.getCborTag(0)),
+        index: Bip32AddressIndex.deserialize(obj: values.elementAsCborTag(0)),
         destinations: values
             .elementAsListOf<CborBytesValue>(1)
             .map((e) => MoneroTxDestination.deserialize(e.value))
@@ -314,15 +316,15 @@ final class MoneroSigningRequest extends SignRequest {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           index.toCbor(),
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               destinations.map((e) => CborBytesValue(e.serialize())).toList()),
           fee,
           change == null
               ? const CborNullValue()
               : CborBytesValue(change!.serialize()),
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               utxos.map((e) => CborBytesValue(e.serialize())).toList()),
           withProof
         ]),

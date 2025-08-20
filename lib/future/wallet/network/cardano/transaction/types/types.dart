@@ -21,10 +21,15 @@ class CardanoUtxo {
 class ADAAssetToken with Equatable {
   final PolicyID id;
   final AssetName name;
-  // final IntegerBalance amount;
   final Token token;
-  ADAAssetToken({required this.id, required this.name})
-      : token = Token(name: name.name, symbol: name.name, decimal: 0);
+  factory ADAAssetToken({required PolicyID id, required AssetName name}) {
+    final assetName = name.name ?? name.toHex();
+    return ADAAssetToken._(
+        id: id,
+        name: name,
+        token: Token(name: assetName, symbol: assetName, decimal: 0));
+  }
+  ADAAssetToken._({required this.id, required this.name, required this.token});
 
   @override
   List get variabels => [id, name];
@@ -97,33 +102,48 @@ class ADATransactionFeeData
   }
 }
 
-class CardanoAccountUtxo {
-  final ADAAccountUTXOResponse utxo;
+class CardanoAccountUtxo with Equality {
+  final TransactionUnspentOutput utxo;
   final IntegerBalance utxoBalance;
   final MultiAsset multiAsset;
   final ICardanoAddress address;
-  const CardanoAccountUtxo._(
+  final bool haveAssets;
+  final bool hasScript;
+  final bool hasReferenceScript;
+
+  CardanoAccountUtxo._(
       {required this.utxo,
       required this.utxoBalance,
       required this.address,
-      required this.multiAsset});
+      required this.multiAsset,
+      required this.haveAssets,
+      required this.hasScript,
+      required this.hasReferenceScript});
   factory CardanoAccountUtxo({
-    required ADAAccountUTXOResponse utxo,
+    required ADAAddressUtxo utxo,
     required WalletCardanoNetwork network,
     required ICardanoAddress address,
   }) {
+    final asset = utxo.output.amount.multiAsset ?? MultiAsset.empty;
     return CardanoAccountUtxo._(
-        utxo: utxo,
+        utxo: TransactionUnspentOutput(input: utxo.input, output: utxo.output),
         address: address,
-        multiAsset: utxo.multiAsset,
-        utxoBalance: IntegerBalance.token(utxo.sumOflovelace, network.token,
-            immutable: true));
+        multiAsset: asset,
+        utxoBalance: IntegerBalance.token(
+            utxo.output.amount.coin, network.token,
+            immutable: true),
+        haveAssets: asset != MultiAsset.empty,
+        hasScript: utxo.output.plutusData != null,
+        hasReferenceScript: utxo.output.scriptRef != null);
   }
+
+  @override
+  List get variabels => [utxo, utxoBalance.balance, address];
 }
 
 abstract class BaseADATransactionController extends TransactionStateController<
     ICardanoAddress,
-    CardanoClient,
+    ADAClient,
     WalletCardanoNetwork,
     ADAChain,
     IADATransactionData,
@@ -543,10 +563,13 @@ class IADATransactionData extends ITransactionData {
   final List<ADADepositBuilder> deposits;
   final List<ADADepositBuilder> refundDeposits;
   final List<TransactionOutput> outputs;
+  final NativeScripts? nativeScript;
+
   IADATransactionData({
     required this.fee,
     required List<CardanoAccountUtxo> utxos,
     required List<TransactionOutput> outputs,
+    this.nativeScript,
     this.metadata,
     List<ADAMinsBuilder> mints = const [],
     List<ADADepositBuilder> deposits = const [],

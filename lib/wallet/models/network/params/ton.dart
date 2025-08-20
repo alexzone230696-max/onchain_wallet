@@ -37,7 +37,7 @@ class TonNetworkParams extends NetworkCoinParams<TonAPIProvider> {
     return TonNetworkParams(
         workchain: values.elementAs(0),
         chainType: ChainType.fromValue(values.elementAs(1)),
-        token: Token.deserialize(obj: values.getCborTag(4)),
+        token: Token.deserialize(obj: values.elementAsCborTag(4)),
         providers: values
             .elementAsListOf<CborTagValue>(5)
             .map((e) => TonAPIProvider.fromCborBytesOrObject(obj: e))
@@ -48,13 +48,14 @@ class TonNetworkParams extends NetworkCoinParams<TonAPIProvider> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           workchain,
           chainType.name,
           const CborNullValue(),
           const CborNullValue(),
           token.toCbor(),
-          CborListValue.fixedLength(providers.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              providers.map((e) => e.toCbor()).toList()),
           addressExplorer,
           transactionExplorer
         ]),

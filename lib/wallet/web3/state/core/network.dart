@@ -405,6 +405,13 @@ abstract class Web3StateHandler<
     return createResponse();
   }
 
+  Future<STATE> silentConnetInternal() async {
+    await sendInternalMessage(
+        network: networkType,
+        request: Web3SilentConnectApplication.network(networkType));
+    return getState();
+  }
+
   Future<Web3MessageCore> request(REQUEST message);
   STATE createState(Web3APPData? authenticated);
   void onRequestDone(REQUEST message) {}
@@ -434,6 +441,16 @@ abstract class Web3ClientRequest {
   Web3RequestSource get source;
   List<Object?> get requestParams;
   String get method;
+
+  Object? tryElementAs(int index) {
+    return requestParams.elementAtOrNull(index);
+  }
+
+  bool? tryElementAsBolean(int index) {
+    final elem = requestParams.elementAtOrNull(index);
+    if (elem is bool) return elem;
+    return null;
+  }
 
   String? tryElementAsString(int index) {
     final elem = requestParams.elementAtOrNull(index);

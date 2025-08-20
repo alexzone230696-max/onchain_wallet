@@ -55,7 +55,7 @@ class BitcoinContact extends ContactCore<BitcoinBaseAddress> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           address,
           addressObject.type.value,
           CborEpochIntValue(created),

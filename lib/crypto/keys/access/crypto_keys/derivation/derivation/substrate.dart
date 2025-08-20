@@ -71,7 +71,7 @@ final class SubstrateAddressIndex extends AddressDerivationIndex {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.dynamicLength([
+        CborSerializable.fromDynamic([
           currencyCoin.toCbor(),
           hdPath ?? const CborNullValue(),
           importedKeyId,

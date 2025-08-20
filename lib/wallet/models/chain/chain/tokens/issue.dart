@@ -25,7 +25,7 @@ class RippleIssueToken extends TokenCore<DecimalBalance, NonDecimalToken> {
         cborBytes: bytes, object: obj, tags: TokenCoreType.ripple.tag);
 
     final NonDecimalToken token =
-        NonDecimalToken.deserialize(obj: cbor.getCborTag(0));
+        NonDecimalToken.deserialize(obj: cbor.elementAsCborTag(0));
     final String issuer = cbor.elementAs(1);
     final String assetCode = cbor.elementAs(2);
     final DecimalBalance balance =
@@ -66,17 +66,19 @@ class RippleIssueToken extends TokenCore<DecimalBalance, NonDecimalToken> {
   final String issuer;
   final String assetCode;
 
-  void _updateBalance([BigRational? updateBalance]) {
+  bool _updateBalance([BigRational? updateBalance]) {
     if (streamBalance.value._internalUpdateBalance(updateBalance)) {
       _updated = DateTime.now().toLocal();
       streamBalance.notify();
+      return true;
     }
+    return false;
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           token.toCbor(),
           issuer,
           assetCode,

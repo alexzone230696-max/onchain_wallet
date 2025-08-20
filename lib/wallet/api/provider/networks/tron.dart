@@ -27,17 +27,17 @@ class TronAPIProvider extends APIProvider {
         bytes, obj, CborTagsConst.tronApiServiceProvider);
     return TronAPIProvider(
         httpNodeUri: cbor.elementAs(0),
-        solidityProvider:
-            EthereumAPIProvider.fromCborBytesOrObject(obj: cbor.getCborTag(1)),
+        solidityProvider: EthereumAPIProvider.fromCborBytesOrObject(
+            obj: cbor.elementAsCborTag(1)),
         auth: cbor.elemetMybeAs<ProviderAuthenticated, CborTagValue>(
             2, (e) => ProviderAuthenticated.deserialize(obj: e)),
-        identifier: cbor.elementAt(3));
+        identifier: cbor.elementAs(3));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           httpNodeUri,
           solidityProvider.toCbor(),
           auth?.toCbor(),

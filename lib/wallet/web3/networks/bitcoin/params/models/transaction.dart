@@ -8,9 +8,23 @@ import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/methods/methods.dar
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/params/core/request.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/permission/models/account.dart';
 
-class Web3BitcoinSignTransaction extends Web3BitcoinRequestParam<String> {
+abstract class BaseWeb3BitcoinSignTransaction<ADDRESS extends IBitcoinAddress,
+        WEB3CHAINACCOUNT extends Web3BitcoinChainAccount>
+    extends BaseWeb3BitcoinRequestParam<String, ADDRESS, WEB3CHAINACCOUNT> {
+  abstract final List<WEB3CHAINACCOUNT> accounts;
+  abstract final WEB3CHAINACCOUNT accessAccount;
+  abstract final Psbt psbt;
+}
+
+class Web3BitcoinSignTransaction extends Web3BitcoinRequestParam<String>
+    implements
+        BaseWeb3BitcoinSignTransaction<IBitcoinAddress,
+            Web3BitcoinChainAccount> {
+  @override
   final List<Web3BitcoinChainAccount> accounts;
+  @override
   final Web3BitcoinChainAccount accessAccount;
+  @override
   final Psbt psbt;
 
   Web3BitcoinSignTransaction._({
@@ -50,21 +64,26 @@ class Web3BitcoinSignTransaction extends Web3BitcoinRequestParam<String> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
-          CborListValue.fixedLength(accounts.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              accounts.map((e) => e.toCbor()).toList()),
           CborBytesValue(psbt.serialize())
         ]),
         type.tag);
   }
 
   @override
-  Web3BitcoinRequest<String, Web3BitcoinSignTransaction> toRequest(
+  Future<Web3BitcoinRequest<String, Web3BitcoinSignTransaction>> toRequest(
       {required Web3RequestInformation request,
       required Web3RequestAuthentication authenticated,
-      required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+      required WEB3REQUESTNETWORKCONTROLLER<IBitcoinAddress, BitcoinChain,
+              Web3BitcoinChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3BitcoinRequest<String, Web3BitcoinSignTransaction>(
       params: this,
       authenticated: authenticated,

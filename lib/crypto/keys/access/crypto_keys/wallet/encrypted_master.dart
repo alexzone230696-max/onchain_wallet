@@ -38,10 +38,11 @@ final class EncryptedMasterKey with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(masterKey),
-          CborListValue.fixedLength(customKeys.map((e) => e.toCbor()).toList()),
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
+              customKeys.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
               subWallets.map((e) => CborBytesValue(e)).toList()),
         ]),
         CryptoKeyConst.encryptedMasterKey);

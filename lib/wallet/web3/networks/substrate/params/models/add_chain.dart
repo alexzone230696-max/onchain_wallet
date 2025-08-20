@@ -6,6 +6,7 @@ import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/core.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/substrate/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/substrate/params/core/request.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/substrate/permission/models/account.dart';
 import 'package:on_chain_wallet/wallet/web3/utils/web3_validator_utils.dart';
 
 class Web3SubstrateAddNewChain extends Web3SubstrateRequestParam<bool> {
@@ -76,7 +77,7 @@ class Web3SubstrateAddNewChain extends Web3SubstrateRequestParam<bool> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
           chain,
           chainType,
@@ -91,12 +92,16 @@ class Web3SubstrateAddNewChain extends Web3SubstrateRequestParam<bool> {
   }
 
   @override
-  Web3SubstrateRequest<bool, Web3SubstrateAddNewChain> toRequest(
+  Future<Web3SubstrateRequest<bool, Web3SubstrateAddNewChain>> toRequest(
       {required Web3RequestInformation request,
       required Web3RequestAuthentication authenticated,
-      required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+      required WEB3REQUESTNETWORKCONTROLLER<ISubstrateAddress, SubstrateChain,
+              Web3SubstrateChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3SubstrateRequest<bool, Web3SubstrateAddNewChain>(
       params: this,
       authenticated: authenticated,

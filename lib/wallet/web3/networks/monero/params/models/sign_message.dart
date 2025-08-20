@@ -25,7 +25,8 @@ class Web3MoneroSignMessageResponse with CborSerializable {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([CborBytesValue(signature)]),
+    return CborTagValue(
+        CborSerializable.fromDynamic([CborBytesValue(signature)]),
         CborTagsConst.defaultTag);
   }
 
@@ -54,12 +55,12 @@ class Web3MoneroSignMessage
       hex: hex,
       tags: Web3MessageTypes.walletRequest.tag,
     );
-    final List<int> challeng = values.elementAt(2);
+    final List<int> challeng = values.elementAs(2);
     return Web3MoneroSignMessage(
         accessAccount: Web3MoneroChainAccount.deserialize(
             object: values.elementAs<CborTagValue>(1)),
         challeng: BytesUtils.toHexString(challeng, prefix: "0x"),
-        content: values.elementAt(3));
+        content: values.elementAs(3));
   }
 
   @override
@@ -68,7 +69,7 @@ class Web3MoneroSignMessage
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
           accessAccount.toCbor(),
           CborBytesValue(BytesUtils.fromHexString(challeng)),
@@ -82,13 +83,18 @@ class Web3MoneroSignMessage
   }
 
   @override
-  Web3MoneroRequest<Web3MoneroSignMessageResponse, Web3MoneroSignMessage>
-      toRequest(
-          {required Web3RequestInformation request,
-          required Web3RequestAuthentication authenticated,
-          required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+  Future<
+      Web3MoneroRequest<Web3MoneroSignMessageResponse,
+          Web3MoneroSignMessage>> toRequest(
+      {required Web3RequestInformation request,
+      required Web3RequestAuthentication authenticated,
+      required WEB3REQUESTNETWORKCONTROLLER<IMoneroAddress, MoneroChain,
+              Web3MoneroChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3MoneroRequest<Web3MoneroSignMessageResponse,
         Web3MoneroSignMessage>(
       params: this,

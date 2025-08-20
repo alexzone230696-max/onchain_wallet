@@ -9,8 +9,7 @@ base mixin MoneroChainRepository on Chain<
     IMoneroAddress,
     WalletMoneroNetwork,
     MoneroClient,
-    MoneroChainStorage,
-    MoneroChainConfig,
+    MoneroNetworkConfig,
     MoneroWalletTransaction,
     MoneroContact,
     MoneroNewAddressParams> {
@@ -18,14 +17,14 @@ base mixin MoneroChainRepository on Chain<
   MoneroAddressUtxos get _accountUtxos;
 
   Future<void> _saveDefaultTracker() async {
-    await _storage.insertChainStorage(
-        storage: MoneroChainStorage.defaultTracker, value: defaultTracker);
+    await _storage.insertNetworkStorage(
+        storage: MoneroNetworkStorageId.defaultTracker, value: defaultTracker);
   }
 
   Future<MoneroAccountBlocksTracker> _getDefaultTracker() async {
     try {
-      final data = await _storage.queryChainStorage(
-          storage: MoneroChainStorage.defaultTracker);
+      final data = await _storage.queryNetworkStorage(
+          storage: MoneroNetworkStorageId.defaultTracker);
       if (data == null) {
         return MoneroAccountBlocksTracker.start();
       }
@@ -37,8 +36,8 @@ base mixin MoneroChainRepository on Chain<
   }
 
   Future<MoneroSyncChain> _getSyncChain() async {
-    final data = await _storage.queryChainSharedStorage(
-        storage: MoneroChainStorage.syncChain);
+    final data = await _storage.queryChainStorage(
+        storage: MoneroChainStorageId.syncChain);
     if (data == null) {
       return MoneroSyncChain.mainnet;
     }
@@ -46,13 +45,13 @@ base mixin MoneroChainRepository on Chain<
   }
 
   Future<void> _saveSyncChain(MoneroSyncChain syncChain) async {
-    await _storage.insertChainSharedStorage(
-        storage: MoneroChainStorage.syncChain, value: syncChain);
+    await _storage.insertChainStorage(
+        storage: MoneroChainStorageId.syncChain, value: syncChain);
   }
 
   Future<MoneroAPIProvider?> _getWalletRPC() async {
-    final data =
-        await _storage.queryChainStorage(storage: MoneroChainStorage.walletRPC);
+    final data = await _storage.queryNetworkStorage(
+        storage: MoneroNetworkStorageId.walletRPC);
     if (data == null) return null;
     return MoneroAPIProvider.fromCborBytesOrObject(bytes: data);
   }
@@ -65,23 +64,24 @@ base mixin MoneroChainRepository on Chain<
 
   Future<void> _saveWalletRpc(MoneroAPIProvider? provider) async {
     if (provider == null) {
-      await _storage.removeChainStorage(storage: MoneroChainStorage.walletRPC);
+      await _storage.removeNetworkStorage(
+          storage: MoneroNetworkStorageId.walletRPC);
       return;
     }
 
-    await _storage.insertChainStorage(
-        storage: MoneroChainStorage.walletRPC, value: provider);
+    await _storage.insertNetworkStorage(
+        storage: MoneroNetworkStorageId.walletRPC, value: provider);
   }
 
   Future<void> _saveUtxos() async {
-    final storageKey = MoneroChainStorage.addressUtxos;
-    await _storage.insertChainStorage(
+    final storageKey = MoneroNetworkStorageId.addressUtxos;
+    await _storage.insertNetworkStorage(
         storage: storageKey, value: _accountUtxos);
   }
 
   Future<MoneroAddressUtxos> _getAccountUtxos() async {
-    final storagekey = MoneroChainStorage.addressUtxos;
-    final data = await _storage.queryChainStorage(storage: storagekey);
+    final storagekey = MoneroNetworkStorageId.addressUtxos;
+    final data = await _storage.queryNetworkStorage(storage: storagekey);
     if (data == null) return MoneroAddressUtxos();
     try {
       return MoneroAddressUtxos.deserialize(bytes: data);

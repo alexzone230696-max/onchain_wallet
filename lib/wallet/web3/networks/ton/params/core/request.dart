@@ -6,11 +6,10 @@ import 'package:on_chain_wallet/wallet/web3/core/core.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ton/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ton/params/params.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ton/permission/models/account.dart';
-import 'package:on_chain_wallet/wallet/web3/networks/ton/permission/models/permission.dart';
 import 'package:ton_dart/ton_dart.dart';
 
 abstract class Web3TonRequestParam<RESPONSE> extends Web3RequestParams<RESPONSE,
-    TonAddress, TonChain, ITonAddress, Web3TonChainAccount, Web3TonChain> {
+    TonAddress, TonChain, ITonAddress, Web3TonChainAccount> {
   @override
   abstract final Web3TonRequestMethods method;
 
@@ -23,7 +22,7 @@ abstract class Web3TonRequestParam<RESPONSE> extends Web3RequestParams<RESPONSE,
         object: object,
         hex: hex,
         tags: Web3MessageTypes.walletRequest.tag);
-    final method = Web3NetworkRequestMethods.fromTag(values.elementAt(0));
+    final method = Web3NetworkRequestMethods.fromTag(values.elementAs(0));
     final Web3TonRequestParam param;
     switch (method) {
       case Web3TonRequestMethods.sendTransaction:
@@ -45,7 +44,7 @@ abstract class Web3TonRequestParam<RESPONSE> extends Web3RequestParams<RESPONSE,
 
 class Web3TonRequest<RESPONSE, PARAMS extends Web3TonRequestParam<RESPONSE>>
     extends Web3NetworkRequest<RESPONSE, TonAddress, TonChain,
-        Web3TonChainAccount, ITonAddress, Web3TonChain, PARAMS> {
+        Web3TonChainAccount, ITonAddress, PARAMS> {
   Web3TonRequest(
       {required super.params,
       required super.info,

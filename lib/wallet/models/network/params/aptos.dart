@@ -36,7 +36,7 @@ class AptosNetworkParams extends NetworkCoinParams<AptosAPIProvider> {
         bytes, obj, CborTagsConst.aptosNetworkParams);
 
     return AptosNetworkParams(
-        token: Token.deserialize(obj: values.getCborTag(0)),
+        token: Token.deserialize(obj: values.elementAsCborTag(0)),
         providers: values
             .elementAsListOf<CborTagValue>(1)
             .map((e) => AptosAPIProvider.fromCborBytesOrObject(obj: e))
@@ -59,9 +59,10 @@ class AptosNetworkParams extends NetworkCoinParams<AptosAPIProvider> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           token.toCbor(),
-          CborListValue.fixedLength(providers.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              providers.map((e) => e.toCbor()).toList()),
           aptosChainType.id,
           chainType.name,
           addressExplorer,

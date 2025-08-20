@@ -14,7 +14,9 @@ import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/constant/constants/
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/params/models/sign_message.dart';
 
 class Web3BitcoinSignMessageStateController extends Web3BitcoinStateController<
-    Web3BitcoinSignMessageResponse, BitcoinClient?, Web3BitcoinSignMessage> {
+    Web3BitcoinSignMessageResponse,
+    BitcoinClient?,
+    BaseWeb3BitcoinSignMessage> {
   late final List<int> payloadMessage =
       BytesUtils.fromHexString(params.message).asImmutableBytes;
   String get message => request.params.message;

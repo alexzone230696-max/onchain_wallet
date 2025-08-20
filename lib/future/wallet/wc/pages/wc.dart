@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
-import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
+import 'package:on_chain_wallet/future/wallet/web3/pages/permission_view.dart';
+import 'package:on_chain_wallet/future/wallet/web3/types/types.dart';
+import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 import 'package:on_chain_wallet/wallet/web3/core/permission/models/authenticated.dart';
 import 'package:on_chain_wallet/wc/core/types/exception.dart';
@@ -63,14 +65,13 @@ class _WalletConnectViewState extends State<WalletConnectView>
     context.showAlert('session_has_been_removed'.tr);
   }
 
-  Future<void> updateDappAuthenticated(Web3APPAuthentication authenticated,
-      {List<NetworkType>? web3Networks, bool remove = false}) async {
-    final updateResult = await wallet.wallet
-        .updateWeb3Application(authenticated, web3Networks: web3Networks);
-    if (!remove && authenticated.hasAnyPermission) {
-      await walletConnect.updateAuthenticated(updateResult.result);
+  Future<void> updateDappAuthenticated(
+      Web3PermissionUpdateResponse update) async {
+    if (update.hasRequiredPermission) {
+      if (update.chains.isEmpty) return;
+      await walletConnect.updateAuthenticated(update.appInfo);
     } else {
-      await walletConnect.removeSession(updateResult.result.clientInfo);
+      await walletConnect.removeSession(update.appInfo.clientInfo);
     }
     context.showAlert("application_updated".tr);
   }
@@ -91,14 +92,15 @@ class _WalletConnectViewState extends State<WalletConnectView>
           walletChain.where((e) => chainIds.contains(e.network.value)).toList();
     }
     final request = Web3UpdatePermissionRequest.chain(
-        lockedChains: lockedChains, authentication: app.authentication);
+        lockedChains: lockedChains,
+        authentication: app.authentication,
+        client: client.object);
     await context.openDialogPage(
       "update_permission".tr,
       fullWidget: (context) => Web3PermissionUpdateView(
           authenticated: request,
-          onPermissionUpdate: (networks) async {
-            await updateDappAuthenticated(request.authentication,
-                remove: !request.haveRequiredPermissions());
+          onPermissionUpdate: (update) async {
+            await updateDappAuthenticated(update);
             return false;
           }),
     );

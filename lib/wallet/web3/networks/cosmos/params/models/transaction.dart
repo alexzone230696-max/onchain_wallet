@@ -56,7 +56,7 @@ class Web3CosmosSignTransactionDirectSignResponse
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(signature),
           CborBytesValue(publicKey.toBuffer()),
           CborBytesValue(bodyBytes),
@@ -166,7 +166,7 @@ class Web3CosmosSignTransactionAminoSignResponse
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(signature),
           CborBytesValue(publicKey.toBuffer()),
           CborBytesValue(StringUtils.encodeJson(tx.toJson())),
@@ -220,7 +220,7 @@ class Web3CosmosSignTransactionDirectParams
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(bodyBytes),
           authInfos == null ? const CborNullValue() : CborBytesValue(authInfos!)
         ]),
@@ -247,7 +247,7 @@ class Web3CosmosSignTransactionAminoParams
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([CborBytesValue(tx.toBuffer())]),
+        CborSerializable.fromDynamic([CborBytesValue(tx.toBuffer())]),
         [method.id]);
   }
 }
@@ -349,7 +349,7 @@ class Web3CosmosSignTransaction
             object: values.elementAs<CborTagValue>(1)),
         chainId: values.elementAs(2),
         transaction: Web3CosmosSignTransactionParams.deserialize(
-            obj: values.getCborTag(3)),
+            obj: values.elementAsCborTag(3)),
         disableBalanceCheck: values.elementAs(4),
         preferNoSetFee: values.elementAs(5),
         preferNoSetMemo: values.elementAs(6));
@@ -361,7 +361,7 @@ class Web3CosmosSignTransaction
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
           accessAccount.toCbor(),
           chainId,
@@ -379,14 +379,18 @@ class Web3CosmosSignTransaction
   }
 
   @override
-  Web3CosmosRequest<Web3CosmosSignTransactionResponse,
-          Web3CosmosSignTransaction>
-      toRequest(
-          {required Web3RequestInformation request,
-          required Web3RequestAuthentication authenticated,
-          required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+  Future<
+      Web3CosmosRequest<Web3CosmosSignTransactionResponse,
+          Web3CosmosSignTransaction>> toRequest(
+      {required Web3RequestInformation request,
+      required Web3RequestAuthentication authenticated,
+      required WEB3REQUESTNETWORKCONTROLLER<ICosmosAddress, CosmosChain,
+              Web3CosmosChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3CosmosRequest<Web3CosmosSignTransactionResponse,
         Web3CosmosSignTransaction>(
       params: this,

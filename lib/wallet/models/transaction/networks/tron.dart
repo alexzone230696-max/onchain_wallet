@@ -91,7 +91,8 @@ class TronWalletTransactionTransferOutput
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([amount.toCbor(), to.toAddress()]), type.tag);
+        CborSerializable.fromDynamic([amount.toCbor(), to.toAddress()]),
+        type.tag);
   }
 
   @override
@@ -127,6 +128,7 @@ class TronWalletTransactionOperationOutput
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([name, amount?.toCbor(), content]), type.tag);
+        CborSerializable.fromDynamic([name, amount?.toCbor(), content]),
+        type.tag);
   }
 }

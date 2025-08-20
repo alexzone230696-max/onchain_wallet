@@ -59,7 +59,7 @@ class AptosAPIProvider extends APIProvider {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [fullNodeUri, auth?.toCbor(), identifier, type.value]),
         CborTagsConst.aptosApiServiceProvider);
   }
@@ -83,7 +83,7 @@ class AptosProviderIdentifier extends ProviderIdentifier {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([fullNodeIdentifier, graphQlIdentifier]),
+        CborSerializable.fromDynamic([fullNodeIdentifier, graphQlIdentifier]),
         network.tag);
   }
 

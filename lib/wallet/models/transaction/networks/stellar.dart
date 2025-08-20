@@ -94,7 +94,8 @@ class StellarWalletTransactionTransferOutput
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([amount.toCbor(), to.baseAddress]), type.tag);
+        CborSerializable.fromDynamic([amount.toCbor(), to.baseAddress]),
+        type.tag);
   }
 
   @override
@@ -130,6 +131,7 @@ class StellarWalletTransactionOperationOutput
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([name, amount?.toCbor(), content]), type.tag);
+        CborSerializable.fromDynamic([name, amount?.toCbor(), content]),
+        type.tag);
   }
 }

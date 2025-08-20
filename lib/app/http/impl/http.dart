@@ -17,15 +17,16 @@ class HTTPCaller {
     Object? body,
   }) async {
     final data = await _clientManager.call(
-      t: ({required client, required headers, required uri}) async {
-        return client.post(uri, headers: headers, body: body).timeout(timeout);
-      },
-      uri: uri,
-      clientType: clientType,
-      method: HTTPRequestType.post,
-      authenticated: authenticated,
-      headers: headers,
-    );
+        t: ({required client, required headers, required uri}) async {
+          return client
+              .post(uri, headers: headers, body: body)
+              .timeout(timeout);
+        },
+        uri: uri,
+        clientType: clientType,
+        method: HTTPRequestType.post,
+        authenticated: authenticated,
+        headers: headers);
     return HTTPCallerResponse.parse(
         bodyBytes: data.bodyBytes,
         statusCode: data.statusCode,

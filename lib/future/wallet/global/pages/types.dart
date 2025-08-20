@@ -9,8 +9,7 @@ typedef APPCHAINNETWORK<NETWORKADDRESS> = Chain<
     ChainAccount<NETWORKADDRESS, TokenCore, NFTCore, ChainTransaction>,
     WalletNetwork,
     NetworkClient,
-    ChainStorageKey,
-    ChainConfig,
+    DefaultNetworkConfig,
     ChainTransaction,
     ContactCore,
     NewAccountParams>;
@@ -24,11 +23,26 @@ typedef APPCHAINACCOUNT<CHAINACCOUNT extends ChainAccount> = Chain<
     CHAINACCOUNT,
     WalletNetwork,
     NetworkClient,
-    ChainStorageKey,
-    ChainConfig,
+    DefaultNetworkConfig,
     ChainTransaction,
     ContactCore,
     NewAccountParams>;
+
+typedef APPCHAINACCOUNTTX<CHAINACCOUNT extends ChainAccount,
+        TRANSACTION extends ChainTransaction>
+    = Chain<
+        APIProvider,
+        NetworkCoinParams,
+        dynamic,
+        TokenCore,
+        NFTCore,
+        CHAINACCOUNT,
+        WalletNetwork,
+        NetworkClient,
+        DefaultNetworkConfig,
+        TRANSACTION,
+        ContactCore,
+        NewAccountParams>;
 
 typedef APPCHAINCLIENT<CL extends NetworkClient> = Chain<
     APIProvider,
@@ -39,8 +53,7 @@ typedef APPCHAINCLIENT<CL extends NetworkClient> = Chain<
     ChainAccount,
     WalletNetwork,
     CL,
-    ChainStorageKey,
-    ChainConfig,
+    DefaultNetworkConfig,
     ChainTransaction,
     ContactCore,
     NewAccountParams>;
@@ -56,8 +69,7 @@ typedef APPCHAINACCOUNTCLIENT<CHAINACCOUNT extends ChainAccount,
         CHAINACCOUNT,
         WalletNetwork,
         CL,
-        ChainStorageKey,
-        ChainConfig,
+        DefaultNetworkConfig,
         ChainTransaction,
         ContactCore,
         NewAccountParams>;
@@ -73,12 +85,25 @@ typedef APPCHAINACCOUNTCLIENTNETWORK<CHAINACCOUNT extends ChainAccount,
         CHAINACCOUNT,
         NETWORK,
         CL,
-        ChainStorageKey,
-        ChainConfig,
+        DefaultNetworkConfig,
         ChainTransaction,
         ContactCore,
         NewAccountParams>;
-
+typedef APPCHAINACCOUNTNETWORK<CHAINACCOUNT extends ChainAccount,
+        NETWORK extends WalletNetwork>
+    = Chain<
+        APIProvider,
+        NetworkCoinParams,
+        dynamic,
+        TokenCore,
+        NFTCore,
+        CHAINACCOUNT,
+        NETWORK,
+        NetworkClient,
+        DefaultNetworkConfig,
+        ChainTransaction,
+        ContactCore,
+        NewAccountParams>;
 typedef APPCHAINADDRESSACCOUNTCLIENTNETWORK<
         NETWORKADDRESS,
         CHAINACCOUNT extends NETWORKCHAINACCOUNT<NETWORKADDRESS>,
@@ -93,8 +118,7 @@ typedef APPCHAINADDRESSACCOUNTCLIENTNETWORK<
         CHAINACCOUNT,
         NETWORK,
         CL,
-        ChainStorageKey,
-        ChainConfig,
+        DefaultNetworkConfig,
         ChainTransaction,
         ContactCore,
         NewAccountParams>;

@@ -37,10 +37,10 @@ class CryptoRequestEncryptChacha
         hex: hex,
         tags: CryptoRequestMethod.encryptChacha.tag);
     return CryptoRequestEncryptChacha(
-      message: values.elementAt(0),
-      key: values.elementAt(1),
-      nonce: values.elementAt(2),
-      nonceLength: values.elementAt(3),
+      message: values.elementAs(0),
+      key: values.elementAs(1),
+      nonce: values.elementAs(2),
+      nonceLength: values.elementAs(3),
     );
   }
 
@@ -71,7 +71,7 @@ class CryptoRequestEncryptChacha
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(message),
           CborBytesValue(key),
           nonce == null ? const CborNullValue() : CborBytesValue(nonce!),
@@ -119,9 +119,9 @@ class CryptoRequestDecryptChacha
         hex: hex,
         tags: CryptoRequestMethod.decryptChacha.tag);
     return CryptoRequestDecryptChacha(
-        message: values.elementAt(0),
-        key: values.elementAt(1),
-        nonce: values.elementAt(2));
+        message: values.elementAs(0),
+        key: values.elementAs(1),
+        nonce: values.elementAs(2));
   }
 
   static List<int> decrypt(
@@ -150,7 +150,7 @@ class CryptoRequestDecryptChacha
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(message),
           CborBytesValue(key),
           CborBytesValue(nonce)

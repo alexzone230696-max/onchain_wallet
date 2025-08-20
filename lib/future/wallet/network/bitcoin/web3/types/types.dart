@@ -16,30 +16,30 @@ import 'package:on_chain_wallet/wallet/models/transaction/networks/bitcoin.dart'
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
 
 abstract class Web3BitcoinStateController<
-        RESPONSE,
-        CLIENT extends BitcoinClient?,
-        T extends Web3BitcoinRequestParam<RESPONSE>>
-    extends Web3StateController<
-        RESPONSE,
-        BitcoinBaseAddress,
-        WalletBitcoinNetwork,
-        BitcoinClient,
-        CLIENT,
-        IBitcoinAddress,
-        BitcoinChain,
-        Web3BitcoinChainAccount,
-        Web3BitcoinChain,
-        T,
-        Web3BitcoinRequest<RESPONSE, T>,
-        Web3RequestResponseData<RESPONSE>,
-        BitcoinWalletTransaction> {
+    RESPONSE,
+    CLIENT extends BitcoinClient?,
+    T extends BaseWeb3BitcoinRequestParam<RESPONSE, IBitcoinAddress,
+        Web3BitcoinChainAccount>> extends Web3StateController<
+    RESPONSE,
+    BitcoinBaseAddress,
+    WalletBitcoinNetwork,
+    BitcoinClient,
+    CLIENT,
+    IBitcoinAddress,
+    BitcoinChain,
+    Web3BitcoinChainAccount,
+    T,
+    BaseWeb3BitcoinRequest<RESPONSE, IBitcoinAddress, Web3BitcoinChainAccount,
+        T>,
+    Web3RequestResponseData<RESPONSE>,
+    BitcoinWalletTransaction> {
   Web3BitcoinStateController(
       {required super.walletProvider, required super.request});
 
   static BaseWeb3StateController findController(
       {required Web3NetworkRequest request,
       required WalletProvider walletProvider}) {
-    if (request is! Web3BitcoinRequest) {
+    if (request is! BaseWeb3BitcoinRequest) {
       throw Web3RequestExceptionConst.internalError;
     }
     appLogger.debug(
@@ -49,12 +49,16 @@ abstract class Web3BitcoinStateController<
     switch (request.params.method) {
       case Web3BitcoinRequestMethods.signMessage:
       case Web3BitcoinRequestMethods.signPersonalMessage:
+      case Web3BitcoinCashRequestMethods.signMessage:
+      case Web3BitcoinCashRequestMethods.signPersonalMessage:
         return Web3BitcoinSignMessageStateController(
             walletProvider: walletProvider, request: request.cast());
       case Web3BitcoinRequestMethods.sendTransaction:
+      case Web3BitcoinCashRequestMethods.sendTransaction:
         return Web3BitcoinSendTransactionStateController(
             walletProvider: walletProvider, request: request.cast());
       case Web3BitcoinRequestMethods.signTransaction:
+      case Web3BitcoinCashRequestMethods.signTransaction:
         return Web3BitcoinSignTransactionStateController(
             walletProvider: walletProvider, request: request.cast());
       default:
@@ -65,7 +69,8 @@ abstract class Web3BitcoinStateController<
 
 abstract class BaseWeb3BitcoinTransactionStateController<
         RESPONSE,
-        T extends Web3BitcoinRequestParam<RESPONSE>,
+        T extends BaseWeb3BitcoinRequestParam<RESPONSE, IBitcoinAddress,
+            Web3BitcoinChainAccount>,
         E extends IWeb3BitcoinTransactionData,
         TRANSACTION extends IWeb3BitcoinTransaction<E>,
         SIGNEDTX extends IWeb3BitcoinSignedTransaction<TRANSACTION, Object>>
@@ -78,9 +83,9 @@ abstract class BaseWeb3BitcoinTransactionStateController<
         WalletBitcoinNetwork,
         BitcoinChain,
         Web3BitcoinChainAccount,
-        Web3BitcoinChain,
         T,
-        Web3BitcoinRequest<RESPONSE, T>,
+        BaseWeb3BitcoinRequest<RESPONSE, IBitcoinAddress,
+            Web3BitcoinChainAccount, T>,
         E,
         TRANSACTION,
         SIGNEDTX,

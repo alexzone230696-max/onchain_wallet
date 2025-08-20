@@ -9,8 +9,7 @@ final class AptosChain extends Chain<
     IAptosAddress,
     WalletAptosNetwork,
     AptosClient,
-    DefaultChainStorageKey,
-    DefaultChainConfig,
+    DefaultNetworkConfig,
     AptosWalletTransaction,
     AptosContact,
     AptosNewAddressParams> {
@@ -18,23 +17,23 @@ final class AptosChain extends Chain<
       {required super.network,
       required super.addressIndex,
       required super.id,
-      required super.config,
+      DefaultNetworkConfig? config,
       required super.client,
       required super.addresses})
-      : super._();
+      : super._(config: config ?? DefaultNetworkConfig.defaultConfig);
   @override
   AptosChain copyWith({
     WalletAptosNetwork? network,
-    List<IAptosAddress>? addresses,
+    List<ChainAccount>? addresses,
     int? addressIndex,
     AptosClient? client,
     String? id,
-    DefaultChainConfig? config,
+    DefaultNetworkConfig? config,
   }) {
     return AptosChain._(
       network: network ?? this.network,
       addressIndex: addressIndex ?? _addressIndex,
-      addresses: addresses ?? _addresses,
+      addresses: addresses?.cast<IAptosAddress>() ?? _addresses,
       client: client ?? _client,
       id: id ?? this.id,
       config: config ?? this.config,
@@ -50,8 +49,7 @@ final class AptosChain extends Chain<
         id: id,
         addressIndex: 0,
         client: client,
-        addresses: [],
-        config: DefaultChainConfig());
+        addresses: []);
   }
 
   factory AptosChain.deserialize(
@@ -62,7 +60,7 @@ final class AptosChain extends Chain<
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
     }
-    final String id = cbor.elementAt<String>(2);
+    final String id = cbor.elementAs<String>(2);
     final List<IAptosAddress> accounts = cbor
         .elementAsListOf<CborTagValue>(3)
         .map((e) => IAptosAddress.deserialize(network, obj: e))
@@ -74,19 +72,15 @@ final class AptosChain extends Chain<
         addresses: accounts,
         addressIndex: addressIndex,
         client: client,
-        id: id,
-        config: DefaultChainConfig());
+        id: id);
   }
 
   @override
-  Future<void> updateAddressBalance(IAptosAddress address,
-      {bool tokens = true, bool saveAccount = true}) async {
-    _isAccountAddress(address);
-    await initAddress(address);
+  Future<void> _updateAddressBalanceInternal(IAptosAddress address,
+      {bool tokens = true}) async {
     await onClient(onConnect: (client) async {
       final balance = await client.getAccountBalance(address.networkAddress);
-      _updateAddressBalanceInternal(
-          address: address, balance: balance, saveAccount: saveAccount);
+      address.address._updateAddressBalance(balance);
       if (tokens) {
         final accountTokens = address.tokens;
         final tokenbalances = await client.getAccountTokenBalances(
@@ -95,9 +89,10 @@ final class AptosChain extends Chain<
         for (final token in accountTokens) {
           final balance = tokenbalances
               .firstWhereOrNull((e) => e.assetType == token.assetType);
-          token._updateBalance(balance?.balance ?? BigInt.zero);
-          token.setFreeze(balance?.frozen ?? false);
-          _saveToken(address: address, token: token);
+          bool changed = token._updateBalance(balance?.balance ?? BigInt.zero);
+          changed |= token.setFreeze(balance?.frozen ?? false);
+          _updateTokenBalanceInternal(
+              address: address, token: token, save: changed);
         }
       }
     });
@@ -115,10 +110,10 @@ final class AptosChain extends Chain<
       for (final token in tokens) {
         final balance = tokenbalances
             .firstWhereOrNull((e) => e.assetType == token.assetType);
-        token._updateBalance(balance?.balance ?? BigInt.zero);
-        token.setFreeze(balance?.frozen ?? false);
-        if (!address.tokens.contains(token)) continue;
-        _saveToken(address: address, token: token);
+        bool changed = token._updateBalance(balance?.balance ?? BigInt.zero);
+        changed |= token.setFreeze(balance?.frozen ?? false);
+        _updateTokenBalanceInternal(
+            address: address, token: token, save: changed);
       }
     });
   }

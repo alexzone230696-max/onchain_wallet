@@ -37,7 +37,7 @@ class APPStreamWidget<T> extends StatefulWidget {
 
 class _ChainStreamBuilderState<T> extends State<APPStreamWidget<T>>
     with SafeState<APPStreamWidget<T>> {
-  // ChainNotify? lastProgressNotify;
+  // DefaultChainNotify? lastProgressNotify;
   late StreamValue<T> stream = widget.stream;
   StreamSubscription<T>? _subscription;
   void onChainNotify(T value) {

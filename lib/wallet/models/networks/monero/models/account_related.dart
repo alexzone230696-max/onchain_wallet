@@ -74,7 +74,7 @@ class MoneroBlockTrackingFailed with CborSerializable, Equatable {
   }
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([startHeight, _endHeight]),
+    return CborTagValue(CborSerializable.fromDynamic([startHeight, _endHeight]),
         CborTagsConst.moneroChainFailedOffsets);
   }
 
@@ -213,13 +213,13 @@ class MoneroDefaultBlockTrackingInfo extends MoneroBlockTrackingInfo {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           startHeight,
           endHeight,
           status.value,
           _currentHeight,
           requestId,
-          CborListValue.fixedLength(_failed.map((e) => e.toCbor()).toList())
+          CborSerializable.fromDynamic(_failed.map((e) => e.toCbor()).toList())
         ]),
         type.tag);
   }
@@ -245,6 +245,7 @@ class MoneroRequestBlockTrackingInfo extends MoneroBlockTrackingInfo {
   final int startHeight;
   final int endHeight;
   List<MoneroDefaultBlockTrackingInfo> _offsets;
+  List<MoneroDefaultBlockTrackingInfo> get currentOffsets => _offsets;
   final int requestId;
   List<MoneroBlockTrackingFailed> _failed;
   List<MoneroBlockTrackingFailed> get failedOffsets => _failed;
@@ -325,10 +326,12 @@ class MoneroRequestBlockTrackingInfo extends MoneroBlockTrackingInfo {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
-          CborListValue.fixedLength(accounts.map((e) => e.toCbor()).toList()),
-          CborListValue.fixedLength(_offsets.map((e) => e.toCbor()).toList()),
-          CborListValue.fixedLength(_failed.map((e) => e.toCbor()).toList()),
+        CborSerializable.fromDynamic([
+          CborSerializable.fromDynamic(
+              accounts.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              _offsets.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(_failed.map((e) => e.toCbor()).toList()),
           startHeight,
           endHeight,
           requestId,
@@ -584,9 +587,9 @@ class MoneroAccountBlocksTracker with CborSerializable {
     assert(isStart, "default tracker already set starts.");
     assert(height > 0, "invalid height.");
     if (!isStart || height <= 0) return;
-    _startHeight = height - 2500;
+    _startHeight = height - 10;
     _endHeight = height;
-    _currentHeight = height - 2500;
+    _currentHeight = height - 10;
     _currentOffsets = _buildOffsets(
         currentHeight: currentHeight, endHeight: endHeight, requestId: null);
     _checkStatus();
@@ -632,11 +635,18 @@ class MoneroAccountBlocksTracker with CborSerializable {
     }
   }
 
+  void addAccountPendingTxes(MoneroViewPrimaryAccountDetails account,
+      Iterable<MoneroAccountIndexTxes> txes) {
+    getAccountInfo(account)._addTx(txes);
+  }
+
+  ///
   void addSyncedAccountsPaymentTx(Iterable<MoneroSyncAccountsInfos> accounts) {
     for (final i in accounts) {
       final account = _accounts.firstWhereOrNull((e) => e == i);
       assert(account != null, "account does not exist.");
       if (account == null) continue;
+      // i.indexes;
       account._mergeAccountTxes(i._indexes);
     }
   }
@@ -652,11 +662,6 @@ class MoneroAccountBlocksTracker with CborSerializable {
   void removeAccountPendingTxes(MoneroViewPrimaryAccountDetails account,
       Iterable<MoneroAccountIndexTxes> txes) {
     getAccountInfo(account)._removeTx(txes);
-  }
-
-  void addAccountPendingTxes(MoneroViewPrimaryAccountDetails account,
-      Iterable<MoneroAccountIndexTxes> txes) {
-    getAccountInfo(account)._addTx(txes);
   }
 
   void addAccount(MoneroViewAccountDetails account) {
@@ -695,9 +700,6 @@ class MoneroAccountBlocksTracker with CborSerializable {
           .expand((e) => e._offsets.where((e) => e.status.isPending))
     ];
   }
-
-  /// 1915832
-  /// 1911983
 
   Future<Stream<void>?> getHeightRequest(
       {required Future<
@@ -797,18 +799,19 @@ class MoneroAccountBlocksTracker with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
-          CborListValue.fixedLength(accounts.map((e) => e.toCbor()).toList()),
+        CborSerializable.fromDynamic([
+          CborSerializable.fromDynamic(
+              accounts.map((e) => e.toCbor()).toList()),
           startHeight,
           endHeight,
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               _failedOffsets.map((e) => e.toCbor()).toList()),
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               _currentOffsets.map((e) => e.toCbor()).toList()),
           currentHeight,
           const CborNullValue(),
           status.value,
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               _requestOffsets.map((e) => e.toCbor()).toList()),
         ]),
         CborTagsConst.moneroSyncRequestChainTracker);
@@ -855,9 +858,9 @@ class MoneroChainAccountTranckerInfo with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborEpochIntValue(updateTime),
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               fetchedBlock.map((e) => CborIntValue(e)).toList())
         ]),
         CborTagsConst.moneroChainTrackerInfo);
@@ -906,11 +909,13 @@ class MoneroViewPrimaryAccountDetails with CborSerializable, Equatable {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue([
-      CborBytesValue(viewPrivateKey),
-      CborBytesValue(spendPublicKey),
-      network.index
-    ], CborTagsConst.moneroViewPrimaryAccountDetails);
+    return CborTagValue(
+        CborListValue<CborObject>.definite([
+          CborBytesValue(viewPrivateKey),
+          CborBytesValue(spendPublicKey),
+          CborIntValue(network.index)
+        ]),
+        CborTagsConst.moneroViewPrimaryAccountDetails);
   }
 
   @override
@@ -948,7 +953,7 @@ class MoneroViewAccountDetails with Equatable, CborSerializable {
         hex: hex,
         tags: NewAccountParamsType.moneroNewAddressParams.tag);
     final viewKey = MoneroViewPrimaryAccountDetails.deserialize(
-        object: values.getCborTag(0));
+        object: values.elementAsCborTag(0));
     return MoneroViewAccountDetails(
       viewKey: viewKey,
       major: values.elementAs(1),
@@ -971,7 +976,12 @@ class MoneroViewAccountDetails with Equatable, CborSerializable {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue([viewKey.toCbor(), index.major, index.minor],
+    return CborTagValue(
+        CborListValue<CborObject>.definite([
+          viewKey.toCbor(),
+          CborIntValue(index.major),
+          CborIntValue(index.minor)
+        ]),
         NewAccountParamsType.moneroNewAddressParams.tag);
   }
 
@@ -1005,8 +1015,8 @@ class MoneroTxIDsUnlockOutputResponse with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
-          CborListValue.fixedLength(payments.map((e) => e.toCbor()).toList())
+        CborSerializable.fromDynamic([
+          CborSerializable.fromDynamic(payments.map((e) => e.toCbor()).toList())
         ]),
         CborTagsConst.moneroUtxoRequestTxId);
   }
@@ -1165,7 +1175,7 @@ class MoneroOutputDetails with CborSerializable, Equatable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(txId.codeUnits),
           CborBytesValue(keyImage.codeUnits),
           confirmations,
@@ -1335,10 +1345,10 @@ class MoneroAddressUtxos with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
-          CborMapValue.fixedLength(_utxos.map((k, v) => MapEntry(
+        CborSerializable.fromDynamic([
+          CborMapValue.definite(_utxos.map((k, v) => MapEntry(
               CborStringValue(k.address),
-              CborListValue.fixedLength(v.map((e) => e.toCbor()).toList()))))
+              CborSerializable.fromDynamic(v.map((e) => e.toCbor()).toList()))))
         ]),
         CborTagsConst.moneroAddressUtxos);
   }
@@ -1363,24 +1373,32 @@ class MoneroUnlockedPaymentRequestDetails with CborSerializable {
   final MoneroOutputDetails? output;
   final MoneroUnlockPaymentRequestStatus status;
   final MoneroAccountIndex index;
+  final DateTime txTimestamp;
+  final bool inPool;
   bool get hasPayment => output != null;
 
   MoneroUnlockedPaymentRequestDetails._(
       {required this.output,
       required this.status,
       required this.txID,
-      required this.index});
+      required this.index,
+      required this.txTimestamp,
+      required this.inPool});
   factory MoneroUnlockedPaymentRequestDetails(
       {required String txid,
       MoneroOutputDetails? output,
-      required MoneroAccountIndex index}) {
+      required MoneroAccountIndex index,
+      required DateTime txTimestamp,
+      required bool inPool}) {
     return MoneroUnlockedPaymentRequestDetails._(
         output: output,
+        inPool: inPool,
         status: output == null
             ? MoneroUnlockPaymentRequestStatus.error
             : MoneroUnlockPaymentRequestStatus.success,
         txID: QuickCryptoValidator.asValidHexBytes(txid),
-        index: index);
+        index: index,
+        txTimestamp: txTimestamp);
   }
   factory MoneroUnlockedPaymentRequestDetails.deserialize(
       {List<int>? bytes, CborObject? cbor, String? hex}) {
@@ -1392,14 +1410,16 @@ class MoneroUnlockedPaymentRequestDetails with CborSerializable {
     final status =
         MoneroUnlockPaymentRequestStatus.fromValue(values.elementAs(1));
     final output = status.hasPayment
-        ? MoneroOutputDetails.deserialize(cbor: values.getCborTag(0))
+        ? MoneroOutputDetails.deserialize(cbor: values.elementAsCborTag(0))
         : null;
     return MoneroUnlockedPaymentRequestDetails._(
         output: output,
         status: status,
         txID: QuickCryptoValidator.asValidHexBytes(
             String.fromCharCodes(values.elementAs<List<int>>(2))),
-        index: MoneroAccountIndex.deserialize(values.elementAs(3)));
+        index: MoneroAccountIndex.deserialize(values.elementAs(3)),
+        txTimestamp: values.elementAs(4),
+        inPool: values.elementAs(5));
   }
   factory MoneroUnlockedPaymentRequestDetails.fromUnlockOutput(
       {required String txId,
@@ -1407,14 +1427,19 @@ class MoneroUnlockedPaymentRequestDetails with CborSerializable {
       required BigInt? globalIndex,
       required MoneroAccountIndex index,
       MoneroUnlockedOutput? output,
+      required DateTime txTimestamp,
+      required bool inPool,
       MoneroAddress? address}) {
     if (output == null) {
-      return MoneroUnlockedPaymentRequestDetails(txid: txId, index: index);
+      return MoneroUnlockedPaymentRequestDetails(
+          txid: txId, index: index, txTimestamp: txTimestamp, inPool: inPool);
     }
     assert(address != null, "address must not be null");
     return MoneroUnlockedPaymentRequestDetails(
         txid: txId,
         index: index,
+        txTimestamp: txTimestamp,
+        inPool: inPool,
         output: MoneroOutputDetails(
             txId: txId,
             keyImage: output.keyImageAsHex,
@@ -1433,11 +1458,13 @@ class MoneroUnlockedPaymentRequestDetails with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           output?.toCbor(),
           status.value,
           CborBytesValue(txID.codeUnits),
-          CborBytesValue(index.serialize())
+          CborBytesValue(index.serialize()),
+          txTimestamp,
+          inPool
         ]),
         CborTagsConst.moneroUtxoPaymentInfo);
   }
@@ -1464,8 +1491,9 @@ class MoneroBatchProcessTxesResponse with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
-          CborListValue.fixedLength(payments.map((e) => e.toCbor()).toList()),
+        CborSerializable.fromDynamic([
+          CborSerializable.fromDynamic(
+              payments.map((e) => e.toCbor()).toList()),
         ]),
         CborTagsConst.moneroBatchProcessTxesResponse);
   }
@@ -1541,8 +1569,8 @@ class MoneroChainTrackerResponse with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
-          CborListValue.fixedLength(
+        CborSerializable.fromDynamic([
+          CborSerializable.fromDynamic(
               txIds.map((e) => CborBytesValue(e.codeUnits)).toList()),
           blockLength,
           startHeight,
@@ -1593,12 +1621,13 @@ class MoneroAccountPendingTxes with CborSerializable, Equatable {
         tags: CborTagsConst.moneroAccountPendingTxes);
     return MoneroAccountPendingTxes._(
         primaryAddress: MoneroViewPrimaryAccountDetails.deserialize(
-            object: values.getCborTag(0)),
+            object: values.elementAsCborTag(0)),
         indexes: values
             .elementAsListOf<CborTagValue>(1)
             .map((e) => MoneroAccountIndexTxes.deserialize(cbor: e))
             .toList(),
-        accountIndex: Bip32AddressIndex.deserialize(obj: values.getCborTag(2)),
+        accountIndex:
+            Bip32AddressIndex.deserialize(obj: values.elementAsCborTag(2)),
         responses: values
             .elementAsListOf<CborTagValue>(3)
             .map(
@@ -1609,11 +1638,12 @@ class MoneroAccountPendingTxes with CborSerializable, Equatable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           primaryAddress.toCbor(),
-          CborListValue.fixedLength(indexes.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(indexes.map((e) => e.toCbor()).toList()),
           accountIndex.toCbor(),
-          CborListValue.fixedLength(responses.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              responses.map((e) => e.toCbor()).toList()),
         ]),
         CborTagsConst.moneroAccountPendingTxes);
   }
@@ -1664,8 +1694,8 @@ class MoneroSyncAccountsRequestInfos with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
-          CborListValue.fixedLength(accounts.map((e) => e.toCbor()).toList())
+        CborSerializable.fromDynamic([
+          CborSerializable.fromDynamic(accounts.map((e) => e.toCbor()).toList())
         ]),
         CborTagsConst.moneroSyncAccountRequestInfo);
   }
@@ -1743,7 +1773,7 @@ class MoneroSyncAccountsInfos with CborSerializable, Equatable {
         tags: CborTagsConst.moneroProcessTxesResponse);
     return MoneroSyncAccountsInfos(
         primaryAccount: MoneroViewPrimaryAccountDetails.deserialize(
-            object: values.getCborTag(0)),
+            object: values.elementAsCborTag(0)),
         indexes: values
             .elementAsListOf<CborTagValue>(1)
             .map((e) => MoneroSyncAccountIndexInfo.deserialize(cbor: e))
@@ -1753,9 +1783,10 @@ class MoneroSyncAccountsInfos with CborSerializable, Equatable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           primaryAccount.toCbor(),
-          CborListValue.fixedLength(_indexes.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              _indexes.map((e) => e.toCbor()).toList()),
         ]),
         CborTagsConst.moneroProcessTxesResponse);
   }
@@ -1827,10 +1858,10 @@ class MoneroSyncAccountIndexInfo with CborSerializable, Equatable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(index.serialize()),
           startHeight,
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               _pendingTxes.map((e) => CborStringValue(e)).toList())
         ]),
         CborTagsConst.moneroSyncAccountIndexInfo);
@@ -1874,9 +1905,9 @@ class MoneroAccountIndexTxes with CborSerializable, Equatable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(index.serialize()),
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               txes.map((e) => CborStringValue(e)).toList())
         ]),
         CborTagsConst.moneroSyncAccountIndexInfo);
@@ -1970,8 +2001,8 @@ class MoneroSyncAccountResponse extends MoneroSyncBlocksResponse {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
-          CborListValue.fixedLength(txIds.map((e) => e.toCbor()).toList()),
+        CborSerializable.fromDynamic([
+          CborSerializable.fromDynamic(txIds.map((e) => e.toCbor()).toList()),
           currentHeight,
           total,
           offset.toCbor(),
@@ -2012,7 +2043,7 @@ class MoneroSyncFailedResponse extends MoneroSyncBlocksResponse {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([currentHeight, total, offset]), type.tag);
+        CborSerializable.fromDynamic([currentHeight, total, offset]), type.tag);
   }
 
   @override

@@ -24,7 +24,7 @@ void main(List<String> args) async {
   }
 
   final applicationId =
-      Web3APPAuthentication.toApplicationId(jsWindow.location.origin);
+      Web3ApplicationAuthentication.toApplicationId(jsWindow.location.origin);
   if (applicationId == null) {
     throw Web3RequestExceptionConst.invalidHost;
   }
@@ -48,7 +48,7 @@ void main(List<String> args) async {
       }
       if (walletEvent.type == WalletEventTypes.exception) {
         workerCompleter.completeError(
-            JSWalletError(message: String.fromCharCodes(walletEvent.data)));
+            JSError(message: String.fromCharCodes(walletEvent.data)));
         return false;
       }
       final target = JSWebviewTraget.fromName(walletEvent.platform);

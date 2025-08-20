@@ -32,7 +32,7 @@ class CustomAPIProvider extends APIProvider {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([url, auth?.toCbor(), identifier]),
+        CborSerializable.fromDynamic([url, auth?.toCbor(), identifier]),
         CborTagsConst.customApiProvider);
   }
 }

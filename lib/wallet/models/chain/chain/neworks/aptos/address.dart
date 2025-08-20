@@ -47,9 +47,9 @@ final class IAptosAddress extends ChainAccount<AptosAddress, AptosFATokens,
     final CryptoCoins coin =
         CustomCoins.getSerializationCoin(values.elementAs(0));
     final keyIndex =
-        AddressDerivationIndex.deserialize(obj: values.getCborTag(1));
+        AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(1));
     final AccountBalance address =
-        AccountBalance.deserialize(network, obj: values.getCborTag(2));
+        AccountBalance.deserialize(network, obj: values.elementAsCborTag(2));
     final AptosAddress networkAddress = AptosAddress(address.address);
     final int networkId = values.elementAs(3);
     if (networkId != network.value) {
@@ -85,7 +85,7 @@ final class IAptosAddress extends ChainAccount<AptosAddress, AptosFATokens,
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           coin.toCbor(),
           keyIndex.toCbor(),
           address.toCbor(),
@@ -105,12 +105,6 @@ final class IAptosAddress extends ChainAccount<AptosAddress, AptosFATokens,
 
   @override
   String? get type => keyScheme.name;
-
-  @override
-  bool isEqual(ChainAccount other) {
-    if (other is! IAptosAddress) return false;
-    return other.networkAddress == networkAddress;
-  }
 
   @override
   AptosNewAddressParams toAccountParams() {
@@ -184,17 +178,18 @@ final class IAptosMultiSigAddress extends IAptosAddress
         object: obj,
         tags: CborTagsConst.aptosMultisigAccount);
     final CryptoCoins coin =
-        CustomCoins.getSerializationCoin(values.elementAt(0));
+        CustomCoins.getSerializationCoin(values.elementAs(0));
     final AptosMultisigAccountInfo multiSignatureAddress =
-        AptosMultisigAccountInfo.deserialize(object: values.getCborTag(1));
+        AptosMultisigAccountInfo.deserialize(
+            object: values.elementAsCborTag(1));
     final AccountBalance address =
-        AccountBalance.deserialize(network, obj: values.getCborTag(2));
+        AccountBalance.deserialize(network, obj: values.elementAsCborTag(2));
     final AptosAddress networkAddress = AptosAddress(address.address);
     final int networkId = values.elementAs(3);
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
     }
-    final String? name = values.elementAt(4);
+    final String? name = values.elementAs(4);
     final keyScheme = AptosSupportKeyScheme.fromValue(values.elementAs(5));
     if (keyScheme != multiSignatureAddress.keyScheme) {
       throw WalletExceptionConst.invalidAccountDetails_(
@@ -231,7 +226,7 @@ final class IAptosMultiSigAddress extends IAptosAddress
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           coin.toCbor(),
           multiSignatureAddress.toCbor(),
           address.toCbor(),
@@ -247,14 +242,8 @@ final class IAptosMultiSigAddress extends IAptosAddress
   List get variabels => [multiSignatureAddress];
 
   @override
-  List<(String, Bip32AddressIndex)> get keyDetails =>
-      multiSignatureAddress.publicKeys
-          .map((e) => (BytesUtils.toHexString(e.publicKey), e.keyIndex))
-          .toList();
-
-  @override
   List<Bip32AddressIndex> signerKeyIndexes() {
-    return keyDetails.map((e) => e.$2).toList();
+    return multiSignatureAddress.publicKeys.map((e) => e.keyIndex).toList();
   }
 
   @override

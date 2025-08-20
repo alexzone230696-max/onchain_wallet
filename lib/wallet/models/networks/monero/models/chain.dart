@@ -30,12 +30,14 @@ class MoneroRingOutput with CborSerializable {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue([
-      CborListValue.fixedLength(
-          orderedIndexes.map((e) => CborBigIntValue(e)).toList()),
-      CborListValue.fixedLength(
-          indexes.map((e) => CborBigIntValue(e)).toList()),
-    ], CborTagsConst.monerogenerateRingOutput);
+    return CborTagValue(
+        CborListValue.definite([
+          CborSerializable.fromDynamic(
+              orderedIndexes.map((e) => CborBigIntValue(e)).toList()),
+          CborSerializable.fromDynamic(
+              indexes.map((e) => CborBigIntValue(e)).toList()),
+        ]),
+        CborTagsConst.monerogenerateRingOutput);
   }
 }
 

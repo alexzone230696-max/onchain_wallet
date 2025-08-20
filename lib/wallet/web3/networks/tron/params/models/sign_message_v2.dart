@@ -26,12 +26,12 @@ class Web3TronSignMessageV2 extends Web3TronRequestParam<String> {
       hex: hex,
       tags: Web3MessageTypes.walletRequest.tag,
     );
-    final List<int> challeng = values.elementAt(2);
+    final List<int> challeng = values.elementAs(2);
     return Web3TronSignMessageV2(
         accessAccount: Web3TronChainAccount.deserialize(
             object: values.elementAs<CborTagValue>(1)),
         challeng: BytesUtils.toHexString(challeng, prefix: "0x"),
-        content: values.elementAt(3));
+        content: values.elementAs(3));
   }
 
   @override
@@ -40,7 +40,7 @@ class Web3TronSignMessageV2 extends Web3TronRequestParam<String> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
           accessAccount.toCbor(),
           CborBytesValue(BytesUtils.fromHexString(challeng)),
@@ -54,12 +54,16 @@ class Web3TronSignMessageV2 extends Web3TronRequestParam<String> {
   }
 
   @override
-  Web3TronRequest<String, Web3TronSignMessageV2> toRequest(
+  Future<Web3TronRequest<String, Web3TronSignMessageV2>> toRequest(
       {required Web3RequestInformation request,
       required Web3RequestAuthentication authenticated,
-      required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+      required WEB3REQUESTNETWORKCONTROLLER<ITronAddress, TronChain,
+              Web3TronChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3TronRequest<String, Web3TronSignMessageV2>(
       params: this,
       authenticated: authenticated,

@@ -67,8 +67,8 @@ class APPSwapSettings with CborSerializable, Equatable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
-          CborListValue.fixedLength(
+        CborSerializable.fromDynamic([
+          CborSerializable.fromDynamic(
               swapProviders.map((e) => CborStringValue(e.identifier)).toList()),
           chainType.name,
           tolerance

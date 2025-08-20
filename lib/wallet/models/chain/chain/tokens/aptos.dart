@@ -26,7 +26,7 @@ class AptosFATokens extends TokenCore<IntegerBalance, Token> {
     final CborListValue values = CborSerializable.cborTagValue(
         cborBytes: bytes, object: obj, tags: TokenCoreType.aptos.tag);
 
-    final Token token = Token.deserialize(obj: values.getCborTag(0));
+    final Token token = Token.deserialize(obj: values.elementAsCborTag(0));
     final IntegerBalance balance =
         IntegerBalance.token(values.elementAs(1), token, immutable: true);
     final DateTime updated = values.elementAs(2);
@@ -59,21 +59,25 @@ class AptosFATokens extends TokenCore<IntegerBalance, Token> {
   final String assetType;
   bool _isFreeze;
   bool get isFreeze => _isFreeze;
-  void setFreeze(bool freeze) {
+  bool setFreeze(bool freeze) {
+    bool f = _isFreeze;
     _isFreeze = freeze;
+    return freeze != f;
   }
 
-  void _updateBalance([BigInt? updateBalance]) {
+  bool _updateBalance([BigInt? updateBalance]) {
     if (streamBalance.value._internalUpdateBalance(updateBalance)) {
       _updated = DateTime.now().toLocal();
       streamBalance.notify();
+      return true;
     }
+    return false;
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           token.toCbor(),
           streamBalance.value.balance,
           CborEpochIntValue(_updated),

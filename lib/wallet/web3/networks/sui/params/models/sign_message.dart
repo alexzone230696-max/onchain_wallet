@@ -38,7 +38,7 @@ class Web3SuiSignMessageResponse with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(messageBytes),
           CborBytesValue(signature),
         ]),
@@ -84,7 +84,7 @@ class Web3SuiSignMessage
       hex: hex,
       tags: Web3MessageTypes.walletRequest.tag,
     );
-    final method = Web3NetworkRequestMethods.fromTag(values.elementAt(0));
+    final method = Web3NetworkRequestMethods.fromTag(values.elementAs(0));
 
     return Web3SuiSignMessage(
         account: Web3SuiChainAccount.deserialize(
@@ -100,19 +100,24 @@ class Web3SuiSignMessage
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [method.tag, accessAccount.toCbor(), challeng, content]),
         type.tag);
   }
 
   final Web3SuiChainAccount accessAccount;
   @override
-  Web3SuiRequest<Web3SuiSignMessageResponse, Web3SuiSignMessage> toRequest(
-      {required Web3RequestInformation request,
-      required Web3RequestAuthentication authenticated,
-      required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+  Future<Web3SuiRequest<Web3SuiSignMessageResponse, Web3SuiSignMessage>>
+      toRequest(
+          {required Web3RequestInformation request,
+          required Web3RequestAuthentication authenticated,
+          required WEB3REQUESTNETWORKCONTROLLER<ISuiAddress, SuiChain,
+                  Web3SuiChainAccount>
+              chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3SuiRequest<Web3SuiSignMessageResponse, Web3SuiSignMessage>(
       params: this,
       authenticated: authenticated,

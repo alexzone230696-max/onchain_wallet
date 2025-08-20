@@ -286,7 +286,7 @@ abstract class MetadataFormValidatorNumeric<T extends MetadataTypeInfoNumeric>
       min = BigRational(minValues[info.primitiveType]!) / pow;
       max = BigRational(values[info.primitiveType]!) / pow;
     }
-    this.value.value = min;
+    value.value = min;
     textFieldKey.currentState?.setValue(min);
   }
 

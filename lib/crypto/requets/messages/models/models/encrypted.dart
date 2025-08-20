@@ -94,8 +94,8 @@ final class WorkerNoneEncryptedMessage
         hex: hex,
         tags: WorkerMessageType.nonEncrypted.tag);
     return WorkerNoneEncryptedMessage(
-        message: cbor.elementAt(0),
-        id: cbor.elementAt(1),
+        message: cbor.elementAs(0),
+        id: cbor.elementAs(1),
         encryptedPart: cbor.elemetMybeAs<WorkerEncryptedMessage, CborObject>(
           2,
           (p0) => WorkerEncryptedMessage.deserialize(object: p0),
@@ -105,7 +105,7 @@ final class WorkerNoneEncryptedMessage
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(message),
           CborIntValue(id),
           encryptedPart?.toCbor()
@@ -153,9 +153,9 @@ final class WorkerEncryptedMessage extends WorkerMessage<List<int>, List<int>>
         hex: hex,
         tags: WorkerMessageType.encrypted.tag);
     return WorkerEncryptedMessage(
-        nonce: cbor.elementAt(0),
-        message: cbor.elementAt(1),
-        id: cbor.elementAt(2));
+        nonce: cbor.elementAs(0),
+        message: cbor.elementAs(1),
+        id: cbor.elementAs(2));
   }
 
   @override
@@ -170,7 +170,7 @@ final class WorkerEncryptedMessage extends WorkerMessage<List<int>, List<int>>
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [CborBytesValue(nonce), CborBytesValue(message), CborIntValue(id)]),
         type.tag);
   }
@@ -203,7 +203,7 @@ final class WorkerEncryptedMessage extends WorkerMessage<List<int>, List<int>>
 //         hex: hex,
 //         tags: WorkerMessageType.cbor.tag);
 //     return WorkerCborMessage(
-//         message: MessageArgsCbor.deserialize(object: cbor.getCborTag(0)),
+//         message: MessageArgsCbor.deserialize(object: cbor.elementAsCborTag(0)),
 //         id: cbor.elementAt(1),
 //         encryptedPart: cbor.elemetMybeAs<WorkerEncryptedMessage, CborObject>(
 //             2, (p0) => WorkerEncryptedMessage.deserialize(object: p0)));
@@ -212,7 +212,7 @@ final class WorkerEncryptedMessage extends WorkerMessage<List<int>, List<int>>
 //   @override
 //   CborTagValue toCbor() {
 //     return CborTagValue(
-//         CborListValue.fixedLength(
+//         CborSerializable.fromDynamic(
 //             [message.toCbor(), CborIntValue(id), encryptedPart?.toCbor()]),
 //         type.tag);
 //   }

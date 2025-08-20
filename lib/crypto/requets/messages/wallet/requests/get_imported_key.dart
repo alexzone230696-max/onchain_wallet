@@ -20,12 +20,12 @@ final class WalletRequestReadImportedKey
         object: object,
         hex: hex,
         tags: WalletRequestMethod.readImportKey.tag);
-    return WalletRequestReadImportedKey(values.elementAt(0));
+    return WalletRequestReadImportedKey(values.elementAs(0));
   }
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([keyId]), method.tag);
+    return CborTagValue(CborSerializable.fromDynamic([keyId]), method.tag);
   }
 
   @override

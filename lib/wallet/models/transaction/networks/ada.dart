@@ -7,14 +7,14 @@ import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart'
 class ADAWalletTransaction extends ChainTransaction {
   ADAWalletTransaction(
       {required super.txId,
-      required super.time,
-      required super.outputs,
+      DateTime? time,
+      super.outputs,
       super.web3Client,
-      required super.totalOutput,
+      super.totalOutput,
       required WalletCardanoNetwork network,
       super.type = WalletTransactionType.send,
       super.status = WalletTransactionStatus.pending})
-      : super();
+      : super(time: time ?? DateTime.now());
 
   factory ADAWalletTransaction.deserialize(WalletCardanoNetwork network,
       {List<int>? bytes, String? cborHex, CborObject? object}) {

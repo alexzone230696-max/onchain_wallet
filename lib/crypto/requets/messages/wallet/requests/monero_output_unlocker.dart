@@ -33,15 +33,16 @@ final class WalletRequestMoneroOutputUnlocker
             .elementAsListOf<CborTagValue>(0)
             .map((e) => MoneroAccountPendingTxes.deserialize(obj: e))
             .toList(),
-        provider:
-            MoneroAPIProvider.fromCborBytesOrObject(obj: values.getCborTag(1)));
+        provider: MoneroAPIProvider.fromCborBytesOrObject(
+            obj: values.elementAsCborTag(1)));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
-          CborListValue.fixedLength(requests.map((e) => e.toCbor()).toList()),
+        CborSerializable.fromDynamic([
+          CborSerializable.fromDynamic(
+              requests.map((e) => e.toCbor()).toList()),
           provider.toCbor(),
         ]),
         method.tag);
@@ -64,7 +65,7 @@ final class WalletRequestMoneroOutputUnlocker
         provider: provider, network: null, isolate: APPIsolate.current);
     final txids =
         requests.expand((e) => e.indexes.expand((e) => e.txes)).toList();
-    final txInfos = await client.getTxes(txIds: txids);
+    final txInfos = await client.getTxesByTxIds(txIds: txids);
     final List<MoneroPrivateKeyData> keys = wallet
         .readKeys(requests
             .map((e) => AccessCryptoPrivateKeyRequest(index: e.accountIndex))
@@ -91,35 +92,45 @@ final class WalletRequestMoneroOutputUnlocker
       required MoneroAccountKeys account,
       required MoneroAccountPendingTxes accountTx}) {
     final List<MoneroUnlockedPaymentRequestDetails> payments = [];
-    for (final index in accountTx.indexes) {
-      for (final txId in index.txes) {
-        final txResponse = txes.firstWhereOrNull(
-            (e) => StringUtils.strip0x(e.txHash.toLowerCase()) == txId);
-        final tx = MethodUtils.nullOnException(() => txResponse?.toTx());
-        if (txResponse == null || tx == null) {
+    final txIds = accountTx.indexes
+        .expand((e) => e.txes.map((e) => StringUtils.strip0x(e).toLowerCase()))
+        .toSet()
+        .toList();
+    for (final txId in txIds) {
+      final txResponse =
+          txes.firstWhereOrNull((e) => StringUtils.hexEqual(e.txHash, txId));
+      final tx = MethodUtils.nullOnException(() => txResponse?.toTx());
+      if (txResponse == null || tx == null) {
+        continue;
+      }
+      for (int i = 0; i < tx.vout.length; i++) {
+        final getOut = MoneroTransactionHelper.getUnlockOut(
+            tx: tx, account: account, realIndex: i);
+        if (getOut == null) {
           continue;
         }
-        for (int i = 0; i < tx.vout.length; i++) {
-          final getOut = MoneroTransactionHelper.getUnlockOut(
-              tx: tx, account: account, realIndex: i);
-          if (getOut == null) {
-            continue;
-          }
-          final address = account.indexAddress(getOut.accountIndex);
-          BigInt? globalIndex;
-          if (tx.vout.length == txResponse.outoutIndices.length) {
-            globalIndex = txResponse.outoutIndices[getOut.realIndex];
-          }
-          payments.add(MoneroUnlockedPaymentRequestDetails.fromUnlockOutput(
-              output: getOut,
-              txId: txId,
-              address: address,
-              comfirmation: txResponse.confirmations,
-              globalIndex: globalIndex,
-              index: index.index));
+        final address = account.indexAddress(getOut.accountIndex);
+        BigInt? globalIndex;
+        if (tx.vout.length == txResponse.outoutIndices.length) {
+          globalIndex = txResponse.outoutIndices[getOut.realIndex];
         }
+        final timestamp = txResponse.timestamp;
+        assert(timestamp != null || txResponse.inPool);
+        // print(i.ti)
+        payments.add(MoneroUnlockedPaymentRequestDetails.fromUnlockOutput(
+            output: getOut,
+            txTimestamp: timestamp == null
+                ? DateTime.now()
+                : DateTimeUtils.fromSecondsSinceEpoch(timestamp),
+            txId: txId,
+            address: address,
+            comfirmation: txResponse.confirmations,
+            globalIndex: globalIndex,
+            index: getOut.accountIndex,
+            inPool: txResponse.inPool));
       }
     }
+
     return accountTx.toResponse(payments);
   }
 

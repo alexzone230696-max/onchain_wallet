@@ -24,8 +24,8 @@ final class SolanaNewAddressParams extends NewAccountParams<ISolanaAddress> {
         tags: NewAccountParamsType.solanaNewAddressParams.tag);
     return SolanaNewAddressParams(
       deriveIndex:
-          AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
-      coin: CustomCoins.getSerializationCoin(values.elementAt(1)),
+          AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(0)),
+      coin: CustomCoins.getSerializationCoin(values.elementAs(1)),
     );
   }
 
@@ -53,7 +53,7 @@ final class SolanaNewAddressParams extends NewAccountParams<ISolanaAddress> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([deriveIndex.toCbor(), coin.toCbor()]),
+        CborSerializable.fromDynamic([deriveIndex.toCbor(), coin.toCbor()]),
         type.tag);
   }
 

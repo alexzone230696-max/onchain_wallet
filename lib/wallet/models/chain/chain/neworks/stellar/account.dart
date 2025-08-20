@@ -9,8 +9,7 @@ final class StellarChain extends Chain<
     IStellarAddress,
     WalletStellarNetwork,
     StellarClient,
-    DefaultChainStorageKey,
-    DefaultChainConfig,
+    DefaultNetworkConfig,
     StellarWalletTransaction,
     StellarContact,
     StellarNewAddressParams> {
@@ -18,23 +17,23 @@ final class StellarChain extends Chain<
       {required super.network,
       required super.addressIndex,
       required super.id,
-      required super.config,
+      DefaultNetworkConfig? config,
       required super.client,
       required super.addresses})
-      : super._();
+      : super._(config: config ?? DefaultNetworkConfig.defaultConfig);
   @override
   StellarChain copyWith({
     WalletStellarNetwork? network,
-    List<IStellarAddress>? addresses,
+    List<ChainAccount>? addresses,
     int? addressIndex,
     StellarClient? client,
     String? id,
-    DefaultChainConfig? config,
+    DefaultNetworkConfig? config,
   }) {
     return StellarChain._(
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
-        addresses: addresses ?? _addresses,
+        addresses: addresses?.cast<IStellarAddress>() ?? _addresses,
         client: client ?? _client,
         id: id ?? this.id,
         config: config ?? this.config);
@@ -49,8 +48,7 @@ final class StellarChain extends Chain<
         id: id,
         addressIndex: 0,
         client: client,
-        addresses: [],
-        config: DefaultChainConfig());
+        addresses: []);
   }
 
   factory StellarChain.deserialize(
@@ -61,7 +59,7 @@ final class StellarChain extends Chain<
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
     }
-    final String id = cbor.elementAt<String>(2);
+    final String id = cbor.elementAs<String>(2);
     final List<IStellarAddress> accounts = cbor
         .elementAsListOf<CborTagValue>(3)
         .map((e) => IStellarAddress.deserialize(network, obj: e))
@@ -73,31 +71,25 @@ final class StellarChain extends Chain<
         addresses: accounts,
         addressIndex: addressIndex,
         client: client,
-        id: id,
-        config: DefaultChainConfig());
+        id: id);
   }
 
   @override
-  Future<void> updateAddressBalance(IStellarAddress address,
-      {bool tokens = true, bool saveAccount = true}) async {
-    _isAccountAddress(address);
-    await initAddress(address);
+  Future<void> _updateAddressBalanceInternal(IStellarAddress address,
+      {bool tokens = true}) async {
     await onClient(onConnect: (client) async {
       final accountInfo = await client.getAccount(address.networkAddress);
       final balance = accountInfo?.balances
               .whereType<StellarNativeBalanceResponse>()
               .fold(BigInt.zero, (p, c) => p + c.unlockedBalance) ??
           BigInt.zero;
-      _updateAddressBalanceInternal(
-          address: address, balance: balance, saveAccount: saveAccount);
+      address.address._updateAddressBalance(balance);
       for (final i in address.tokens) {
         final balance = accountInfo?.getAssetByIssueAsset(i);
-        if (balance == null) {
-          i._updateBalance(BigInt.zero);
-        } else {
-          i._updateBalance(balance.unlockedBalance);
-        }
-        _saveToken(address: address, token: i);
+        _updateTokenBalanceInternal(
+            address: address,
+            token: i,
+            save: i._updateBalance(balance?.unlockedBalance ?? BigInt.zero));
       }
     });
   }
@@ -113,16 +105,13 @@ final class StellarChain extends Chain<
               .whereType<StellarNativeBalanceResponse>()
               .fold(BigInt.zero, (p, c) => p + c.unlockedBalance) ??
           BigInt.zero;
-      _updateAddressBalanceInternal(
-          address: address, balance: balance, saveAccount: true);
+      address.address._updateAddressBalance(balance);
       for (final i in tokens) {
         final balance = accountInfo?.getAssetByIssueAsset(i);
-        if (balance == null) {
-          i._updateBalance(BigInt.zero);
-        } else {
-          i._updateBalance(balance.unlockedBalance);
-        }
-        _saveToken(address: address, token: i);
+        _updateTokenBalanceInternal(
+            address: address,
+            token: i,
+            save: i._updateBalance(balance?.unlockedBalance ?? BigInt.zero));
       }
     });
   }

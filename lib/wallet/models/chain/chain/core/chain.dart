@@ -5,12 +5,11 @@ abstract final class Chain<
         NETWORKPARAMS extends NetworkCoinParams,
         NETWORKADDRESS,
         CHAINTOKEN extends TokenCore,
-        NFT extends NFTCore,
+        CHAINNFT extends NFTCore,
         ADDRESS extends ChainAccount,
         NETWORK extends WalletNetwork,
         CLIENT extends NetworkClient,
-        STORAGE extends ChainStorageKey,
-        CONFIG extends ChainConfig,
+        CONFIG extends DefaultNetworkConfig,
         TRANSACTION extends ChainTransaction,
         CONTACT extends ContactCore,
         ADDRESSPARAM extends NewAccountParams>
@@ -19,28 +18,39 @@ abstract final class Chain<
         NETWORKPARAMS,
         NETWORKADDRESS,
         CHAINTOKEN,
-        NFT,
+        CHAINNFT,
         ADDRESS,
         NETWORK,
         CLIENT,
-        STORAGE,
         CONFIG,
         TRANSACTION,
         CONTACT,
         ADDRESSPARAM>
     with
-        ChainRepository<ADDRESS, NETWORK, CLIENT, STORAGE, CONFIG, CHAINTOKEN,
-            NFT, TRANSACTION, CONTACT, ADDRESSPARAM>,
+        ChainRepository<ADDRESS, NETWORK, CLIENT, CONFIG, CHAINTOKEN, CHAINNFT,
+            TRANSACTION, CONTACT, ADDRESSPARAM>,
         BaseChainController<
             PROVIDER,
             NETWORKPARAMS,
             NETWORKADDRESS,
             CHAINTOKEN,
-            NFT,
+            CHAINNFT,
             ADDRESS,
             NETWORK,
             CLIENT,
-            STORAGE,
+            CONFIG,
+            TRANSACTION,
+            CONTACT,
+            ADDRESSPARAM>,
+        BaseChainWeb3Controller<
+            PROVIDER,
+            NETWORKPARAMS,
+            NETWORKADDRESS,
+            CHAINTOKEN,
+            CHAINNFT,
+            ADDRESS,
+            NETWORK,
+            CLIENT,
             CONFIG,
             TRANSACTION,
             CONTACT,
@@ -48,7 +58,7 @@ abstract final class Chain<
         CborSerializable,
         CryptoWokerImpl {
   @override
-  final ChainStorageManager _storage;
+  final NetworkStorageManager _storage;
 
   NETWORK _network;
   @override
@@ -94,7 +104,8 @@ abstract final class Chain<
         cborBytes: bytes, object: obj, hex: hex, tags: CborTagsConst.iAccount);
     final int networkId = values.elementAs(0);
     WalletNetwork? network = MethodUtils.nullOnException(() {
-      return WalletNetwork.fromCborBytesOrObject(obj: values.getCborTag(1));
+      return WalletNetwork.fromCborBytesOrObject(
+          obj: values.elementAsCborTag(1));
     });
     network = ChainConst.updateNetwork(networkId: networkId, network: network);
     final ProviderIdentifier? providerId = MethodUtils.nullOnException(() {
@@ -291,13 +302,18 @@ abstract final class Chain<
             BaseChainController._totalBalance(addresses), network.token,
             immutable: true)),
         _storage =
-            ChainStorageManager(network: network, id: id, config: config);
+            NetworkStorageManager(network: network, id: id, config: config);
 
   Chain copyWith(
       {NETWORK? network,
-      List<ADDRESS>? addresses,
+      List<ChainAccount>? addresses,
       int? addressIndex,
       String? id,
       CONFIG? config,
       CLIENT? client});
+
+  @override
+  String toString() {
+    return "Chain: ${network.networkName}";
+  }
 }

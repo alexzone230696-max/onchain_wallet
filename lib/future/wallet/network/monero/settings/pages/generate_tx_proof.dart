@@ -93,7 +93,7 @@ class _MoneroGenerateTxProofViewState
                 provider: client.service.provider,
                 message: message,
                 receiverAddress:
-                    isOutputRequest ? widget.txOutput!.output.to : null,
+                    isOutputRequest ? widget.txOutput!.recepient : null,
                 txKeys: isOutputRequest ? widget.txOutput!.txKeys : null),
             encryptedPart: selectedAccount.addrDetails.toCbor().encode()));
     if (result.hasError) {
@@ -110,12 +110,12 @@ class _MoneroGenerateTxProofViewState
     super.onInitOnce();
     final request = widget.txOutput;
     if (request != null) {
-      isOutputRequest = true;
+      isOutputRequest = request.txKeys != null;
       txId = request.txId;
-      receiver = account.getReceiptAddress(request.output.address) ??
+      receiver = account.getReceiptAddress(request.recepient.address) ??
           ReceiptAddress<MoneroAddress>(
-              view: request.output.to.address,
-              networkAddress: request.output.to);
+              view: request.recepient.address,
+              networkAddress: request.recepient);
     }
   }
 

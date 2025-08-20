@@ -26,11 +26,13 @@ class ShimmerActionView extends StatelessWidget {
 class Shimmer extends StatelessWidget {
   final bool sliver;
   final bool enable;
+  final bool ignoring;
   final SHIMMERBUILDER onActive;
   const Shimmer(
       {required this.onActive,
       this.sliver = false,
       required this.enable,
+      this.ignoring = true,
       super.key});
   // final Widget shimmerBox;
   @override
@@ -38,6 +40,7 @@ class Shimmer extends StatelessWidget {
     if (sliver) {
       return APPSliverAnimatedSwitcher<bool>(enable: enable, widgets: {
         false: (context) => SliverIgnorePointer(
+            ignoring: ignoring,
             sliver: SliverToBoxAdapter(
                 child: ShimmerWidget(child: onActive(enable, context)))),
         true: (context) => onActive(enable, context)
@@ -46,6 +49,7 @@ class Shimmer extends StatelessWidget {
     return APPAnimated(
         isActive: enable,
         onDeactive: (context) => IgnorePointer(
+            ignoring: ignoring,
             child: ShimmerWidget(child: onActive(enable, context))),
         onActive: (context) => onActive(enable, context));
   }

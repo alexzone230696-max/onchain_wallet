@@ -16,21 +16,23 @@ class Web3MoneroChainAccount extends Web3ChainAccount<MoneroAddress> {
       required super.address,
       required super.defaultAddress,
       required this.id,
+      required super.identifier,
       this.publicKey});
   @override
-  Web3MoneroChainAccount clone({
-    AddressDerivationIndex? keyIndex,
-    MoneroAddress? address,
-    bool? defaultAddress,
-    int? id,
-    List<int>? publicKey,
-  }) {
+  Web3MoneroChainAccount clone(
+      {AddressDerivationIndex? keyIndex,
+      MoneroAddress? address,
+      bool? defaultAddress,
+      int? id,
+      List<int>? publicKey,
+      String? identifier}) {
     return Web3MoneroChainAccount(
         keyIndex: keyIndex ?? this.keyIndex,
         address: address ?? this.address,
         defaultAddress: defaultAddress ?? this.defaultAddress,
         id: id ?? this.id,
-        publicKey: publicKey ?? this.publicKey);
+        publicKey: publicKey ?? this.publicKey,
+        identifier: identifier ?? this.identifier);
   }
 
   factory Web3MoneroChainAccount.fromChainAccount(
@@ -42,6 +44,7 @@ class Web3MoneroChainAccount extends Web3ChainAccount<MoneroAddress> {
         address: address.networkAddress,
         id: id,
         defaultAddress: isDefault,
+        identifier: address.identifier,
         publicKey: address.addrDetails.isPrimary
             ? address.networkAddress.pubSpendKey
             : null);
@@ -55,22 +58,25 @@ class Web3MoneroChainAccount extends Web3ChainAccount<MoneroAddress> {
         hex: hex,
         tags: CborTagsConst.web3MoneroAccount);
     return Web3MoneroChainAccount(
-        keyIndex: AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
-        address: MoneroAddress(values.elementAt(1)),
-        id: values.elementAt(2),
-        defaultAddress: values.elementAt(3),
-        publicKey: values.elementAs(4));
+        keyIndex: AddressDerivationIndex.deserialize(
+            obj: values.indexAs<CborTagValue>(0)),
+        address: MoneroAddress(values.valueAs(1)),
+        id: values.valueAs(2),
+        defaultAddress: values.valueAs(3),
+        publicKey: values.valueAs(4),
+        identifier: values.valueAs(5));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           keyIndex.toCbor(),
           address.address,
           id,
           defaultAddress,
-          publicKey
+          publicKey,
+          identifier
         ]),
         CborTagsConst.web3MoneroAccount);
   }
@@ -103,7 +109,7 @@ class Web3MoneroChainIdnetifier extends Web3ChainIdnetifier {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-      CborListValue.fixedLength([network.index, id, wsIdentifier, caip2]),
+      CborSerializable.fromDynamic([network.index, id, wsIdentifier, caip2]),
       CborTagsConst.web3MoneroChainIdentifier,
     );
   }

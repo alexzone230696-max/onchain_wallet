@@ -27,7 +27,7 @@ class SolanaSPLToken extends TokenCore<IntegerBalance, Token> {
   factory SolanaSPLToken.deserialize({List<int>? bytes, CborObject? obj}) {
     final CborListValue cbor = CborSerializable.cborTagValue(
         cborBytes: bytes, object: obj, tags: TokenCoreType.spl.tag);
-    final Token token = Token.deserialize(obj: cbor.getCborTag(0));
+    final Token token = Token.deserialize(obj: cbor.elementAsCborTag(0));
     final String mint = cbor.elementAs(1);
     final IntegerBalance balance =
         IntegerBalance.token(cbor.elementAs(2), token, immutable: true);
@@ -66,17 +66,19 @@ class SolanaSPLToken extends TokenCore<IntegerBalance, Token> {
   final SolAddress tokenAccount;
   final SolAddress tokenOwner;
 
-  void _updateBalance([BigInt? updateBalance]) {
+  bool _updateBalance([BigInt? updateBalance]) {
     if (streamBalance.value._internalUpdateBalance(updateBalance)) {
       _updated = DateTime.now().toLocal();
       streamBalance.notify();
+      return true;
     }
+    return false;
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           token.toCbor(),
           mint.address,
           streamBalance.value.balance,

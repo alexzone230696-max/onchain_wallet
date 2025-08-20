@@ -9,23 +9,22 @@ base mixin CosmosChainRepository on Chain<
     ICosmosAddress,
     WalletCosmosNetwork,
     CosmosClient,
-    ChainStorageKey,
-    CosmosChainConfig,
+    CosmosNetworkConfig,
     CosmosWalletTransaction,
     CosmosContact,
     CosmosNewAddressParams> {
   CosmosAccountIBCChannelIds _channelId = CosmosAccountIBCChannelIds();
   CosmosAccountIBCChannelIds get channelId => _channelId;
   Future<void> _loadChannelIds() async {
-    final data = await _storage.queryChainStorage(
-        storage: CosmosChainStorage.channelIds);
+    final data = await _storage.queryNetworkStorage(
+        storage: CosmosNetowkStorageId.channelIds);
     if (data == null) return;
     _channelId = CosmosAccountIBCChannelIds.deserialize(bytes: data);
   }
 
   Future<void> _saveChannelId(CosmosIBCChannelId channel) async {
     _channelId.addChannel(channel);
-    await _storage.insertChainStorage(
-        storage: CosmosChainStorage.channelIds, value: _channelId);
+    await _storage.insertNetworkStorage(
+        storage: CosmosNetowkStorageId.channelIds, value: _channelId);
   }
 }

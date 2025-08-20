@@ -36,9 +36,9 @@ class Web3EthreumTransactionAccessList with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           address.address,
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               storageKeys.map((e) => CborBytesValue(e)).toList())
         ]),
         CborTagsConst.web3EthereumTransactionAccessList);
@@ -155,19 +155,19 @@ class Web3EthreumSendTransaction extends Web3EthereumRequestParam<String> {
       hex: hex,
       tags: Web3MessageTypes.walletRequest.tag,
     );
-    final String? to = values.elementAt(2);
-    final int? trType = values.elementAt(10);
+    final String? to = values.elementAs(2);
+    final int? trType = values.elementAs(10);
     return Web3EthreumSendTransaction._(
         accessAccount: Web3EthereumChainAccount.deserialize(
             object: values.elementAs<CborTagValue>(1)),
         to: to == null ? null : ETHAddress(to),
-        gas: values.elementAt(3),
-        gasPrice: values.elementAt(4),
-        maxFeePerGas: values.elementAt(5),
-        maxPriorityFeePerGas: values.elementAt(6),
-        value: values.elementAt(7),
-        data: values.elementAt(8),
-        chainId: values.elementAt(9),
+        gas: values.elementAs(3),
+        gasPrice: values.elementAs(4),
+        maxFeePerGas: values.elementAs(5),
+        maxPriorityFeePerGas: values.elementAs(6),
+        value: values.elementAs(7),
+        data: values.elementAs(8),
+        chainId: values.elementAs(9),
         transactionType:
             trType == null ? null : ETHTransactionType.fromPrefix(trType));
   }
@@ -179,7 +179,7 @@ class Web3EthreumSendTransaction extends Web3EthereumRequestParam<String> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
           accessAccount.toCbor(),
           to?.address,
@@ -196,12 +196,16 @@ class Web3EthreumSendTransaction extends Web3EthereumRequestParam<String> {
   }
 
   @override
-  Web3EthereumRequest<String, Web3EthreumSendTransaction> toRequest(
+  Future<Web3EthereumRequest<String, Web3EthreumSendTransaction>> toRequest(
       {required Web3RequestInformation request,
       required Web3RequestAuthentication authenticated,
-      required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+      required WEB3REQUESTNETWORKCONTROLLER<IEthAddress, EthereumChain,
+              Web3EthereumChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3EthereumRequest<String, Web3EthreumSendTransaction>(
       params: this,
       authenticated: authenticated,

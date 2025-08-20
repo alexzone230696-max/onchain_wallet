@@ -28,7 +28,8 @@ final class ADALegacyPrivateKeyData extends CryptoPrivateKeyData {
         extendedKey: cbor.elementAs(2),
         wif: cbor.elementAs(3),
         keyName: cbor.elementAs(4),
-        publicKey: AdaLegacyPublicKeyData.deserialize(obj: cbor.getCborTag(5)));
+        publicKey:
+            AdaLegacyPublicKeyData.deserialize(obj: cbor.elementAsCborTag(5)));
   }
 
   const ADALegacyPrivateKeyData._(
@@ -43,7 +44,7 @@ final class ADALegacyPrivateKeyData extends CryptoPrivateKeyData {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           coin.toCbor(),
           privateKey,
           extendedKey,

@@ -30,7 +30,7 @@ class Web3XRPSignMessageResponse with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [CborBytesValue(signature), CborBytesValue(publicKey)]),
         CborTagsConst.defaultTag);
   }
@@ -63,12 +63,12 @@ class Web3XRPSignMessage
       hex: hex,
       tags: Web3MessageTypes.walletRequest.tag,
     );
-    final List<int> challeng = values.elementAt(2);
+    final List<int> challeng = values.elementAs(2);
     return Web3XRPSignMessage(
         accessAccount: Web3XRPChainAccount.deserialize(
             object: values.elementAs<CborTagValue>(1)),
         challeng: BytesUtils.toHexString(challeng, prefix: "0x"),
-        content: values.elementAt(3));
+        content: values.elementAs(3));
   }
 
   @override
@@ -77,7 +77,7 @@ class Web3XRPSignMessage
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
           accessAccount.toCbor(),
           CborBytesValue(BytesUtils.fromHexString(challeng)),
@@ -91,12 +91,17 @@ class Web3XRPSignMessage
   }
 
   @override
-  Web3XRPRequest<Web3XRPSignMessageResponse, Web3XRPSignMessage> toRequest(
-      {required Web3RequestInformation request,
-      required Web3RequestAuthentication authenticated,
-      required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+  Future<Web3XRPRequest<Web3XRPSignMessageResponse, Web3XRPSignMessage>>
+      toRequest(
+          {required Web3RequestInformation request,
+          required Web3RequestAuthentication authenticated,
+          required WEB3REQUESTNETWORKCONTROLLER<IXRPAddress, XRPChain,
+                  Web3XRPChainAccount>
+              chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3XRPRequest<Web3XRPSignMessageResponse, Web3XRPSignMessage>(
       params: this,
       authenticated: authenticated,

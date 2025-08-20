@@ -15,7 +15,6 @@ final class ITonAddress extends ChainAccount<TonAddress, TonJettonToken,
   }) : publicKey = List.unmodifiable(publicKey);
 
   factory ITonAddress._newAccount({
-    // required TonNewAddressParams accountParams,
     required List<int> publicKey,
     required WalletTonNetwork network,
     required CryptoCoins coin,
@@ -46,10 +45,10 @@ final class ITonAddress extends ChainAccount<TonAddress, TonJettonToken,
     final CryptoCoins coin =
         CustomCoins.getSerializationCoin(cbor.elementAs(0));
     final keyIndex =
-        AddressDerivationIndex.deserialize(obj: cbor.getCborTag(1));
+        AddressDerivationIndex.deserialize(obj: cbor.elementAsCborTag(1));
     final List<int> publicKey = cbor.elementAs(2);
     final AccountBalance address =
-        AccountBalance.deserialize(network, obj: cbor.getCborTag(3));
+        AccountBalance.deserialize(network, obj: cbor.elementAsCborTag(3));
     final TonAddress tonAddress = TonAddress(address.toAddress);
     final int networkId = cbor.elementAs(4);
     if (networkId != network.value) {
@@ -84,7 +83,7 @@ final class ITonAddress extends ChainAccount<TonAddress, TonJettonToken,
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           coin.toCbor(),
           keyIndex.toCbor(),
           publicKey,
@@ -113,15 +112,11 @@ final class ITonAddress extends ChainAccount<TonAddress, TonJettonToken,
   }
 
   @override
-  bool isEqual(ChainAccount other) {
-    if (other is! ITonAddress) return false;
-    return context == other.context &&
-        BytesUtils.bytesEqual(other.networkAddress.hash, networkAddress.hash);
-  }
-
-  @override
   TonNewAddressParams toAccountParams() {
     return TonNewAddressParams(
         deriveIndex: keyIndex, coin: coin, context: context);
   }
+
+  @override
+  String get baseAddress => networkAddress.toRawAddress();
 }

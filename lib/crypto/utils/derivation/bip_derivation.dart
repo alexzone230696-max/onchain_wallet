@@ -9,7 +9,7 @@ class BipDerivationUtils {
   static const String substrateBaseAccount = "//44//60//0/0/";
   static AddressDerivationIndex generateAccountNextKeyIndex(
       {required CryptoCoins coin,
-      required List<ChainAccount> addresses,
+      List<ChainAccount> addresses = const [],
       required SeedTypes seedGenerationType,
       int? coinType}) {
     if (coin.proposal == SubstratePropoosal.substrate) {

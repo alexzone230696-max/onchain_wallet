@@ -13,7 +13,9 @@ class SubstrateAccountPageView extends StatelessWidget {
   Widget build(BuildContext context) {
     return TabBarView(physics: WidgetConstant.noScrollPhysics, children: [
       _SubstrateServices(chainAccount),
-      AccountTransactionActivityView(chainAccount)
+      AccountTransactionActivityView<ISubstrateAddress,
+              SubstrateWalletTransaction>(
+          account: chainAccount, address: chainAccount.address)
     ]);
   }
 }

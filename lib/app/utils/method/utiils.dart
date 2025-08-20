@@ -28,7 +28,7 @@ class MethodUtils {
         r = t();
       } else {
         final Completer<T> completer = Completer<T>();
-        cancelable.setup(<T>() {
+        cancelable.setup(() {
           return completer;
         });
         cancelable.success(t);
@@ -175,7 +175,7 @@ class MethodResult<T> {
   bool get isCancel => exception is CancelableExption;
   final bool unknownError;
   bool errorISA<E extends Object>() {
-    return this.exception is E;
+    return exception is E;
   }
 
   T get result {

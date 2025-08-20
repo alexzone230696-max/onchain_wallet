@@ -1,10 +1,8 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wc/wallet/core/network.dart';
 import 'package:on_chain_wallet/wc/wallet/types/types.dart';
-import 'package:on_chain_wallet/wc/core/types/types.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/bitcoin.dart';
 import 'package:on_chain_wallet/wallet/web3/state/state.dart';
 import 'package:on_chain_wallet/wallet/web3/core/core.dart';
@@ -76,7 +74,7 @@ class BitcoinWeb3WalletConnectStateAccount
       return BitcoinWeb3WalletConnectStateAddress(
           chainaccount: e,
           jsAccount: BitcoinWalletConnectAddress(
-              address: e.wcStyle,
+              address: e.addressStr,
               publicKey: e.publicKey,
               redeemScript: e.redeemScript,
               type: e.type.value,
@@ -100,7 +98,7 @@ class BitcoinWeb3WalletConnectStateAccount
                 chainaccount: defaultAddress,
                 networkIdentifier: networks[defaultAddress.id]!,
                 jsAccount: BitcoinWalletConnectAddress(
-                    address: defaultAddress.wcStyle,
+                    address: defaultAddress.addressStr,
                     redeemScript: defaultAddress.redeemScript,
                     type: defaultAddress.type.value,
                     witnessScript: defaultAddress.witnessScript,
@@ -125,48 +123,6 @@ class BitcoinWeb3WalletConnectStateHandler
             WalletConnectNetworkRequest,
             WalletConnectClientEvent> {
   BitcoinWeb3WalletConnectStateHandler({required super.sendInternalMessage});
-  @override
-  BitcoinBaseAddress toAddress(String v,
-      {Web3BitcoinChainIdnetifier? network,
-      BitcoinWeb3WalletConnectStateAccount? state}) {
-    if (network == null || !network.isBch) {
-      return super.toAddress(v, network: network, state: state);
-    }
-    final hasCaip = v.indexOf(":") > 0;
-    if (hasCaip) {
-      return super.toAddress(v, network: network, state: state);
-    }
-    final correctAddress = "${network.caipChainId}:$v";
-    return super.toAddress(correctAddress, network: network, state: state);
-  }
-
-  @override
-  Future<List<WCChainNamespace>> generateNamespace() async {
-    final state = await getState();
-    final bchNetworks = state.chains.where((e) => e.isBch);
-    final bchAccounts = state.accounts.where((e) => e.networkIdentifier.isBch);
-    final methods =
-        this.methods.expand((e) => e.walletConnectMethodNames).toList();
-    final events = this.events.map((e) => e.name).toList();
-    final bch = WCChainNamespace(
-        identifier: NetworkType.bitcoinCash.caip2,
-        namespace: WCNamespace(
-            chains: bchNetworks.map((e) => e.caip2).toList(),
-            accounts: bchAccounts.map((e) => e.caip10).toList(),
-            methods: methods,
-            events: events));
-    final otherNetwork = state.chains.where((e) => !e.isBch);
-    final otherAccounts =
-        state.accounts.where((e) => !e.networkIdentifier.isBch);
-    final btc = WCChainNamespace(
-        identifier: NetworkType.bitcoinAndForked.caip2,
-        namespace: WCNamespace(
-            chains: otherNetwork.map((e) => e.caip2).toList(),
-            accounts: otherAccounts.map((e) => e.caip10).toList(),
-            methods: methods,
-            events: events));
-    return [btc, bch];
-  }
 
   @override
   Future<Web3MessageCore> request(WalletConnectNetworkRequest message,

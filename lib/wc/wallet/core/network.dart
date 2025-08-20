@@ -132,7 +132,7 @@ abstract class Web3WalletConnectStateHandler<
   @override
   Future<WalletConnectClientEvent> initChain(Web3APPData authenticated) async {
     return await lock.synchronized(() async {
-      final currentState = this._state;
+      final currentState = _state;
       final state = createState(authenticated);
       final event = _createStateEvent(currentState, state);
       _state = state;
@@ -199,8 +199,7 @@ class WalletConnectClientRequestParams {
     final caip2 = request.request.chainId.split(":").first;
     final network = NetworkType.values.firstWhere((e) => e.caip2 == caip2,
         orElse: () => throw Web3RequestExceptionConst.networkDoesNotExists);
-    return WalletConnectClientRequestParams._(
-        request, network.isBitcoin ? NetworkType.bitcoinAndForked : network);
+    return WalletConnectClientRequestParams._(request, network);
   }
 }
 

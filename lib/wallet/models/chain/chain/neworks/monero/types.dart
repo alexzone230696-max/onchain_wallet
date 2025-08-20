@@ -14,6 +14,14 @@ enum MoneroChainStatus {
   }
 }
 
+enum MoneroChainNotify implements ChainNotify {
+  trackerUpdated(0);
+
+  @override
+  final int value;
+  const MoneroChainNotify(this.value);
+}
+
 class MoneroSyncChain with CborSerializable, Equatable {
   final int value;
   final ChainType? chain;
@@ -44,43 +52,54 @@ class MoneroSyncChain with CborSerializable, Equatable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([value]), CborTagsConst.moneroSyncChain);
+        CborSerializable.fromDynamic([value]), CborTagsConst.moneroSyncChain);
   }
 
   @override
   List get variabels => [value];
 }
 
-enum MoneroChainStorage implements ChainStorageKey {
-  contacts(0),
-  transaction(1),
-  defaultTracker(11),
-  walletRPC(13),
-  addressUtxos(14),
-  syncChain(101);
-
-  @override
-  final int storageId;
-  const MoneroChainStorage(this.storageId);
-
-  @override
-  bool get isSharedStorage => this == syncChain;
+class MoneroNetworkStorageId extends DefaultNetworkStorageId {
+  static const MoneroNetworkStorageId defaultTracker =
+      MoneroNetworkStorageId(11);
+  static const MoneroNetworkStorageId walletRPC = MoneroNetworkStorageId(13);
+  static const MoneroNetworkStorageId addressUtxos = MoneroNetworkStorageId(14);
+  // static const MoneroNetworkStorageId syncChain =
+  //     MoneroNetworkStorageId(101, isSharedStorage: true);
+  const MoneroNetworkStorageId(super.storageId);
+  static const List<DefaultNetworkStorageId> values = [
+    ...DefaultNetworkStorageId.values,
+    defaultTracker,
+    walletRPC,
+    addressUtxos,
+    // syncChain
+  ];
 }
 
-class MoneroChainConfig extends ChainConfig<MoneroChainStorage> {
-  MoneroChainConfig(
+class MoneroChainStorageId extends DefaultChainStorageId {
+  static const MoneroChainStorageId syncChain = MoneroChainStorageId(101);
+  const MoneroChainStorageId(super.storageId);
+  static const List<DefaultChainStorageId> values = [
+    ...DefaultChainStorageId.values,
+    syncChain
+  ];
+}
+
+class MoneroNetworkConfig extends DefaultNetworkConfig<MoneroNetworkStorageId> {
+  MoneroNetworkConfig(
       {MoneroChainStatus status = MoneroChainStatus.none,
       bool showInitializeAlert = true})
       : _status = status,
-        _showInitializeAlert = showInitializeAlert;
-  factory MoneroChainConfig.deserialize(
+        _showInitializeAlert = showInitializeAlert,
+        super(supportToken: false, supportNft: false, supportWeb3: true);
+  factory MoneroNetworkConfig.deserialize(
       {List<int>? bytes, CborObject? object, String? hex}) {
     final CborListValue values = CborSerializable.cborTagValue(
         cborBytes: bytes,
         object: object,
         hex: hex,
         tags: CborTagsConst.moneroChainConfig);
-    return MoneroChainConfig(
+    return MoneroNetworkConfig(
         status: MoneroChainStatus.fromValue(values.elementAs(0)),
         showInitializeAlert: values.elementAs<bool?>(1) ?? true);
   }
@@ -88,9 +107,9 @@ class MoneroChainConfig extends ChainConfig<MoneroChainStorage> {
 
   MoneroChainStatus get status => _status;
 
-  MoneroChainConfig copyWith(
+  MoneroNetworkConfig copyWith(
       {MoneroChainStatus? status, bool? showInitializeAlert}) {
-    return MoneroChainConfig(
+    return MoneroNetworkConfig(
         showInitializeAlert: showInitializeAlert ?? this.showInitializeAlert,
         status: status ?? this.status);
   }
@@ -104,29 +123,15 @@ class MoneroChainConfig extends ChainConfig<MoneroChainStorage> {
   bool get showInitializeAlert => _showInitializeAlert;
 
   @override
-  MoneroChainStorage get transactionStorageKey =>
-      MoneroChainStorage.transaction;
-  @override
-  MoneroChainStorage? get nftStorageKey => null;
-
-  @override
-  MoneroChainStorage? get tokenStorageKey => null;
-  @override
-  MoneroChainStorage get contactsStorageKey => MoneroChainStorage.contacts;
-
-  @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([_status.value, _showInitializeAlert]),
+        CborSerializable.fromDynamic([_status.value, _showInitializeAlert]),
         CborTagsConst.moneroChainConfig);
   }
 
   @override
-  List<MoneroChainStorage> get storageKeys => MoneroChainStorage.values;
-
-  @override
-  List<MoneroChainStorage> get addressStorage =>
-      [MoneroChainStorage.transaction];
+  List<DefaultNetworkStorageId> get storageKeys =>
+      MoneroNetworkStorageId.values;
 
   @override
   String toString() {

@@ -85,22 +85,7 @@ mixin WalletsStoragesManger {
 
   Future<void> _removeWalletStorage(MainWallet wallet) async {
     final params = ITableDropStructA(tableName: wallet.key);
-
-    await Future.wait([
-      AppNativeMethods.platform.dropDb(params),
-    ]);
-  }
-
-  Future<void> _setupWalletBackupAccounts(
-      {required MainWallet wallet, required WalletRestoreV2 backup}) async {
-    for (final i in backup.chains) {
-      final account = i.chain;
-      await account.restoreAccount(i.repositories);
-      assert(account.id == wallet.key, "invalid account wallet id.");
-    }
-    for (final i in backup.dapps) {
-      await _savePermission(wallet: wallet, permission: i);
-    }
+    await Future.wait([AppNativeMethods.platform.dropDb(params)]);
   }
 
   Future<List<List<int>>> _readAccounts(MainWallet wallet) async {
@@ -120,26 +105,58 @@ mixin WalletsStoragesManger {
         key: identifier);
   }
 
+  Future<List<List<int>>> _readWeb3ApplicationActivities(
+      {required MainWallet wallet,
+      required Web3ApplicationAuthentication permission}) async {
+    return await _queriesStorage(
+        storage: APPDatabaseConst.web3AuthStorage,
+        storageId: APPDatabaseConst.web3Activities,
+        tableName: wallet.key,
+        key: permission.applicationId);
+  }
+
+  Future<void> _saveWeb3ApplicationActivity(
+      {required MainWallet wallet,
+      required Web3ApplicationAuthentication permission,
+      required Web3AccountAcitvity activity}) async {
+    await _insertStorage(
+        storage: APPDatabaseConst.web3AuthStorage,
+        storageId: APPDatabaseConst.web3Activities,
+        value: activity,
+        tableName: wallet.key,
+        key: permission.applicationId,
+        keyA: activity.requestId);
+  }
+
+  Future<void> _removeWeb3ApplicationActivities(
+      {required MainWallet wallet,
+      required Web3ApplicationAuthentication permission}) async {
+    await _removeStorage(
+        storage: APPDatabaseConst.web3AuthStorage,
+        storageId: APPDatabaseConst.web3Activities,
+        tableName: wallet.key,
+        key: permission.applicationId);
+  }
+
   Future<void> _savePermission(
       {required MainWallet wallet,
-      required Web3APPAuthentication permission}) async {
+      required Web3ApplicationAuthentication permission}) async {
     await _insertStorage(
         storage: APPDatabaseConst.web3AuthStorage,
         storageId: APPDatabaseConst.defaultStorageId,
         value: permission,
         tableName: wallet.key,
-        key: permission.applicationKey);
+        key: permission.applicationId);
   }
 
   Future<void> _removeWeb3Permission(
       {required MainWallet wallet,
-      required Web3APPAuthentication permission}) async {
+      required Web3ApplicationAuthentication permission}) async {
     await _removeStorage(
-      storage: APPDatabaseConst.web3AuthStorage,
-      storageId: APPDatabaseConst.defaultStorageId,
-      tableName: wallet.key,
-      key: permission.applicationKey,
-    );
+        storage: APPDatabaseConst.web3AuthStorage,
+        storageId: APPDatabaseConst.defaultStorageId,
+        tableName: wallet.key,
+        key: permission.applicationId);
   }
 
   Future<List<List<int>>> _readAllPermission(MainWallet wallet) async {

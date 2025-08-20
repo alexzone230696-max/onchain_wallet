@@ -57,10 +57,10 @@ abstract class TonAccountContext with CborSerializable, Equatable {
     final CborTagValue decode =
         CborSerializable.decode(cborBytes: bytes, hex: hex, object: object);
     final type = TonAccountContextType.fromTag(decode.tags);
-    final list = decode.getList;
+    final list = decode.valueAs<CborListValue>();
     final WalletVersion version =
         WalletVersion.fromValue(list.elementAs<String>(0));
-    final bool bouncable = list.elementAt(1);
+    final bool bouncable = list.elementAs(1);
     switch (type) {
       case TonAccountContextType.legacy:
         return TonAccountLegacyContext(version: version, bouncable: bouncable);
@@ -125,7 +125,7 @@ class TonAccountLegacyContext extends TonAccountContext {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           version.name,
           bouncable,
         ]),
@@ -179,7 +179,7 @@ class TonAccountSubWalletContext extends TonAccountContext {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([version.name, bouncable, subwalletId]),
+        CborSerializable.fromDynamic([version.name, bouncable, subwalletId]),
         type.tag);
   }
 
@@ -234,7 +234,7 @@ class TonAccountV5CustomContext extends TonAccountContext {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([version.name, bouncable, walletId]),
+        CborSerializable.fromDynamic([version.name, bouncable, walletId]),
         type.tag);
   }
 
@@ -308,7 +308,7 @@ class TonAccountV5SubWalletContext extends TonAccountContext {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([version.name, bouncable, subwalletId]),
+        CborSerializable.fromDynamic([version.name, bouncable, subwalletId]),
         type.tag);
   }
 

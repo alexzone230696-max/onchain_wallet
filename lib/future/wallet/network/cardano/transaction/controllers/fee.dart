@@ -9,9 +9,6 @@ mixin ADATransactionFeeController
     on BaseADATransactionController, ADATransactionApiController {
   final Cancelable _cancelable = Cancelable();
   final _lock = SynchronizedLock();
-  // ADATransactionFee get _defaultFee => ADATransactionFee(
-  //     fee: IntegerBalance.zero(network.token), type: TxFeeTypes.normal);
-
   @override
   late final ADATransactionFeeData txFee = ADATransactionFeeData(
       select: ADATransactionFee(
@@ -21,7 +18,8 @@ mixin ADATransactionFeeController
   Future<ADATransactionFee> simulateFee() async {
     final params = await latestEpochProtocolParameters();
     final transaction = await buildTransaction(simulate: true);
-    final size = transaction.transaction.estimateSize();
+    final signedTx = await signTransaction(transaction, fakeSignature: true);
+    final size = signedTx.finalTransactionData.size;
     final fee = params.calculateFee(size);
     return ADATransactionFee(
         type: TxFeeTypes.normal, fee: IntegerBalance.token(fee, network.token));

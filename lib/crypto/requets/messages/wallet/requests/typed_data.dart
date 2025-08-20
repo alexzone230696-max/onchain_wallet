@@ -27,14 +27,14 @@ final class WalletRequestEthereumTypedDataSign
         hex: hex,
         tags: WalletRequestMethod.ethereumTypedDataSign.tag);
     return WalletRequestEthereumTypedDataSign(
-        message: EIP712Base.fromJson(StringUtils.toJson(values.elementAt(0))),
-        index: Bip32AddressIndex.deserialize(obj: values.getCborTag(1)));
+        message: EIP712Base.fromJson(StringUtils.toJson(values.elementAs(0))),
+        index: Bip32AddressIndex.deserialize(obj: values.elementAsCborTag(1)));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [StringUtils.fromJson(message.toJson()), index.toCbor()]),
         method.tag);
   }

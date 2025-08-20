@@ -150,8 +150,8 @@ final class HDWallets with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
-          CborListValue.fixedLength(
+        CborSerializable.fromDynamic([
+          CborSerializable.fromDynamic(
               _wallets.values.map((e) => e._toCbor()).toList()),
           _currentWallet ?? const CborNullValue()
         ]),
@@ -283,7 +283,7 @@ final class MainWallet {
     final CborListValue values =
         CborSerializable.decodeCborTags(bytes, obj, CborTagsConst.wallet);
     final int setting = values.elementAs(5);
-    final int network = values.elementAt(4);
+    final int network = values.elementAs(4);
     WalletLockTime lockTime = WalletLockTime.fromValue(setting);
     return MainWallet._(
         key: values.elementAs(0),
@@ -303,7 +303,7 @@ final class MainWallet {
 
   CborTagValue _toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           key,
           name,
           data,
@@ -312,7 +312,8 @@ final class MainWallet {
           locktime.value,
           CborEpochIntValue(created),
           protectWallet,
-          CborListValue.fixedLength(subWallets.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              subWallets.map((e) => e.toCbor()).toList()),
           id
         ]),
         CborTagsConst.wallet);
@@ -379,17 +380,17 @@ final class SubWallet with CborSerializable {
     final CborListValue values = CborSerializable.cborTagValue(
         cborBytes: bytes, object: obj, tags: CborTagsConst.subWallet);
     return SubWallet(
-        key: values.elementAt(0),
-        name: values.elementAt(1),
+        key: values.elementAs(0),
+        name: values.elementAs(1),
         type: SubWalletType.fromValue(values.elementAs<int>(2)),
-        created: values.elementAt<DateTime>(3),
+        created: values.elementAs<DateTime>(3),
         data: values.elementAs(4));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [id, name, walletType.value, CborEpochIntValue(created), data]),
         CborTagsConst.subWallet);
   }

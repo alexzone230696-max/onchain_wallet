@@ -20,7 +20,7 @@ class ETHERC20Token extends SolidityToken {
   factory ETHERC20Token.deserialize({List<int>? bytes, CborObject? obj}) {
     final CborListValue cbor = CborSerializable.cborTagValue(
         cborBytes: bytes, object: obj, tags: TokenCoreType.erc20.tag);
-    final Token token = Token.deserialize(obj: cbor.getCborTag(0));
+    final Token token = Token.deserialize(obj: cbor.elementAsCborTag(0));
     final ETHAddress contractAddress = ETHAddress(cbor.elementAs(1));
     final IntegerBalance balance =
         IntegerBalance.token(cbor.elementAs(2), token, immutable: true);
@@ -50,17 +50,19 @@ class ETHERC20Token extends SolidityToken {
   @override
   final ETHAddress contractAddress;
   @override
-  void _updateBalance([BigInt? updateBalance]) {
+  bool _updateBalance([BigInt? updateBalance]) {
     if (streamBalance.value._internalUpdateBalance(updateBalance)) {
       _updated = DateTime.now().toLocal();
       streamBalance.notify();
+      return true;
     }
+    return false;
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           token.toCbor(),
           contractAddress.address,
           streamBalance.value.balance,

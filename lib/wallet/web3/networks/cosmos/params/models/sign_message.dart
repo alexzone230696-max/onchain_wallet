@@ -38,7 +38,7 @@ class Web3CosmosSignMessageResponse with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [CborBytesValue(messageBytes), CborBytesValue(signature)]),
         CborTagsConst.defaultTag);
   }
@@ -83,20 +83,25 @@ class Web3CosmosSignMessage
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [method.tag, accessAccount.toCbor(), challeng, content]),
         type.tag);
   }
 
   final Web3CosmosChainAccount accessAccount;
   @override
-  Web3CosmosRequest<Web3CosmosSignMessageResponse, Web3CosmosSignMessage>
-      toRequest(
-          {required Web3RequestInformation request,
-          required Web3RequestAuthentication authenticated,
-          required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+  Future<
+      Web3CosmosRequest<Web3CosmosSignMessageResponse,
+          Web3CosmosSignMessage>> toRequest(
+      {required Web3RequestInformation request,
+      required Web3RequestAuthentication authenticated,
+      required WEB3REQUESTNETWORKCONTROLLER<ICosmosAddress, CosmosChain,
+              Web3CosmosChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3CosmosRequest<Web3CosmosSignMessageResponse,
         Web3CosmosSignMessage>(
       params: this,

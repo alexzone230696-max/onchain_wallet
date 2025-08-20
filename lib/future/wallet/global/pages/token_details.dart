@@ -30,7 +30,7 @@ class TokenDetailsModalView<TOKEN extends TokenCore,
   @override
   Widget build(BuildContext context) {
     return ChainStreamBuilder(
-        allowNotify: [ChainNotify.token],
+        allowNotify: [DefaultChainNotify.token],
         builder: (context, chain, lastNotify) {
           final currentToken = address.tokens.whereType<TOKEN>().firstWhere(
               (e) => e.identifier == token.identifier,

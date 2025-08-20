@@ -71,7 +71,7 @@ class SelectProviderView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChainStreamBuilder(
-        allowNotify: [ChainNotify.client],
+        allowNotify: [DefaultChainNotify.client],
         builder: (context, account, _) => switch (account.network.type) {
               NetworkType.aptos => _SelectAptosProviderView(account.cast()),
               _ => _SelectProviderView(chain: account)

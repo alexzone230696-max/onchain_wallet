@@ -13,96 +13,80 @@ enum _WalletAddressStatus {
   ready;
 
   bool get isInit => this == init;
+  bool get isReady => this == ready;
 }
 
-abstract class ChainConfig<STORAGE extends ChainStorageKey>
+abstract class StorageId {
+  abstract final int storageId;
+}
+
+abstract class ChainStorageId extends StorageId {}
+
+abstract class NetworkConfig<STORAGE extends StorageId>
     with CborSerializable, Equatable {
   double get appbarHeight => 0;
   bool get hasAction => false;
-  List<STORAGE> get storageKeys;
-  STORAGE? get tokenStorageKey;
-  STORAGE? get nftStorageKey;
-  STORAGE get transactionStorageKey;
-  STORAGE get contactsStorageKey;
-  List<STORAGE> get addressStorage;
+  final bool supportToken;
+  final bool supportNft;
+  final bool supportWeb3;
 
-  const ChainConfig();
+  List<StorageId> get storageKeys;
+  const NetworkConfig(
+      {required this.supportToken,
+      required this.supportNft,
+      required this.supportWeb3});
 
   @override
   List get variabels => [storageKeys, hasAction];
 }
 
-abstract class ChainStorageKey {
-  abstract final int storageId;
-  bool get isSharedStorage;
-}
-
-/// maximum value 9999
-enum AccountChainStorageKey implements ChainStorageKey {
-  account(1000);
-
-  /// account
-
-  @override
-  final int storageId;
-  const AccountChainStorageKey(this.storageId);
-
-  @override
-  bool get isSharedStorage => false;
-}
-
 /// maximum value 999
-enum DefaultChainStorageKey implements ChainStorageKey {
-  contacts(0),
-  transaction(1),
-  token(2),
-  nft(3);
-
-  /// account
+class DefaultNetworkStorageId implements StorageId {
+  static const DefaultNetworkStorageId contacts = DefaultNetworkStorageId(0);
+  static const DefaultNetworkStorageId transaction = DefaultNetworkStorageId(1);
+  static const DefaultNetworkStorageId token = DefaultNetworkStorageId(2);
+  static const DefaultNetworkStorageId nft = DefaultNetworkStorageId(3);
+  static const DefaultNetworkStorageId web3 = DefaultNetworkStorageId(4);
+  static const DefaultNetworkStorageId account = DefaultNetworkStorageId(1000);
+  static const List<DefaultNetworkStorageId> values = [
+    contacts,
+    transaction,
+    token,
+    nft,
+    web3
+  ];
 
   @override
   final int storageId;
-  const DefaultChainStorageKey(this.storageId);
-
-  @override
-  bool get isSharedStorage => false;
+  const DefaultNetworkStorageId(this.storageId);
 }
 
-class DefaultChainConfig extends ChainConfig<DefaultChainStorageKey> {
-  DefaultChainConfig();
-  factory DefaultChainConfig.deserialize(
-      {List<int>? bytess, CborObject? object, String? hex}) {
-    return DefaultChainConfig();
-  }
-
+class DefaultChainStorageId implements ChainStorageId {
+  static const DefaultChainStorageId web3 = DefaultChainStorageId(2);
   @override
-  DefaultChainStorageKey? get nftStorageKey => DefaultChainStorageKey.nft;
+  final int storageId;
+  const DefaultChainStorageId(this.storageId);
 
-  @override
-  DefaultChainStorageKey? get tokenStorageKey => DefaultChainStorageKey.token;
+  static const List<DefaultChainStorageId> values = [web3];
+}
 
-  @override
-  DefaultChainStorageKey get transactionStorageKey =>
-      DefaultChainStorageKey.transaction;
-  @override
-  DefaultChainStorageKey get contactsStorageKey =>
-      DefaultChainStorageKey.contacts;
-
+class DefaultNetworkConfig<T extends DefaultNetworkStorageId>
+    extends NetworkConfig<T> {
+  const DefaultNetworkConfig(
+      {required super.supportToken,
+      required super.supportNft,
+      required super.supportWeb3});
+  static const DefaultNetworkConfig defaultConfig = DefaultNetworkConfig(
+      supportNft: false, supportToken: true, supportWeb3: true);
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([]), CborTagsConst.defaultChainConfig);
+        CborSerializable.fromDynamic([]), CborTagsConst.defaultChainConfig);
   }
 
   @override
-  List<DefaultChainStorageKey> get storageKeys => DefaultChainStorageKey.values;
-
-  @override
-  List<DefaultChainStorageKey> get addressStorage => [
-        DefaultChainStorageKey.transaction,
-        DefaultChainStorageKey.token,
-        DefaultChainStorageKey.nft
-      ];
+  List<DefaultNetworkStorageId> get storageKeys =>
+      DefaultNetworkStorageId.values;
 }
 
 abstract final class BaseChain<
@@ -110,12 +94,11 @@ abstract final class BaseChain<
     NETWORKPARAMS extends NetworkCoinParams,
     NETWORKADDRESS,
     CHAINTOKEN extends TokenCore,
-    NFT extends NFTCore,
+    CHAINNFT extends NFTCore,
     ADDRESS extends ChainAccount,
     NETWORK extends WalletNetwork,
     CLIENT extends NetworkClient,
-    STORAGE extends ChainStorageKey,
-    CONFIG extends ChainConfig,
+    CONFIG extends DefaultNetworkConfig,
     TRANSACTION extends ChainTransaction,
     CONTACT extends ContactCore,
     ADDRESSPARAM extends NewAccountParams> with CborSerializable {
@@ -137,7 +120,7 @@ abstract final class BaseChain<
   CONFIG get config => _config;
   abstract final SynchronizedLock _lock;
 
-  abstract final ChainStorageManager _storage;
+  abstract final NetworkStorageManager _storage;
 
   abstract NodeClientStatus _clientStatus;
   NetworkServiceProtocol? get service => _client?.service;
@@ -157,7 +140,11 @@ abstract final class BaseChain<
   }
 }
 
-enum ChainNotify {
+abstract class ChainNotify {
+  abstract final int value;
+}
+
+enum DefaultChainNotify implements ChainNotify {
   address(0),
   account(1),
   client(2),
@@ -167,15 +154,9 @@ enum ChainNotify {
   token(6),
   nft(7);
 
+  @override
   final int value;
-  const ChainNotify(this.value);
-  static ChainNotify fromValue(int? value) {
-    return values.firstWhere(
-      (e) => e.value == value,
-      orElse: () => throw WalletExceptionConst.invalidData(
-          messsage: 'Invalid chain notify tag'),
-    );
-  }
+  const DefaultChainNotify(this.value);
 }
 
 enum ChainNotifyStatus { progress, complete }

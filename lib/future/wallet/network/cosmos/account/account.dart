@@ -22,7 +22,8 @@ class CosmosAccountPageView extends StatelessWidget {
                 account: chainAccount,
                 address: chainAccount.address);
           }),
-      AccountTransactionActivityView(chainAccount)
+      AccountTransactionActivityView<ICosmosAddress, CosmosWalletTransaction>(
+          account: chainAccount, address: chainAccount.address)
     ]);
   }
 }

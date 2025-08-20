@@ -1,38 +1,29 @@
 part of 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 
-/// for chain storage management networkid and [NetworkType.id] allowed to [100000 - 1]
 class ChainStorageManager with BaseRepository {
-  static const int maxAddressItemLimit = 300;
-
-  final ChainConfig config;
-
-  /// storage id
-  final int networkId;
+  final List<DefaultChainStorageId> chainStorageIds;
 
   /// table name
-  final String id;
-
-  /// shared storage id [NetworkType.id]
+  String? _id;
   final NetworkType networkType;
-  ChainStorageManager._({
-    required this.networkId,
-    required this.id,
-    required this.config,
+  ChainStorageManager({
+    required String id,
     required this.networkType,
-  });
-  factory ChainStorageManager(
-      {required WalletNetwork network,
-      required String id,
-      required ChainConfig config}) {
-    return ChainStorageManager._(
-        networkId: network.value,
-        id: id,
-        config: config,
-        networkType: network.type);
+  })  : _id = id,
+        chainStorageIds = switch (networkType) {
+          NetworkType.monero => MoneroChainStorageId.values,
+          _ => DefaultChainStorageId.values,
+        };
+  @override
+  String get tableId {
+    final id = _id;
+    if (id == null) throw WalletExceptionConst.storageIsNotAvailable;
+    return id;
   }
+
   Future<List<ITableDataStructA>> _queriesStorage(
       {required int storage,
-      ChainStorageKey? storageKey,
+      StorageId? storageKey,
       String? key,
       String? keyA,
       int? offset,
@@ -53,25 +44,7 @@ class ChainStorageManager with BaseRepository {
   }
 
   Future<List<List<int>>> queriesChainStorage(
-      {required ChainStorageKey storage,
-      ChainAccount? address,
-      String? keyA,
-      int? offset,
-      int? limit,
-      IDatabaseQueryOrdering ordering = IDatabaseQueryOrdering.desc}) async {
-    final data = await _queriesStorage(
-        storage: networkId,
-        key: address?.identifier,
-        storageKey: storage,
-        keyA: keyA,
-        offset: offset,
-        limit: limit,
-        ordering: ordering);
-    return data.map((e) => e.data).toList();
-  }
-
-  Future<List<List<int>>> queriesChainSharedStorage(
-      {required ChainStorageKey storage,
+      {required ChainStorageId storage,
       String? key,
       String? keyA,
       int? offset,
@@ -89,56 +62,20 @@ class ChainStorageManager with BaseRepository {
   }
 
   Future<List<int>?> queryChainStorage({
-    required ChainStorageKey storage,
-    ChainAccount? address,
+    required StorageId storage,
+    String? key,
     String? keyA,
   }) async {
-    return await queryStorageData(
-        storage: networkId,
+    return queryStorageData(
+        storage: networkType.id,
         storageId: storage.storageId,
-        key: address?.identifier,
+        key: key,
         keyA: keyA);
   }
 
   Future<bool> insertChainStorage(
       {required CborSerializable value,
-      required ChainStorageKey storage,
-      ChainAccount? address,
-      String? keyA}) async {
-    final data = await insertStorage(
-        storage: networkId,
-        storageId: storage.storageId,
-        key: address?.identifier,
-        keyA: keyA,
-        value: value);
-    return data;
-  }
-
-  Future<bool> removeChainStorage(
-      {ChainStorageKey? storage, ChainAccount? address, String? keyA}) async {
-    return await removeStorage(
-        storage: networkId,
-        storageId: storage?.storageId,
-        key: address?.identifier,
-        keyA: keyA);
-  }
-
-  Future<List<int>?> queryChainSharedStorage({
-    required ChainStorageKey storage,
-    String? key,
-    String? keyA,
-  }) async {
-    return queryStorageData(
-      storage: networkType.id,
-      storageId: storage.storageId,
-      key: key,
-      keyA: keyA,
-    );
-  }
-
-  Future<bool> insertChainSharedStorage(
-      {required CborSerializable value,
-      required ChainStorageKey storage,
+      required StorageId storage,
       String? key,
       String? keyA}) async {
     return insertStorage(
@@ -149,19 +86,168 @@ class ChainStorageManager with BaseRepository {
         value: value);
   }
 
-  Future<List<WalletBackupChainRepository>> readAllRepositories() async {
-    final shared = await _queriesStorage(
-      storage: networkType.id,
-    );
-    final keys = await _queriesStorage(storage: networkId);
+  Future<bool> removeChainStorage(
+      {StorageId? storage, String? key, String? keyA}) async {
+    return await removeStorage(
+        storage: networkType.id,
+        storageId: storage?.storageId,
+        key: key,
+        keyA: keyA);
+  }
+
+  void dispose() {
+    _id = null;
+  }
+
+  Future<List<WalletBackupChainRepository>> readAllChainRepositories(
+      {List<String> web3Identifier = const []}) async {
+    final shared = await _queriesStorage(storage: networkType.id);
     List<WalletBackupChainRepository> chainRepositories = [];
+    for (final i in shared) {
+      if (i.storageId == DefaultChainStorageId.web3.storageId &&
+          !web3Identifier.contains(i.key)) {
+        continue;
+      }
+      final storage =
+          chainStorageIds.firstWhereOrNull((e) => e.storageId == i.storageId);
+      assert(storage != null, "unknow storage key ${i.storageId}");
+      if (storage == null) continue;
+      final repository = WalletBackupChainRepository(
+          storageID: storage.storageId,
+          value: i.data,
+          identifier: i.key,
+          identifier2: i.keyA,
+          createdAt: i.createdAt,
+          chainID: networkType.id);
+      chainRepositories.add(repository);
+    }
+
+    return chainRepositories;
+  }
+
+  Future<void> restoreChainRepositories(
+      List<WalletBackupChainRepository> repositories) async {
+    List<ITableInsertOrUpdateStructA> params = [];
+    for (final i in repositories) {
+      if (i.chainID != networkType.id) {
+        throw WalletExceptionConst.invalidData(
+            messsage: "invalid repository data.");
+      }
+      final storageKey =
+          chainStorageIds.firstWhereOrNull((e) => e.storageId == i.storageID);
+      // assert(storageKey != null, "unknown storage key");
+      if (storageKey == null) continue;
+      final createdAt = i.createdAt;
+      final param = ITableInsertOrUpdateStructA(
+          data: i.value,
+          storage: networkType.id,
+          storageId: i.storageID,
+          key: i.identifier,
+          keyA: i.identifier2,
+          createdAt: createdAt == null
+              ? null
+              : DateTimeUtils.fromSecondsSinceEpoch(createdAt),
+          tableName: tableId);
+      params.add(param);
+    }
+
+    await insertAllStorage(params);
+  }
+}
+
+/// for chain storage management networkid and [NetworkType.id] allowed to [100000 - 1]
+class NetworkStorageManager extends ChainStorageManager {
+  static const int maxAddressItemLimit = 300;
+
+  final NetworkConfig config;
+
+  /// storage id
+  final int networkId;
+
+  /// shared storage id [NetworkType.id]
+  // final NetworkType networkType;
+  NetworkStorageManager._({
+    required this.networkId,
+    required super.id,
+    required this.config,
+    required super.networkType,
+  });
+  factory NetworkStorageManager(
+      {required WalletNetwork network,
+      required String id,
+      required NetworkConfig config}) {
+    return NetworkStorageManager._(
+        networkId: network.value,
+        id: id,
+        config: config,
+        networkType: network.type);
+  }
+
+  Future<List<List<int>>> queriesNetworkStorage(
+      {required StorageId storage,
+      ChainAccount? address,
+      String? keyA,
+      int? offset,
+      int? limit,
+      IDatabaseQueryOrdering ordering = IDatabaseQueryOrdering.desc}) async {
+    final data = await _queriesStorage(
+        storage: networkId,
+        key: address?.identifier,
+        storageKey: storage,
+        keyA: keyA,
+        offset: offset,
+        limit: limit,
+        ordering: ordering);
+    return data.map((e) => e.data).toList();
+  }
+
+  Future<List<int>?> queryNetworkStorage({
+    required StorageId storage,
+    ChainAccount? address,
+    String? keyA,
+  }) async {
+    return await queryStorageData(
+        storage: networkId,
+        storageId: storage.storageId,
+        key: address?.identifier,
+        keyA: keyA);
+  }
+
+  Future<bool> insertNetworkStorage(
+      {required CborSerializable value,
+      required StorageId storage,
+      ChainAccount? address,
+      String? keyA,
+      DateTime? createdAt}) async {
+    final data = await insertStorage(
+        storage: networkId,
+        storageId: storage.storageId,
+        key: address?.identifier,
+        keyA: keyA,
+        value: value,
+        createdAt: createdAt);
+    return data;
+  }
+
+  Future<bool> removeNetworkStorage(
+      {StorageId? storage, ChainAccount? address, String? keyA}) async {
+    return await removeStorage(
+        storage: networkId,
+        storageId: storage?.storageId,
+        key: address?.identifier,
+        keyA: keyA);
+  }
+
+  Future<List<WalletBackupNetworkRepository>> readAllRepositories() async {
+    final keys = await _queriesStorage(storage: networkId);
+    List<WalletBackupNetworkRepository> chainRepositories = [];
     for (final i in keys) {
       final storage = config.storageKeys
           .firstWhereOrNull((e) => e.storageId == i.storageId);
       if (storage == null) {
         continue;
       }
-      final repository = WalletBackupChainRepository(
+      final repository = WalletBackupNetworkRepository(
           identifier: i.key,
           storageID: storage.storageId,
           value: i.data,
@@ -170,27 +256,11 @@ class ChainStorageManager with BaseRepository {
           createdAt: i.createdAt);
       chainRepositories.add(repository);
     }
-    List<WalletBackupChainRepository> sharedRepositories = [];
-    for (final i in shared) {
-      final storage = config.storageKeys
-          .firstWhereOrNull((e) => e.storageId == i.storageId);
-      assert(storage != null, "unknow storage key ");
-      assert(storage?.isSharedStorage == true, "unknow storage key ");
-      if (storage == null || !storage.isSharedStorage) continue;
-      final repository = WalletBackupChainRepository(
-          storageID: storage.storageId,
-          value: i.data,
-          networkID: networkId,
-          identifier: i.key,
-          identifier2: i.keyA,
-          createdAt: i.createdAt);
-      sharedRepositories.add(repository);
-    }
-    return [...chainRepositories, ...sharedRepositories];
+    return chainRepositories;
   }
 
-  Future<void> restoreChainRepositories(
-      List<WalletBackupChainRepository> repositories) async {
+  Future<void> restoreNetworkRepositories(
+      List<WalletBackupNetworkRepository> repositories) async {
     List<ITableInsertOrUpdateStructA> params = [];
     for (final i in repositories) {
       if (i.networkID != networkId) {
@@ -199,13 +269,13 @@ class ChainStorageManager with BaseRepository {
       }
       final storageKey = config.storageKeys
           .firstWhereOrNull((e) => e.storageId == i.storageID);
-      assert(storageKey != null, "unknown storage key");
+      // assert(storageKey != null, "unknown storage key");
       if (storageKey == null) continue;
       final createdAt = i.createdAt;
       final param = ITableInsertOrUpdateStructA(
           data: i.value,
-          storage: storageKey.isSharedStorage ? networkType.id : networkId,
-          storageId: storageKey.storageId,
+          storage: networkId,
+          storageId: i.storageID,
           key: i.identifier,
           keyA: i.identifier2,
           createdAt: createdAt == null
@@ -219,10 +289,11 @@ class ChainStorageManager with BaseRepository {
   }
 
   Future<void> saveAccount(Chain chain) async {
-    await insertChainStorage(
-        value: chain, storage: AccountChainStorageKey.account);
+    await insertNetworkStorage(
+        value: chain, storage: DefaultNetworkStorageId.account);
   }
 
-  @override
-  String get tableId => id;
+  Future<void> removeAccount(Chain chain) async {
+    await removeNetworkStorage();
+  }
 }

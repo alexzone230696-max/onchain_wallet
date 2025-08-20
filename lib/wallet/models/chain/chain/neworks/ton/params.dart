@@ -29,10 +29,10 @@ final class TonNewAddressParams extends NewAccountParams<ITonAddress> {
         tags: NewAccountParamsType.tonNewAddressParams.tag);
     return TonNewAddressParams(
       deriveIndex:
-          AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
+          AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(0)),
       context: TonAccountContext.deserialize(
           object: values.elementAs<CborTagValue>(1)),
-      coin: CustomCoins.getSerializationCoin(values.elementAt(2)),
+      coin: CustomCoins.getSerializationCoin(values.elementAs(2)),
     );
   }
 
@@ -66,7 +66,7 @@ final class TonNewAddressParams extends NewAccountParams<ITonAddress> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [deriveIndex.toCbor(), context.toCbor(), coin.toCbor()]),
         type.tag);
   }

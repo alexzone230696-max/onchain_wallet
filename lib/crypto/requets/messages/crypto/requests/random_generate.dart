@@ -33,20 +33,19 @@ class CryptoRequestRandomGenerator<T>
         object: object,
         hex: hex,
         tags: CryptoRequestMethod.randomGenerator.tag);
-    final existsKeys = values
-        .elementAt<List<dynamic>>(1)
-        .map((e) => (e as CborBytesValue).value);
+    final existsKeys =
+        values.elementAsListOf<CborBytesValue>(1).map((e) => e.value);
     return CryptoRequestRandomGenerator(
-        length: values.elementAt(0),
+        length: values.elementAs(0),
         existsKeys: List<List<int>>.from(existsKeys));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           length,
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               existsKeys.map((e) => CborBytesValue(e)).toList())
         ]),
         method.tag);

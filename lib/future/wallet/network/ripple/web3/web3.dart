@@ -1,1 +1,1 @@
-export 'permission/permission.dart';
+export 'permission/web3_permission.dart';

@@ -24,17 +24,17 @@ final class ImportedKeyStorage with CborSerializable, Equatable {
           bytes, obj, CryptoKeyConst.walletCustomKey);
 
       final CryptoCoins coin = CustomCoins.getCoin(
-        name: cbor.elementAt(4),
-        proposal: cbor.elementAt(3),
+        name: cbor.elementAs(4),
+        proposal: cbor.elementAs(3),
       );
       return ImportedKeyStorage._(
-          checksum: cbor.elementAt(0),
-          extendedPrivateKey: cbor.elementAt(1),
-          publicKey: cbor.elementAt(2),
+          checksum: cbor.elementAs(0),
+          extendedPrivateKey: cbor.elementAs(1),
+          publicKey: cbor.elementAs(2),
           coin: coin,
-          created: cbor.elementAt(5),
-          name: cbor.elementAt(6),
-          keyType: CustomKeyType.fromValue(cbor.elementAt(7)));
+          created: cbor.elementAs(5),
+          name: cbor.elementAs(6),
+          keyType: CustomKeyType.fromValue(cbor.elementAs(7)));
     } catch (e) {
       throw WalletExceptionConst.invalidMnemonic;
     }
@@ -43,7 +43,7 @@ final class ImportedKeyStorage with CborSerializable, Equatable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           checksum,
           extendedPrivateKey,
           publicKey,

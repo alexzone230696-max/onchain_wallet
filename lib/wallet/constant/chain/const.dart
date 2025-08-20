@@ -373,7 +373,7 @@ class _DefaultAppCoins {
         assetLogo: APPConst.ada,
       ),
       providers: [],
-      magic: 1);
+      networkType: ADANetwork.testnetPreprod);
   static final CardanoNetworkParams cardano = CardanoNetworkParams(
       chainType: ChainType.mainnet,
       token: Token(
@@ -384,7 +384,7 @@ class _DefaultAppCoins {
         assetLogo: APPConst.ada,
       ),
       providers: [],
-      magic: 764824073);
+      networkType: ADANetwork.mainnet);
   static final CosmosNetworkParams cosmosTestnet = CosmosNetworkParams(
       networkType: CosmosNetworkTypes.main,
       chainType: ChainType.testnet,

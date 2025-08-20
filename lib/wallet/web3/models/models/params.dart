@@ -19,17 +19,17 @@ class ExtentionRequestEvent with CborSerializable {
     final CborListValue values = CborSerializable.cborTagValue(
         cborBytes: bytes, object: object, hex: hex);
     return ExtentionRequestEvent(
-        id: values.elementAt(0),
-        data: values.elementAt(1),
-        requestId: values.elementAt(2),
-        url: values.elementAt(3),
-        tabId: values.elementAt(4));
+        id: values.elementAs(0),
+        data: values.elementAs(1),
+        requestId: values.elementAs(2),
+        url: values.elementAs(3),
+        tabId: values.elementAs(4));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [id, CborBytesValue(data), requestId, url, tabId]),
         [1]);
   }

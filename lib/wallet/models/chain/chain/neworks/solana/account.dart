@@ -9,8 +9,7 @@ final class SolanaChain extends Chain<
     ISolanaAddress,
     WalletSolanaNetwork,
     SolanaClient,
-    DefaultChainStorageKey,
-    DefaultChainConfig,
+    DefaultNetworkConfig,
     SolanaWalletTransaction,
     SolanaContact,
     SolanaNewAddressParams> {
@@ -18,22 +17,22 @@ final class SolanaChain extends Chain<
       {required super.network,
       required super.addressIndex,
       required super.id,
-      required super.config,
+      DefaultNetworkConfig? config,
       required super.client,
       required super.addresses})
-      : super._();
+      : super._(config: config ?? DefaultNetworkConfig.defaultConfig);
   @override
   SolanaChain copyWith(
       {WalletSolanaNetwork? network,
-      List<ISolanaAddress>? addresses,
+      List<ChainAccount>? addresses,
       int? addressIndex,
       SolanaClient? client,
       String? id,
-      DefaultChainConfig? config}) {
+      DefaultNetworkConfig? config}) {
     return SolanaChain._(
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
-        addresses: addresses ?? _addresses,
+        addresses: addresses?.cast<ISolanaAddress>() ?? _addresses,
         client: client ?? _client,
         id: id ?? this.id,
         config: config ?? this.config);
@@ -48,8 +47,7 @@ final class SolanaChain extends Chain<
         id: id,
         addressIndex: 0,
         client: client,
-        addresses: [],
-        config: DefaultChainConfig());
+        addresses: []);
   }
 
   factory SolanaChain.deserialize(
@@ -60,7 +58,7 @@ final class SolanaChain extends Chain<
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
     }
-    final String id = cbor.elementAt<String>(2);
+    final String id = cbor.elementAs<String>(2);
     final List<ISolanaAddress> accounts = cbor
         .elementAsListOf<CborTagValue>(3)
         .map((e) => ISolanaAddress.deserialize(network, obj: e))
@@ -71,19 +69,15 @@ final class SolanaChain extends Chain<
         addresses: accounts,
         addressIndex: addressIndex,
         client: client,
-        id: id,
-        config: DefaultChainConfig());
+        id: id);
   }
 
   @override
-  Future<void> updateAddressBalance(ISolanaAddress address,
-      {bool tokens = true, bool saveAccount = true}) async {
-    _isAccountAddress(address);
-    await initAddress(address);
+  Future<void> _updateAddressBalanceInternal(ISolanaAddress address,
+      {bool tokens = true}) async {
     await onClient(onConnect: (client) async {
       final balance = await client.getAccountBalance(address.networkAddress);
-      _updateAddressBalanceInternal(
-          address: address, balance: balance, saveAccount: saveAccount);
+      address.address._updateAddressBalance(balance);
       if (tokens) {
         final tokens = address.tokens;
         final balances = await Future.wait(tokens.map((e) async {
@@ -97,8 +91,10 @@ final class SolanaChain extends Chain<
           final token = tokens[i];
           final balance = balances[i];
           if (balance == null) continue;
-          token._updateBalance(balance);
-          _saveToken(address: address, token: token);
+          _updateTokenBalanceInternal(
+              address: address,
+              token: token,
+              save: token._updateBalance(balance));
         }
       }
     });
@@ -121,8 +117,10 @@ final class SolanaChain extends Chain<
         final token = tokens[i];
         final balance = balances[i];
         if (balance == null) continue;
-        token._updateBalance(balance);
-        _saveToken(address: address, token: token);
+        _updateTokenBalanceInternal(
+            address: address,
+            token: token,
+            save: token._updateBalance(balance));
       }
     });
   }

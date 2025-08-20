@@ -23,14 +23,14 @@ final class MoneroMnemonicToPrivateKeyMessage
         object: object,
         tags: CryptoRequestMethod.moneroMnemonicToPrivateKey.tag);
     return MoneroMnemonicToPrivateKeyMessage(
-        mnemonic: values.elementAt(0),
-        coin: CustomCoins.getSerializationCoin(values.elementAt(1)));
+        mnemonic: values.elementAs(0),
+        coin: CustomCoins.getSerializationCoin(values.elementAs(1)));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([mnemonic, coin.toCbor()]), method.tag);
+        CborSerializable.fromDynamic([mnemonic, coin.toCbor()]), method.tag);
   }
 
   @override
@@ -76,7 +76,8 @@ class MoneroMenmonicGenerateMessage
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([wordsNum.value, language.name]), method.tag);
+        CborSerializable.fromDynamic([wordsNum.value, language.name]),
+        method.tag);
   }
 
   @override

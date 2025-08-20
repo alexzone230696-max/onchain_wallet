@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/constant/global/app.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
-import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/password_checker.dart';
+import 'package:on_chain_wallet/future/wallet/web3/controller/web3_request_controller.dart';
+import 'package:on_chain_wallet/future/wallet/web3/pages/permission_view.dart';
+import 'package:on_chain_wallet/future/wallet/web3/types/types.dart';
+import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/models/access/wallet_access.dart';
 import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 import 'package:on_chain_wallet/wallet/web3/core/permission/models/authenticated.dart';
@@ -61,10 +65,10 @@ class _WalletConnectActiveSessionsState extends State<_ManageWeb3DapssView>
     if (accept != true) return;
     app.toggleAction();
     updateState();
-    app.object.authentication.resetApp();
-    if (app.object.authentication.active) {
-      app.object.authentication.toggleActive();
-    }
+    // // app.object.authentication.resetApp();
+    // if (app.object.authentication.active) {
+    //   app.object.authentication.toggleActive();
+    // }
     await wallet.wallet.removeWeb3Application(app.object.authentication);
     switch (app.object.authentication.protocol) {
       case Web3APPProtocol.walletConnect:
@@ -80,20 +84,19 @@ class _WalletConnectActiveSessionsState extends State<_ManageWeb3DapssView>
     context.showAlert("application_removed".tr);
   }
 
-  Future<void> updateDappAuthenticated(Web3APPAuthentication authenticated,
-      {List<NetworkType>? web3Networks, bool remove = false}) async {
-    final updateResult = await wallet.wallet
-        .updateWeb3Application(authenticated, web3Networks: web3Networks);
-    switch (authenticated.protocol) {
+  Future<void> updateDappAuthenticated(
+      Web3PermissionUpdateResponse updatedAuth) async {
+    switch (updatedAuth.authentication.protocol) {
       case Web3APPProtocol.walletConnect:
-        if (!remove && authenticated.hasAnyPermission) {
-          await walletConnect.updateAuthenticated(updateResult.result);
+        if (updatedAuth.hasRequiredPermission &&
+            updatedAuth.appInfo.dappData.hasAnyPermission) {
+          await walletConnect.updateAuthenticated(updatedAuth.appInfo);
         } else {
-          await walletConnect.removeSession(updateResult.result.clientInfo);
+          await walletConnect.removeSession(updatedAuth.appInfo.clientInfo);
         }
         break;
       case Web3APPProtocol.injected:
-        await web3Controller?.updateClientAuthenticated(updateResult.result);
+        await web3Controller?.updateClientAuthenticated(updatedAuth.appInfo);
         break;
     }
     context.showAlert("application_updated".tr);
@@ -123,9 +126,8 @@ class _WalletConnectActiveSessionsState extends State<_ManageWeb3DapssView>
       "update_permission".tr,
       fullWidget: (context) => Web3PermissionUpdateView(
           authenticated: request,
-          onPermissionUpdate: (networks) async {
-            await updateDappAuthenticated(request.authentication,
-                remove: !request.haveRequiredPermissions());
+          onPermissionUpdate: (update) async {
+            await updateDappAuthenticated(update);
             return false;
           }),
     );

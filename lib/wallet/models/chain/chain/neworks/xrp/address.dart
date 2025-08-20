@@ -58,18 +58,18 @@ final class IXRPAddress extends ChainAccount<XRPAddress, RippleIssueToken,
     final CryptoCoins coin =
         CustomCoins.getSerializationCoin(values.elementAs(0));
     final keyIndex =
-        AddressDerivationIndex.deserialize(obj: values.getCborTag(1));
-    final List<int> publicKey = values.elementAt(2);
+        AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(1));
+    final List<int> publicKey = values.elementAs(2);
     final AccountBalance address =
-        AccountBalance.deserialize(network, obj: values.getCborTag(3));
+        AccountBalance.deserialize(network, obj: values.elementAsCborTag(3));
     final XRPAddress rippleAddress = XRPAddress(address.toAddress);
     final int? tag = values.elementAs(4);
     final networkId = values.elementAs(5);
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
     }
-    final String? accountName = values.elementAt(6);
-    final String identifier = values.elementAt(7);
+    final String? accountName = values.elementAs(6);
+    final String identifier = values.elementAs(7);
     return IXRPAddress._(
         coin: coin,
         publicKey: publicKey,
@@ -99,7 +99,7 @@ final class IXRPAddress extends ChainAccount<XRPAddress, RippleIssueToken,
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           coin.toCbor(),
           keyIndex.toCbor(),
           publicKey,
@@ -128,14 +128,6 @@ final class IXRPAddress extends ChainAccount<XRPAddress, RippleIssueToken,
   String get baseAddress => networkAddress.address;
 
   @override
-  bool isEqual(ChainAccount other) {
-    if (other is! IXRPAddress) return false;
-    return networkAddress.address == other.networkAddress.address &&
-        networkAddress.tag == other.networkAddress.tag &&
-        multiSigAccount == other.multiSigAccount;
-  }
-
-  @override
   RippleNewAddressParams toAccountParams() {
     return RippleNewAddressParams(deriveIndex: keyIndex, coin: coin, tag: tag);
   }
@@ -162,7 +154,6 @@ final class IXRPMultisigAddress extends IXRPAddress
   }
 
   factory IXRPMultisigAddress._newAccount({
-    // required RippleMultiSigNewAddressParams accountParams,
     required WalletXRPNetwork network,
     required CryptoCoins coin,
     required int? tag,
@@ -190,7 +181,7 @@ final class IXRPMultisigAddress extends IXRPAddress
     final CryptoCoins coin =
         CustomCoins.getSerializationCoin(values.elementAs(0));
     final AccountBalance address =
-        AccountBalance.deserialize(network, obj: values.getCborTag(1));
+        AccountBalance.deserialize(network, obj: values.elementAsCborTag(1));
     final int? tag = values.elementAs(2);
     final int networkId = values.elementAs(3);
     final XRPAddress rippleAddress = XRPAddress(address.toAddress);
@@ -198,7 +189,8 @@ final class IXRPMultisigAddress extends IXRPAddress
       throw WalletExceptionConst.incorrectNetwork;
     }
     final RippleMultiSignatureAddress multiSigAccount =
-        RippleMultiSignatureAddress.deserialize(obj: values.getCborTag(4));
+        RippleMultiSignatureAddress.deserialize(
+            obj: values.elementAsCborTag(4));
     final String? accountName = values.elementAs(5);
     final String identifier = values.elementAs(6);
     return IXRPMultisigAddress._(
@@ -226,13 +218,13 @@ final class IXRPMultisigAddress extends IXRPAddress
 
   @override
   List<Bip32AddressIndex> signerKeyIndexes() {
-    return keyDetails.map((e) => e.$2).toList();
+    return multiSignatureAccount.signers.map((e) => e.keyIndex).toList();
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           coin.toCbor(),
           address.toCbor(),
           tag,
@@ -243,12 +235,6 @@ final class IXRPMultisigAddress extends IXRPAddress
         ]),
         CborTagsConst.rippleMultisigAccount);
   }
-
-  @override
-  List<(String, Bip32AddressIndex)> get keyDetails =>
-      multiSignatureAccount.signers
-          .map((e) => (e.publicKey, e.keyIndex))
-          .toList();
 
   @override
   IAdressType get iAddressType => IAdressType.multisigByAddress;

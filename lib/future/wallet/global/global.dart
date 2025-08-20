@@ -35,3 +35,4 @@ export 'pages/chain_stream.dart';
 export 'pages/manage_contacts.dart';
 export 'pages/duplicate_extension_instance.dart';
 export 'pages/manage_account_token.dart';
+export 'address_derivation/public_key_generations.dart';

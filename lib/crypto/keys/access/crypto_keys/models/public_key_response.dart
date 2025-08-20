@@ -2,23 +2,18 @@ part of 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart
 
 final class PublicKeyData extends CryptoPublicKeyData {
   @override
-  final String? extendedKey;
-  @override
-  final String comprossed;
-  @override
-  final String? uncomprossed;
-  @override
   final String keyName;
-  @override
-  final String? chainCode;
 
   const PublicKeyData.__(
-      {required this.extendedKey,
-      required this.comprossed,
-      required this.uncomprossed,
+      {required super.extendedKey,
+      required super.comprossed,
+      required super.uncomprossed,
       required this.keyName,
-      required this.chainCode})
-      : super._();
+      required super.chainCode,
+      required super.curve})
+      : super._(
+          type: CryptoPublicKeyDataType.public,
+        );
   factory PublicKeyData._fromBip32(
       {required Bip32Base account, required String keyName}) {
     final comperesed = BytesUtils.toHexString(account.publicKey.compressed);
@@ -28,7 +23,8 @@ final class PublicKeyData extends CryptoPublicKeyData {
         comprossed: comperesed,
         uncomprossed: uncompresed == comperesed ? null : uncompresed,
         keyName: keyName,
-        chainCode: account.publicKey.chainCode.toHex());
+        chainCode: account.publicKey.chainCode.toHex(),
+        curve: account.curveType);
   }
   factory PublicKeyData._(
       {required IPublicKey key,
@@ -41,7 +37,8 @@ final class PublicKeyData extends CryptoPublicKeyData {
         comprossed: key.toHex(),
         uncomprossed: uncompresed == comperesed ? null : uncompresed,
         keyName: keyName,
-        chainCode: null);
+        chainCode: null,
+        curve: key.curve);
   }
 
   factory PublicKeyData.deserialize({List<int>? bytes, CborObject? obj}) {
@@ -50,26 +47,25 @@ final class PublicKeyData extends CryptoPublicKeyData {
         object: obj,
         tags: CryptoKeyConst.accessPubliKeyResponse);
     return PublicKeyData.__(
-        extendedKey: cbor.elementAs(0),
-        comprossed: cbor.elementAs(1),
-        uncomprossed: cbor.elementAs(2),
-        keyName: cbor.elementAs(3),
-        chainCode: cbor.elementAs(4));
+        extendedKey: cbor.valueAs(0),
+        comprossed: cbor.valueAs(1),
+        uncomprossed: cbor.valueAs(2),
+        keyName: cbor.valueAs(3),
+        chainCode: cbor.valueAs(4),
+        curve: EllipticCurveTypes.fromName(cbor.valueAs(5)));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           extendedKey,
           comprossed,
           uncomprossed ?? const CborNullValue(),
           keyName,
-          chainCode
+          chainCode,
+          curve.name
         ]),
         type.tag);
   }
-
-  @override
-  CryptoPublicKeyDataType get type => CryptoPublicKeyDataType.public;
 }

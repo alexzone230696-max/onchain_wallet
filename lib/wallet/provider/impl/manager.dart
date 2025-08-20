@@ -44,6 +44,10 @@ mixin WalletsManager on _WalletCore {
 
   void _emitStatus(WalletActionEvent event) {
     _homePageStatus.value = event;
+    appLogger.debug(
+        runtime: runtimeType,
+        functionName: "_emitStatus",
+        msg: "status: ${_homePageStatus.value.walletStatus.name}");
     if (latestEvent.status.inProgress) return;
     if (homePageStatus.isLock) {
       _wallet?.walletConnectHandler.dispose();
@@ -136,13 +140,14 @@ mixin WalletsManager on _WalletCore {
     }, lockId: lockId);
   }
 
-  Future<void> _initPage({MainWallet? slectedWallet}) async {
+  Future<void> _initPage(
+      {MainWallet? slectedWallet, WalletRestoreV2? backup}) async {
     final currentController = _wallet;
     if (_wallets.hasWallet) {
       final wallet =
           await _wallets.getInitializeWallet(key: slectedWallet?.key);
       final controller =
-          await WalletController._setup(this as WalletCore, wallet);
+          await WalletController._setup(this as WalletCore, wallet, backup);
       _wallet = controller;
     } else {
       _wallet = null;
@@ -169,16 +174,9 @@ mixin WalletsManager on _WalletCore {
         CryptoRequestGenerateMasterKey.fromStorage(
             storageData: updatedWallet.data, key: pw));
     await _wallets.setupNewWallet(updatedWallet);
-    await _initializeWallet(wallet: updatedWallet, backup: backup);
-    await _initPage(slectedWallet: updatedWallet);
+    await _removeWalletStorage(updatedWallet);
+    await _initPage(slectedWallet: updatedWallet, backup: backup);
     await _writeHdWallet(_wallets);
-  }
-
-  Future<void> _initializeWallet(
-      {required MainWallet wallet, WalletRestoreV2? backup}) async {
-    await _removeWalletStorage(wallet);
-    if (backup == null) return;
-    await _setupWalletBackupAccounts(wallet: wallet, backup: backup);
   }
 
   Future<List<int>> _toWalletPassword(

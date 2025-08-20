@@ -74,10 +74,15 @@ class StreamPageProgressController extends StreamValue<PageProgressStatus> {
   }
 
   void errorText(String text,
-      {bool backToIdle = true, bool showBackButton = false}) {
+      {bool backToIdle = true,
+      bool showBackButton = false,
+      DynamicVoid? onTapBackButton}) {
     _updateStream(StreamWidgetStatus.error,
         progressWidget: StreamPageProgressErrorView(
-            text: text, controller: showBackButton ? this : null),
+          text: text,
+          controller: showBackButton ? this : null,
+          onTapBackButton: onTapBackButton,
+        ),
         backToIdle: backToIdle);
   }
 

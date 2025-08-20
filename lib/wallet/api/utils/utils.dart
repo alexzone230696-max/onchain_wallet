@@ -104,12 +104,12 @@ class APIUtils {
         network: network);
   }
 
-  static CardanoClient buildCardanoProvider({
+  static ADAClient buildCardanoProvider({
     required CardanoAPIProvider provider,
     required WalletCardanoNetwork network,
     APPIsolate isolate = APPIsolate.separate,
   }) {
-    return CardanoClient(
+    return ADAClient(
         provider: BlockFrostProvider(
             CardanoHTTPService(provider: provider, isolate: isolate)),
         network: network);

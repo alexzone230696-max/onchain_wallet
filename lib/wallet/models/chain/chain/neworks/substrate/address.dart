@@ -38,16 +38,16 @@ final class ISubstrateAddress extends ChainAccount<BaseSubstrateAddress,
     final CryptoCoins coin =
         CustomCoins.getSerializationCoin(values.elementAs(0));
     final keyIndex =
-        AddressDerivationIndex.deserialize(obj: values.getCborTag(1));
+        AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(1));
     final List<int> publicKey = values.elementAs(2);
     final AccountBalance address =
-        AccountBalance.deserialize(network, obj: values.getCborTag(3));
+        AccountBalance.deserialize(network, obj: values.elementAsCborTag(3));
     final BaseSubstrateAddress addr = BaseSubstrateAddress(address.toAddress);
     final int networkId = values.elementAs(4);
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
     }
-    final String? accountName = values.elementAt(5);
+    final String? accountName = values.elementAs(5);
     final String identifier = values.elementAs(6);
     return ISubstrateAddress._(
         coin: coin,
@@ -71,7 +71,7 @@ final class ISubstrateAddress extends ChainAccount<BaseSubstrateAddress,
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           coin.toCbor(),
           keyIndex.toCbor(),
           publicKey,
@@ -90,12 +90,6 @@ final class ISubstrateAddress extends ChainAccount<BaseSubstrateAddress,
 
   @override
   String? get type => null;
-
-  @override
-  bool isEqual(ChainAccount other) {
-    if (other is! ISubstrateAddress) return false;
-    return other.networkAddress == networkAddress;
-  }
 
   @override
   SubstrateNewAddressParams toAccountParams() {

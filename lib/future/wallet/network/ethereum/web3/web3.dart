@@ -6,5 +6,5 @@ export 'operations/personal_sign.dart';
 export 'operations/typed_data.dart';
 export 'pages/send_transaction.dart';
 export 'pages/typed_data.dart';
-export 'permission/ethereum_permission_view.dart';
+export 'permission/permission.dart';
 export 'types/types.dart';

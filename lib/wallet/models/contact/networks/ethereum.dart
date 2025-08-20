@@ -37,7 +37,8 @@ class EthereumContact extends ContactCore<ETHAddress> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([address, CborEpochIntValue(created), name]),
+        CborSerializable.fromDynamic(
+            [address, CborEpochIntValue(created), name]),
         CborTagsConst.ethereumContact);
   }
 

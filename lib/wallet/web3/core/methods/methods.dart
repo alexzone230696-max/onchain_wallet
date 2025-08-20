@@ -3,6 +3,8 @@ import 'package:on_chain_wallet/crypto/models/networks.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/aptos/aptos.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/methods/methods.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/bitcoin_cash/methods/methods.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/cardano/cardano.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/cosmos/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ethereum/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/monero/methods/methods.dart';
@@ -14,19 +16,23 @@ import 'package:on_chain_wallet/wallet/web3/networks/sui/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ton/ton.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/tron/methods/methods.dart';
 
+enum Web3RequestMode { silent, user }
+
 abstract class Web3RequestMethods {
   final int id;
   final String name;
   final List<String> methodsName;
   final bool reloadAuthenticated;
-  List<String> get walletConnectMethodNames => [name, ...methodsName];
+  final Web3RequestMode mode;
   bool get isGlobalMethod => false;
+  List<String> get walletConnectMethodNames => [name, ...methodsName];
 
   const Web3RequestMethods(
       {required this.id,
       required this.name,
       required this.methodsName,
-      required this.reloadAuthenticated});
+      required this.reloadAuthenticated,
+      this.mode = Web3RequestMode.user});
   T cast<T extends Web3RequestMethods>() {
     if (this is! T) {
       throw Web3RequestExceptionConst.internalError;
@@ -92,6 +98,7 @@ abstract class Web3NetworkRequestMethods extends Web3RequestMethods {
       NetworkType.solana => Web3SolanaRequestMethods.fromId(tag!.last),
       NetworkType.xrpl => Web3XRPRequestMethods.fromId(tag!.last),
       NetworkType.monero => Web3MoneroRequestMethods.fromId(tag!.last),
+      NetworkType.cardano => Web3ADARequestMethods.fromId(tag!.last),
       NetworkType.ton => Web3TonRequestMethods.fromId(tag!.last),
       NetworkType.substrate => Web3SubstrateRequestMethods.fromId(tag!.last),
       NetworkType.stellar => Web3StellarRequestMethods.fromId(tag!.last),
@@ -100,6 +107,8 @@ abstract class Web3NetworkRequestMethods extends Web3RequestMethods {
       NetworkType.cosmos => Web3CosmosRequestMethods.fromId(tag!.last),
       NetworkType.bitcoinAndForked =>
         Web3BitcoinRequestMethods.fromId(tag!.last),
+      NetworkType.bitcoinCash =>
+        Web3BitcoinCashRequestMethods.fromId(tag!.last),
       _ => throw Web3RequestExceptionConst.invalidNetwork
     };
   }
@@ -111,12 +120,14 @@ abstract class Web3NetworkRequestMethods extends Web3RequestMethods {
       NetworkType.solana => Web3SolanaRequestMethods.values,
       NetworkType.xrpl => Web3XRPRequestMethods.values,
       NetworkType.monero => Web3MoneroRequestMethods.values,
+      NetworkType.cardano => Web3ADARequestMethods.values,
       NetworkType.ton => Web3TonRequestMethods.values,
       NetworkType.stellar => Web3StellarRequestMethods.values,
       NetworkType.aptos => Web3AptosRequestMethods.values,
       NetworkType.sui => Web3SuiRequestMethods.values,
       NetworkType.cosmos => Web3CosmosRequestMethods.values,
       NetworkType.bitcoinAndForked => Web3BitcoinRequestMethods.values,
+      NetworkType.bitcoinCash => Web3BitcoinCashRequestMethods.values,
       NetworkType.substrate => Web3SubstrateRequestMethods.values,
       _ => throw Web3RequestExceptionConst.invalidNetwork
     };

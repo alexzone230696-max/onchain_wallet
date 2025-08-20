@@ -29,6 +29,8 @@ mixin BitcoinWeb3StateHandler<
         RESPONSE,
         REQUEST,
         EVENT> {
+  static final _allowNetworks = BasedUtxoNetwork.values.where((e) =>
+      e != BitcoinCashNetwork.mainnet && e != BitcoinCashNetwork.testnet);
   @override
   BitcoinBaseAddress toAddress(String v,
       {Web3BitcoinChainIdnetifier? network, STATEACCOUNT? state}) {
@@ -38,8 +40,8 @@ mixin BitcoinWeb3StateHandler<
             .baseAddress;
       }
 
-      final networks = state?.chains.map((e) => e.network).toSet() ??
-          BasedUtxoNetwork.values;
+      final networks =
+          state?.chains.map((e) => e.network).toSet() ?? _allowNetworks;
       for (final i in networks) {
         try {
           return BitcoinNetworkAddress.parse(address: v, network: i)

@@ -14,8 +14,7 @@ abstract class Web3StellarRequestParam<RESPONSE> extends Web3RequestParams<
     StellarAddress,
     StellarChain,
     IStellarAddress,
-    Web3StellarChainAccount,
-    Web3StellarChain> {
+    Web3StellarChainAccount> {
   @override
   abstract final Web3StellarRequestMethods method;
 
@@ -28,7 +27,7 @@ abstract class Web3StellarRequestParam<RESPONSE> extends Web3RequestParams<
         object: object,
         hex: hex,
         tags: Web3MessageTypes.walletRequest.tag);
-    final method = Web3NetworkRequestMethods.fromTag(values.elementAt(0));
+    final method = Web3NetworkRequestMethods.fromTag(values.elementAs(0));
     final Web3StellarRequestParam param;
     switch (method) {
       case Web3StellarRequestMethods.signTransaction:
@@ -51,7 +50,7 @@ abstract class Web3StellarRequestParam<RESPONSE> extends Web3RequestParams<
 class Web3StellarRequest<RESPONSE,
         PARAMS extends Web3StellarRequestParam<RESPONSE>>
     extends Web3NetworkRequest<RESPONSE, StellarAddress, StellarChain,
-        Web3StellarChainAccount, IStellarAddress, Web3StellarChain, PARAMS> {
+        Web3StellarChainAccount, IStellarAddress, PARAMS> {
   Web3StellarRequest(
       {required super.params,
       required super.info,

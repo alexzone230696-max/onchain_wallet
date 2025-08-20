@@ -222,27 +222,30 @@ class JSExtentionWallet extends Web3JSWalletHandler {
   Future<void> _sendMessageToWallet(
       {required Web3WalletRequestParams message,
       required String requestId}) async {
-    if (message.method == Web3GlobalRequestMethods.disconnect) {
-      final globalMessage = message.cast<Web3DisconnectApplication>();
-      final event = WalletEvent(
-          clientId: clientId,
-          data: globalMessage.chain.tag,
-          requestId: requestId,
-          type: WalletEventTypes.background,
-          target: WalletEventTarget.external);
-      final r = await sendBackgroudMessage(event);
-      _onWalletResponse(r);
-      return;
+    final encryptedMessage = _encryptMessage(message).toCbor().encode();
+    switch (message.method) {
+      case Web3GlobalRequestMethods.disconnect:
+      case Web3GlobalRequestMethods.connectSilent:
+        final event = WalletEvent(
+            clientId: clientId,
+            data: encryptedMessage,
+            requestId: requestId,
+            type: WalletEventTypes.background,
+            target: WalletEventTarget.external);
+        final r = await sendBackgroudMessage(event);
+        _onWalletResponse(r);
+        break;
+      default:
+        final event = WalletEvent(
+            clientId: clientId,
+            data: encryptedMessage,
+            requestId: requestId,
+            type: WalletEventTypes.message,
+            target: WalletEventTarget.external,
+            additional: tabId);
+        await _sendMessageToExtention(message: event, requestId: requestId);
+        break;
     }
-    final encryptedMessage = _encryptMessage(message);
-    final event = WalletEvent(
-        clientId: clientId,
-        data: encryptedMessage.toCbor().encode(),
-        requestId: requestId,
-        type: WalletEventTypes.message,
-        target: WalletEventTarget.external,
-        additional: tabId);
-    await _sendMessageToExtention(message: event, requestId: requestId);
   }
 
   @override

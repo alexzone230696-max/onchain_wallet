@@ -463,6 +463,7 @@ class RenderMultiSliver extends RenderSliver
     );
     final childPaintOffset =
         _finalPaintOffsetForChild(child, effectiveAxisDirection);
+    // ignore: deprecated_member_use
     transform.translate(childPaintOffset.dx, childPaintOffset.dy);
   }
 

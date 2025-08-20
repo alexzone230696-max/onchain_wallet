@@ -26,7 +26,7 @@ class Web3EncryptedMessage with CborSerializable {
           tags: _Web3EncryptedMessageConst.encryptedMessageTag);
 
       return Web3EncryptedMessage(
-          message: values.elementAt(0), nonce: values.elementAt(1));
+          message: values.elementAs(0), nonce: values.elementAs(1));
     } catch (e) {
       throw Web3RequestExceptionConst.internalError;
     }
@@ -35,7 +35,7 @@ class Web3EncryptedMessage with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [CborBytesValue(message), CborBytesValue(nonce)]),
         _Web3EncryptedMessageConst.encryptedMessageTag);
   }

@@ -8,18 +8,15 @@ import 'package:on_chain_wallet/wallet/web3/core/core.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/cosmos/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/cosmos/params/models/add_new_chain.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/cosmos/params/models/sign_message.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/cosmos/params/models/transaction.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/cosmos/permission/models/account.dart';
-import 'package:on_chain_wallet/wallet/web3/networks/cosmos/permission/models/permission.dart';
-
-import '../models/transaction.dart';
 
 abstract class Web3CosmosRequestParam<RESPONSE> extends Web3RequestParams<
     RESPONSE,
     CosmosBaseAddress,
     CosmosChain,
     ICosmosAddress,
-    Web3CosmosChainAccount,
-    Web3CosmosChain> {
+    Web3CosmosChainAccount> {
   @override
   abstract final Web3CosmosRequestMethods method;
 
@@ -34,7 +31,7 @@ abstract class Web3CosmosRequestParam<RESPONSE> extends Web3RequestParams<
         object: object,
         hex: hex,
         tags: Web3MessageTypes.walletRequest.tag);
-    final method = Web3NetworkRequestMethods.fromTag(values.elementAt(0));
+    final method = Web3NetworkRequestMethods.fromTag(values.elementAs(0));
     final Web3CosmosRequestParam param;
     switch (method) {
       case Web3CosmosRequestMethods.signTransactionAmino:
@@ -64,7 +61,7 @@ abstract class Web3CosmosRequestParam<RESPONSE> extends Web3RequestParams<
 class Web3CosmosRequest<RESPONSE,
         PARAMS extends Web3CosmosRequestParam<RESPONSE>>
     extends Web3NetworkRequest<RESPONSE, CosmosBaseAddress, CosmosChain,
-        Web3CosmosChainAccount, ICosmosAddress, Web3CosmosChain, PARAMS> {
+        Web3CosmosChainAccount, ICosmosAddress, PARAMS> {
   Web3CosmosRequest(
       {required super.params,
       required super.info,

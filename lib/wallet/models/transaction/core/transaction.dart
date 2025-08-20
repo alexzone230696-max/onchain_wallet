@@ -23,9 +23,11 @@ import 'package:on_chain_wallet/wallet/models/transaction/networks/xrp.dart';
 
 enum WalletTransactionType {
   send(0),
+
   web3(1),
   web3Sign(2),
-  web3Tx(3);
+  web3Tx(3),
+  receive(4);
 
   final int value;
   const WalletTransactionType(this.value);
@@ -50,7 +52,7 @@ class WalletAccountTransactions<TRANSACTION extends ChainTransaction> {
       _transactions.where((e) => e.status.inMempool).toList();
   factory WalletAccountTransactions({required List<TRANSACTION> transactions}) {
     final txes = transactions.clone();
-    // txes.sort((a, b) => b.time.compareTo(a.time));
+    txes.sort((a, b) => b.time.compareTo(a.time));
     return WalletAccountTransactions._(transactions: txes);
   }
   void addTx(TRANSACTION tx) {
@@ -61,7 +63,7 @@ class WalletAccountTransactions<TRANSACTION extends ChainTransaction> {
     } else {
       txes.add(tx);
     }
-    // txes.sort((a, b) => b.time.compareTo(a.time));
+    txes.sort((a, b) => b.time.compareTo(a.time));
     _transactions = txes.toSet().toImutableList;
     _havePendingTxes = _transactions.any((e) => e.status.inMempool);
   }
@@ -99,7 +101,7 @@ class WalletWeb3ClientTransaction with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([name, applicationId, image?.toCbor()]),
+        CborSerializable.fromDynamic([name, applicationId, image?.toCbor()]),
         CborTagsConst.transactionWeb3Client);
   }
 }
@@ -222,11 +224,11 @@ abstract class ChainTransaction with CborSerializable, Equatable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           txId,
           time,
           totalOutput?.toCbor(),
-          CborListValue.fixedLength(outputs.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(outputs.map((e) => e.toCbor()).toList()),
           web3Client?.toCbor(),
           type.value,
           status.value
@@ -238,6 +240,11 @@ abstract class ChainTransaction with CborSerializable, Equatable {
 
   @override
   List get variabels => [txId];
+
+  String get storageIdentifier => switch (type) {
+        WalletTransactionType.send || WalletTransactionType.web3Tx => txId,
+        _ => "${type.value}_$txId"
+      };
 }
 
 enum WalletTransactionOutputType {
@@ -360,7 +367,7 @@ class WalletTransactionIntegerAmount
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [amount.balance, token?.toCbor(), tokenIdentifier]),
         type.tag);
   }
@@ -392,7 +399,7 @@ class WalletTransactionDecimalsAmount
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [amount.price, token?.toCbor(), tokenIdentifier]),
         type.tag);
   }

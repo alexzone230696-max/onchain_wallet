@@ -6,7 +6,8 @@ class Web3CosmosExceptionConstant {
           "Chain ID mismatch. account chain ID does not match 'signDoc' chain ID.");
   static Web3RequestException get feeCoinNotFound =>
       Web3RequestExceptionConst.message(
-          "Transaction fee unavailable. Token not found");
+          "Transaction fee unavailable. Token not found",
+          errorType: Web3ErrorCode.invalidParams);
   static Web3RequestException get invalidAminoSignDoc =>
       Web3RequestExceptionConst.invalidParameters(
           "signDoc parameter must be a valid amino transaction as json.");

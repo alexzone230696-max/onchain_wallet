@@ -3,16 +3,17 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/cardano/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 
 import 'provider.dart';
 
-mixin ADATransactionUtxosController
-    on BaseADATransactionController, ADATransactionApiController {
-  late final StreamValue<List<ADAAccountFetchedUtxos>> accountUtxos =
-      StreamValue(account.addresses
-          .where((e) => !e.isRewardAddress)
-          .map((e) => ADAAccountFetchedUtxos(address: e))
-          .toList());
+mixin ADATransactionUtxosController on ADATransactionApiController {
+  @override
+  WalletCardanoNetwork get network;
+  ADAChain get account;
+  bool _allowAssets = true;
+  final StreamValue<List<ADAAccountFetchedUtxos>> accountUtxos =
+      StreamValue([]);
   void onSelectedUtxosChanged(List<CardanoAccountUtxo> utxos);
   bool get hasUtxos => totalUtxos.value.largerThanZero;
   bool _allSelected = false;
@@ -21,7 +22,7 @@ mixin ADATransactionUtxosController
   late final LiveFormField<IntegerBalance, IntegerBalance> totalUtxos =
       LiveFormField(
           title: "spendable_amount".tr,
-          value: IntegerBalance.zero(account.network.token),
+          value: IntegerBalance.zero(network.token),
           optional: false);
 
   Future<void> getAccountsUtxos(
@@ -33,7 +34,11 @@ mixin ADATransactionUtxosController
           if (e.isSuccess) return;
           e.setPending();
           final utxos = await getAccountUtxos(account, e.address);
-          e.setUtxo(utxos);
+          if (_allowAssets) {
+            e.setUtxo(utxos);
+          } else {
+            e.setUtxo(utxos.where((e) => !e.haveAssets).toList());
+          }
         } catch (err) {
           e.setError();
         }
@@ -85,6 +90,15 @@ mixin ADATransactionUtxosController
     }
     _updateAmount();
     _updateTotoalSelectedUtxos();
+  }
+
+  Future<void> initUtxos(
+      {List<ICardanoAddress>? addresses, bool allowAssets = true}) async {
+    _allowAssets = allowAssets;
+    addresses ??= account.addresses.where((e) => !e.isRewardAddress).toList();
+    accountUtxos.value =
+        addresses.map((e) => ADAAccountFetchedUtxos(address: e)).toList();
+    getAccountsUtxos();
   }
 
   @override

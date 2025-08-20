@@ -2,34 +2,81 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/wallet/web3/core/messages/models/models/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/permission/models/authenticated.dart';
 
-class Web3RequestException with Equatable implements Exception {
-  final String message;
+enum Web3ErrorCode {
+  // General / internal errors
+  internalError(-32603, "WALLET-000"),
+  walletNotInitialized(-1, "WALLET-001"),
+
+  // User & authentication
+  rejectedByUser(4001, "WALLET-002"),
+  missingPermission(4100, "WALLET-003"),
+  invalidOrDisabledClient(-32001, "WALLET-004"), // subcode to distinguish
+
+  // Request & method errors
+  invalidRequest(-32600, "WALLET-005"),
+  invalidParams(-32602, "WALLET-006"),
+  unknownRequestMethod(4200, "WALLET-007"),
+  unsupportedFeature(4903, "WALLET-008"),
+  refused(4904, "WALLET-018"),
+
+  // Network / chain
+  invalidNetwork(-32000, "WALLET-009"),
+  // networkDoesNotExist(-4902, "WALLET-014"),
+  // ethereumRpcWrongChainId(-32003, "WALLET-01-"),
+  disconnectedProvider(4900, "WALLET-010"),
+  disconnectedChain(4901, "WALLET-011"),
+  chainNotSupported(-32002, "WALLET-012"),
+  invalidHost(-32004, "WALLET-013"),
+
+  // RPC errors
+  rpcError(-32005, "WALLET-014");
+
+  // Auth helper
+  bool get isAuthError =>
+      this == rejectedByUser ||
+      this == missingPermission ||
+      this == invalidOrDisabledClient;
+  bool get isRefused => this == refused;
+
+  const Web3ErrorCode(this.code, this.walletCode);
+
   final int code;
   final String walletCode;
+
+  static Web3ErrorCode fromWalletCode(String? walletCode) {
+    return values.firstWhere(
+      (e) => e.walletCode == walletCode,
+      orElse: () => Web3ErrorCode.internalError,
+    );
+  }
+}
+
+class Web3RequestException with Equatable implements Exception {
+  final String message;
+  final int? errorCode;
   final String? data;
+  final Web3ErrorCode type;
+  int get code => errorCode ?? type.code;
 
   Map<String, dynamic> toJson() {
     return {
       "message": message,
-      "code": code,
-      "walletCode": walletCode,
+      "code": errorCode ?? type.code,
+      "walletCode": type.walletCode,
       "data": data
     };
   }
 
   const Web3RequestException(
-      {required this.message,
-      required this.code,
-      required this.walletCode,
-      this.data});
+      {required this.message, this.errorCode, required this.type, this.data});
   Web3ExceptionMessage toResponseMessage(
       {Map<String, dynamic>? request,
       String? requestId,
       Web3APPData? authenticated}) {
     return Web3ExceptionMessage(
         message: message,
-        code: code,
-        walletCode: walletCode,
+        code: errorCode ?? type.code,
+        errorType: type,
         data: data,
         authenticated: authenticated);
   }
@@ -40,7 +87,7 @@ class Web3RequestException with Equatable implements Exception {
   }
 
   @override
-  List get variabels => [code, message];
+  List get variabels => [type, errorCode, message];
 }
 
 class Web3RequestClosed implements AppException {

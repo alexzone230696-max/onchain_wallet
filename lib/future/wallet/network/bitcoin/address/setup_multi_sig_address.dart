@@ -346,13 +346,16 @@ class _SetupBitcoinMultiSigAddressViewState
                                     (index) {
                                   final supportTypes =
                                       supportedMultisigTypes.keys.toList();
-                                  return RadioListTile(
-                                      title: Text(supportTypes[index].value),
-                                      subtitle: Text(BTCUtils.getAddressDetails(
-                                          supportTypes[index])),
-                                      value: supportTypes[index],
-                                      groupValue: multiSigAddressTye,
-                                      onChanged: onChangeAddressType);
+                                  return RadioGroup(
+                                    groupValue: multiSigAddressTye,
+                                    onChanged: onChangeAddressType,
+                                    child: RadioListTile(
+                                        title: Text(supportTypes[index].value),
+                                        subtitle: Text(
+                                            BTCUtils.getAddressDetails(
+                                                supportTypes[index])),
+                                        value: supportTypes[index]),
+                                  );
                                 }),
                                 AnimatedSwitcher(
                                   duration: APPConst.animationDuraion,

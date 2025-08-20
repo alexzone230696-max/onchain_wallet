@@ -151,8 +151,8 @@ mixin Web3RequestControllerImpl on CryptoWokerImpl {
     }
     Web3APPAuthenticationKey? auth = dappInfo?.authentication.token;
     if (auth == null) {
-      final appAuth = await walletCore.getDappAuthenticatedKey(client);
-      auth = appAuth.result;
+      final appAuth = await walletCore.getDappApplication(client);
+      auth = appAuth.result.token;
     }
     _keys[clientId] = Web3ActiveClient(
         client: client,
@@ -208,16 +208,13 @@ mixin Web3RequestControllerImpl on CryptoWokerImpl {
       ONUPDATEWEB3PERMISSION onUpdate) async {
     final currentApp = latestClient.value.client;
     if (currentApp == null) return;
-    final dapp = await walletCore.getWeb3Dapp(currentApp.client);
+    final dapp = await walletCore.getDappApplication(currentApp.client);
     final request = Web3UpdatePermissionRequest(
-        authentication: dapp.result.authentication, client: currentApp.client);
+        authentication: dapp.result, client: currentApp.client);
     onUpdate(
       request,
-      (networks) async {
-        final message = await walletCore.updateWeb3Application(
-            request.authentication,
-            web3Networks: networks);
-        final msg = Web3ChainMessage(authenticated: message.result.dappData);
+      (update) async {
+        final msg = Web3ChainMessage(authenticated: update.appInfo.dappData);
         final encrypted = currentApp.encrypt(msg);
         await sendMessageToClient(message: encrypted, client: currentApp);
         return false;

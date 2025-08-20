@@ -22,7 +22,8 @@ class TronMultiSigSignerDetais with Equatable, CborSerializable {
 
     final List<int> publicKey = cbor.elementAs(0);
     final BigInt weight = cbor.elementAs(1);
-    final keyIndex = Bip32AddressIndex.deserialize(obj: cbor.getCborTag(2));
+    final keyIndex =
+        Bip32AddressIndex.deserialize(obj: cbor.elementAsCborTag(2));
     return TronMultiSigSignerDetais(
         publicKey: publicKey, weight: weight, keyIndex: keyIndex);
   }
@@ -36,7 +37,7 @@ class TronMultiSigSignerDetais with Equatable, CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(BytesUtils.fromHexString(publicKey)),
           weight,
           keyIndex.toCbor()
@@ -69,16 +70,19 @@ class TronMultiSignatureAddress with Equatable, CborSerializable {
       throw const WalletException(
           'The total weight of the signatories should reach the threshold');
     }
-
+    final sortedSigners = signers.clone()
+      ..sort((a, b) => a.publicKey.compareTo(b.publicKey));
     return TronMultiSignatureAddress._(
-        signers: signers, threshold: threshold, permissionID: permissionID);
+        signers: sortedSigners,
+        threshold: threshold,
+        permissionID: permissionID);
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
-          CborListValue.fixedLength(signers.map((e) => e.toCbor()).toList()),
+        CborSerializable.fromDynamic([
+          CborSerializable.fromDynamic(signers.map((e) => e.toCbor()).toList()),
           threshold,
           permissionID,
         ]),

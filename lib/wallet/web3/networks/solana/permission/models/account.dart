@@ -17,20 +17,22 @@ class Web3SolanaChainAccount extends Web3ChainAccount<SolAddress> {
     required super.address,
     required super.defaultAddress,
     required this.id,
+    required super.identifier,
   });
   @override
-  Web3SolanaChainAccount clone({
-    AddressDerivationIndex? keyIndex,
-    SolAddress? address,
-    bool? defaultAddress,
-    int? id,
-    List<int>? publicKey,
-  }) {
+  Web3SolanaChainAccount clone(
+      {AddressDerivationIndex? keyIndex,
+      SolAddress? address,
+      bool? defaultAddress,
+      int? id,
+      List<int>? publicKey,
+      String? identifier}) {
     return Web3SolanaChainAccount(
         keyIndex: keyIndex ?? this.keyIndex,
         address: address ?? this.address,
         defaultAddress: defaultAddress ?? this.defaultAddress,
-        id: id ?? this.id);
+        id: id ?? this.id,
+        identifier: identifier ?? this.identifier);
   }
 
   factory Web3SolanaChainAccount.fromChainAccount(
@@ -42,7 +44,8 @@ class Web3SolanaChainAccount extends Web3ChainAccount<SolAddress> {
         keyIndex: address.keyIndex,
         address: address.networkAddress,
         id: id,
-        defaultAddress: isDefault);
+        defaultAddress: isDefault,
+        identifier: address.identifier);
   }
 
   factory Web3SolanaChainAccount.deserialize(
@@ -53,20 +56,23 @@ class Web3SolanaChainAccount extends Web3ChainAccount<SolAddress> {
         hex: hex,
         tags: CborTagsConst.web3SolanaAccount);
     return Web3SolanaChainAccount(
-        keyIndex: AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
-        address: SolAddress(values.elementAt(1)),
-        id: values.elementAt(2),
-        defaultAddress: values.elementAt(3));
+        keyIndex: AddressDerivationIndex.deserialize(
+            obj: values.indexAs<CborTagValue>(0)),
+        address: SolAddress(values.valueAs(1)),
+        id: values.valueAs(2),
+        defaultAddress: values.valueAs(3),
+        identifier: values.valueAs(4));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           keyIndex.toCbor(),
           address.address,
           id,
           defaultAddress,
+          identifier
         ]),
         CborTagsConst.web3SolanaAccount);
   }

@@ -139,4 +139,9 @@ class JsUtils {
     if (obj.isA<JSString>()) return obj;
     return null;
   }
+
+  static JSAny? undefinedAsNull(JSAny? obj) {
+    if (obj.isUndefinedOrNull) return null;
+    return obj;
+  }
 }

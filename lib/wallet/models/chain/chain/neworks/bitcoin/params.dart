@@ -41,7 +41,7 @@ final class BitcoinNewAddressParams
         tags: NewAccountParamsType.bitcoinNewAddressParams.tag);
     return BitcoinNewAddressParams(
         deriveIndex:
-            AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
+            AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(0)),
         bitcoinAddressType: BitcoinAddressType.fromValue(values.elementAs(1)),
         coin: CustomCoins.getSerializationCoin(values.elementAs(2)),
         keyType: PubKeyModes.fromValue(values.elementAs(3)));
@@ -79,11 +79,11 @@ final class BitcoinNewAddressParams
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.dynamicLength([
+        CborListValue<CborObject>.definite([
           deriveIndex.toCbor(),
-          bitcoinAddressType.value,
+          CborStringValue(bitcoinAddressType.value),
           coin.toCbor(),
-          keyType.value
+          CborIntValue(keyType.value)
         ]),
         type.tag);
   }
@@ -133,8 +133,8 @@ final class BitcoinMultiSigNewAddressParams implements BitcoinNewAddressParams {
         tags: NewAccountParamsType.bitcoinMultiSigNewAddressParams.tag);
     return BitcoinMultiSigNewAddressParams(
       bitcoinAddressType: BitcoinAddressType.fromValue(values.elementAs(0)),
-      multiSignatureAddress:
-          BitcoinMultiSignatureAddress.deserialize(obj: values.getCborTag(1)),
+      multiSignatureAddress: BitcoinMultiSignatureAddress.deserialize(
+          obj: values.elementAsCborTag(1)),
       coin: CustomCoins.getSerializationCoin(values.elementAs(2)),
     );
   }
@@ -163,8 +163,8 @@ final class BitcoinMultiSigNewAddressParams implements BitcoinNewAddressParams {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.dynamicLength([
-          bitcoinAddressType.value,
+        CborListValue<CborObject>.definite([
+          CborStringValue(bitcoinAddressType.value),
           multiSignatureAddress.toCbor(),
           coin.toCbor()
         ]),
@@ -212,9 +212,9 @@ final class BitcoinCashNewAddressParams
         tags: NewAccountParamsType.bitcoinCashNewAddressParams.tag);
     return BitcoinCashNewAddressParams(
         deriveIndex:
-            AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
-        bitcoinAddressType: BitcoinAddressType.fromValue(values.elementAt(1)),
-        coin: CustomCoins.getSerializationCoin(values.elementAt(2)),
+            AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(0)),
+        bitcoinAddressType: BitcoinAddressType.fromValue(values.elementAs(1)),
+        coin: CustomCoins.getSerializationCoin(values.elementAs(2)),
         keyType: PubKeyModes.fromValue(values.elementAs(3),
             defaultValue: PubKeyModes.compressed));
   }
@@ -254,11 +254,11 @@ final class BitcoinCashNewAddressParams
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.dynamicLength([
+        CborListValue<CborObject>.definite([
           deriveIndex.toCbor(),
-          bitcoinAddressType.value,
+          CborStringValue(bitcoinAddressType.value),
           coin.toCbor(),
-          keyType.value
+          CborIntValue(keyType.value)
         ]),
         type.tag);
   }
@@ -305,10 +305,10 @@ final class BitcoinCashMultiSigNewAddressParams
         hex: hex,
         tags: NewAccountParamsType.bitcoinCashMultiSigNewAddressParams.tag);
     return BitcoinCashMultiSigNewAddressParams(
-      bitcoinAddressType: BitcoinAddressType.fromValue(values.elementAt(0)),
-      multiSignatureAddress:
-          BitcoinMultiSignatureAddress.deserialize(obj: values.getCborTag(1)),
-      coin: CustomCoins.getSerializationCoin(values.elementAt(2)),
+      bitcoinAddressType: BitcoinAddressType.fromValue(values.elementAs(0)),
+      multiSignatureAddress: BitcoinMultiSignatureAddress.deserialize(
+          obj: values.elementAsCborTag(1)),
+      coin: CustomCoins.getSerializationCoin(values.elementAs(2)),
     );
   }
 
@@ -335,8 +335,8 @@ final class BitcoinCashMultiSigNewAddressParams
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.dynamicLength([
-          bitcoinAddressType.value,
+        CborListValue<CborObject>.definite([
+          CborStringValue(bitcoinAddressType.value),
           multiSignatureAddress.toCbor(),
           coin.toCbor()
         ]),

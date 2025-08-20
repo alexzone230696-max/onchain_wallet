@@ -76,32 +76,34 @@ class EthereumNetworkParams extends NetworkCoinParams<EthereumAPIProvider> {
       {List<int>? bytes, CborObject? obj}) {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, CborTagsConst.evmNetworkParam);
-    final bool? defaultNetwork = cbor.elementAt(7);
+    final bool? defaultNetwork = cbor.elementAs(7);
     return EthereumNetworkParams(
-      chainId: cbor.elementAt(0),
-      supportEIP1559: cbor.elementAt(1),
-      chainType: ChainType.fromValue(cbor.elementAt(2)),
-      token: Token.deserialize(obj: cbor.getCborTag(5)),
-      providers: (cbor.elementAt(6) as List)
+      chainId: cbor.elementAs(0),
+      supportEIP1559: cbor.elementAs(1),
+      chainType: ChainType.fromValue(cbor.elementAs(2)),
+      token: Token.deserialize(obj: cbor.elementAsCborTag(5)),
+      providers: cbor
+          .elementAsListOf<CborObject>(6)
           .map((e) => EthereumAPIProvider.fromCborBytesOrObject(obj: e))
           .toList(),
       defaultNetwork: defaultNetwork ?? true,
-      bip32CoinType: cbor.elementAt(8),
-      transactionExplorer: cbor.elementAt(9),
-      addressExplorer: cbor.elementAt(10),
+      bip32CoinType: cbor.elementAs(8),
+      transactionExplorer: cbor.elementAs(9),
+      addressExplorer: cbor.elementAs(10),
     );
   }
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           chainId,
           supportEIP1559,
           chainType.name,
           const CborNullValue(),
           const CborNullValue(),
           token.toCbor(),
-          CborListValue.fixedLength(providers.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              providers.map((e) => e.toCbor()).toList()),
           defaultNetwork,
           bip32CoinType,
           transactionExplorer,

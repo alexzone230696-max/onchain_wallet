@@ -15,7 +15,8 @@ class MoneroAccountPageView extends StatelessWidget {
   Widget build(BuildContext context) {
     return TabBarView(physics: WidgetConstant.noScrollPhysics, children: [
       _MoneroServices(chainAccount),
-      AccountTransactionActivityView(chainAccount)
+      AccountTransactionActivityView<IMoneroAddress, MoneroWalletTransaction>(
+          account: chainAccount, address: chainAccount.address)
     ]);
   }
 }

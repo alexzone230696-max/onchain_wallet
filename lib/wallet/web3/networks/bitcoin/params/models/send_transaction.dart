@@ -33,7 +33,7 @@ class Web3BitcoinSendTransactionOutput with CborSerializable {
         cborBytes: cborBytes,
         hex: cborHex,
         object: object,
-        tags: CborTagsConst.web3BitcoinSendTransactionParams);
+        tags: CborTagsConst.defaultTag);
     return Web3BitcoinSendTransactionOutput(
         value: values.elementAs(0),
         scriptPubKey: Script.deserialize(bytes: values.elementAs(1)),
@@ -43,16 +43,32 @@ class Web3BitcoinSendTransactionOutput with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [value, CborBytesValue(scriptPubKey.toBytes()), address]),
-        CborTagsConst.web3BitcoinSendTransactionParams);
+        CborTagsConst.defaultTag);
   }
 }
 
-class Web3BitcoinSendTransaction extends Web3BitcoinRequestParam<String> {
+abstract class BaseWeb3BitcoinSendTransaction<ADDRESS extends IBitcoinAddress,
+        WEB3CHAINACCOUNT extends Web3BitcoinChainAccount>
+    extends BaseWeb3BitcoinRequestParam<String, ADDRESS, WEB3CHAINACCOUNT> {
+  abstract final List<WEB3CHAINACCOUNT> accounts;
+  abstract final WEB3CHAINACCOUNT accessAccount;
+  abstract final List<Web3BitcoinSendTransactionOutput> outputs;
+  abstract final WEB3CHAINACCOUNT? requiredAccount;
+}
+
+class Web3BitcoinSendTransaction extends Web3BitcoinRequestParam<String>
+    implements
+        BaseWeb3BitcoinSendTransaction<IBitcoinAddress,
+            Web3BitcoinChainAccount> {
+  @override
   final List<Web3BitcoinChainAccount> accounts;
+  @override
   final Web3BitcoinChainAccount accessAccount;
+  @override
   final List<Web3BitcoinSendTransactionOutput> outputs;
+  @override
   final Web3BitcoinChainAccount? requiredAccount;
 
   Web3BitcoinSendTransaction._({
@@ -111,22 +127,27 @@ class Web3BitcoinSendTransaction extends Web3BitcoinRequestParam<String> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
-          CborListValue.fixedLength(accounts.map((e) => e.toCbor()).toList()),
-          CborListValue.fixedLength(outputs.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              accounts.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(outputs.map((e) => e.toCbor()).toList()),
           requiredAccount?.toCbor()
         ]),
         type.tag);
   }
 
   @override
-  Web3BitcoinRequest<String, Web3BitcoinSendTransaction> toRequest(
+  Future<Web3BitcoinRequest<String, Web3BitcoinSendTransaction>> toRequest(
       {required Web3RequestInformation request,
       required Web3RequestAuthentication authenticated,
-      required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+      required WEB3REQUESTNETWORKCONTROLLER<IBitcoinAddress, BitcoinChain,
+              Web3BitcoinChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3BitcoinRequest<String, Web3BitcoinSendTransaction>(
       params: this,
       authenticated: authenticated,

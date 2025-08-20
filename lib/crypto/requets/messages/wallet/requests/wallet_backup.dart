@@ -28,7 +28,7 @@ final class WalletRequestBackupWallet
         hex: hex,
         tags: WalletRequestMethod.walletBackup.tag);
     return WalletRequestBackupWallet(
-        key: values.elementAt(0),
+        key: values.elementAs(0),
         newPassword: values.elementAs(1),
         passhrase: values.elementAs(2));
   }
@@ -36,7 +36,8 @@ final class WalletRequestBackupWallet
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([key, newPassword, passhrase]), method.tag);
+        CborSerializable.fromDynamic([key, newPassword, passhrase]),
+        method.tag);
   }
 
   @override

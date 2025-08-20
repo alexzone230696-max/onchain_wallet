@@ -37,7 +37,7 @@ class APPWalletSetting with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [showTestnetNetworks, enableWebView, enableSwap]),
         APPSerializationConst.walletSetting);
   }
@@ -128,7 +128,7 @@ class APPSetting with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           appColor,
           appBrightness,
           currency.name,

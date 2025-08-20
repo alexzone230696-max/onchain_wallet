@@ -93,7 +93,7 @@ class SwapTransactionStateController extends StateController {
                             account: Web3EthereumChainAccount.fromChainAccount(
                                 address: accounts.first.cast<IEthAddress>(),
                                 id: ethChain.network.value,
-                                defaultAddress: true),
+                                isDefault: true),
                             to: e.to,
                             value: e.value,
                             gas: e.gasLimit?.toInt(),

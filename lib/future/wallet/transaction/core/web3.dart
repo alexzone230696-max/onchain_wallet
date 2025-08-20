@@ -35,12 +35,10 @@ abstract class Web3TransactionStateController<
         C extends APPCHAINADDRESSACCOUNTCLIENTNETWORK<NETWORKADDRESS, ACCOUNT,
             CLIENT, NETWORK>,
         CHANACCOUNT extends Web3ChainAccount,
-        WEB3CHAIN extends Web3Chain<NETWORKADDRESS, C, ACCOUNT, CHANACCOUNT,
-            WalletNetwork>,
         PARAMS extends Web3RequestParams<RESPONSE, NETWORKADDRESS, C, ACCOUNT,
-            CHANACCOUNT, WEB3CHAIN>,
+            CHANACCOUNT>,
         WEB3REQUEST extends Web3NetworkRequest<RESPONSE, NETWORKADDRESS, C,
-            CHANACCOUNT, ACCOUNT, WEB3CHAIN, PARAMS>,
+            CHANACCOUNT, ACCOUNT, PARAMS>,
         TRANSACTIONDATA extends ITransactionData,
         TRANSACTION extends ITransaction<TRANSACTIONDATA, ACCOUNT>,
         SIGNEDTX extends ISignedTransaction<TRANSACTION, Object>,
@@ -55,7 +53,6 @@ abstract class Web3TransactionStateController<
         ACCOUNT,
         C,
         CHANACCOUNT,
-        WEB3CHAIN,
         PARAMS,
         WEB3REQUEST,
         Web3RequestTransactionResponseData<RESPONSE, SUCCESS>,
@@ -126,11 +123,12 @@ abstract class Web3TransactionStateController<
       final response = await getResponse();
       request.completeResponse(response.response);
       final txIds = response.txIds;
+      List<IWalletTransaction<T, ACCOUNT>> walletTxes = [];
       if (txIds != null) {
         for (final i in txIds) {
           if (i.status.isFailed) continue;
           final successResult = i.cast<SUCCESS>();
-          final walletTxes = await buildWalletTransaction(
+          walletTxes = await buildWalletTransaction(
               signedTx: successResult.signedTransaction, txId: successResult);
           for (final i in walletTxes) {
             await account.saveTransaction(
@@ -141,7 +139,10 @@ abstract class Web3TransactionStateController<
               functionName: "submit transaction",
               msg: successResult.txId);
         }
-        pageKey.responseTx(txIds: txIds, account: account);
+        pageKey.responseTx(
+            txIds: txIds,
+            transactions: walletTxes.map((e) => e.transaction).toList(),
+            account: account);
       } else {
         pageKey.response(text: response.message);
       }
@@ -178,7 +179,7 @@ abstract class Web3TransactionStateController<
       appLogger.error(
           runtime: runtimeType,
           functionName: "acceptRequest",
-          msg: e,
+          msg: "${e.runtimeType}:$e",
           trace: s);
       final exception = Web3RequestExceptionConst.fromException(e);
       pageKey.errorResponse(error: exception);

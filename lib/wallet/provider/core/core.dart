@@ -32,13 +32,10 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
       {required MainWallet hdWallet,
       required String password,
       required WalletUpdateInfosData walletInfos}) async {
-    final result = await _callSynchronized(
-      () async {
-        return await _setup(
-            hdWallet: hdWallet, password: password, walletInfos: walletInfos);
-      },
-      action: () => WalletActionEventType.setup,
-    );
+    final result = await _callSynchronized(() async {
+      return await _setup(
+          hdWallet: hdWallet, password: password, walletInfos: walletInfos);
+    }, action: () => WalletActionEventType.setup);
     return result;
   }
 
@@ -67,14 +64,35 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
     return result;
   }
 
+  Future<MethodResult<List<Web3InternalChain>>> getWeb3InternalChains(
+      Web3ApplicationAuthentication authenticated,
+      {List<NetworkType>? networks}) async {
+    final result = await _callSynchronized(() async {
+      return await _controller._getWeb3InternalChains(authenticated,
+          networks: networks);
+    }, lockId: LockId.three, action: () => WalletActionEventType.web3Auth);
+    return result;
+  }
+
+  Future<MethodResult<List<Web3AccountAcitvity>>> getWeb3ApplicationActivities(
+      Web3ApplicationAuthentication permission) async {
+    final result = await _callSynchronized(() async {
+      return await _controller._getWeb3ApplicationActivities(permission);
+    }, lockId: LockId.three, action: () => WalletActionEventType.web3Auth);
+    return result;
+  }
+
+  Future<MethodResult<void>> removeWeb3ApplicationActivities(
+      Web3ApplicationAuthentication permission) async {
+    return await _callSynchronized(() async {
+      return await _controller._removeWeb3ApplicationActivities(permission);
+    }, lockId: LockId.three, action: () => WalletActionEventType.web3Auth);
+  }
+
   Future<MethodResult<List<Web3DappInfo>>> getAllWeb3Applications() async {
-    return await _callSynchronized(
-      () async {
-        return await _controller._getAllWeb3Applications();
-      },
-      lockId: LockId.two,
-      action: () => WalletActionEventType.web3Auth,
-    );
+    return await _callSynchronized(() async {
+      return await _controller._getAllWeb3Applications();
+    }, lockId: LockId.two, action: () => WalletActionEventType.web3Auth);
   }
 
   Future<RESPONSE> localWeb3Request<RESPONSE>(
@@ -93,10 +111,10 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
     return result;
   }
 
-  Future<MethodResult<Web3APPAuthenticationKey>> getDappAuthenticatedKey(
+  Future<MethodResult<Web3ApplicationAuthentication>> getDappApplication(
       Web3ClientInfo clientInfo) async {
     final result = await _callSynchronized(() async {
-      return await _controller._getDappAuthenticatedKey(clientInfo);
+      return await _controller._getDappApplication(clientInfo);
     }, lockId: LockId.two, action: () => WalletActionEventType.web3Auth);
     return result;
   }
@@ -109,17 +127,18 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
     return result;
   }
 
-  Future<MethodResult<Web3DappInfo>> updateWeb3Application(
-      Web3APPAuthentication application,
-      {List<NetworkType>? web3Networks}) async {
+  Future<MethodResult<Web3DappInfo>> updateWeb3Application({
+    required Web3ApplicationAuthentication application,
+    required List<Web3InternalChain> chains,
+  }) async {
     return _callSynchronized(
-        () async => _controller._updateWeb3Application(application,
-            web3Networks: web3Networks),
+        () async => _controller._updateWeb3Application(
+            application: application, chains: chains),
         action: () => WalletActionEventType.updateWeb3Auth);
   }
 
   Future<MethodResult<void>> removeWeb3Application(
-      Web3APPAuthentication application) async {
+      Web3ApplicationAuthentication application) async {
     return _callSynchronized(
         () async => _controller._removeWeb3Authenticated(application),
         action: () => WalletActionEventType.updateWeb3Auth);
@@ -158,19 +177,11 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
     }, action: () => WalletActionEventType.switchWallet);
   }
 
-  Future<MethodResult<List<EncryptedCustomKey>>> getImportedAccounts(
-      String password) {
+  Future<MethodResult<List<EncryptedCustomKey>>> getImportedAccounts() {
     final result = _callSynchronized(() async {
-      return _controller._getImportedAccounts(password);
+      return _controller._getImportedAccounts();
     }, action: () => WalletActionEventType.exportKey);
     return result;
-  }
-
-  List<T> networks<T extends WalletNetwork>() {
-    if (isOpen) {
-      return _controller._appChains.networks().whereType<T>().toList();
-    }
-    return [];
   }
 
   List<T> getChains<T extends Chain>() {
@@ -187,10 +198,10 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
     }, action: () => WalletActionEventType.removeKey);
   }
 
-  Future<void> switchNetwork(int? networkId) async {
-    if (networkId == null || network.value == networkId) return;
+  Future<void> switchNetwork(Chain? network) async {
+    if (network == null) return;
     final result = await _callSynchronized(
-        () async => await _controller._switchNetwork(networkId),
+        () async => await _controller._switchNetwork(network),
         action: () => WalletActionEventType.switchNetwork);
     assert(!result.hasError, "failed to switch network ${result.error}");
   }
@@ -203,15 +214,22 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
     return result;
   }
 
+  Future<MethodResult<PublicKeyDerivationResult>> getKeyDerivationPublicKey(
+      AddressDerivationIndex index) async {
+    final result = await _callSynchronized(
+        () async => _controller._getKeyDerivationPublicKey(index),
+        action: () => WalletActionEventType.exportAccountKey);
+    return result;
+  }
+
   Future<void> updateImportNetwork(WalletNetwork network) async {
     final result = await _callSynchronized(
-      () async => await _controller._updateImportNetwork(network),
-      action: () => network.isWalletNetwork
-          ? WalletActionEventType.updateAccount
-          : WalletActionEventType.importNetwork,
-      conditionStatus: () =>
-          !network.isWalletNetwork || network.value == this.network.value,
-    );
+        () async => await _controller._updateImportNetwork(network),
+        action: () => network.isWalletNetwork
+            ? WalletActionEventType.updateAccount
+            : WalletActionEventType.importNetwork,
+        conditionStatus: () =>
+            !network.isWalletNetwork || network.value == this.network.value);
     return result.result;
   }
 
@@ -470,69 +488,58 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
           masterKeys: resotreKey.masterKey,
           chains: const [],
           dapps: const [],
+          networks: const [],
           invalidAddresses: const [],
           verifiedChecksum: false,
           wallet: wallet);
     }
-    final List<WalletChainBackup> validateChains = [];
+    final List<WalletNetworkBackup> validateChains = [];
     final List<ChainAccount> invalidAddresses = [];
-    try {
-      for (final c in backup.chains) {
-        final List<ChainAccount> addresses = [];
+    for (final c in backup.networks) {
+      final List<ChainAccount> addresses = [];
 
-        for (final address in c.chain.addresses) {
-          try {
-            final network = c.chain.network;
-            if (address.multiSigAccount) {
-              final multiSigAccount =
-                  address.toAccountParams().toAccount(network, null);
-              final isValid = multiSigAccount == address &&
-                  address.isEqual(multiSigAccount) &&
-                  address.identifier == multiSigAccount.identifier;
-              if (isValid) {
-                addresses.add(multiSigAccount);
-              } else {
-                invalidAddresses.add(address);
-              }
-
-              continue;
-            }
-            final addr = await crypto.walletArgs(
-                message: WalletRequestDeriveAddress(
-                    addressParams: address.toAccountParams()),
-                encryptedMasterKey: resotreKey.encryptedKey.masterKey,
-                key: key);
-            final account =
-                addr.accountParams.toAccount(network, addr.publicKey);
-            final isValid = account == address &&
-                address.isEqual(account) &&
-                address.identifier == account.identifier;
+      for (final address in c.chain.addresses) {
+        try {
+          final network = c.chain.network;
+          if (address.multiSigAccount) {
+            final multiSigAccount =
+                address.toAccountParams().toAccount(network, null);
+            final isValid = address.identifier == multiSigAccount.identifier;
             if (isValid) {
-              addresses.add(account);
+              addresses.add(multiSigAccount);
             } else {
               invalidAddresses.add(address);
             }
-          } catch (e) {
+            continue;
+          }
+          final addr = await crypto.walletArgs(
+              message: WalletRequestDeriveAddress(
+                  addressParams: address.toAccountParams()),
+              encryptedMasterKey: resotreKey.encryptedKey.masterKey,
+              key: key);
+          final account = addr.accountParams.toAccount(network, addr.publicKey);
+          final isValid = address.identifier == account.identifier;
+          if (isValid) {
+            addresses.add(account);
+          } else {
             invalidAddresses.add(address);
           }
+        } catch (e) {
+          invalidAddresses.add(address);
         }
-        final chain = WalletChainBackup(
-            chain: c.chain.copyWith(
-                addresses: c.chain.addresses
-                    .where((e) => addresses.contains(e))
-                    .toList(),
-                id: wallet.key),
-            repositories: c.repositories);
-
-        validateChains.add(chain);
       }
-      // ignore: empty_catches
-    } catch (_) {}
+      final chain = WalletNetworkBackup(
+          chain: c.chain.copyWith(addresses: addresses, id: wallet.key),
+          repositories: c.repositories);
+
+      validateChains.add(chain);
+    }
     return WalletRestoreV2(
         masterKeys: setupKey,
         dapps: backup.dapps,
-        chains: validateChains,
+        networks: validateChains,
         invalidAddresses: invalidAddresses,
+        chains: backup.chains,
         wallet: wallet,
         verifiedChecksum: true);
   }

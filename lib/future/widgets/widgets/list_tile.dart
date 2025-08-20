@@ -97,12 +97,12 @@ class AppRadioListTile<T> extends StatelessWidget {
   const AppRadioListTile(
       {super.key,
       required this.groupValue,
-      this.onChanged,
+      required this.onChanged,
       required this.value,
       this.title,
       this.subtitle,
       this.secondary});
-  final void Function(T? value)? onChanged;
+  final void Function(T? value) onChanged;
   final T value;
   final Widget? title;
   final Widget? secondary;
@@ -110,23 +110,25 @@ class AppRadioListTile<T> extends StatelessWidget {
   final T? groupValue;
   @override
   Widget build(BuildContext context) {
-    return RadioListTile<T>(
+    return RadioGroup<T>(
       onChanged: onChanged,
       groupValue: groupValue,
-      value: value,
-      secondary: secondary,
-      title: title == null
-          ? null
-          : DefaultTextStyle(
-              style: context.textTheme.labelLarge!, child: title!),
-      subtitle: subtitle == null
-          ? null
-          : DefaultTextStyle(
-              style: context.textTheme.bodyMedium!,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              child: subtitle!,
-            ),
+      child: RadioListTile<T>(
+        value: value,
+        secondary: secondary,
+        title: title == null
+            ? null
+            : DefaultTextStyle(
+                style: context.textTheme.labelLarge!, child: title!),
+        subtitle: subtitle == null
+            ? null
+            : DefaultTextStyle(
+                style: context.textTheme.bodyMedium!,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                child: subtitle!,
+              ),
+      ),
     );
   }
 }

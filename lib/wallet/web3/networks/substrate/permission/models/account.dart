@@ -19,6 +19,7 @@ class Web3SubstrateChainAccount extends Web3ChainAccount<BaseSubstrateAddress> {
       required super.address,
       required super.defaultAddress,
       required this.id,
+      required super.identifier,
       required List<int> publicKey})
       : publicKey = publicKey.asImmutableBytes;
   @override
@@ -28,13 +29,15 @@ class Web3SubstrateChainAccount extends Web3ChainAccount<BaseSubstrateAddress> {
     bool? defaultAddress,
     int? id,
     List<int>? publicKey,
+    String? identifier,
   }) {
     return Web3SubstrateChainAccount(
         keyIndex: keyIndex ?? this.keyIndex,
         address: address ?? this.address,
         defaultAddress: defaultAddress ?? this.defaultAddress,
         id: id ?? this.id,
-        publicKey: publicKey ?? this.publicKey);
+        publicKey: publicKey ?? this.publicKey,
+        identifier: identifier ?? this.identifier);
   }
 
   factory Web3SubstrateChainAccount.fromChainAccount(
@@ -46,7 +49,8 @@ class Web3SubstrateChainAccount extends Web3ChainAccount<BaseSubstrateAddress> {
         address: address.networkAddress,
         id: id,
         defaultAddress: isDefault,
-        publicKey: address.publicKey);
+        publicKey: address.publicKey,
+        identifier: address.identifier);
   }
 
   factory Web3SubstrateChainAccount.deserialize(
@@ -57,22 +61,25 @@ class Web3SubstrateChainAccount extends Web3ChainAccount<BaseSubstrateAddress> {
         hex: hex,
         tags: CborTagsConst.web3SubstrateAccount);
     return Web3SubstrateChainAccount(
-        keyIndex: AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
-        address: BaseSubstrateAddress(values.elementAt(1)),
-        id: values.elementAt(2),
-        defaultAddress: values.elementAt(3),
-        publicKey: values.elementAs(4));
+        keyIndex: AddressDerivationIndex.deserialize(
+            obj: values.indexAs<CborTagValue>(0)),
+        address: BaseSubstrateAddress(values.valueAs(1)),
+        id: values.valueAs(2),
+        defaultAddress: values.valueAs(3),
+        publicKey: values.valueAs(4),
+        identifier: values.valueAs(5));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           keyIndex.toCbor(),
           address.address,
           id,
           defaultAddress,
-          publicKey
+          publicKey,
+          identifier
         ]),
         CborTagsConst.web3SubstrateAccount);
   }
@@ -115,7 +122,7 @@ class Web3SubstrateChainIdnetifier extends Web3ChainIdnetifier {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           genesisHash,
           specVersion,
           id,

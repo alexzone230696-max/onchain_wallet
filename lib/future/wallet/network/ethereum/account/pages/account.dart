@@ -24,7 +24,8 @@ class ETHAccountPageView extends StatelessWidget {
               token: p0);
         },
       ),
-      AccountTransactionActivityView(chainAccount)
+      AccountTransactionActivityView<IEthAddress, EthWalletTransaction>(
+          account: chainAccount, address: chainAccount.address)
     ]);
   }
 }

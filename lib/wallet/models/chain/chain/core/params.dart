@@ -8,6 +8,8 @@ enum NewAccountParamsType {
   bitcoinMultiSigNewAddressParams(
       CborTagsConst.bitcoinMultiSigNewAddressParams),
   cardanoNewAddressParams(CborTagsConst.cardanoNewAddressParams),
+  cardanoMultisigNewAddressParams(
+      CborTagsConst.cardanoNewMultisigAddressParams),
   cosmosNewAddressParams(CborTagsConst.cosmosNewAddressParams),
   ethereumNewAddressParamss(CborTagsConst.ethereumNewAddressParamss),
   solanaNewAddressParams(CborTagsConst.solanaNewAddressParams),
@@ -42,8 +44,10 @@ abstract final class NewAccountParams<ACCOUNT extends ChainAccount>
   bool get isMultiSig;
   ACCOUNT toAccount(WalletNetwork network, CryptoPublicKeyData? publicKey);
 
-  static String toIdentifier(String address) {
-    final hash = MD4.hash(StringUtils.encode(address));
+  static String toIdentifier(String address,
+      {List<int> multisigAddress = const []}) {
+    final hash = QuickCrypto.sha256Hash(
+        [...StringUtils.encode(address), ...multisigAddress]);
     return StringUtils.decode(hash, type: StringEncoding.base64UrlSafe);
   }
 
@@ -69,6 +73,9 @@ abstract final class NewAccountParams<ACCOUNT extends ChainAccount>
         break;
       case NewAccountParamsType.cardanoNewAddressParams:
         params = CardanoNewAddressParams.deserialize(object: decode);
+        break;
+      case NewAccountParamsType.cardanoMultisigNewAddressParams:
+        params = CardanoMultisigNewAddressParams.deserialize(object: decode);
         break;
       case NewAccountParamsType.cosmosNewAddressParams:
         params = CosmosNewAddressParams.deserialize(object: decode);

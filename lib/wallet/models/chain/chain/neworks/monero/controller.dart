@@ -11,8 +11,7 @@ base mixin MoneroChainController
             IMoneroAddress,
             WalletMoneroNetwork,
             MoneroClient,
-            MoneroChainStorage,
-            MoneroChainConfig,
+            MoneroNetworkConfig,
             MoneroWalletTransaction,
             MoneroContact,
             MoneroNewAddressParams>,
@@ -56,8 +55,7 @@ base mixin MoneroChainController
   }
 
   List<MoneroAccountIndex> relateAccountIndexes(
-    MoneroViewPrimaryAccountDetails viewKey,
-  ) {
+      MoneroViewPrimaryAccountDetails viewKey) {
     final accounts = relatedTxAccounts(viewKey);
     return accounts.map((e) => e.addrDetails.index).toList();
   }
@@ -65,6 +63,12 @@ base mixin MoneroChainController
   List<IMoneroAddress> relatedTxAccounts(
       MoneroViewPrimaryAccountDetails viewKey) {
     return addresses.where((e) => e.addrDetails.viewKey == viewKey).toList();
+  }
+
+  IMoneroAddress? _accountFromPrimaryAndIndex(
+      MoneroViewPrimaryAccountDetails viewKey, MoneroAccountIndex index) {
+    return addresses.firstWhereOrNull((e) =>
+        e.addrDetails.viewKey == viewKey && e.addrDetails.index == index);
   }
 
   List<MoneroAddress> relatedAccountAddresses(
@@ -148,6 +152,29 @@ base mixin MoneroChainController
           _accountUtxos.updateUtxos(out);
           defaultTracker.removeAccountPendingTxes(
               out.primaryAddress, out.indexes);
+          for (final i in out.responses) {
+            final unlockInfo = i.output;
+
+            if (unlockInfo == null) continue;
+            final amount = unlockInfo.amount;
+            final address = _accountFromPrimaryAndIndex(
+                out.primaryAddress, unlockInfo.lockedOutput.accountIndex);
+            if (address == null) continue;
+            final tx = MoneroWalletTransaction(
+              txId: i.txID,
+              time: i.txTimestamp,
+              type: WalletTransactionType.receive,
+              status: i.inPool
+                  ? WalletTransactionStatus.pending
+                  : WalletTransactionStatus.block,
+              outputs: [],
+              network: network,
+              txKeys: null,
+              totalOutput: WalletTransactionIntegerAmount(
+                  amount: amount, network: network),
+            );
+            saveTransaction(address: address, transaction: tx);
+          }
         }
         await _saveDefaultTracker();
         await _saveUtxos();
@@ -207,6 +234,7 @@ base mixin MoneroChainController
           for (int i = 0; i < txes.length; i++) {
             final tx = txes[i];
             final utxo = updateRequired[i];
+            assert(StringUtils.hexEqual(tx.txHash, utxo.txId));
             _accountUtxos.updateUtxoInfromation(
                 utxo: utxo,
                 outoutIndices: tx.outoutIndices,
@@ -216,15 +244,15 @@ base mixin MoneroChainController
         await _saveUtxos();
       },
     );
+    _updateAddressBalance();
   }
 
   void _updateAddressBalance() {
     for (final i in _addresses) {
       final balance = _accountUtxos.getAddressBalance(i.addrDetails);
-      _updateAddressBalanceInternal(
-          address: i, balance: balance, saveAccount: false);
+      i.address._updateAddressBalance(balance);
     }
-    save();
+    _saveAccount();
   }
 
   @override
@@ -232,18 +260,15 @@ base mixin MoneroChainController
       {List<IMoneroAddress>? addresses, bool tokens = true}) async {
     final address = _addresses.elementAtOrNull(_addressIndex);
     if (address == null) return;
-    await updateAddressBalance(address);
+    await _updateAddressBalanceInternal(address, tokens: tokens);
   }
 
   /// update address balance
   /// -[address]: address for retrive and update balance
   @override
-  Future<void> updateAddressBalance(IMoneroAddress address,
-      {bool tokens = true, bool saveAccount = true}) async {
-    _isAccountAddress(address);
-    await initAddress(address);
+  Future<void> _updateAddressBalanceInternal(IMoneroAddress address,
+      {bool tokens = true}) async {
     await _updateAaccountsBalances();
-    _updateAddressBalance();
     _syncBlock();
   }
 
@@ -260,7 +285,8 @@ base mixin MoneroChainController
           final IMoneroAddress newAddress =
               accountParams.toAccount(network, publicKey);
 
-          final any = addresses.any((element) => element.isEqual(newAddress));
+          final any = addresses
+              .any((element) => newAddress.identifier == element.identifier);
           if (any) {
             throw WalletExceptionConst.addressAlreadyExist;
           }
@@ -271,7 +297,7 @@ base mixin MoneroChainController
           await _saveUtxos();
           return newAddress;
         },
-        type: ChainNotify.address,
+        type: DefaultChainNotify.address,
         saveAccount: true,
         notifyProgress: _addresses.isEmpty);
   }
@@ -306,7 +332,7 @@ base mixin MoneroChainController
         _updateChainStatus();
         return true;
       },
-      type: ChainNotify.address,
+      type: DefaultChainNotify.address,
       saveAccount: true,
     );
   }
@@ -357,17 +383,14 @@ base mixin MoneroChainController
             final accounts = syncAccounts.keys
                 .map(
                   (e) => MoneroSyncAccountsInfos(
-                    primaryAccount: e,
-                    indexes: syncAccounts[e]!,
-                  ),
+                      primaryAccount: e, indexes: syncAccounts[e]!),
                 )
                 .toList();
 
             await defaultTracker.addSyncRequest(
-              accounts: accounts,
-              startHeight: startHeight,
-              endHeight: endHeight,
-            );
+                accounts: accounts,
+                startHeight: startHeight,
+                endHeight: endHeight);
             await _saveDefaultTracker();
           }
         },
@@ -378,7 +401,7 @@ base mixin MoneroChainController
       t: () async {
         await _updateSyncChain(chain);
       },
-      type: ChainNotify.account,
+      type: DefaultChainNotify.account,
     );
   }
 
@@ -400,7 +423,7 @@ base mixin MoneroChainController
       t: () async {
         await _updateSyncChain(chain);
       },
-      type: ChainNotify.account,
+      type: DefaultChainNotify.account,
     );
   }
 
@@ -442,6 +465,12 @@ base mixin MoneroChainController
       _blockSubscribe?.cancel();
       _blockSubscribe = null;
     }
+  }
+
+  @override
+  Future<void> _saveDefaultTracker() async {
+    await super._saveDefaultTracker();
+    _controller.add(ChainEvent.complete(MoneroChainNotify.trackerUpdated));
   }
 
   Future<void> _syncBlock() async {

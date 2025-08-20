@@ -14,12 +14,13 @@ class ExtentionWalletKey with CborSerializable {
         object: object,
         hex: hex,
         tags: ExtentionSessionStorageConst.historyTag);
-    return ExtentionWalletKey(values.elementAt(0));
+    return ExtentionWalletKey(values.elementAs(0));
   }
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.dynamicLength([key]),
+    return CborTagValue(
+        CborListValue<CborObject>.inDefinite([CborStringValue(key)]),
         ExtentionSessionStorageConst.historyTag);
   }
 }
@@ -45,12 +46,12 @@ class ExtentionKey with CborSerializable {
         object: object,
         hex: hex,
         tags: ExtentionSessionStorageConst.keyTag);
-    return ExtentionKey.fromHex(values.elementAt(0), values.elementAt(1));
+    return ExtentionKey.fromHex(values.elementAs(0), values.elementAs(1));
   }
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([key, nonce]),
+    return CborTagValue(CborSerializable.fromDynamic([key, nonce]),
         ExtentionSessionStorageConst.keyTag);
   }
 }

@@ -26,7 +26,7 @@ class TonJettonToken extends TokenCore<IntegerBalance, Token> {
   factory TonJettonToken.deserialize({List<int>? bytes, CborObject? obj}) {
     final CborListValue cbor = CborSerializable.cborTagValue(
         cborBytes: bytes, object: obj, tags: TokenCoreType.jetton.tag);
-    final Token token = Token.deserialize(obj: cbor.getCborTag(0));
+    final Token token = Token.deserialize(obj: cbor.elementAsCborTag(0));
     final String minterAddress = cbor.elementAs(1);
     final String walletAddress = cbor.elementAs(2);
     final DateTime updated = cbor.elementAs(4);
@@ -42,11 +42,13 @@ class TonJettonToken extends TokenCore<IntegerBalance, Token> {
   final TonAddress minterAddress;
   final TonAddress walletAddress;
 
-  void _updateBalance([BigInt? updateBalance]) {
+  bool _updateBalance([BigInt? updateBalance]) {
     if (streamBalance.value._internalUpdateBalance(updateBalance)) {
       _updated = DateTime.now().toLocal();
       streamBalance.notify();
+      return true;
     }
+    return false;
   }
 
   @override
@@ -72,7 +74,7 @@ class TonJettonToken extends TokenCore<IntegerBalance, Token> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           token.toCbor(),
           minterAddress.toFriendlyAddress(),
           walletAddress.toFriendlyAddress(),

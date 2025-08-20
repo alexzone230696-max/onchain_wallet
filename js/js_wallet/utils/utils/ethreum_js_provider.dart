@@ -18,6 +18,7 @@ import 'package:on_chain/ethereum/src/rpc/core/methods.dart'
     show EthereumMethods;
 import 'package:on_chain/ethereum/src/rpc/methds/dynamic.dart';
 import 'package:on_chain/ethereum/src/rpc/provider/provider.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/ethereum/constant/exception.dart';
 
 typedef ONETHSubsribe = void Function(EthereumSubscribeResult);
 
@@ -93,7 +94,7 @@ class JSEthereumClient {
 
   Future<dynamic> call(String methodName, List<dynamic> params) async {
     if (!isConnect) {
-      throw Web3RequestExceptionConst.disconnectedChain;
+      throw Web3EthereumExceptionConst.disconnectedChain;
     }
     final method = EthereumMethods.fromName(methodName);
     if (method == null) {

@@ -15,7 +15,7 @@ class AccessMnemonicResponse extends CryptoKeyData {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([mnemonic.toStr()]),
+    return CborTagValue(CborSerializable.fromDynamic([mnemonic.toStr()]),
         CryptoKeyConst.accessMnemonicResponse);
   }
 

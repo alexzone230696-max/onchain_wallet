@@ -94,10 +94,112 @@ abstract final class WalletBackupCore {
   WalletBackupCore decrypt(List<int> decryptedKey);
 }
 
-final class WalletBackupChainRepository with CborSerializable {
+final class WalletBackupNetworkRepository with CborSerializable {
   final List<int> value;
   final int storageID;
   final int networkID;
+  final int? createdAt;
+  final String? identifier;
+  final String? identifier2;
+
+  const WalletBackupNetworkRepository._(
+      {required this.storageID,
+      required this.identifier,
+      required this.value,
+      required this.networkID,
+      required this.identifier2,
+      required this.createdAt});
+  factory WalletBackupNetworkRepository(
+      {required int storageID,
+      required String? identifier,
+      required String? identifier2,
+      required List<int> value,
+      required int networkID,
+      required int? createdAt}) {
+    return WalletBackupNetworkRepository._(
+        storageID: storageID,
+        identifier: identifier,
+        value: value,
+        networkID: networkID,
+        identifier2: identifier2,
+        createdAt: createdAt);
+  }
+  factory WalletBackupNetworkRepository.deserialize(
+      {List<int>? bytes, CborObject? obj, String? hex}) {
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        hex: hex,
+        object: obj,
+        tags: CborTagsConst.walletBackupNetworkStorageIds);
+
+    return WalletBackupNetworkRepository(
+        value: values.valueAs(0),
+        storageID: values.valueAs(1),
+        identifier: values.valueAs(2),
+        identifier2: values.valueAs(3),
+        networkID: values.valueAs(4),
+        createdAt: values.valueAs(5));
+  }
+
+  @override
+  CborTagValue toCbor() {
+    return CborTagValue(
+        CborSerializable.fromDynamic([
+          CborBytesValue(value),
+          storageID,
+          identifier,
+          identifier2,
+          networkID,
+          createdAt,
+        ]),
+        CborTagsConst.walletBackupNetworkStorageIds);
+  }
+}
+
+final class WalletNetworkBackup with CborSerializable {
+  final Chain chain;
+  final List<WalletBackupNetworkRepository> repositories;
+  WalletNetworkBackup._(
+      {required this.chain,
+      List<WalletBackupNetworkRepository> repositories = const []})
+      : repositories = repositories.immutable;
+  factory WalletNetworkBackup(
+      {required Chain chain,
+      required List<WalletBackupNetworkRepository> repositories}) {
+    return WalletNetworkBackup._(chain: chain, repositories: repositories);
+  }
+  factory WalletNetworkBackup.deserialize(
+      {List<int>? bytes, CborObject? obj, String? hex}) {
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        hex: hex,
+        object: obj,
+        tags: CborTagsConst.walletBackupChains);
+
+    return WalletNetworkBackup(
+        chain: Chain.deserialize(obj: values.elementAsCborTag(0)),
+        repositories: values
+            .elementAsListOf<CborTagValue>(1)
+            .map((e) => WalletBackupNetworkRepository.deserialize(obj: e))
+            .toList());
+  }
+
+  @override
+  CborTagValue toCbor() {
+    return CborTagValue(
+        CborSerializable.fromDynamic([
+          chain.toCbor(),
+          CborSerializable.fromDynamic(
+              repositories.map((e) => e.toCbor()).toList())
+        ]),
+        CborTagsConst.walletBackupChains);
+  }
+}
+
+final class WalletBackupChainRepository with CborSerializable {
+  final List<int> value;
+  final int storageID;
+  final int chainID;
   final int? createdAt;
   final String? identifier;
   final String? identifier2;
@@ -106,7 +208,7 @@ final class WalletBackupChainRepository with CborSerializable {
       {required this.storageID,
       required this.identifier,
       required this.value,
-      required this.networkID,
+      required this.chainID,
       required this.identifier2,
       required this.createdAt});
   factory WalletBackupChainRepository(
@@ -114,13 +216,13 @@ final class WalletBackupChainRepository with CborSerializable {
       required String? identifier,
       required String? identifier2,
       required List<int> value,
-      required int networkID,
+      required int chainID,
       required int? createdAt}) {
     return WalletBackupChainRepository._(
         storageID: storageID,
         identifier: identifier,
         value: value,
-        networkID: networkID,
+        chainID: chainID,
         identifier2: identifier2,
         createdAt: createdAt);
   }
@@ -133,88 +235,56 @@ final class WalletBackupChainRepository with CborSerializable {
         tags: CborTagsConst.walletBackupChainStorageIds);
 
     return WalletBackupChainRepository(
-        value: values.elementAs(0),
-        storageID: values.elementAs(1),
-        identifier: values.elementAs(2),
-        identifier2: values.elementAs(3),
-        networkID: values.elementAs(4),
-        createdAt: values.elementAs(5));
+        value: values.valueAs(0),
+        storageID: values.valueAs(1),
+        identifier: values.valueAs(2),
+        identifier2: values.valueAs(3),
+        chainID: values.valueAs(4),
+        createdAt: values.valueAs(5));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(value),
           storageID,
           identifier,
           identifier2,
-          networkID,
-          createdAt
+          chainID,
+          createdAt,
         ]),
         CborTagsConst.walletBackupChainStorageIds);
   }
 }
 
-final class WalletChainBackup with CborSerializable {
-  final Chain chain;
-  final List<WalletBackupChainRepository> repositories;
-  WalletChainBackup._(
-      {required this.chain,
-      List<WalletBackupChainRepository> repositories = const []})
-      : repositories = repositories.immutable;
-  factory WalletChainBackup(
-      {required Chain chain,
-      required List<WalletBackupChainRepository> repositories}) {
-    return WalletChainBackup._(chain: chain, repositories: repositories);
-  }
-  factory WalletChainBackup.deserialize(
-      {List<int>? bytes, CborObject? obj, String? hex}) {
-    final CborListValue values = CborSerializable.cborTagValue(
-        cborBytes: bytes,
-        hex: hex,
-        object: obj,
-        tags: CborTagsConst.walletBackupChains);
-
-    return WalletChainBackup(
-        chain: Chain.deserialize(obj: values.getCborTag(0)),
-        repositories: values
-            .elementAsListOf<CborTagValue>(1)
-            .map((e) => WalletBackupChainRepository.deserialize(obj: e))
-            .toList());
-  }
-
-  @override
-  CborTagValue toCbor() {
-    return CborTagValue(
-        CborListValue.fixedLength([
-          chain.toCbor(),
-          CborListValue.fixedLength(
-              repositories.map((e) => e.toCbor()).toList())
-        ]),
-        CborTagsConst.walletBackupChains);
-  }
-}
-
 final class WalletBackup implements WalletBackupCore {
-  final List<WalletChainBackup> chains;
-  final List<Web3APPAuthentication> dapps;
+  final List<WalletNetworkBackup> networks;
+  final List<Web3ApplicationAuthentication> dapps;
+  final List<WalletBackupChainRepository> chains;
   WalletBackup._(
       {required this.key,
-      required List<WalletChainBackup> chains,
-      List<Web3APPAuthentication> dapps = const [],
+      required List<WalletNetworkBackup> networks,
+      required List<WalletBackupChainRepository> chains,
+      List<Web3ApplicationAuthentication> dapps = const [],
       DateTime? created,
       this.isEncrypted = true})
-      : chains = chains.immutable,
+      : networks = networks.immutable,
         created = created ?? DateTime.now(),
-        dapps = dapps.immutable;
+        dapps = dapps.immutable,
+        chains = chains.immutable;
   factory WalletBackup(
       {required String key,
-      required List<WalletChainBackup> chains,
-      List<Web3APPAuthentication> dapps = const [],
+      required List<WalletNetworkBackup> networks,
+      required List<WalletBackupChainRepository> chains,
+      List<Web3ApplicationAuthentication> dapps = const [],
       DateTime? created}) {
     return WalletBackup._(
-        key: key, chains: chains, created: created, dapps: dapps);
+        key: key,
+        networks: networks,
+        created: created,
+        dapps: dapps,
+        chains: chains);
   }
   factory WalletBackup.deserialize({List<int>? bytes, CborObject? obj}) {
     final CborListValue values = CborSerializable.cborTagValue(
@@ -223,14 +293,18 @@ final class WalletBackup implements WalletBackupCore {
     /// id: "backup"
     return WalletBackup(
         key: values.elementAs(0),
-        chains: values
+        networks: values
             .elementAsListOf<CborTagValue>(1)
-            .map((e) => WalletChainBackup.deserialize(obj: e))
+            .map((e) => WalletNetworkBackup.deserialize(obj: e))
             .toList(),
         created: values.elementAs(2),
         dapps: values
             .elementAsListOf<CborTagValue>(3, emyptyOnNull: true)
-            .map((e) => Web3APPAuthentication.deserialize(object: e))
+            .map((e) => Web3ApplicationAuthentication.deserialize(object: e))
+            .toList(),
+        chains: values
+            .elementAsListOf<CborTagValue>(4, emyptyOnNull: true)
+            .map((e) => WalletBackupChainRepository.deserialize(obj: e))
             .toList());
   }
 
@@ -242,11 +316,12 @@ final class WalletBackup implements WalletBackupCore {
 
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborListValue<CborObject>.definite([
           CborStringValue(key),
-          CborListValue.fixedLength(chains.map((e) => e.toCbor()).toList()),
+          CborListValue.definite(networks.map((e) => e.toCbor()).toList()),
           CborEpochIntValue(created),
-          CborListValue.fixedLength(dapps.map((e) => e.toCbor()).toList()),
+          CborListValue.definite(dapps.map((e) => e.toCbor()).toList()),
+          CborListValue.definite(chains.map((e) => e.toCbor()).toList()),
         ]),
         type.tag);
   }
@@ -263,8 +338,9 @@ final class WalletBackup implements WalletBackupCore {
         key: type.fromDecyrptBytes(decryptedKeyBytes),
         created: created,
         isEncrypted: false,
-        chains: chains,
-        dapps: dapps);
+        networks: networks,
+        dapps: dapps,
+        chains: chains);
   }
 }
 
@@ -310,7 +386,7 @@ final class WalletKeyBackup implements WalletBackupCore {
 
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [CborStringValue(key), CborEpochIntValue(created)]),
         type.tag);
   }
@@ -334,36 +410,41 @@ final class WalletKeyBackup implements WalletBackupCore {
 final class WalletRestoreV2 {
   WalletRestoreV2._({
     required this.masterKeys,
-    required List<WalletChainBackup> chains,
+    required List<WalletNetworkBackup> networks,
     required List<ChainAccount> invalidAddresses,
-    required List<Web3APPAuthentication> dapps,
+    required List<Web3ApplicationAuthentication> dapps,
+    required List<WalletBackupChainRepository> chains,
     required this.wallet,
     this.verifiedChecksum,
-  })  : chains = chains.immutable,
+  })  : networks = networks.immutable,
         invalidAddresses = invalidAddresses.immutable,
-        totalAccounts = chains.fold(0, (p, c) => p + c.chain.addresses.length) +
-            invalidAddresses.length,
-        dapps = dapps.immutable;
-  factory WalletRestoreV2({
-    required WalletMasterKeys masterKeys,
-    required List<WalletChainBackup> chains,
-    required List<ChainAccount> invalidAddresses,
-    required MainWallet wallet,
-    required bool verifiedChecksum,
-    required List<Web3APPAuthentication> dapps,
-  }) {
+        totalAccounts =
+            networks.fold(0, (p, c) => p + c.chain.addresses.length) +
+                invalidAddresses.length,
+        dapps = dapps.immutable,
+        chains = chains.immutable;
+  factory WalletRestoreV2(
+      {required WalletMasterKeys masterKeys,
+      required List<WalletNetworkBackup> networks,
+      required List<ChainAccount> invalidAddresses,
+      required MainWallet wallet,
+      required bool verifiedChecksum,
+      required List<Web3ApplicationAuthentication> dapps,
+      required List<WalletBackupChainRepository> chains}) {
     return WalletRestoreV2._(
         masterKeys: masterKeys,
         chains: chains,
+        networks: networks,
         invalidAddresses: invalidAddresses,
         wallet: wallet,
         verifiedChecksum: verifiedChecksum,
         dapps: dapps);
   }
   final WalletMasterKeys masterKeys;
-  final List<WalletChainBackup> chains;
+  final List<WalletNetworkBackup> networks;
   final List<ChainAccount> invalidAddresses;
-  final List<Web3APPAuthentication> dapps;
+  final List<Web3ApplicationAuthentication> dapps;
+  final List<WalletBackupChainRepository> chains;
 
   final MainWallet wallet;
   final bool? verifiedChecksum;

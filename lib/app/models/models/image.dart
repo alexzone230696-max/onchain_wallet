@@ -68,7 +68,7 @@ class APPImage with CborSerializable, Equatable implements APPImageInfo {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([type.value, CborStringValue(uri)]),
+        CborSerializable.fromDynamic([type.value, CborStringValue(uri)]),
         APPSerializationConst.imageTag);
   }
 

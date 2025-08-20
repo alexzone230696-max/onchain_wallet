@@ -1,5 +1,33 @@
 part of 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 
+class ADANetworkStorageId extends DefaultNetworkStorageId {
+  static const ADANetworkStorageId utxos = ADANetworkStorageId(11);
+  // static const ADANetworkStorageId utxosOutput = ADANetworkStorageId(12);
+  const ADANetworkStorageId(super.storageId);
+  static const List<DefaultNetworkStorageId> values = [
+    ...DefaultNetworkStorageId.values,
+    utxos,
+  ];
+  // @override
+  // bool get isSharedStorage => false;
+}
+
+class ADANetworkConfig extends DefaultNetworkConfig<ADANetworkStorageId> {
+  ADANetworkConfig(
+      {super.supportToken = false,
+      super.supportNft = false,
+      super.supportWeb3 = true});
+
+  @override
+  List<DefaultNetworkStorageId> get storageKeys => ADANetworkStorageId.values;
+
+  @override
+  CborTagValue toCbor() {
+    return CborTagValue(
+        CborSerializable.fromDynamic([]), CborTagsConst.cardanoChainConfig);
+  }
+}
+
 final class ADAChain extends Chain<
     CardanoAPIProvider,
     CardanoNetworkParams,
@@ -8,12 +36,11 @@ final class ADAChain extends Chain<
     NFTCore,
     ICardanoAddress,
     WalletCardanoNetwork,
-    CardanoClient,
-    DefaultChainStorageKey,
-    DefaultChainConfig,
+    ADAClient,
+    ADANetworkConfig,
     ADAWalletTransaction,
     CardanoContact,
-    CardanoNewAddressParams> {
+    BaseCardanoNewAddressParams> with ADAChainRepository, ADAChainController {
   ADAChain._({
     required super.network,
     required super.addressIndex,
@@ -25,16 +52,16 @@ final class ADAChain extends Chain<
   @override
   ADAChain copyWith({
     WalletCardanoNetwork? network,
-    List<ICardanoAddress>? addresses,
+    List<ChainAccount>? addresses,
     int? addressIndex,
-    CardanoClient? client,
+    ADAClient? client,
     String? id,
-    DefaultChainConfig? config,
+    ADANetworkConfig? config,
   }) {
     return ADAChain._(
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
-        addresses: addresses ?? _addresses,
+        addresses: addresses?.cast<ICardanoAddress>() ?? _addresses,
         client: client ?? _client,
         id: id ?? this.id,
         config: config ?? this.config);
@@ -43,25 +70,25 @@ final class ADAChain extends Chain<
   factory ADAChain.setup(
       {required WalletCardanoNetwork network,
       required String id,
-      CardanoClient? client}) {
+      ADAClient? client}) {
     return ADAChain._(
         network: network,
         addressIndex: 0,
         id: id,
         client: client,
         addresses: [],
-        config: DefaultChainConfig());
+        config: ADANetworkConfig());
   }
 
   factory ADAChain.deserialize(
       {required WalletCardanoNetwork network,
       required CborListValue cbor,
-      CardanoClient? client}) {
+      ADAClient? client}) {
     final int networkId = cbor.elementAs(0);
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
     }
-    final String id = cbor.elementAt<String>(2);
+    final String id = cbor.elementAs<String>(2);
     final List<ICardanoAddress> accounts = cbor
         .elementAsListOf<CborTagValue>(3)
         .map((e) => ICardanoAddress.deserialize(network, obj: e))
@@ -73,36 +100,7 @@ final class ADAChain extends Chain<
         addressIndex: addressIndex,
         client: client,
         id: id,
-        config: DefaultChainConfig());
-  }
-
-  @override
-  Future<void> updateAddressBalance(ICardanoAddress address,
-      {bool tokens = true, bool saveAccount = true}) async {
-    _isAccountAddress(address);
-    await initAddress(address);
-    await onClient(onConnect: (client) async {
-      final balance = await client.getAccountBalance(address.networkAddress);
-      _updateAddressBalanceInternal(
-          address: address, balance: balance, saveAccount: saveAccount);
-    });
-  }
-
-  Future<List<ADAAccountUTXOResponse>> getAddressUtxos(
-      ICardanoAddress address) async {
-    _isAccountAddress(address);
-    final utxos = await onClient(
-        onConnect: (client) async {
-          final utxos =
-              await client.getAccountUtxos(address: address.networkAddress);
-          final balance =
-              utxos.fold(BigInt.zero, (p, c) => p + c.sumOflovelace);
-          _updateAddressBalanceInternal(
-              address: address, balance: balance, saveAccount: true);
-          return utxos;
-        },
-        onError: (err) => throw err);
-    return utxos;
+        config: ADANetworkConfig());
   }
 
   @override
@@ -111,5 +109,13 @@ final class ADAChain extends Chain<
       required List<TokenCore<BalanceCore<dynamic, APPToken>, APPToken>>
           tokens}) async {
     throw UnimplementedError();
+  }
+
+  @override
+  Future<void> _initAddress(ICardanoAddress? address) async {
+    if (address == null || !address._status.isInit) return;
+    await super._initAddress(address);
+    final utxos = await _getAddressUtxos(address);
+    address._setAddressUtxos(utxos);
   }
 }

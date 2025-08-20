@@ -9,8 +9,7 @@ final class MoneroChain extends Chain<
     IMoneroAddress,
     WalletMoneroNetwork,
     MoneroClient,
-    MoneroChainStorage,
-    MoneroChainConfig,
+    MoneroNetworkConfig,
     MoneroWalletTransaction,
     MoneroContact,
     MoneroNewAddressParams> with MoneroChainRepository, MoneroChainController {
@@ -26,16 +25,16 @@ final class MoneroChain extends Chain<
   MoneroChain copyWith({
     WalletMoneroNetwork? network,
     InternalStreamValue<IntegerBalance>? totalBalance,
-    List<IMoneroAddress>? addresses,
+    List<ChainAccount>? addresses,
     int? addressIndex,
     MoneroClient? client,
     String? id,
-    MoneroChainConfig? config,
+    MoneroNetworkConfig? config,
   }) {
     return MoneroChain._(
       network: network ?? this.network,
       addressIndex: addressIndex ?? _addressIndex,
-      addresses: addresses ?? _addresses,
+      addresses: addresses?.cast<IMoneroAddress>() ?? _addresses,
       client: client ?? _client,
       id: id ?? this.id,
       config: config ?? this.config,
@@ -52,7 +51,7 @@ final class MoneroChain extends Chain<
         addressIndex: 0,
         id: id,
         client: client,
-        config: MoneroChainConfig(),
+        config: MoneroNetworkConfig(),
         addresses: []);
   }
 
@@ -64,14 +63,14 @@ final class MoneroChain extends Chain<
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
     }
-    final String id = cbor.elementAt<String>(2);
+    final String id = cbor.elementAs<String>(2);
     final List<IMoneroAddress> accounts = cbor
         .elementAsListOf<CborTagValue>(3)
         .map((e) => IMoneroAddress.deserialize(network, obj: e))
         .toList();
     final int addressIndex = cbor.elementAs(4);
-    final config =
-        MoneroChainConfig.deserialize(object: cbor.elementAs<CborTagValue>(5));
+    final config = MoneroNetworkConfig.deserialize(
+        object: cbor.elementAs<CborTagValue>(5));
     return MoneroChain._(
       network: network,
       addresses: accounts,

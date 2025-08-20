@@ -31,11 +31,12 @@ class CborTagsConst {
     5
   ];
   static const List<int> walletBackupWif = [walletBackupVersion, 170, 6];
-  static const List<int> walletBackupChainStorageIds = [
+  static const List<int> walletBackupNetworkStorageIds = [
     walletBackupVersion,
     170,
     7
   ];
+
   static const List<int> walletBackupChains = [walletBackupVersion, 170, 8];
   static const List<int> walletBackupWalletV2 = [walletBackupVersion, 170, 9];
   static const List<int> walletBackupWalletV3 = [walletBackupVersion, 170, 10];
@@ -43,6 +44,11 @@ class CborTagsConst {
     walletBackupVersion,
     170,
     11
+  ];
+  static const List<int> walletBackupChainStorageIds = [
+    walletBackupVersion,
+    170,
+    12
   ];
 
   static const List<int> mnemonic = [180];
@@ -84,8 +90,14 @@ class CborTagsConst {
 
   // cardano address
   static const List<int> cardanoAccount = [200, 197];
-
+  static const List<int> cardanoAddressUtxos = [200, 197, 1];
+  static const List<int> cardanoAddressUtxo = [200, 197, 2];
+  static const List<int> cardanoUtxoOutput = [200, 197, 3];
+  static const List<int> cardanoMultisigAccount = [200, 197, 0];
   static const List<int> cardanoAccountDetails = [200, 197, 100];
+  static const List<int> cardanoMultiSignaturAddress = [200, 197, 1, 0];
+  static const List<int> cardanoMultiSignaturScript = [200, 197, 1, 1];
+  static const List<int> cardanoMultiSigSigner = [200, 197, 1, 2];
 
   // cosmos address
   static const List<int> cosmosAccount = [200, 198];
@@ -254,6 +266,11 @@ class CborTagsConst {
 
   ///
   static const List<int> web3App = [161, 0, 0];
+  static const List<int> web3Application = [161, 0, 13];
+  static const List<int> web3InternalNetworkAccount = [161, 0, 10];
+  static const List<int> web3InternalNetwork = [161, 0, 11];
+  static const List<int> web3InternalChain = [161, 0, 12];
+
   static const List<int> web3ChainIdentifier = [161, 0, 1];
   static const List<int> web3EthereumChainIdentifier = [161, 0, 2];
   static const List<int> web3TronChainIdentifier = [161, 0, 4];
@@ -263,6 +280,8 @@ class CborTagsConst {
   static const List<int> web3CosmosChainIdentifier = [161, 0, 6];
   static const List<int> web3BitcoinChainIdentifier = [161, 0, 7];
   static const List<int> web3MoneroChainIdentifier = [161, 0, 8];
+  static const List<int> web3ADAChainIdentifier = [161, 0, 9];
+  static const List<int> web3BitcoinCashChainIdentifier = [161, 0, 15];
   static const List<int> web3EthereumAccount = [161, 1, 1];
   static const List<int> web3EthereumTransactionAccessList = [161, 1, 1, 0];
 
@@ -279,9 +298,13 @@ class CborTagsConst {
   static const List<int> web3SuiAccount = [161, 2, 7];
   static const List<int> web3CosmosAccount = [161, 2, 8];
   static const List<int> web3BitcoinAccount = [161, 2, 9];
-  static const List<int> web3BitcoinSendTransactionParams = [161, 2, 9, 0];
+
+  // static const List<int> web3BitcoinSendTransactionParams = [161, 2, 9, 0];
   static const List<int> web3XRPAccount = [161, 2, 10];
   static const List<int> web3MoneroAccount = [161, 2, 11];
+  static const List<int> web3CardanoAccount = [161, 2, 12];
+  static const List<int> web3BitcoinCashAccount = [161, 2, 13];
+  static const List<int> web3CardanoMultiSigAccount = [161, 2, 12, 0];
 
   /// address params
   static const List<int> bitcoinCashNewAddressParams = [12, 0];
@@ -289,6 +312,7 @@ class CborTagsConst {
   static const List<int> bitcoinNewAddressParams = [12, 2];
   static const List<int> bitcoinMultiSigNewAddressParams = [12, 4];
   static const List<int> cardanoNewAddressParams = [12, 5];
+  static const List<int> cardanoNewMultisigAddressParams = [12, 5, 1];
   static const List<int> cosmosNewAddressParams = [12, 6];
   static const List<int> ethereumNewAddressParamss = [12, 7];
   static const List<int> solanaNewAddressParams = [12, 8];

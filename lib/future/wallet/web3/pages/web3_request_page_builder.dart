@@ -4,6 +4,7 @@ import 'package:on_chain_wallet/crypto/models/networks.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/address_details.dart';
 import 'package:on_chain_wallet/future/wallet/network/aptos/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/web3/types/types.dart';
+import 'package:on_chain_wallet/future/wallet/network/cardano/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/monero/web3/types/types.dart';
@@ -66,6 +67,8 @@ class _Web3StatePageBuilderState extends State<Web3StatePageBuilder>
           request: request, walletProvider: context.wallet),
       NetworkType.monero => Web3MoneroStateController.findController(
           request: request, walletProvider: context.wallet),
+      NetworkType.cardano => Web3CardanoStateController.findController(
+          request: request, walletProvider: context.wallet),
       _ => throw UnimplementedError()
     };
     controller.init();
@@ -96,7 +99,7 @@ class _Web3StatePageBuilderState extends State<Web3StatePageBuilder>
             children: [
               Text(request.params.method.name.tr),
               Text(request.params.method.name,
-                  style: context.textTheme.bodySmall),
+                  style: context.textTheme.bodySmall)
             ],
           ),
           actions: [

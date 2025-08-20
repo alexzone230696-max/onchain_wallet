@@ -137,6 +137,7 @@ class WalletProvider extends StateController
     }
     switch (event.action) {
       case WalletActionEventType.setup:
+      case WalletActionEventType.eraseWallet:
         navigatorKey?.currentContext?.popToHome();
         break;
       default:

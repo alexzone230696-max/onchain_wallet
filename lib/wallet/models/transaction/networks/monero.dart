@@ -2,6 +2,7 @@ import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:blockchain_utils/helper/helper.dart';
 import 'package:monero_dart/monero_dart.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
+import 'package:on_chain_wallet/app/utils/list/extension.dart';
 import 'package:on_chain_wallet/crypto/models/networks.dart';
 import 'package:on_chain_wallet/wallet/constant/constant.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
@@ -9,24 +10,24 @@ import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart'
 
 class MoneroWalletTransactionProof {
   final String txId;
-  final List<List<int>> txKeys;
-  final MoneroWalletTransactionOutput output;
+  final List<List<int>>? txKeys;
+  final MoneroAddress recepient;
   const MoneroWalletTransactionProof(
-      {required this.txKeys, required this.output, required this.txId});
+      {required this.txKeys, required this.recepient, required this.txId});
 }
 
 class MoneroWalletTransaction extends ChainTransaction {
-  final List<List<int>> txKeys;
+  final List<List<int>>? txKeys;
   MoneroWalletTransaction(
       {required super.txId,
       required super.time,
       required super.outputs,
       required WalletMoneroNetwork network,
-      required List<List<int>> txKeys,
+      required List<List<int>>? txKeys,
       required super.totalOutput,
       super.type = WalletTransactionType.send,
       super.status = WalletTransactionStatus.pending})
-      : txKeys = txKeys.map((e) => e.asImmutableBytes).toImutableList,
+      : txKeys = txKeys?.map((e) => e.asImmutableBytes).toImutableList,
         super();
 
   factory MoneroWalletTransaction.deserialize(WalletMoneroNetwork network,
@@ -50,25 +51,25 @@ class MoneroWalletTransaction extends ChainTransaction {
       type: WalletTransactionType.fromValue(values.elementAs(5)),
       status: WalletTransactionStatus.fromValue(values.elementAs(6)),
       txKeys: values
-          .elementAsListOf<CborBytesValue>(7)
+          .elementAsListOf<CborBytesValue>(7, emyptyOnNull: true)
           .map((e) => e.value)
-          .toList(),
+          .nullOnEmoty,
     );
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           txId,
           time,
           totalOutput?.toCbor(),
-          CborListValue.fixedLength(outputs.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(outputs.map((e) => e.toCbor()).toList()),
           web3Client?.toCbor(),
           type.value,
           status.value,
-          CborListValue.fixedLength(
-              txKeys.map((e) => CborBytesValue(e)).toList()),
+          CborSerializable.fromDynamic(
+              txKeys?.map((e) => CborBytesValue(e)).toList() ?? []),
         ]),
         network.tag);
   }
@@ -76,10 +77,9 @@ class MoneroWalletTransaction extends ChainTransaction {
   @override
   NetworkType get network => NetworkType.monero;
 
-  MoneroWalletTransactionProof generateProofRequest(
-      MoneroWalletTransactionOutput output) {
+  MoneroWalletTransactionProof generateProofRequest(MoneroAddress recepient) {
     return MoneroWalletTransactionProof(
-        txKeys: txKeys, output: output, txId: txId);
+        txKeys: txKeys, recepient: recepient, txId: txId);
   }
 }
 
@@ -99,7 +99,7 @@ class MoneroWalletTransactionOutput
         tags: CborTagsConst.moneroWalletTransactionOutput);
     return MoneroWalletTransactionOutput(
       amount: WalletTransactionIntegerAmount.deserialize(network,
-          object: values.getCborTag(0)),
+          object: values.elementAsCborTag(0)),
       to: MoneroAddress(values.elementAs(1)),
     );
   }
@@ -107,7 +107,7 @@ class MoneroWalletTransactionOutput
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([amount.toCbor(), to.address]),
+        CborSerializable.fromDynamic([amount.toCbor(), to.address]),
         CborTagsConst.moneroWalletTransactionOutput);
   }
 }

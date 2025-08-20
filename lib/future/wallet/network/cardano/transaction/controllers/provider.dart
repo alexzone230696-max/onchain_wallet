@@ -4,7 +4,7 @@ import 'package:on_chain_wallet/future/wallet/network/cardano/transaction/types/
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
 mixin ADATransactionApiController on DisposableMixin {
-  CardanoClient get client;
+  ADAClient get client;
   WalletCardanoNetwork get network;
   late final CachedObject<ADAEpochParametersResponse>
       _latestEpochProtocolParameters = CachedObject<ADAEpochParametersResponse>(

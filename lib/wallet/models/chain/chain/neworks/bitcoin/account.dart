@@ -9,8 +9,7 @@ final class BitcoinChain extends Chain<
     IBitcoinAddress,
     WalletBitcoinNetwork,
     BitcoinClient,
-    DefaultChainStorageKey,
-    DefaultChainConfig,
+    DefaultNetworkConfig,
     BitcoinWalletTransaction,
     BitcoinContact,
     BaseBitcoinNewAddressParams> {
@@ -18,23 +17,26 @@ final class BitcoinChain extends Chain<
     required super.network,
     required super.addressIndex,
     required super.id,
-    required super.config,
+    DefaultNetworkConfig? config,
     required super.client,
     required super.addresses,
-  }) : super._();
+  }) : super._(
+            config: config ??
+                DefaultNetworkConfig(
+                    supportNft: false, supportToken: false, supportWeb3: true));
   @override
   BitcoinChain copyWith({
     WalletBitcoinNetwork? network,
-    List<IBitcoinAddress>? addresses,
+    List<ChainAccount>? addresses,
     int? addressIndex,
     BitcoinClient? client,
     String? id,
-    DefaultChainConfig? config,
+    DefaultNetworkConfig? config,
   }) {
     return BitcoinChain._(
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
-        addresses: addresses ?? _addresses,
+        addresses: addresses?.cast<IBitcoinAddress>() ?? _addresses,
         client: client ?? _client,
         id: id ?? this.id,
         config: config ?? this.config);
@@ -49,8 +51,7 @@ final class BitcoinChain extends Chain<
         addressIndex: 0,
         id: id,
         client: client,
-        addresses: [],
-        config: DefaultChainConfig());
+        addresses: []);
   }
 
   factory BitcoinChain.deserialize(
@@ -78,8 +79,7 @@ final class BitcoinChain extends Chain<
         addresses: accounts,
         addressIndex: addressIndex,
         client: client,
-        id: id,
-        config: DefaultChainConfig());
+        id: id);
   }
 
   BitcoinBaseAddress? findAddressFromScript(Script script) {
@@ -89,14 +89,11 @@ final class BitcoinChain extends Chain<
   }
 
   @override
-  Future<void> updateAddressBalance(IBitcoinAddress address,
-      {bool tokens = true, bool saveAccount = true}) async {
-    _isAccountAddress(address);
-    await initAddress(address);
+  Future<void> _updateAddressBalanceInternal(IBitcoinAddress address,
+      {bool tokens = true}) async {
     await onClient(onConnect: (client) async {
       final balance = await client.getAccountBalance(address.networkAddress);
-      _updateAddressBalanceInternal(
-          address: address, balance: balance, saveAccount: saveAccount);
+      address.address._updateAddressBalance(balance);
     });
   }
 
@@ -107,10 +104,7 @@ final class BitcoinChain extends Chain<
         onConnect: (client) async {
           final balance = await client.readUtxos(address.toUtxoRequest(),
               includeTokens && network.coinParam.isBCH);
-          _updateAddressBalanceInternal(
-              address: address,
-              balance: balance.sumOfUtxosValue(),
-              saveAccount: true);
+          address.address._updateAddressBalance(balance.sumOfUtxosValue());
           return balance;
         },
         onError: (err) => throw err);

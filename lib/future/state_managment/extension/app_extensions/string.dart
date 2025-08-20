@@ -23,6 +23,10 @@ extension Translate on String {
     return StrUtils.toCamelCase(this);
   }
 
+  String get camelCaseToSpaced {
+    return StrUtils.camelCaseToSpaced(this);
+  }
+
   String get orEmpty => trim().isEmpty ? "value_is_empty".tr : this;
   String or(String or) => trim().isEmpty ? or : this;
   String? get nullOnEmpty => trim().isEmpty ? null : this;

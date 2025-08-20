@@ -4,7 +4,8 @@ import 'package:on_chain_wallet/wallet/web3/core/exception/exception.dart';
 class Web3MoneroExceptionConstant {
   static final Web3RequestException accountDoesNotSupportSignMessage =
       Web3RequestExceptionConst.message(
-          'The provided address does not support message signing.');
+          'The provided address does not support message signing.',
+          errorType: Web3ErrorCode.refused);
   static final Web3RequestException noRecipients =
       Web3RequestExceptionConst.invalidParameters(
           'at least one recipients required.');

@@ -157,7 +157,7 @@ class WebViewController
     }
   }
 
-  final bool isWorker = true;
+  final bool isWorker = false;
 
   Future<void> _activeScript(WebViewEvent event) async {
     final auth = tabsAuthenticated[event.viewId];
@@ -275,7 +275,7 @@ class WebViewController
       {required Web3ActiveClient client,
       required Web3EncryptedMessage message}) async {
     final tab = tabsAuthenticated.values.firstWhereOrNull((e) =>
-        Web3APPAuthentication.toApplicationId(e.url) ==
+        Web3ApplicationAuthentication.toApplicationId(e.url) ==
             client.client.identifier &&
         e.viewId == client.identifier);
     if (tab == null) return;

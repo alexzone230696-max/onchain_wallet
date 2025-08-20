@@ -237,14 +237,14 @@ class MoneroTransactionTransferOperation
       final payments = signedTx.transaction.transactionData.payments
           .where((e) => e.address == i)
           .toList();
+      final total =
+          payments.fold<BigInt>(BigInt.zero, (p, c) => p + c.paymet.amount);
       final transaction = MoneroWalletTransaction(
           txId: txId.txId,
           time: DateTime.now(),
           network: network,
-          totalOutput: WalletTransactionIntegerAmount(
-              amount: payments.fold<BigInt>(
-                  BigInt.zero, (p, c) => p + c.paymet.amount),
-              network: network),
+          totalOutput:
+              WalletTransactionIntegerAmount(amount: total, network: network),
           outputs: destinations,
           txKeys: signedTx.finalTransactionData.txData.txKeys
               .map((e) => e.key)
@@ -252,7 +252,6 @@ class MoneroTransactionTransferOperation
       transactions
           .add(IWalletTransaction(transaction: transaction, account: i));
     }
-
     return transactions;
   }
 

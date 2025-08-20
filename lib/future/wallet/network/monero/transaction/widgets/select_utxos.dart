@@ -20,7 +20,11 @@ class MoneroTransactionSelectUtxos extends StatelessWidget {
               value: form.accountUtxos,
               builder: (context, value) {
                 return TextButton.icon(
-                  onPressed: form.onToggleAllUtxos,
+                  onPressed: () => form.onToggleAllUtxos(
+                    () {
+                      context.showAlert("transaction_input_exceeds_16_desc".tr);
+                    },
+                  ),
                   label: Text("choose_all".tr),
                   icon: APPAnimated(
                       isActive: form.allUtxosSelected,
@@ -69,7 +73,11 @@ class MoneroTransactionSelectUtxos extends StatelessWidget {
                                     return APPCheckBox(
                                         onChanged: (v) {
                                           form.onToggleAddressUtxos(
-                                              addressUtxos);
+                                              addressUtxos, () {
+                                            context.showAlert(
+                                                "transaction_input_exceeds_16_desc"
+                                                    .tr);
+                                          });
                                         },
                                         value: addressUtxos.allSelected,
                                         backgroundColor:
@@ -97,7 +105,11 @@ class MoneroTransactionSelectUtxos extends StatelessWidget {
                                     onRemove: canSpent
                                         ? () {
                                             form.onUpdateUtxo(
-                                                addressUtxos, utxo);
+                                                addressUtxos, utxo, () {
+                                              context.showAlert(
+                                                  "transaction_input_exceeds_16_desc"
+                                                      .tr);
+                                            });
                                           }
                                         : null,
                                     onRemoveWidget: APPCheckBox(

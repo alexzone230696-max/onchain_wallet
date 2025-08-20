@@ -19,12 +19,13 @@ class Web3ChainMessage extends Web3MessageCore {
         tags: Web3MessageTypes.chains.tag);
 
     return Web3ChainMessage(
-        authenticated: Web3APPData.deserialize(object: values.getCborTag(0)));
+        authenticated:
+            Web3APPData.deserialize(object: values.elementAsCborTag(0)));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([authenticated.toCbor()]), type.tag);
+        CborSerializable.fromDynamic([authenticated.toCbor()]), type.tag);
   }
 }

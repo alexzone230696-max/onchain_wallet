@@ -37,7 +37,9 @@ abstract class JSBasePageController {
     JSClientType.cosmos: CosmosPageController(requestController),
     JSClientType.bitcoin: BitcoinPageController(requestController),
     JSClientType.xrpl: RipplePageController(requestController),
-    JSClientType.monero: MoneroPageController(requestController)
+    JSClientType.monero: MoneroPageController(requestController),
+    JSClientType.cardano: ADAPageController(requestController),
+    JSClientType.bitcoinCash: BitcoinCashPageController(requestController)
   };
 
   void _initControllers() {

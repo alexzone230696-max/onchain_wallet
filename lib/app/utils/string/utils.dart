@@ -32,7 +32,18 @@ class StrUtils {
     return RegExp('^[^$_ltrChars]*[$_rtlChars]').hasMatch(text);
   }
 
-  static String toCamelCase(String input) {
+  static String camelCaseToSpaced(String input) {
+    return input
+        // Insert a space before each capital letter (except the first one)
+        .replaceAllMapped(
+            RegExp(r'(?<=[a-z])([A-Z])'), (match) => ' ${match.group(1)}')
+        // Capitalize the first letter of each word
+        .split(' ')
+        .map((word) => word[0].toUpperCase() + word.substring(1))
+        .join(' ');
+  }
+
+  static String toCamelCase(String input, {bool space = false}) {
     if (input.isEmpty) {
       return input;
     }
@@ -50,7 +61,7 @@ class StrUtils {
     }).toList();
 
     // Join the words to form CamelCase
-    final String camelCaseString = capitalizedWords.join('');
+    final String camelCaseString = capitalizedWords.join(space ? ' ' : '');
 
     return camelCaseString;
   }

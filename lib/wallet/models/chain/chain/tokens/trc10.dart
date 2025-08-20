@@ -20,7 +20,7 @@ class TronTRC10Token extends TronToken {
   factory TronTRC10Token.deserialize({List<int>? bytes, CborObject? obj}) {
     final CborListValue cbor = CborSerializable.cborTagValue(
         cborBytes: bytes, object: obj, tags: TokenCoreType.trc10.tag);
-    final Token token = Token.deserialize(obj: cbor.getCborTag(0));
+    final Token token = Token.deserialize(obj: cbor.elementAsCborTag(0));
     final String tokenID = cbor.elementAs(1);
     final DateTime updated = cbor.elementAs(3);
     return TronTRC10Token._(
@@ -49,16 +49,18 @@ class TronTRC10Token extends TronToken {
 
   final String tokenID;
   @override
-  void _updateBalance([BigInt? updateBalance]) {
+  bool _updateBalance([BigInt? updateBalance]) {
     if (streamBalance.value._internalUpdateBalance(updateBalance)) {
       _updated = DateTime.now().toLocal();
+      return true;
     }
+    return false;
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           token.toCbor(),
           tokenID,
           streamBalance.value.balance,

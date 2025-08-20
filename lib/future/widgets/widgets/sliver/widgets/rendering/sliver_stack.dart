@@ -361,6 +361,7 @@ class RenderSliverStack extends RenderSliver
     if (child is RenderSliver && child.geometry!.visible ||
         child is RenderBox) {
       final parentData = child.parentData as SliverStackParentData;
+      // ignore: deprecated_member_use
       transform.translate(parentData.paintOffset.dx, parentData.paintOffset.dy);
     }
   }

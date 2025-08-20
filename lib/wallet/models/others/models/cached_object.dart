@@ -12,7 +12,7 @@ class CachedObject<T extends Object?> with Equatable {
 
   bool _shouldFetch({Duration? interval}) {
     interval ??= this.interval;
-    final update = this._update;
+    final update = _update;
     if (update == null) return true;
     final expire = update.add(interval);
     if (expire.isBefore(DateTime.now())) {

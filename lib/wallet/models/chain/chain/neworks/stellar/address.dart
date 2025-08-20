@@ -57,10 +57,10 @@ final class IStellarAddress extends ChainAccount<StellarAddress,
     final CryptoCoins coin =
         CustomCoins.getSerializationCoin(values.elementAs(0));
     final keyIndex =
-        AddressDerivationIndex.deserialize(obj: values.getCborTag(1));
+        AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(1));
     final List<int> publicKey = values.elementAs(2);
     final AccountBalance address =
-        AccountBalance.deserialize(network, obj: values.getCborTag(3));
+        AccountBalance.deserialize(network, obj: values.elementAsCborTag(3));
     final StellarAddress stellarAddress =
         StellarAddress.fromBase32Addr(address.toAddress);
 
@@ -94,7 +94,7 @@ final class IStellarAddress extends ChainAccount<StellarAddress,
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           coin.toCbor(),
           keyIndex.toCbor(),
           publicKey,
@@ -120,13 +120,6 @@ final class IStellarAddress extends ChainAccount<StellarAddress,
 
   @override
   String get baseAddress => networkAddress.baseAddress;
-
-  @override
-  bool isEqual(ChainAccount other) {
-    if (other is! IStellarAddress) return false;
-    return networkAddress == other.networkAddress &&
-        multiSigAccount == other.multiSigAccount;
-  }
 
   @override
   StellarNewAddressParams toAccountParams() {

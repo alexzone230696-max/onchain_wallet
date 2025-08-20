@@ -26,7 +26,7 @@ class SubstrateNetworkParams extends NetworkCoinParams<SubstrateAPIProvider> {
         tags: CborTagsConst.substrateNetworkParams);
 
     return SubstrateNetworkParams(
-        token: Token.deserialize(obj: values.getCborTag(2)),
+        token: Token.deserialize(obj: values.elementAsCborTag(2)),
         providers: values
             .elementAsListOf<CborTagValue>(3)
             .map((e) => SubstrateAPIProvider.fromCborBytesOrObject(obj: e))
@@ -64,11 +64,12 @@ class SubstrateNetworkParams extends NetworkCoinParams<SubstrateAPIProvider> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           const CborNullValue(),
           const CborNullValue(),
           token.toCbor(),
-          CborListValue.fixedLength(providers.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              providers.map((e) => e.toCbor()).toList()),
           chainType.name,
           ss58Format,
           const CborNullValue(),
@@ -78,7 +79,8 @@ class SubstrateNetworkParams extends NetworkCoinParams<SubstrateAPIProvider> {
           bip32CoinType,
           addressExplorer,
           transactionExplorer,
-          CborListValue.fixedLength(keyAlgorithms.map((e) => e.value).toList()),
+          CborSerializable.fromDynamic(
+              keyAlgorithms.map((e) => e.value).toList()),
           specVersion
         ]),
         CborTagsConst.substrateNetworkParams);

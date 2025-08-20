@@ -139,3 +139,26 @@ extension type JSStellarSignMessageParams._(JSObject _) implements JSAny {
   external APPJSUint8Array get message;
   static const List<String> properties = ['message'];
 }
+@JS()
+extension type JSADAWalletStandardSignTransactionParams(JSAny _)
+    implements JSAny {
+  external APPJSUint8Array get transaction;
+  external JSStellarWalletAccount? account;
+}
+@JS()
+extension type JSADASignTransactionResponse(JSAny _) implements JSAny {
+  factory JSADASignTransactionResponse.setup(List<List<int>> witnesses) {
+    return JSADASignTransactionResponse(JSObject())
+      ..witness =
+          witnesses.map((e) => APPJSUint8Array.fromList(e)).toList().toJS;
+  }
+  external JSArray<APPJSUint8Array> get witnesses;
+  external set witness(JSArray<APPJSUint8Array> _);
+}
+@JS()
+extension type JSStellarSignTransactionParams._(JSObject _) implements JSAny {
+  external JSStellarWalletAccount? account;
+  external APPJSUint8Array get transaction;
+  external JSBoolean? get partialSign;
+  static const List<String> properties = ['transaction'];
+}

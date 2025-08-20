@@ -22,7 +22,8 @@ class TonAccountPageView extends StatelessWidget {
               address: account.address);
         },
       ),
-      AccountTransactionActivityView(account)
+      AccountTransactionActivityView<ITonAddress, TonWalletTransaction>(
+          account: account, address: account.address)
     ]);
   }
 }

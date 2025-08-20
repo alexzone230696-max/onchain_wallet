@@ -136,8 +136,8 @@ class WalletBitcoinNetwork extends WalletNetwork<BitcoinParams> {
       {List<int>? bytes, CborObject? obj}) {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, CborTagsConst.bitconNetwork);
-    return WalletBitcoinNetwork(cbor.elementAt(0),
-        BitcoinParams.fromCborBytesOrObject(obj: cbor.getCborTag(1)));
+    return WalletBitcoinNetwork(cbor.elementAs(0),
+        BitcoinParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)));
   }
 
   const WalletBitcoinNetwork(this.value, this.coinParam);
@@ -176,7 +176,8 @@ class WalletBitcoinNetwork extends WalletNetwork<BitcoinParams> {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([value, coinParam.toCbor()]),
+    return CborTagValue(
+        CborSerializable.fromDynamic([value, coinParam.toCbor()]),
         CborTagsConst.bitconNetwork);
   }
 
@@ -200,7 +201,7 @@ class WalletBitcoinCashNetwork extends WalletBitcoinNetwork {
   String get caip => ChainConst.buildCaip2(
       type, coinParam.chainType.isMainnet ? "bitcoincash" : "bchtest");
   @override
-  String get wsIdentifier => coinParam.transacationNetwork.identifier;
+  String get wsIdentifier => caip;
   @override
   WalletBitcoinCashNetwork copyWith({int? value, BitcoinParams? coinParam}) {
     return WalletBitcoinCashNetwork(
@@ -216,7 +217,8 @@ class WalletBitcoinCashNetwork extends WalletBitcoinNetwork {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([value, coinParam.toCbor()]),
+    return CborTagValue(
+        CborSerializable.fromDynamic([value, coinParam.toCbor()]),
         CborTagsConst.bitcoinCashNetwork);
   }
 
@@ -225,8 +227,8 @@ class WalletBitcoinCashNetwork extends WalletBitcoinNetwork {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, CborTagsConst.bitcoinCashNetwork);
     return WalletBitcoinCashNetwork(
-      cbor.elementAt(0),
-      BitcoinParams.fromCborBytesOrObject(obj: cbor.getCborTag(1)),
+      cbor.elementAs(0),
+      BitcoinParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
     );
   }
 }
@@ -247,7 +249,8 @@ class WalletXRPNetwork extends WalletNetwork<RippleNetworkParams> {
   const WalletXRPNetwork(this.value, this.coinParam);
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([value, coinParam.toCbor()]),
+    return CborTagValue(
+        CborSerializable.fromDynamic([value, coinParam.toCbor()]),
         CborTagsConst.xrpNetwork);
   }
 
@@ -256,8 +259,8 @@ class WalletXRPNetwork extends WalletNetwork<RippleNetworkParams> {
     final CborListValue cbor =
         CborSerializable.decodeCborTags(bytes, obj, CborTagsConst.xrpNetwork);
     return WalletXRPNetwork(
-      cbor.elementAt(0),
-      RippleNetworkParams.fromCborBytesOrObject(obj: cbor.getCborTag(1)),
+      cbor.elementAs(0),
+      RippleNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
     );
   }
 
@@ -309,8 +312,9 @@ class WalletEthereumNetwork extends WalletNetwork<EthereumNetworkParams> {
     final CborListValue cbor =
         CborSerializable.decodeCborTags(bytes, obj, CborTagsConst.evmNetwork);
     return WalletEthereumNetwork(
-      cbor.elementAt(0),
-      EthereumNetworkParams.fromCborBytesOrObject(obj: cbor.getCborTag(1)),
+      cbor.elementAs(0),
+      EthereumNetworkParams.fromCborBytesOrObject(
+          obj: cbor.elementAsCborTag(1)),
     );
   }
   @override
@@ -334,7 +338,8 @@ class WalletEthereumNetwork extends WalletNetwork<EthereumNetworkParams> {
   bool get supportImportNetwork => true;
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([value, coinParam.toCbor()]),
+    return CborTagValue(
+        CborSerializable.fromDynamic([value, coinParam.toCbor()]),
         CborTagsConst.evmNetwork);
   }
 
@@ -391,8 +396,8 @@ class WalletTronNetwork extends WalletNetwork<TronNetworkParams> {
     final CborListValue cbor =
         CborSerializable.decodeCborTags(bytes, obj, CborTagsConst.tvmNetwork);
     return WalletTronNetwork(
-      cbor.elementAt(0),
-      TronNetworkParams.fromCborBytesOrObject(obj: cbor.getCborTag(1)),
+      cbor.elementAs(0),
+      TronNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
     );
   }
   @override
@@ -407,7 +412,8 @@ class WalletTronNetwork extends WalletNetwork<TronNetworkParams> {
   List get variabels => [value];
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([value, coinParam.toCbor()]),
+    return CborTagValue(
+        CborSerializable.fromDynamic([value, coinParam.toCbor()]),
         CborTagsConst.tvmNetwork);
   }
 
@@ -445,8 +451,8 @@ class WalletSolanaNetwork extends WalletNetwork<SolanaNetworkParams> {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, CborTagsConst.solanaNetwork);
     return WalletSolanaNetwork(
-      cbor.elementAt(0),
-      SolanaNetworkParams.fromCborBytesOrObject(obj: cbor.getCborTag(1)),
+      cbor.elementAs(0),
+      SolanaNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
     );
   }
   @override
@@ -468,7 +474,8 @@ class WalletSolanaNetwork extends WalletNetwork<SolanaNetworkParams> {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([value, coinParam.toCbor()]),
+    return CborTagValue(
+        CborSerializable.fromDynamic([value, coinParam.toCbor()]),
         CborTagsConst.solanaNetwork);
   }
 
@@ -495,13 +502,10 @@ class WalletCardanoNetwork extends WalletNetwork<CardanoNetworkParams> {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, CborTagsConst.cardanoNetwork);
     return WalletCardanoNetwork(
-      cbor.elementAt(0),
-      CardanoNetworkParams.fromCborBytesOrObject(obj: cbor.getCborTag(1)),
+      cbor.elementAs(0),
+      CardanoNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
     );
   }
-
-  ADANetwork get toCardanoNetwork =>
-      coinParam.mainnet ? ADANetwork.mainnet : ADANetwork.testnetPreprod;
 
   @override
   List<BipCoins> get coins {
@@ -527,7 +531,8 @@ class WalletCardanoNetwork extends WalletNetwork<CardanoNetworkParams> {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([value, coinParam.toCbor()]),
+    return CborTagValue(
+        CborSerializable.fromDynamic([value, coinParam.toCbor()]),
         CborTagsConst.cardanoNetwork);
   }
 
@@ -547,10 +552,10 @@ class WalletCardanoNetwork extends WalletNetwork<CardanoNetworkParams> {
   Object get identifier => coinParam.identifier;
 
   @override
-  String get caip => throw UnimplementedError();
+  String get caip => ChainConst.buildCaip2(type, coinParam.chainId);
 
   @override
-  String get wsIdentifier => throw UnimplementedError();
+  String get wsIdentifier => caip;
 }
 
 class WalletCosmosNetwork extends WalletNetwork<CosmosNetworkParams> {
@@ -571,8 +576,8 @@ class WalletCosmosNetwork extends WalletNetwork<CosmosNetworkParams> {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, CborTagsConst.cosmosNetwork);
     return WalletCosmosNetwork(
-      cbor.elementAt(0),
-      CosmosNetworkParams.fromCborBytesOrObject(obj: cbor.getCborTag(1)),
+      cbor.elementAs(0),
+      CosmosNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
     );
   }
 
@@ -586,7 +591,8 @@ class WalletCosmosNetwork extends WalletNetwork<CosmosNetworkParams> {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([value, coinParam.toCbor()]),
+    return CborTagValue(
+        CborSerializable.fromDynamic([value, coinParam.toCbor()]),
         CborTagsConst.cosmosNetwork);
   }
 
@@ -629,8 +635,8 @@ class WalletTonNetwork extends WalletNetwork<TonNetworkParams> {
     final CborListValue cbor =
         CborSerializable.decodeCborTags(bytes, obj, CborTagsConst.tonNetwork);
     return WalletTonNetwork(
-      cbor.elementAt(0),
-      TonNetworkParams.fromCborBytesOrObject(obj: cbor.getCborTag(1)),
+      cbor.elementAs(0),
+      TonNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
     );
   }
 
@@ -647,7 +653,8 @@ class WalletTonNetwork extends WalletNetwork<TonNetworkParams> {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([value, coinParam.toCbor()]),
+    return CborTagValue(
+        CborSerializable.fromDynamic([value, coinParam.toCbor()]),
         CborTagsConst.tonNetwork);
   }
 
@@ -681,8 +688,10 @@ class WalletSubstrateNetwork extends WalletNetwork<SubstrateNetworkParams> {
       {List<int>? bytes, CborObject? obj}) {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, CborTagsConst.substrateNetwork);
-    return WalletSubstrateNetwork(cbor.elementAt(0),
-        SubstrateNetworkParams.fromCborBytesOrObject(obj: cbor.getCborTag(1)));
+    return WalletSubstrateNetwork(
+        cbor.elementAs(0),
+        SubstrateNetworkParams.fromCborBytesOrObject(
+            obj: cbor.elementAsCborTag(1)));
   }
 
   @override
@@ -706,7 +715,8 @@ class WalletSubstrateNetwork extends WalletNetwork<SubstrateNetworkParams> {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([value, coinParam.toCbor()]),
+    return CborTagValue(
+        CborSerializable.fromDynamic([value, coinParam.toCbor()]),
         CborTagsConst.substrateNetwork);
   }
 
@@ -762,8 +772,8 @@ class WalletStellarNetwork extends WalletNetwork<StellarNetworkParams> {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, CborTagsConst.stellarNetwork);
     return WalletStellarNetwork(
-      cbor.elementAt(0),
-      StellarNetworkParams.fromCborBytesOrObject(obj: cbor.getCborTag(1)),
+      cbor.elementAs(0),
+      StellarNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
     );
   }
 
@@ -780,7 +790,8 @@ class WalletStellarNetwork extends WalletNetwork<StellarNetworkParams> {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([value, coinParam.toCbor()]),
+    return CborTagValue(
+        CborSerializable.fromDynamic([value, coinParam.toCbor()]),
         CborTagsConst.stellarNetwork);
   }
 
@@ -814,8 +825,8 @@ class WalletMoneroNetwork extends WalletNetwork<MoneroNetworkParams> {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, CborTagsConst.moneroNetwork);
     return WalletMoneroNetwork(
-      cbor.elementAt(0),
-      MoneroNetworkParams.fromCborBytesOrObject(obj: cbor.getCborTag(1)),
+      cbor.elementAs(0),
+      MoneroNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
     );
   }
 
@@ -832,7 +843,8 @@ class WalletMoneroNetwork extends WalletNetwork<MoneroNetworkParams> {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([value, coinParam.toCbor()]),
+    return CborTagValue(
+        CborSerializable.fromDynamic([value, coinParam.toCbor()]),
         CborTagsConst.moneroNetwork);
   }
 
@@ -877,8 +889,8 @@ class WalletAptosNetwork extends WalletNetwork<AptosNetworkParams> {
     final CborListValue cbor =
         CborSerializable.decodeCborTags(bytes, obj, CborTagsConst.aptosNetwork);
     return WalletAptosNetwork(
-      cbor.elementAt(0),
-      AptosNetworkParams.fromCborBytesOrObject(obj: cbor.getCborTag(1)),
+      cbor.elementAs(0),
+      AptosNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
     );
   }
   @override
@@ -900,7 +912,8 @@ class WalletAptosNetwork extends WalletNetwork<AptosNetworkParams> {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([value, coinParam.toCbor()]),
+    return CborTagValue(
+        CborSerializable.fromDynamic([value, coinParam.toCbor()]),
         CborTagsConst.aptosNetwork);
   }
 
@@ -928,8 +941,8 @@ class WalletSuiNetwork extends WalletNetwork<SuiNetworkParams> {
     final CborListValue cbor =
         CborSerializable.decodeCborTags(bytes, obj, CborTagsConst.suiNetwork);
     return WalletSuiNetwork(
-      cbor.elementAt(0),
-      SuiNetworkParams.fromCborBytesOrObject(obj: cbor.getCborTag(1)),
+      cbor.elementAs(0),
+      SuiNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
     );
   }
   @override
@@ -951,7 +964,8 @@ class WalletSuiNetwork extends WalletNetwork<SuiNetworkParams> {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([value, coinParam.toCbor()]),
+    return CborTagValue(
+        CborSerializable.fromDynamic([value, coinParam.toCbor()]),
         CborTagsConst.suiNetwork);
   }
 

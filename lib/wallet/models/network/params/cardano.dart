@@ -8,20 +8,24 @@ import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 import 'package:blockchain_utils/bip/bip.dart';
 
 class CardanoNetworkParams extends NetworkCoinParams<CardanoAPIProvider> {
-  final int magic;
+  final ADANetwork networkType;
+  String get chainId {
+    return "${networkType.value}-${networkType.protocolMagic}";
+  }
+
   factory CardanoNetworkParams.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
     final CborListValue values = CborSerializable.decodeCborTags(
         bytes, obj, CborTagsConst.cardanoNetworkParams);
 
     return CardanoNetworkParams(
-        token: Token.deserialize(obj: values.getCborTag(2)),
+        token: Token.deserialize(obj: values.elementAsCborTag(2)),
         providers: values
             .elementAsListOf<CborTagValue>(3)
             .map((e) => CardanoAPIProvider.fromCborBytesOrObject(obj: e))
             .toList(),
         chainType: ChainType.fromValue(values.elementAs(4)),
-        magic: values.elementAs(5),
+        networkType: ADANetwork.fromProtocolMagic(values.elementAs(5)),
         addressExplorer: values.elementAs(6),
         transactionExplorer: values.elementAs(7));
   }
@@ -29,27 +33,28 @@ class CardanoNetworkParams extends NetworkCoinParams<CardanoAPIProvider> {
       {required super.token,
       required super.providers,
       required super.chainType,
-      required this.magic,
+      required this.networkType,
       super.addressExplorer,
       super.transactionExplorer});
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           const CborNullValue(),
           const CborNullValue(),
           token.toCbor(),
-          CborListValue.fixedLength(providers.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              providers.map((e) => e.toCbor()).toList()),
           chainType.name,
-          magic,
+          networkType.protocolMagic,
           addressExplorer,
           transactionExplorer
         ]),
         CborTagsConst.cardanoNetworkParams);
   }
 
-  int get identifier => magic;
+  int get identifier => networkType.protocolMagic;
 
   @override
   NetworkCoinParams<CardanoAPIProvider> updateParams(
@@ -63,7 +68,7 @@ class CardanoNetworkParams extends NetworkCoinParams<CardanoAPIProvider> {
             token: this.token, updateToken: token),
         providers: updateProviders?.cast<CardanoAPIProvider>() ?? providers,
         chainType: chainType,
-        magic: magic,
+        networkType: networkType,
         addressExplorer: addressExplorer,
         transactionExplorer: transactionExplorer);
   }

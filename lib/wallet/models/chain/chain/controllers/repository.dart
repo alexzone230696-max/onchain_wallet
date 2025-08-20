@@ -4,20 +4,19 @@ mixin ChainRepository<
     ADDRESS extends ChainAccount,
     NETWORK extends WalletNetwork,
     CLIENT extends NetworkClient,
-    STORAGE extends ChainStorageKey,
-    CONFIG extends ChainConfig,
+    CONFIG extends DefaultNetworkConfig,
     TOKEN extends TokenCore,
     NFT extends NFTCore,
     TRANSACTION extends ChainTransaction,
     CONTACT extends ContactCore,
     ADDRESSPARAM extends NewAccountParams> {
   Future<CLIENT?> clientOrNull();
-  ChainStorageManager get _storage;
+  NetworkStorageManager get _storage;
   NETWORK get network;
 
   Future<List<CONTACT>> _getContacts() async {
-    final storagekey = _storage.config.contactsStorageKey;
-    final data = await _storage.queriesChainStorage(storage: storagekey);
+    final storagekey = DefaultNetworkStorageId.contacts;
+    final data = await _storage.queriesNetworkStorage(storage: storagekey);
     final contacts = data
         .map((e) => ContactCore.deserialize<CONTACT>(network, bytes: e))
         .toList()
@@ -34,14 +33,14 @@ mixin ChainRepository<
   }
 
   Future<void> _saveContact(CONTACT contact) async {
-    final storageKey = _storage.config.contactsStorageKey;
-    await _storage.insertChainStorage(
+    final storageKey = DefaultNetworkStorageId.contacts;
+    await _storage.insertNetworkStorage(
         storage: storageKey, value: contact, keyA: contact.identifier);
   }
 
   Future<void> _removeContact(CONTACT contact) async {
-    final storageKey = _storage.config.contactsStorageKey;
-    await _storage.removeChainStorage(
+    final storageKey = DefaultNetworkStorageId.contacts;
+    await _storage.removeNetworkStorage(
         storage: storageKey, keyA: contact.identifier);
   }
 
@@ -51,10 +50,10 @@ mixin ChainRepository<
       {int? offset,
       int? limit,
       IDatabaseQueryOrdering ordering = IDatabaseQueryOrdering.desc}) async {
-    final storagekey = _storage.config.tokenStorageKey;
+    final storagekey = DefaultNetworkStorageId.token;
     assert(address.network == network.value, "address does not exists");
-    if (storagekey == null || address.network != network.value) return [];
-    final data = await _storage.queriesChainStorage(
+    if (address.network != network.value) return [];
+    final data = await _storage.queriesNetworkStorage(
       address: address,
       storage: storagekey,
       limit: limit,
@@ -77,15 +76,12 @@ mixin ChainRepository<
 
   Future<void> _saveToken(
       {required ADDRESS address, required TOKEN token}) async {
-    final storageKey = _storage.config.tokenStorageKey;
-    assert(storageKey != null, "unknown token storage key");
+    final storageKey = DefaultNetworkStorageId.token;
     assert(address.network == network.value, "address does not exists");
-    if (storageKey == null ||
-        !address.tokens.contains(token) ||
-        address.network != network.value) {
+    if (!address.tokens.contains(token) || address.network != network.value) {
       return;
     }
-    await _storage.insertChainStorage(
+    await _storage.insertNetworkStorage(
         address: address,
         storage: storageKey,
         value: token,
@@ -94,24 +90,21 @@ mixin ChainRepository<
 
   Future<void> _removeToken(
       {required ADDRESS address, required TOKEN token}) async {
-    final storageKey = _storage.config.tokenStorageKey;
-    assert(storageKey != null, "unknown token storage key");
+    final storageKey = DefaultNetworkStorageId.token;
     assert(address.tokens.contains(token), 'asset not found an account');
     assert(address.network == network.value, "address does not exists");
-    if (storageKey == null ||
-        !address.tokens.contains(token) ||
-        address.network != network.value) {
+    if (!address.tokens.contains(token) || address.network != network.value) {
       return;
     }
 
-    await _storage.removeChainStorage(
+    await _storage.removeNetworkStorage(
         address: address, storage: storageKey, keyA: token.identifier);
   }
 
   Future<void> _cleanAddressRepositories({required ADDRESS address}) async {
     assert(address.network == network.value, "address does not exists");
     if (address.network != network.value) return;
-    await _storage.removeChainStorage(address: address);
+    await _storage.removeNetworkStorage(address: address);
     appLogger.debug(
         runtime: runtimeType,
         functionName: "_cleanAddressRepositories ${network.networkName}",
@@ -122,13 +115,12 @@ mixin ChainRepository<
       {int? offset,
       int? limit,
       IDatabaseQueryOrdering ordering = IDatabaseQueryOrdering.desc}) async {
-    final storagekey = _storage.config.nftStorageKey;
-    if (storagekey == null) return [];
+    final storagekey = DefaultNetworkStorageId.nft;
     assert(address.network == network.value, "address does not exists");
     if (address.network != network.value) {
       return [];
     }
-    final data = await _storage.queriesChainStorage(
+    final data = await _storage.queriesNetworkStorage(
       address: address,
       storage: storagekey,
       limit: limit,
@@ -151,34 +143,28 @@ mixin ChainRepository<
   }
 
   Future<void> _saveNFT({required ADDRESS address, required NFT nft}) async {
-    final storageKey = _storage.config.nftStorageKey;
+    final storagekey = DefaultNetworkStorageId.nft;
     assert(address.nfts.contains(nft), 'asset not found an account');
-    assert(storageKey != null, "unknown nft storage key");
     assert(address.network == network.value, "address does not exists");
-    if (storageKey == null ||
-        !address.nfts.contains(nft) ||
-        address.network != network.value) {
+    if (!address.nfts.contains(nft) || address.network != network.value) {
       return;
     }
-    await _storage.insertChainStorage(
+    await _storage.insertNetworkStorage(
         address: address,
-        storage: storageKey,
+        storage: storagekey,
         value: nft,
         keyA: nft.identifier);
   }
 
   Future<void> _removeNFT({required ADDRESS address, required NFT nft}) async {
-    final storageKey = _storage.config.nftStorageKey;
-    assert(storageKey != null, "unknown nft storage key");
+    final storagekey = DefaultNetworkStorageId.nft;
     assert(address.nfts.contains(nft), 'asset not found an account');
     assert(address.network == network.value, "address does not exists");
-    if (storageKey == null ||
-        !address.nfts.contains(nft) ||
-        address.network != network.value) {
+    if (!address.nfts.contains(nft) || address.network != network.value) {
       return;
     }
-    await _storage.removeChainStorage(
-        address: address, storage: storageKey, keyA: nft.identifier);
+    await _storage.removeNetworkStorage(
+        address: address, storage: storagekey, keyA: nft.identifier);
   }
 
   Future<List<TRANSACTION>> _getTransactions(ADDRESS address) async {
@@ -186,10 +172,11 @@ mixin ChainRepository<
     if (address.network != network.value) {
       return [];
     }
-    final data = await _storage.queriesChainStorage(
+    final storagekey = DefaultNetworkStorageId.transaction;
+    final data = await _storage.queriesNetworkStorage(
         address: address,
-        storage: _storage.config.transactionStorageKey,
-        limit: ChainStorageManager.maxAddressItemLimit);
+        storage: storagekey,
+        limit: NetworkStorageManager.maxAddressItemLimit);
     final txes = data
         .map((e) => MethodUtils.nullOnException(
             () => ChainTransaction.deserialize<TRANSACTION>(network, bytes: e)))
@@ -212,15 +199,18 @@ mixin ChainRepository<
     if (address.network != network.value) {
       return;
     }
-    await _storage.insertChainStorage(
+    final storagekey = DefaultNetworkStorageId.transaction;
+    await _storage.insertNetworkStorage(
         address: address,
-        storage: _storage.config.transactionStorageKey,
+        storage: storagekey,
         value: transaction,
-        keyA: transaction.txId);
+        keyA: transaction.storageIdentifier,
+        createdAt: transaction.time);
   }
 
   Future<void> _removeTransaction(
       {required ADDRESS address, required TRANSACTION transaction}) async {
+    final storagekey = DefaultNetworkStorageId.transaction;
     assert(address.network == network.value, "address does not exists");
     assert(address.transactions.contains(transaction),
         "transaction does not exists");
@@ -228,9 +218,9 @@ mixin ChainRepository<
         !address.transactions.contains(transaction)) {
       return;
     }
-    await _storage.removeChainStorage(
+    await _storage.removeNetworkStorage(
         address: address,
-        storage: _storage.config.transactionStorageKey,
-        keyA: transaction.txId);
+        storage: storagekey,
+        keyA: transaction.storageIdentifier);
   }
 }

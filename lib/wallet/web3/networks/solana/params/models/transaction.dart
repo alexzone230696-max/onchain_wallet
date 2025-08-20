@@ -69,7 +69,7 @@ class Web3SolanaSendTransactionOptions with CborSerializable {
       maxRetries: values.elementAs(1),
       skipPreflight: values.elementAs(2),
       commitment: values.elementAs(3),
-      minContextSlot: values.elementAt(4),
+      minContextSlot: values.elementAs(4),
     );
   }
   // factory Web3SolanaSendTransactionOptions.fromJson(Map<String, dynamic> json) {
@@ -84,7 +84,7 @@ class Web3SolanaSendTransactionOptions with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           preflightCommitment,
           maxRetries,
           skipPreflight,
@@ -115,7 +115,7 @@ class Web3SolanaSendTransactionData with CborSerializable {
     return Web3SolanaSendTransactionData(
         account: Web3SolanaChainAccount.deserialize(
             object: values.elementAs<CborTagValue>(0)),
-        messageByte: values.elementAt(1),
+        messageByte: values.elementAs(1),
         sendConfig:
             values.elemetMybeAs<Web3SolanaSendTransactionOptions, CborTagValue>(
                 2,
@@ -126,7 +126,7 @@ class Web3SolanaSendTransactionData with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           account.toCbor(),
           CborBytesValue(messageBytes),
           sendConfig?.toCbor()
@@ -167,7 +167,7 @@ class Web3SolanaTransactionResponse with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(signature),
           CborBytesValue(signedTx),
         ]),
@@ -223,7 +223,7 @@ class Web3SolanaSendTransaction
         object: object,
         hex: hex,
         tags: Web3MessageTypes.walletRequest.tag);
-    final method = Web3NetworkRequestMethods.fromTag(values.elementAt(0));
+    final method = Web3NetworkRequestMethods.fromTag(values.elementAs(0));
     return Web3SolanaSendTransaction(
         messages: values
             .elementAs<CborListValue>(1)
@@ -247,23 +247,28 @@ class Web3SolanaSendTransaction
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
-          CborListValue.fixedLength(messages.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              messages.map((e) => e.toCbor()).toList()),
           mode?.name
         ]),
         type.tag);
   }
 
   @override
-  Web3SolanaRequest<List<Web3SolanaTransactionResponse>,
-          Web3SolanaSendTransaction>
-      toRequest(
-          {required Web3RequestInformation request,
-          required Web3RequestAuthentication authenticated,
-          required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+  Future<
+      Web3SolanaRequest<List<Web3SolanaTransactionResponse>,
+          Web3SolanaSendTransaction>> toRequest(
+      {required Web3RequestInformation request,
+      required Web3RequestAuthentication authenticated,
+      required WEB3REQUESTNETWORKCONTROLLER<ISolanaAddress, SolanaChain,
+              Web3SolanaChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3SolanaRequest<List<Web3SolanaTransactionResponse>,
         Web3SolanaSendTransaction>(
       params: this,

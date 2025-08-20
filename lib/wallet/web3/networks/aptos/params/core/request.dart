@@ -10,12 +10,7 @@ import 'package:on_chain_wallet/wallet/web3/core/core.dart';
 import 'package:on_chain/aptos/aptos.dart';
 
 abstract class Web3AptosRequestParam<RESPONSE> extends Web3RequestParams<
-    RESPONSE,
-    AptosAddress,
-    AptosChain,
-    IAptosAddress,
-    Web3AptosChainAccount,
-    Web3AptosChain> {
+    RESPONSE, AptosAddress, AptosChain, IAptosAddress, Web3AptosChainAccount> {
   @override
   abstract final Web3AptosRequestMethods method;
 
@@ -31,7 +26,7 @@ abstract class Web3AptosRequestParam<RESPONSE> extends Web3RequestParams<
         object: object,
         hex: hex,
         tags: Web3MessageTypes.walletRequest.tag);
-    final method = Web3NetworkRequestMethods.fromTag(values.elementAt(0));
+    final method = Web3NetworkRequestMethods.fromTag(values.elementAs(0));
     final Web3AptosRequestParam param;
     switch (method) {
       case Web3AptosRequestMethods.signTransaction:
@@ -54,7 +49,7 @@ abstract class Web3AptosRequestParam<RESPONSE> extends Web3RequestParams<
 
 class Web3AptosRequest<RESPONSE, PARAMS extends Web3AptosRequestParam<RESPONSE>>
     extends Web3NetworkRequest<RESPONSE, AptosAddress, AptosChain,
-        Web3AptosChainAccount, IAptosAddress, Web3AptosChain, PARAMS> {
+        Web3AptosChainAccount, IAptosAddress, PARAMS> {
   Web3AptosRequest(
       {required super.params,
       required super.info,

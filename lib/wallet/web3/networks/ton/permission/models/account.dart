@@ -16,25 +16,26 @@ class Web3TonChainAccount extends Web3ChainAccount<TonAddress> {
   final List<int> publicKey;
   final TonChainId network;
 
-  Web3TonChainAccount._({
-    required super.keyIndex,
-    required super.address,
-    required super.defaultAddress,
-    required this.id,
-    required List<int> publicKey,
-    required this.accountContext,
-    required this.network,
-  }) : publicKey = publicKey.asImmutableBytes;
+  Web3TonChainAccount._(
+      {required super.keyIndex,
+      required super.address,
+      required super.defaultAddress,
+      required this.id,
+      required List<int> publicKey,
+      required this.accountContext,
+      required this.network,
+      required super.identifier})
+      : publicKey = publicKey.asImmutableBytes;
   @override
-  Web3TonChainAccount clone({
-    AddressDerivationIndex? keyIndex,
-    TonAddress? address,
-    bool? defaultAddress,
-    int? id,
-    List<int>? publicKey,
-    TonChainId? network,
-    TonAccountContext? accountContext,
-  }) {
+  Web3TonChainAccount clone(
+      {AddressDerivationIndex? keyIndex,
+      TonAddress? address,
+      bool? defaultAddress,
+      int? id,
+      List<int>? publicKey,
+      TonChainId? network,
+      TonAccountContext? accountContext,
+      String? identifier}) {
     return Web3TonChainAccount._(
         keyIndex: keyIndex ?? this.keyIndex,
         address: address ?? this.address,
@@ -42,7 +43,8 @@ class Web3TonChainAccount extends Web3ChainAccount<TonAddress> {
         id: id ?? this.id,
         publicKey: publicKey ?? this.publicKey,
         network: network ?? this.network,
-        accountContext: accountContext ?? this.accountContext);
+        accountContext: accountContext ?? this.accountContext,
+        identifier: identifier ?? this.identifier);
   }
 
   factory Web3TonChainAccount.fromChainAccount(
@@ -57,7 +59,8 @@ class Web3TonChainAccount extends Web3ChainAccount<TonAddress> {
         defaultAddress: isDefault,
         accountContext: address.context,
         publicKey: address.publicKey,
-        network: network);
+        network: network,
+        identifier: address.identifier);
   }
 
   factory Web3TonChainAccount.deserialize(
@@ -68,14 +71,16 @@ class Web3TonChainAccount extends Web3ChainAccount<TonAddress> {
         hex: hex,
         tags: CborTagsConst.web3TonAccount);
     return Web3TonChainAccount._(
-        keyIndex: AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
-        address: TonAddress(values.elementAs(1)),
-        id: values.elementAs(2),
-        defaultAddress: values.elementAs(3),
+        keyIndex: AddressDerivationIndex.deserialize(
+            obj: values.indexAs<CborTagValue>(0)),
+        address: TonAddress(values.valueAs(1)),
+        id: values.valueAs(2),
+        defaultAddress: values.valueAs(3),
         accountContext: TonAccountContext.deserialize(
-            object: values.elementAs<CborTagValue>(4)),
-        publicKey: values.elementAs(5),
-        network: TonChainId.fromWorkchain(values.elementAs(6)));
+            object: values.indexAs<CborTagValue>(4)),
+        publicKey: values.valueAs(5),
+        network: TonChainId.fromWorkchain(values.valueAs(6)),
+        identifier: values.valueAs(7));
   }
   VersionedWalletContract toWalletContract(TonChainId chain) {
     return accountContext.toWalletContract(publicKey: publicKey, chain: chain);
@@ -84,14 +89,15 @@ class Web3TonChainAccount extends Web3ChainAccount<TonAddress> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           keyIndex.toCbor(),
           address.toFriendlyAddress(),
           id,
           defaultAddress,
           accountContext.toCbor(),
           CborBytesValue(publicKey),
-          network.workchain
+          network.workchain,
+          identifier
         ]),
         CborTagsConst.web3TonAccount);
   }

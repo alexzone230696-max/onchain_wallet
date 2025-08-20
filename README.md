@@ -8,21 +8,30 @@ Welcome to OnChain Wallet, the open-source wallet crafted for the decentralized 
 
 - **Features:** Full support for Bitcoin and transactions on forked Bitcoin-based networks.
 - **Supported Networks:** Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, Dash, Bitcoin SV, and more.
-- **Web3:** Wallet Standard. (available on extension, Android, and macOS platforms.). [examples](https://github.com/mrtnetwork/mrt_wallet_web3_js_examples/blob/main/public/scripts/bitcoin.mjs)
+- **Web3:** 
+  - Wallet Standard (available on extension, Android, and macOS platforms.).
+  - WalletConnect (available on all platforms).
+  - [examples](https://mrtnetwork.github.io/onchain_dapp/)
 
 
 ### Ripple
 
 - **Features:** Unlocking the potential of the Ripple network.
 - **Highlights:** Comprehensive support for advanced cryptographic algorithms, NFTs, tokens, multisignature transactions, account settings, trust settings, escrow transactions, regular key settings, and more.
-
+- **Web3:** 
+  - Wallet Standard (available on extension, Android, and macOS platforms.).
+  - WalletConnect (available on all platforms).
+  - [examples](https://mrtnetwork.github.io/onchain_dapp/)
 
 ### Solana
 
 - **Features:** Seamless support for Solana transactions.
 - **Highlights:**
   - SPLToken transfer, account creation and token minting.
-- **Web3:** Wallet Standard. (available on extension, Android, and macOS platforms.). [examples](https://github.com/mrtnetwork/mrt_wallet_web3_js_examples/blob/main/public/scripts/ws_solana.mjs)
+- **Web3:** 
+  - Wallet Standard (available on extension, Android, and macOS platforms.).
+  - WalletConnect (available on all platforms).
+  - [examples](https://mrtnetwork.github.io/onchain_dapp/)
 
 
 ### Cardano
@@ -33,19 +42,32 @@ Welcome to OnChain Wallet, the open-source wallet crafted for the decentralized 
   - Facilitates minting and transfer of assets.
   - Integration for stake certificates.
   - Allows for multiple account transactions.
-
+- **Web3:** 
+  - Wallet Standard (available on extension, Android, and macOS platforms.).
+  - Cardano CIP-30 (available on extension, Android, and macOS platforms.).
+  - WalletConnect (available on all platforms).
+  - [examples](https://mrtnetwork.github.io/onchain_dapp/)
 
 ### Ethereum
 
 - **Features:** Support for Ethereum transactions.
 - **Highlights:** Compatibility with both legacy and EIP-1559 transactions. Import and manage ERC-20 assets effortlessly, and execute ERC-20 token transfers with ease.
-- **Web3:** Wallet Standard, EIP-1193 and EIP-6963. (available on extension, Android, and macOS platforms.). [examples](https://github.com/mrtnetwork/mrt_wallet_web3_js_examples/tree/main/public/scripts)
+- **Web3:** 
+  - EIP-1193 (available on extension, Android, and macOS platforms.).
+  - EIP-6963 (available on extension, Android, and macOS platforms.).
+  - Wallet Standard (available on extension, Android, and macOS platforms.).
+  - WalletConnect (available on all platforms).
+  - [examples](https://mrtnetwork.github.io/onchain_dapp/)
 
 ### Tron
 
 - **Features:** Seamless interaction with the Tron blockchain.
 - **Highlights:** Confidence in sending TRX, TRC-20, and TRC-10 tokens. Support for native contracts, including multi-signature transactions. Control over updating account permissions, managing accounts, unstaking (v2), delegating resources, and creating/updating witnesses.
-- **Web3:** Wallet Standard and TIP-1193. (available on extension, Android, and macOS platforms.). [examples](https://github.com/mrtnetwork/mrt_wallet_web3_js_examples/tree/main/public/scripts)
+- **Web3:** 
+  - TIP-1193 (available on extension, Android, and macOS platforms.).
+  - Wallet Standard (available on extension, Android, and macOS platforms.).
+  - WalletConnect (available on all platforms).
+  - [examples](https://mrtnetwork.github.io/onchain_dapp/)
 
 
 ### Cosmos
@@ -54,47 +76,70 @@ Welcome to OnChain Wallet, the open-source wallet crafted for the decentralized 
 - **Highlights:**
   - Support for Secp256k1, Secp256r1, Ed25519, and ETHSecp256k1
   - Supports importing networks based on forked Cosmos and Evmos chains.
-- **Web3:** Wallet Standard. (available on extension, Android, and macOS platforms.). [examples](https://github.com/mrtnetwork/mrt_wallet_web3_js_examples/blob/main/public/scripts/ws_cosmos.mjs)
+- **Web3:** 
+  - Wallet Standard (available on extension, Android, and macOS platforms.).
+  - WalletConnect (available on all platforms).
+  - [examples](https://mrtnetwork.github.io/onchain_dapp/)
 
 
 ### Ton
 
 - **Features:** Seamless support for Ton transactions.
 - **Highlights:** Jetton transfer, multiple message transfer.
-- **Web3:** Wallet Standard. (available on extension, Android, and macOS platforms.). [examples](https://github.com/mrtnetwork/mrt_wallet_web3_js_examples/blob/main/public/scripts/ws_ton.mjs)
+- **Web3:** 
+  - Wallet Standard (available on extension, Android, and macOS platforms.).
+  - WalletConnect (available on all platforms).
+  - [examples](https://mrtnetwork.github.io/onchain_dapp/)
 
 
 ### Stellar
 
 - **Features:** Seamless Stellar transaction support.
 - **Highlights:** Supports Payment, ChangeTrust, PathPayment, ManageBuyOffer, ManageSellOffer, and more.
-- **Web3:** Wallet Standard. (available on extension, Android, and macOS platforms.). [examples](https://github.com/mrtnetwork/mrt_wallet_web3_js_examples/blob/main/public/scripts/ws_stellar.mjs)
+- **Web3:** 
+  - Wallet Standard (available on extension, Android, and macOS platforms.).
+  - WalletConnect (available on all platforms).
+  - [examples](https://mrtnetwork.github.io/onchain_dapp/)
 
 
 ### Substrate
 
 - **Features:** Provides seamless support for Kusama, Polkadot transactions, and standalone chains.
 - **Highlights:** Enables importing Substrate networks, interacting with metadata, creating extrinsics, querying storage, and making runtime calls.
-- **Web3:** Wallet Standard and polkadotJs injected provider. (available on extension, Android, and macOS platforms.). [examples](https://github.com/mrtnetwork/mrt_wallet_web3_js_examples/blob/main/public/scripts/ws_substrate.mjs)
+- **Web3:** 
+  - Wallet Standard (available on extension, Android, and macOS platforms.).
+  - Plkadot.js Injected (available on extension, Android, and macOS platforms.).
+  - WalletConnect (available on all platforms).
+  - [examples](https://mrtnetwork.github.io/onchain_dapp/)
 
 
 ### Monero
 
 - **Features:** Seamless support for Monero transactions, Generate and verify proof.
+- **Web3:** 
+  - Wallet Standard (available on extension, Android, and macOS platforms.).
+  - WalletConnect (available on all platforms).
+  - [examples](https://mrtnetwork.github.io/onchain_dapp/)
 
 
 ### SUI
 
 - **Features:** Seamless support for Sui transactions.
 - **Highlights:** Coin management, Multisig.
-- **Web3:** Wallet Standard. (available on extension, Android, and macOS platforms.). [examples](https://github.com/mrtnetwork/mrt_wallet_web3_js_examples/blob/main/public/scripts/ws_sui.mjs)
+- **Web3:** 
+  - Wallet Standard (available on extension, Android, and macOS platforms.).
+  - WalletConnect (available on all platforms).
+  - [examples](https://mrtnetwork.github.io/onchain_dapp/)
 
 
 ### Aptos
 
 - **Features:** Seamless support for Aptos transactions.
 - **Highlights:** Coin management, Multikey, MultiED25519.
-- **Web3:** Wallet Standard. (available on extension, Android, and macOS platforms.). [examples](https://github.com/mrtnetwork/mrt_wallet_web3_js_examples/blob/main/public/scripts/ws_aptos.mjs)
+- **Web3:** 
+  - Wallet Standard (available on extension, Android, and macOS platforms.).
+  - WalletConnect (available on all platforms).
+  - [examples](https://mrtnetwork.github.io/onchain_dapp/)
 
 
 ## Platform Support

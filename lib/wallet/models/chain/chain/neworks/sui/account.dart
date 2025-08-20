@@ -9,8 +9,7 @@ final class SuiChain extends Chain<
     ISuiAddress,
     WalletSuiNetwork,
     SuiClient,
-    DefaultChainStorageKey,
-    DefaultChainConfig,
+    DefaultNetworkConfig,
     SuiWalletTransaction,
     SuiContact,
     SuiNewAddressParams> {
@@ -18,22 +17,22 @@ final class SuiChain extends Chain<
     required super.network,
     required super.addressIndex,
     required super.id,
-    required super.config,
+    DefaultNetworkConfig? config,
     required super.client,
     required super.addresses,
-  }) : super._();
+  }) : super._(config: config ?? DefaultNetworkConfig.defaultConfig);
   @override
   SuiChain copyWith(
       {WalletSuiNetwork? network,
-      List<ISuiAddress>? addresses,
+      List<ChainAccount>? addresses,
       int? addressIndex,
       SuiClient? client,
       String? id,
-      DefaultChainConfig? config}) {
+      DefaultNetworkConfig? config}) {
     return SuiChain._(
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
-        addresses: addresses ?? _addresses,
+        addresses: addresses?.cast<ISuiAddress>() ?? _addresses,
         client: client ?? _client,
         id: id ?? this.id,
         config: config ?? this.config);
@@ -48,8 +47,7 @@ final class SuiChain extends Chain<
         id: id,
         addressIndex: 0,
         client: client,
-        addresses: [],
-        config: DefaultChainConfig());
+        addresses: []);
   }
 
   factory SuiChain.deserialize(
@@ -60,7 +58,7 @@ final class SuiChain extends Chain<
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
     }
-    final String id = cbor.elementAt<String>(2);
+    final String id = cbor.elementAs<String>(2);
     final List<ISuiAddress> accounts = cbor
         .elementAsListOf<CborTagValue>(3)
         .map((e) => ISuiAddress.deserialize(network, obj: e))
@@ -72,28 +70,25 @@ final class SuiChain extends Chain<
         addresses: accounts,
         addressIndex: addressIndex,
         client: client,
-        id: id,
-        config: DefaultChainConfig());
+        id: id);
   }
 
   @override
-  Future<void> updateAddressBalance(ISuiAddress address,
-      {bool tokens = true, bool saveAccount = true}) async {
-    _isAccountAddress(address);
-    await initAddress(address);
+  Future<void> _updateAddressBalanceInternal(ISuiAddress address,
+      {bool tokens = true}) async {
     await onClient(onConnect: (client) async {
       final balance = await client.getAcountBalances(address.networkAddress);
       final native = balance.firstWhereOrNull(
           (e) => e.coinType == SuiTransactionConst.suiTypeArgs);
-      _updateAddressBalanceInternal(
-          address: address,
-          balance: native?.totalBalance ?? BigInt.zero,
-          saveAccount: saveAccount);
+      address.address
+          ._updateAddressBalance(native?.totalBalance ?? BigInt.zero);
       for (final token in address.tokens) {
         final asset =
             balance.firstWhereOrNull((e) => e.coinType == token.assetType);
-        token._updateBalance(asset?.totalBalance ?? BigInt.zero);
-        _saveToken(address: address, token: token);
+        _updateTokenBalanceInternal(
+            address: address,
+            token: token,
+            save: token._updateBalance(asset?.totalBalance ?? BigInt.zero));
       }
     });
   }
@@ -106,16 +101,15 @@ final class SuiChain extends Chain<
       final balance = await client.getAcountBalances(address.networkAddress);
       final native = balance.firstWhereOrNull(
           (e) => e.coinType == SuiTransactionConst.suiTypeArgs);
-      _updateAddressBalanceInternal(
-          address: address,
-          balance: native?.totalBalance ?? BigInt.zero,
-          saveAccount: true);
+      address.address
+          ._updateAddressBalance(native?.totalBalance ?? BigInt.zero);
       for (final token in tokens) {
         final asset =
             balance.firstWhereOrNull((e) => e.coinType == token.assetType);
-        token._updateBalance(asset?.totalBalance ?? BigInt.zero);
-        if (!address.tokens.contains(token)) continue;
-        _saveToken(address: address, token: token);
+        _updateTokenBalanceInternal(
+            address: address,
+            token: token,
+            save: token._updateBalance(asset?.totalBalance ?? BigInt.zero));
       }
     });
   }

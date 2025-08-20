@@ -181,7 +181,7 @@ class _ExtensionAndWebScriptsBuilder {
       if (minify) '-m',
       '-o',
       '${_extensionDir}background.js',
-      'js/background.dart',
+      'js/background/background.dart',
       "--no-source-maps",
     ];
 

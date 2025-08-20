@@ -40,57 +40,63 @@ class TronAccountInfo with CborSerializable {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, CborTagsConst.tronAccountInfo);
 
-    final witness = cbor.elementAt(14);
+    final witness = cbor.elementAs<CborTagValue?>(14);
     return TronAccountInfo._(
-        accountName: cbor.elementAt(0),
-        address: cbor.elementAt(1),
-        balance: cbor.elementAt(2),
-        createTime: cbor.elementAt(3),
-        latestOperationTime: cbor.elementAt(4),
-        frozenSupply: (cbor.elementAt(5) as List)
+        accountName: cbor.elementAs(0),
+        address: cbor.elementAs(1),
+        balance: cbor.elementAs(2),
+        createTime: cbor.elementAs(3),
+        latestOperationTime: cbor.elementAs(4),
+        frozenSupply: cbor
+            .elementAsListOf<CborObject>(5)
             .map((e) => FrozenSupply.fromCborBytesOrObject(obj: e))
             .toList(),
-        assetIssuedName: cbor.elementAt(6),
-        freeNetUsage: cbor.elementAt(7),
-        latestConsumeFreeTime: cbor.elementAt(8),
-        netWindowSize: cbor.elementAt(9),
-        netWindowOptimized: cbor.elementAt(10),
-        accountResource:
-            TronAccountResource.fromCborBytesOrObject(obj: cbor.getCborTag(11)),
-        ownerPermission:
-            AccountPermission.fromCborBytesOrObject(obj: cbor.getCborTag(12)),
-        activePermissions: (cbor.elementAt(13) as List)
+        assetIssuedName: cbor.elementAs(6),
+        freeNetUsage: cbor.elementAs(7),
+        latestConsumeFreeTime: cbor.elementAs(8),
+        netWindowSize: cbor.elementAs(9),
+        netWindowOptimized: cbor.elementAs(10),
+        accountResource: TronAccountResource.fromCborBytesOrObject(
+            obj: cbor.elementAsCborTag(11)),
+        ownerPermission: AccountPermission.fromCborBytesOrObject(
+            obj: cbor.elementAsCborTag(12)),
+        activePermissions: cbor
+            .elementAsListOf<CborObject>(13)
             .map((e) => AccountPermission.fromCborBytesOrObject(obj: e))
             .toList(),
         witnessPermission: witness == null
             ? null
-            : AccountPermission.fromCborBytesOrObject(obj: cbor.getCborTag(14)),
-        frozenV2: (cbor.elementAt(15) as List)
+            : AccountPermission.fromCborBytesOrObject(obj: witness),
+        frozenV2: cbor
+            .elementAsListOf<CborObject>(15)
             .map((e) => FrozenV2.fromCborBytesOrObject(obj: e))
             .toList(),
-        unfrozenV2: (cbor.elementAt(16) as List)
+        unfrozenV2: cbor
+            .elementAsListOf<CborObject>(16)
             .map((e) => UnfrozenV2.fromCborBytesOrObject(obj: e))
             .toList(),
-        assetV2: (cbor.elementAt(17) as List)
+        assetV2: cbor
+            .elementAsListOf<CborObject>(17)
             .map((e) => AssetV2.fromCborBytesOrObject(obj: e))
             .toList(),
-        assetIssuedID: cbor.elementAt(18),
-        freeAssetNetUsageV2: (cbor.elementAt(19) as List)
+        assetIssuedID: cbor.elementAs(18),
+        freeAssetNetUsageV2: cbor
+            .elementAsListOf<CborObject>(19)
             .map((e) => FreeAssetNetUsageV2.fromCborBytesOrObject(obj: e))
             .toList(),
-        assetOptimized: cbor.elementAt(20));
+        assetOptimized: cbor.elementAs(20));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           accountName,
           address,
           balance,
           createTime,
           latestOperationTime,
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               frozenSupply.map((e) => e.toCbor()).toList()),
           assetIssuedName,
           freeNetUsage,
@@ -99,14 +105,16 @@ class TronAccountInfo with CborSerializable {
           netWindowOptimized,
           accountResource.toCbor(),
           ownerPermission.toCbor(),
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               activePermissions.map((e) => e.toCbor()).toList()),
           witnessPermission?.toCbor(),
-          CborListValue.fixedLength(frozenV2.map((e) => e.toCbor()).toList()),
-          CborListValue.fixedLength(unfrozenV2.map((e) => e.toCbor()).toList()),
-          CborListValue.fixedLength(assetV2.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              frozenV2.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              unfrozenV2.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(assetV2.map((e) => e.toCbor()).toList()),
           assetIssuedID,
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               freeAssetNetUsageV2.map((e) => e.toCbor()).toList()),
           assetOptimized
         ]),
@@ -274,13 +282,13 @@ class AccountPermission with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           type.name,
           id,
           permissionName,
           threshold,
           operations,
-          CborListValue.fixedLength(keys.map((e) => e.toCbor()).toList())
+          CborSerializable.fromDynamic(keys.map((e) => e.toCbor()).toList())
         ]),
         _TronAccountCborConst.accountPermission);
   }
@@ -289,16 +297,17 @@ class AccountPermission with CborSerializable {
       {List<int>? bytes, CborObject? obj}) {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, _TronAccountCborConst.accountPermission);
-    final keys = (cbor.elementAt(5) as List)
+    final keys = cbor
+        .elementAsListOf<CborObject>(5)
         .map((e) => PermissionKeys.fromCborBytesOrObject(obj: e))
         .toList();
     return AccountPermission(
-        type: PermissionType.fromName(cbor.elementAt(0),
+        type: PermissionType.fromName(cbor.elementAs(0),
             defaultPermission: PermissionType.owner),
-        id: cbor.elementAt(1),
-        permissionName: cbor.elementAt(2),
-        threshold: cbor.elementAt(3),
-        operations: cbor.elementAt(4),
+        id: cbor.elementAs(1),
+        permissionName: cbor.elementAs(2),
+        threshold: cbor.elementAs(3),
+        operations: cbor.elementAs(4),
         keys: keys);
   }
 
@@ -381,7 +390,7 @@ class PermissionKeys with CborSerializable, Equatable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([address.toAddress(), weight]),
+        CborSerializable.fromDynamic([address.toAddress(), weight]),
         _TronAccountCborConst.permissionKeys);
   }
 
@@ -390,7 +399,7 @@ class PermissionKeys with CborSerializable, Equatable {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, _TronAccountCborConst.permissionKeys);
     return PermissionKeys(
-        address: TronAddress(cbor.elementAt(0)), weight: cbor.elementAt(1));
+        address: TronAddress(cbor.elementAs(0)), weight: cbor.elementAs(1));
   }
 
   @override
@@ -403,7 +412,8 @@ class FrozenSupply with CborSerializable {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([frozenBalance, expireTime]),
+    return CborTagValue(
+        CborSerializable.fromDynamic([frozenBalance, expireTime]),
         _TronAccountCborConst.frozenSupply);
   }
 
@@ -412,7 +422,7 @@ class FrozenSupply with CborSerializable {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, _TronAccountCborConst.frozenSupply);
     return FrozenSupply._(
-        frozenBalance: cbor.elementAt(0), expireTime: cbor.elementAt(1));
+        frozenBalance: cbor.elementAs(0), expireTime: cbor.elementAs(1));
   }
 
   FrozenSupply._({
@@ -443,7 +453,7 @@ class FrozenV2 with CborSerializable {
   final ResourceCode type;
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([amount, type.name]),
+    return CborTagValue(CborSerializable.fromDynamic([amount, type.name]),
         _TronAccountCborConst.assetFrozenV2);
   }
 
@@ -451,8 +461,8 @@ class FrozenV2 with CborSerializable {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, _TronAccountCborConst.assetFrozenV2);
     return FrozenV2._(
-        type: ResourceCode.fromName(cbor.elementAt(1))!,
-        amount: cbor.elementAt(0));
+        type: ResourceCode.fromName(cbor.elementAs(1))!,
+        amount: cbor.elementAs(0));
   }
 
   FrozenV2._({
@@ -487,7 +497,7 @@ class UnfrozenV2 with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           type,
           unfreezeAmount,
           unfreezeExpireTime,
@@ -500,9 +510,9 @@ class UnfrozenV2 with CborSerializable {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, _TronAccountCborConst.assetUnfreezV2);
     return UnfrozenV2._(
-        type: cbor.elementAt(0),
-        unfreezeAmount: cbor.elementAt(1),
-        unfreezeExpireTime: cbor.elementAt(2));
+        type: cbor.elementAs(0),
+        unfreezeAmount: cbor.elementAs(1),
+        unfreezeExpireTime: cbor.elementAs(2));
   }
 
   UnfrozenV2._({
@@ -542,7 +552,7 @@ class AssetV2 with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           key,
           value,
         ]),
@@ -552,7 +562,7 @@ class AssetV2 with CborSerializable {
   factory AssetV2.fromCborBytesOrObject({List<int>? bytes, CborObject? obj}) {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, _TronAccountCborConst.assetVersion2);
-    return AssetV2._(key: cbor.elementAt(0), value: cbor.elementAt(1));
+    return AssetV2._(key: cbor.elementAs(0), value: cbor.elementAs(1));
   }
 
   factory AssetV2.fromJson(Map<String, dynamic> json) {
@@ -584,7 +594,7 @@ class FreeAssetNetUsageV2 with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           key,
           value,
         ]),
@@ -596,7 +606,7 @@ class FreeAssetNetUsageV2 with CborSerializable {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, _TronAccountCborConst.frozenAssetsNetUsage);
     return FreeAssetNetUsageV2._(
-        key: cbor.elementAt(0), value: cbor.elementAt(1));
+        key: cbor.elementAs(0), value: cbor.elementAs(1));
   }
 
   factory FreeAssetNetUsageV2.fromJson(Map<String, dynamic> json) {
@@ -651,7 +661,7 @@ class TronAccountResource with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           energyWindowSize,
           delegatedFrozenV2BalanceForEnergy,
           energyWindowOptimized
@@ -664,9 +674,9 @@ class TronAccountResource with CborSerializable {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, _TronAccountCborConst.tronAccountResource);
     return TronAccountResource._(
-        energyWindowSize: cbor.elementAt(0),
-        delegatedFrozenV2BalanceForEnergy: cbor.elementAt(1),
-        energyWindowOptimized: cbor.elementAt(2));
+        energyWindowSize: cbor.elementAs(0),
+        delegatedFrozenV2BalanceForEnergy: cbor.elementAs(1),
+        energyWindowOptimized: cbor.elementAs(2));
   }
 }
 
@@ -674,7 +684,7 @@ class TronAccountResourceInfo with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           freeNetUsed,
           freeNetLimit,
           netLimit,
@@ -692,14 +702,14 @@ class TronAccountResourceInfo with CborSerializable {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, CborTagsConst.tronAccountResource);
     return TronAccountResourceInfo(
-      freeNetUsed: cbor.elementAt(0),
-      freeNetLimit: cbor.elementAt(1),
-      netLimit: cbor.elementAt(2),
-      netUsed: cbor.elementAt(3),
-      energyLimit: cbor.elementAt(4),
-      energyUsed: cbor.elementAt(5),
-      tronPowerLimit: cbor.elementAt(6),
-      tronPowerUsed: cbor.elementAt(7),
+      freeNetUsed: cbor.elementAs(0),
+      freeNetLimit: cbor.elementAs(1),
+      netLimit: cbor.elementAs(2),
+      netUsed: cbor.elementAs(3),
+      energyLimit: cbor.elementAs(4),
+      energyUsed: cbor.elementAs(5),
+      tronPowerLimit: cbor.elementAs(6),
+      tronPowerUsed: cbor.elementAs(7),
     );
   }
 

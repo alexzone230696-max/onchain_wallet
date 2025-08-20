@@ -16,19 +16,20 @@ final class GlobalSignResponse with CborSerializable {
   factory GlobalSignResponse.deserialize(List<int> bytes) {
     final CborListValue values = CborSerializable.cborTagValue(
         cborBytes: bytes, tags: CryptoKeyConst.globalSignature);
-    final index = AddressDerivationIndex.deserialize(obj: values.getCborTag(0));
-    final List<int> signature = values.elementAt(1);
+    final index =
+        AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(0));
+    final List<int> signature = values.elementAs(1);
     return GlobalSignResponse(
         signature: signature,
         index: index,
         signerPubKey: CryptoPublicKeyData.fromCborBytesOrObject(
-            obj: values.getCborTag(2)));
+            obj: values.elementAsCborTag(2)));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [index.toCbor(), signature, signerPubKey.toCbor()]),
         CryptoKeyConst.globalSignature);
   }

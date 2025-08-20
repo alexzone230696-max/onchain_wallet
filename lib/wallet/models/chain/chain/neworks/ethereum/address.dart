@@ -39,9 +39,9 @@ final class IEthAddress extends ChainAccount<ETHAddress, ETHERC20Token, NFTCore,
     final CryptoCoins coin =
         CustomCoins.getSerializationCoin(values.elementAs(0));
     final keyIndex =
-        AddressDerivationIndex.deserialize(obj: values.getCborTag(1));
+        AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(1));
     final AccountBalance address =
-        AccountBalance.deserialize(network, obj: values.getCborTag(2));
+        AccountBalance.deserialize(network, obj: values.elementAsCborTag(2));
     final ETHAddress ethAddress = ETHAddress(address.toAddress);
     final int networkId = values.elementAs(3);
     if (networkId != network.value) {
@@ -73,7 +73,7 @@ final class IEthAddress extends ChainAccount<ETHAddress, ETHERC20Token, NFTCore,
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           coin.toCbor(),
           keyIndex.toCbor(),
           address.toCbor(),
@@ -92,12 +92,6 @@ final class IEthAddress extends ChainAccount<ETHAddress, ETHERC20Token, NFTCore,
 
   @override
   String? get type => null;
-
-  @override
-  bool isEqual(ChainAccount other) {
-    if (other is! IEthAddress) return false;
-    return other.networkAddress == networkAddress;
-  }
 
   @override
   EthereumNewAddressParams toAccountParams() {

@@ -190,13 +190,13 @@ class MessageArgsTwoBytes extends CborMessageResponseArgs {
     final CborListValue values = CborSerializable.cborTagValue(
         cborBytes: bytes, object: object, tags: ArgsResponseType.twoArgs.tag);
     return MessageArgsTwoBytes(
-        keyOne: values.elementAt(0), keyTwo: values.elementAt(1));
+        keyOne: values.elementAs(0), keyTwo: values.elementAs(1));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [CborBytesValue(keyOne), CborBytesValue(keyTwo)]),
         ArgsResponseType.twoArgs.tag);
   }
@@ -213,12 +213,12 @@ class MessageArgsOneBytes extends CborMessageResponseArgs {
       {List<int>? bytes, CborTagValue? object}) {
     final CborListValue values = CborSerializable.cborTagValue(
         cborBytes: bytes, object: object, tags: ArgsResponseType.oneArg.tag);
-    return MessageArgsOneBytes(keyOne: values.elementAt(0));
+    return MessageArgsOneBytes(keyOne: values.elementAs(0));
   }
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([CborBytesValue(keyOne)]),
+    return CborTagValue(CborSerializable.fromDynamic([CborBytesValue(keyOne)]),
         ArgsResponseType.oneArg.tag);
   }
 
@@ -238,8 +238,8 @@ class MessageArgsStreamId extends CborMessageResponseArgs {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(
-        CborListValue.fixedLength([streamId]), ArgsResponseType.streamId.tag);
+    return CborTagValue(CborSerializable.fromDynamic([streamId]),
+        ArgsResponseType.streamId.tag);
   }
 
   @override
@@ -270,7 +270,7 @@ class MessageArgsThreeBytes extends CborMessageResponseArgs {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(keyOne),
           CborBytesValue(keyTwo),
           CborBytesValue(keyThree)
@@ -310,7 +310,7 @@ class MessageArgsFourBytes extends CborMessageResponseArgs {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(keyOne),
           CborBytesValue(keyTwo),
           CborBytesValue(keyThree),
@@ -351,7 +351,7 @@ class MessageArgsStream extends StreamArgsRequestable {
         object: object,
         tags: StreamCryptoArgsType.streamArgs.tag);
     return MessageArgsStream._(
-        data: values.elementAt(0),
+        data: values.elementAs(0),
         streamId: values.elementAs(1),
         method: MessageArgsStreamMethod.fromValue(values.elementAs(2)));
   }
@@ -372,7 +372,7 @@ class MessageArgsStream extends StreamArgsRequestable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           data == null ? null : CborBytesValue(data!),
           streamId,
           method.value
@@ -398,7 +398,7 @@ class MessageArgsStreamResponse extends CborMessageResponseArgs {
         object: object,
         tags: ArgsResponseType.streamArgs.tag);
     return MessageArgsStreamResponse._(
-        data: values.elementAt(0),
+        data: values.elementAs(0),
         streamId: values.elementAs(1),
         method: MessageArgsStreamMethod.fromValue(values.elementAs(2)));
   }
@@ -419,7 +419,7 @@ class MessageArgsStreamResponse extends CborMessageResponseArgs {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           data == null ? null : CborBytesValue(data!),
           streamId,
           method.value
@@ -438,13 +438,13 @@ class MessageArgsException extends CborMessageResponseArgs {
       {List<int>? bytes, CborTagValue? object}) {
     final CborListValue values = CborSerializable.cborTagValue(
         cborBytes: bytes, object: object, tags: ArgsResponseType.exception.tag);
-    return MessageArgsException(StringUtils.decode(values.elementAt(0)));
+    return MessageArgsException(StringUtils.decode(values.elementAs(0)));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [CborBytesValue(StringUtils.encode(message))]),
         ArgsResponseType.exception.tag);
   }
@@ -471,7 +471,7 @@ class MessageArgsMessage extends CborMessageResponseArgs {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([message]), ArgsResponseType.message.tag);
+        CborSerializable.fromDynamic([message]), ArgsResponseType.message.tag);
   }
 
   @override
@@ -545,9 +545,9 @@ class WalletArgs<T, A extends CborMessageResponseArgs,
           CborSerializable.decode(cborBytes: encryptedMasterKey);
       return WalletArgs(
           args: args,
-          version: values.elementAt(0),
-          nonce: values.elementAt(1),
-          walletData: values.elementAt(2),
+          version: values.elementAs(0),
+          nonce: values.elementAs(1),
+          walletData: values.elementAs(2),
           key: key);
     } catch (e) {
       throw WalletExceptionConst.incorrectWalletData;
@@ -557,16 +557,16 @@ class WalletArgs<T, A extends CborMessageResponseArgs,
     final CborListValue values = CborSerializable.cborTagValue(
         cborBytes: bytes, object: object, tags: CryptoArgsType.wallet.tag);
     final WalletArgsCompleter args =
-        WalletRequest.deserialize(object: values.getCborTag(0));
+        WalletRequest.deserialize(object: values.elementAsCborTag(0));
     if (args is! R) {
       throw WalletExceptionConst.invalidArgruments("$T", "${args.runtimeType}");
     }
     return WalletArgs(
         args: args,
-        version: values.elementAt(1),
-        walletData: values.elementAt(2),
-        nonce: values.elementAt(3),
-        key: values.elementAt(4));
+        version: values.elementAs(1),
+        walletData: values.elementAs(2),
+        nonce: values.elementAs(3),
+        key: values.elementAs(4));
   }
 
   Future<A> getResult() {
@@ -587,7 +587,7 @@ class WalletArgs<T, A extends CborMessageResponseArgs,
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [args.toCbor(), version, walletData, nonce, key]),
         CryptoArgsType.wallet.tag);
   }

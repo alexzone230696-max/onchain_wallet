@@ -9,8 +9,7 @@ final class EthereumChain extends Chain<
     IEthAddress,
     WalletEthereumNetwork,
     EthereumClient,
-    DefaultChainStorageKey,
-    DefaultChainConfig,
+    DefaultNetworkConfig,
     EthWalletTransaction,
     EthereumContact,
     EthereumNewAddressParams> {
@@ -18,22 +17,22 @@ final class EthereumChain extends Chain<
       {required super.network,
       required super.addressIndex,
       required super.id,
-      required super.config,
+      DefaultNetworkConfig? config,
       required super.addresses,
       required super.client})
-      : super._();
+      : super._(config: config ?? DefaultNetworkConfig.defaultConfig);
   @override
   EthereumChain copyWith(
       {WalletEthereumNetwork? network,
-      List<IEthAddress>? addresses,
+      List<ChainAccount>? addresses,
       int? addressIndex,
       EthereumClient? client,
       String? id,
-      DefaultChainConfig? config}) {
+      DefaultNetworkConfig? config}) {
     return EthereumChain._(
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
-        addresses: addresses ?? _addresses,
+        addresses: addresses?.cast<IEthAddress>() ?? _addresses,
         client: client ?? _client,
         id: id ?? this.id,
         config: config ?? this.config);
@@ -48,8 +47,7 @@ final class EthereumChain extends Chain<
         id: id,
         addressIndex: 0,
         client: client,
-        addresses: [],
-        config: DefaultChainConfig());
+        addresses: []);
   }
 
   factory EthereumChain.deserialize(
@@ -60,7 +58,7 @@ final class EthereumChain extends Chain<
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
     }
-    final String id = cbor.elementAt<String>(2);
+    final String id = cbor.elementAs<String>(2);
     final List<IEthAddress> accounts = cbor
         .elementAsListOf<CborTagValue>(3)
         .map((e) => IEthAddress.deserialize(network, obj: e))
@@ -72,21 +70,17 @@ final class EthereumChain extends Chain<
         addresses: accounts,
         addressIndex: addressIndex,
         client: client,
-        id: id,
-        config: DefaultChainConfig());
+        id: id);
   }
 
   BigInt get chainId => network.coinParam.chainId;
 
   @override
-  Future<void> updateAddressBalance(IEthAddress address,
-      {bool tokens = true, bool saveAccount = true}) async {
-    _isAccountAddress(address);
-    await initAddress(address);
+  Future<void> _updateAddressBalanceInternal(IEthAddress address,
+      {bool tokens = true}) async {
     await onClient(onConnect: (client) async {
       final balance = await client.getBalance(address.networkAddress);
-      _updateAddressBalanceInternal(
-          address: address, balance: balance, saveAccount: saveAccount);
+      address.address._updateAddressBalance(balance);
       if (tokens) {
         final tokens = address.tokens;
         final balances = await Future.wait(tokens.map((e) async {
@@ -102,8 +96,11 @@ final class EthereumChain extends Chain<
           final token = tokens[i];
           final balance = balances[i];
           if (balance == null) continue;
-          token._updateBalance(balance);
-          _saveToken(address: address, token: token);
+
+          _updateTokenBalanceInternal(
+              address: address,
+              token: token,
+              save: token._updateBalance(balance));
         }
       }
     });
@@ -128,9 +125,10 @@ final class EthereumChain extends Chain<
         final token = tokens[i];
         final balance = balances[i];
         if (balance == null) continue;
-        token._updateBalance(balance);
-        if (!address.tokens.contains(token)) continue;
-        _saveToken(address: address, token: token);
+        _updateTokenBalanceInternal(
+            address: address,
+            token: token,
+            save: token._updateBalance(balance));
       }
     });
   }

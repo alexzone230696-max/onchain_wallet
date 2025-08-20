@@ -50,11 +50,11 @@ class Web3TonTransactionMessage with CborSerializable {
         object: object,
         hex: hex,
         tags: Web3TonConst.sendTransactionMessagesTag);
-    final List<int>? stateInitBytes = values.elementAt(2);
-    final List<int>? payloadBytes = values.elementAt(3);
+    final List<int>? stateInitBytes = values.elementAs(2);
+    final List<int>? payloadBytes = values.elementAs(3);
     return Web3TonTransactionMessage(
-        address: TonAddress(values.elementAt(0)),
-        amount: values.elementAt(1),
+        address: TonAddress(values.elementAs(0)),
+        amount: values.elementAs(1),
         stateInit:
             stateInitBytes == null ? null : Cell.fromBytes(stateInitBytes),
         payload: payloadBytes == null ? null : Cell.fromBytes(payloadBytes));
@@ -62,7 +62,7 @@ class Web3TonTransactionMessage with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           address.toFriendlyAddress(),
           amount,
           stateInit == null ? null : CborBytesValue(stateInit!.toBoc()),
@@ -89,8 +89,8 @@ class Web3TonSendTransactionResponse with CborSerializable {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(
-        CborListValue.fixedLength([message, txHash]), CborTagsConst.defaultTag);
+    return CborTagValue(CborSerializable.fromDynamic([message, txHash]),
+        CborTagsConst.defaultTag);
   }
 
   Map<String, dynamic> toWalletConnectJson() {
@@ -151,7 +151,7 @@ class Web3TonSendTransaction
             .cast<CborTagValue>()
             .map((e) => Web3TonTransactionMessage.deserialize(object: e))
             .toList(),
-        validUntil: values.elementAt(3),
+        validUntil: values.elementAs(3),
         method: method);
   }
 
@@ -163,10 +163,11 @@ class Web3TonSendTransaction
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
           accessAccount.toCbor(),
-          CborListValue.fixedLength(messages.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              messages.map((e) => e.toCbor()).toList()),
           validUntil
         ]),
         type.tag);
@@ -178,13 +179,17 @@ class Web3TonSendTransaction
   }
 
   @override
-  Web3TonRequest<Web3TonSendTransactionResponse, Web3TonSendTransaction>
+  Future<Web3TonRequest<Web3TonSendTransactionResponse, Web3TonSendTransaction>>
       toRequest(
           {required Web3RequestInformation request,
           required Web3RequestAuthentication authenticated,
-          required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+          required WEB3REQUESTNETWORKCONTROLLER<ITonAddress, TonChain,
+                  Web3TonChainAccount>
+              chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3TonRequest<Web3TonSendTransactionResponse,
         Web3TonSendTransaction>(
       params: this,

@@ -1,10 +1,15 @@
 part of 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 
-final class CardanoNewAddressParams extends NewAccountParams<ICardanoAddress> {
+abstract final class BaseCardanoNewAddressParams
+    extends NewAccountParams<ICardanoAddress> {
   final ADAAddressType addressType;
+  const BaseCardanoNewAddressParams._({required this.addressType}) : super._();
+}
+
+final class CardanoNewAddressParams extends BaseCardanoNewAddressParams {
   @override
   final AddressDerivationIndex deriveIndex;
-  final Bip32AddressIndex? rewardKeyIndex;
+  final AddressDerivationIndex? rewardKeyIndex;
   final CardanoAddrDetails? addressDetails;
   final String? customHdPath;
   final List<int>? customHdPathKey;
@@ -14,7 +19,7 @@ final class CardanoNewAddressParams extends NewAccountParams<ICardanoAddress> {
   @override
   final CryptoCoins coin;
   CardanoNewAddressParams._(
-      {required this.addressType,
+      {required super.addressType,
       required this.deriveIndex,
       required this.rewardKeyIndex,
       required this.coin,
@@ -27,7 +32,7 @@ final class CardanoNewAddressParams extends NewAccountParams<ICardanoAddress> {
   factory CardanoNewAddressParams(
       {required ADAAddressType addressType,
       required AddressDerivationIndex deriveIndex,
-      required Bip32AddressIndex? rewardKeyIndex,
+      required AddressDerivationIndex? rewardKeyIndex,
       required CryptoCoins coin,
       CardanoAddrDetails? addressDetails,
       String? customHdPath,
@@ -50,23 +55,22 @@ final class CardanoNewAddressParams extends NewAccountParams<ICardanoAddress> {
         hex: hex,
         tags: NewAccountParamsType.cardanoNewAddressParams.tag);
     return CardanoNewAddressParams(
-        addressType: ADAAddressType.fromHeader(values.elementAt(0)),
+        addressType: ADAAddressType.fromHeader(values.elementAs(0)),
         deriveIndex:
-            AddressDerivationIndex.deserialize(obj: values.getCborTag(1)),
-        rewardKeyIndex: values.getCborTag(2)?.to<Bip32AddressIndex, CborObject>(
-            (e) => Bip32AddressIndex.deserialize(obj: e)),
-        addressDetails: values
-            .getCborTag(3)
-            ?.to((e) => CardanoAddrDetails.deserialize(obj: e)),
-        customHdPath: values.elementAt(4),
-        customHdPathKey: values.elementAt(5),
-        coin: CustomCoins.getSerializationCoin(values.elementAt(6)));
+            AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(1)),
+        rewardKeyIndex: values.elemetMybeAs<Bip32AddressIndex, CborObject>(
+            2, (e) => Bip32AddressIndex.deserialize(obj: e)),
+        addressDetails: values.elemetMybeAs<CardanoAddrDetails, CborObject>(
+            3, (e) => CardanoAddrDetails.deserialize(obj: e)),
+        customHdPath: values.elementAs(4),
+        customHdPathKey: values.elementAs(5),
+        coin: CustomCoins.getSerializationCoin(values.elementAs(6)));
   }
   CardanoNewAddressParams copyWith(
       {ADAAddressType? addressType,
       AddressDerivationIndex? deriveIndex,
       CardanoAddrDetails? addressDetails,
-      Bip32AddressIndex? rewardKeyIndex,
+      AddressDerivationIndex? rewardKeyIndex,
       List<int>? publicKey,
       String? customHdPath,
       List<int>? customHdPathKey,
@@ -97,13 +101,12 @@ final class CardanoNewAddressParams extends NewAccountParams<ICardanoAddress> {
     if (needStakeKey && rewardKeyIndex == null) {
       throw WalletExceptionConst.invalidAccountDetails;
     }
-    final address = addressDetails.toAddress(
-        deriveIndex.currencyCoin, !network.coinParam.mainnet);
+    final address = addressDetails.toAddress(network.coinParam.networkType);
     return ICardanoAddress._newAccount(
         publicKey: addressDetails.publicKey,
         network: network,
         address: address,
-        addressDetails: addressDetails,
+        addressInfo: addressDetails,
         coin: coin,
         keyIndex: deriveIndex,
         rewardIndex: rewardKeyIndex,
@@ -113,7 +116,7 @@ final class CardanoNewAddressParams extends NewAccountParams<ICardanoAddress> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           addressType.header,
           deriveIndex.toCbor(),
           rewardKeyIndex?.toCbor(),
@@ -129,4 +132,64 @@ final class CardanoNewAddressParams extends NewAccountParams<ICardanoAddress> {
 
   @override
   NewAccountParamsType get type => NewAccountParamsType.cardanoNewAddressParams;
+}
+
+final class CardanoMultisigNewAddressParams
+    extends BaseCardanoNewAddressParams {
+  @override
+  final AddressDerivationIndex deriveIndex = MultiSigAddressIndex();
+  final CardanoMultiSignatureAddressDetails addressInfo;
+  bool get needStakeKey => addressType == ADAAddressType.base;
+  @override
+  bool get isMultiSig => true;
+  @override
+  final CryptoCoins coin;
+  CardanoMultisigNewAddressParams._(
+      {required this.addressInfo, required this.coin})
+      : super._(addressType: addressInfo.addressType);
+  factory CardanoMultisigNewAddressParams(
+      {required CardanoMultiSignatureAddressDetails addressInfo,
+      required CryptoCoins coin}) {
+    return CardanoMultisigNewAddressParams._(
+        addressInfo: addressInfo, coin: coin);
+  }
+
+  factory CardanoMultisigNewAddressParams.deserialize(
+      {List<int>? bytes, CborObject? object, String? hex}) {
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: object,
+        hex: hex,
+        tags: NewAccountParamsType.cardanoMultisigNewAddressParams.tag);
+    return CardanoMultisigNewAddressParams(
+        coin: CustomCoins.getSerializationCoin(values.valueAs(0)),
+        addressInfo: CardanoMultiSignatureAddressDetails.deserialize(
+            obj: values.indexAs<CborTagValue>(1)));
+  }
+
+  @override
+  ICardanoAddress toAccount(
+      WalletNetwork network, CryptoPublicKeyData? publicKey) {
+    if (network is! WalletCardanoNetwork) {
+      throw WalletExceptionConst.invalidAccountDetails;
+    }
+    final address = addressInfo.toAddress(network.coinParam.networkType);
+    return ICardanoMultiSigAddress._newAccount(
+        network: network,
+        address: address,
+        addressInfo: addressInfo,
+        coin: coin,
+        identifier: NewAccountParams.toIdentifier(address.address));
+  }
+
+  @override
+  CborTagValue toCbor() {
+    return CborTagValue(
+        CborSerializable.fromDynamic([coin.toCbor(), addressInfo.toCbor()]),
+        type.tag);
+  }
+
+  @override
+  NewAccountParamsType get type =>
+      NewAccountParamsType.cardanoMultisigNewAddressParams;
 }

@@ -56,14 +56,14 @@ final class NoneEncryptedRequestFakeMoneroTx
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
-          CborListValue.fixedLength(
+        CborSerializable.fromDynamic([
+          CborSerializable.fromDynamic(
               destinations.map((e) => CborBytesValue(e.serialize())).toList()),
           fee,
           change == null
               ? const CborNullValue()
               : CborBytesValue(change!.serialize()),
-          CborListValue.fixedLength(fakePayments
+          CborSerializable.fromDynamic(fakePayments
               .map((e) => CborBytesValue(e.toVariantSerialize()))
               .toList()),
         ]),

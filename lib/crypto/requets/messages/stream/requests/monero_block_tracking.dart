@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:monero_dart/monero_dart.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/crypto/crypto/core/app_crypto.dart';
 import 'package:on_chain_wallet/crypto/requets/argruments/argruments.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/core/message.dart';
 import 'package:on_chain_wallet/wallet/api/api.dart';
@@ -15,6 +16,7 @@ final class StreamRequestMoneroBlockTracking extends IsolateStreamRequest<
             provider: provider, network: null, isolate: APPIsolate.current);
   final MoneroAPIProvider provider;
   final MoneroClient client;
+  final crypto = AppCrypto.instance();
   factory StreamRequestMoneroBlockTracking.deserialize(
       {List<int>? bytes, CborObject? object, String? hex}) {
     final CborListValue values = CborSerializable.cborTagValue(
@@ -23,14 +25,14 @@ final class StreamRequestMoneroBlockTracking extends IsolateStreamRequest<
         hex: hex,
         tags: StreamIsolateMethod.moneroAccountTracker.tag);
     return StreamRequestMoneroBlockTracking(
-        provider:
-            MoneroAPIProvider.fromCborBytesOrObject(obj: values.getCborTag(0)));
+        provider: MoneroAPIProvider.fromCborBytesOrObject(
+            obj: values.elementAsCborTag(0)));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([provider.toCbor()]), method.tag);
+        CborSerializable.fromDynamic([provider.toCbor()]), method.tag);
   }
 
   MoneroSyncBlocksResponse _proccessBlock(
@@ -38,10 +40,10 @@ final class StreamRequestMoneroBlockTracking extends IsolateStreamRequest<
       required MoneroSyncAccountsRequestInfos accounts,
       required MoneroDefaultBlockTrackingInfo offset,
       required int total,
-      required int startHeight}) {
+      required int startHeight,
+      required List<MoneroAccountKeys> accountsKeys}) {
     try {
       final viewAccounts = accounts.accounts;
-      final accountsKeys = viewAccounts.map((e) => e.getAccountKeys()).toList();
       final start = startHeight - blocks.startHeight;
       final end = start + total;
       for (int i = start; i < end; i++) {
@@ -55,17 +57,14 @@ final class StreamRequestMoneroBlockTracking extends IsolateStreamRequest<
             assert(false, "should not be faild.");
             continue;
           }
-          for (int realIndex = 0; realIndex < tx.vout.length; realIndex++) {
-            for (int a = 0; a < accountsKeys.length; a++) {
-              final account = accountsKeys[a];
-              final unlock = MoneroTransactionHelper.getLockedOutputs(
-                  realIndex: realIndex, tx: tx, account: account);
-              if (unlock != null) {
-                moneroBlock ??= block.toBlock();
-                final txid = BytesUtils.toHexString(moneroBlock.txHashes[t]);
-                viewAccounts[a].addPendingTx(unlock, txid);
-              }
-            }
+          final unlock = crypto.moneroUnlockOutput(
+              accounts: accountsKeys, transaction: tx);
+          if (unlock.isEmpty) continue;
+          moneroBlock ??= block.toBlock();
+          for (final i in unlock) {
+            final txid = BytesUtils.toHexString(moneroBlock.txHashes[t]);
+            final index = accountsKeys.indexOf(i.account);
+            viewAccounts[index].addPendingTx(i.output, txid);
           }
         }
       }
@@ -88,9 +87,12 @@ final class StreamRequestMoneroBlockTracking extends IsolateStreamRequest<
     required MoneroSyncAccountsRequestInfos accounts,
     required bool Function() isCancelled,
   }) async* {
+    final accountsKeys =
+        accounts.accounts.map((e) => e.getAccountKeys()).toList();
     int startBlock = offset.currentHeight;
-    while (startBlock < offset.endHeight) {
+    while (startBlock < offset.endHeight && !isCancelled()) {
       final blocks = await _fetchBlocks(startBlock, offset.endHeight);
+      await Future.delayed(const Duration(milliseconds: 5));
       MoneroSyncBlocksResponse result;
       if (blocks == null) {
         result = MoneroSyncFailedResponse(
@@ -103,11 +105,15 @@ final class StreamRequestMoneroBlockTracking extends IsolateStreamRequest<
             accounts: accounts,
             startHeight: startBlock,
             total: blocks.$2,
+            accountsKeys: accountsKeys,
             offset: offset);
       }
 
       startBlock += result.total;
       yield result;
+    }
+    if (closed) {
+      crypto.close();
     }
   }
 
@@ -237,7 +243,6 @@ class _FetchedBlocks {
     final remain = endHeight - height;
     if (remain >= 25) return 25;
     return remain;
-    // return
   }
 
   @override

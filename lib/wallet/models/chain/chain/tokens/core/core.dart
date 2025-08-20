@@ -75,7 +75,7 @@ abstract class SolidityToken extends TokenCore<IntegerBalance, Token> {
       : super._();
   SolidityAddress get contractAddress;
   String toHexAddress();
-  void _updateBalance([BigInt? updateBalance]);
+  bool _updateBalance([BigInt? updateBalance]);
 }
 
 enum TronTokenTypes {
@@ -106,7 +106,7 @@ abstract class TronToken extends TokenCore<IntegerBalance, Token> {
   TronToken clone({BigInt? balance});
   @override
   TronToken updateToken(Token updateToken);
-  void _updateBalance([BigInt? updateBalance]);
+  bool _updateBalance([BigInt? updateBalance]);
   @override
   String get issuer;
   TronTokenTypes get tronTokenType;

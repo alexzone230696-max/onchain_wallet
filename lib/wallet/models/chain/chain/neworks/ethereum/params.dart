@@ -25,7 +25,7 @@ final class EthereumNewAddressParams extends NewAccountParams<IEthAddress> {
         tags: NewAccountParamsType.ethereumNewAddressParamss.tag);
     return EthereumNewAddressParams(
       deriveIndex:
-          AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
+          AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(0)),
       coin: CustomCoins.getSerializationCoin(values.elementAs(1)),
     );
   }
@@ -52,7 +52,7 @@ final class EthereumNewAddressParams extends NewAccountParams<IEthAddress> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([deriveIndex.toCbor(), coin.toCbor()]),
+        CborSerializable.fromDynamic([deriveIndex.toCbor(), coin.toCbor()]),
         type.tag);
   }
 

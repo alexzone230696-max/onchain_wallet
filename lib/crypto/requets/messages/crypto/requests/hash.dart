@@ -50,15 +50,15 @@ class CryptoRequestHashing
         hex: hex,
         tags: CryptoRequestMethod.hashing.tag);
     return CryptoRequestHashing._(
-        hashingType: CryptoRequestHashingType.fromName(values.elementAt(0)),
-        dataBytes: values.elementAt(1),
-        dataHex: values.elementAt(2));
+        hashingType: CryptoRequestHashingType.fromName(values.elementAs(0)),
+        dataBytes: values.elementAs(1),
+        dataHex: values.elementAs(2));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           hashingType.name,
           dataBytes == null ? null : CborBytesValue(dataBytes!),
           dataHex

@@ -91,7 +91,7 @@ class XRPWalletTransactionTransferOutput
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([amount.toCbor(), to.address]), type.tag);
+        CborSerializable.fromDynamic([amount.toCbor(), to.address]), type.tag);
   }
 
   @override
@@ -124,6 +124,7 @@ class XRPWalletTransactionOperationOutput
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([name, amount?.toCbor(), content]), type.tag);
+        CborSerializable.fromDynamic([name, amount?.toCbor(), content]),
+        type.tag);
   }
 }

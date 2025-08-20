@@ -1,9 +1,8 @@
 part of 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 
-class XRPChainConfig extends DefaultChainConfig {
-  XRPChainConfig();
-  @override
-  DefaultChainStorageKey? get nftStorageKey => DefaultChainStorageKey.nft;
+class XRPChainConfig extends DefaultNetworkConfig {
+  XRPChainConfig()
+      : super(supportToken: true, supportNft: true, supportWeb3: true);
 }
 
 final class XRPChain extends Chain<
@@ -15,7 +14,6 @@ final class XRPChain extends Chain<
     IXRPAddress,
     WalletXRPNetwork,
     XRPClient,
-    DefaultChainStorageKey,
     XRPChainConfig,
     XRPWalletTransaction,
     RippleContact,
@@ -24,14 +22,14 @@ final class XRPChain extends Chain<
     required super.network,
     required super.addressIndex,
     required super.id,
-    required super.config,
+    XRPChainConfig? config,
     required super.client,
     required super.addresses,
-  }) : super._();
+  }) : super._(config: config ?? XRPChainConfig());
   @override
   XRPChain copyWith({
     WalletXRPNetwork? network,
-    List<IXRPAddress>? addresses,
+    List<ChainAccount>? addresses,
     List<ContactCore<XRPAddress>>? contacts,
     int? addressIndex,
     XRPClient? client,
@@ -41,7 +39,7 @@ final class XRPChain extends Chain<
     return XRPChain._(
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
-        addresses: addresses ?? _addresses,
+        addresses: addresses?.cast<IXRPAddress>() ?? _addresses,
         client: client ?? _client,
         id: id ?? this.id,
         config: config ?? this.config);
@@ -56,8 +54,7 @@ final class XRPChain extends Chain<
         id: id,
         addressIndex: 0,
         client: client,
-        addresses: [],
-        config: XRPChainConfig());
+        addresses: []);
   }
 
   factory XRPChain.deserialize(
@@ -68,7 +65,7 @@ final class XRPChain extends Chain<
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
     }
-    final String id = cbor.elementAt<String>(2);
+    final String id = cbor.elementAs<String>(2);
     final List<IXRPAddress> accounts = cbor
         .elementAsListOf<CborTagValue>(3)
         .map((e) => IXRPAddress.deserialize(network, obj: e))
@@ -79,8 +76,7 @@ final class XRPChain extends Chain<
         addresses: accounts,
         addressIndex: addressIndex < 0 ? 0 : addressIndex,
         client: client,
-        id: id,
-        config: XRPChainConfig());
+        id: id);
   }
 
   @override
@@ -91,28 +87,24 @@ final class XRPChain extends Chain<
   }
 
   @override
-  Future<void> updateAddressBalance(IXRPAddress address,
-      {bool tokens = true, bool saveAccount = true}) async {
-    _isAccountAddress(address);
-    await initAddress(address);
+  Future<void> _updateAddressBalanceInternal(IXRPAddress address,
+      {bool tokens = true}) async {
     await onClient(onConnect: (client) async {
       final balance = await client.getAccountBalance(address.networkAddress);
-      _updateAddressBalanceInternal(
-          address: address, balance: balance, saveAccount: saveAccount);
+      address.address._updateAddressBalance(balance);
       if (tokens) {
         final tokens = address.tokens;
         if (tokens.isEmpty) return;
         final balances = await client.getAccountTokens(address.networkAddress);
         for (final i in tokens) {
-          try {
-            final currentUpdate = balances.firstWhere((element) =>
-                element.issuer.address == i.issuer &&
-                element.currency == i.assetCode);
-            i._updateBalance(BigRational.parseDecimal(currentUpdate.balance));
-          } on StateError {
-            i._updateBalance(BigRational.zero);
-          }
-          _saveToken(address: address, token: i);
+          final currentUpdate = balances.firstWhereOrNull((element) =>
+              element.issuer.address == i.issuer &&
+              element.currency == i.assetCode);
+          _updateTokenBalanceInternal(
+              address: address,
+              token: i,
+              save: i._updateBalance(
+                  BigRational.parseDecimal(currentUpdate?.balance ?? "0")));
         }
       }
     });
@@ -127,15 +119,14 @@ final class XRPChain extends Chain<
       if (tokens.isEmpty) return;
       final balances = await client.getAccountTokens(address.networkAddress);
       for (final i in tokens) {
-        try {
-          final currentUpdate = balances.firstWhere((element) =>
-              element.issuer.address == i.issuer &&
-              element.currency == i.assetCode);
-          i._updateBalance(BigRational.parseDecimal(currentUpdate.balance));
-        } on StateError {
-          i._updateBalance(BigRational.zero);
-        }
-        _saveToken(address: address, token: i);
+        final currentUpdate = balances.firstWhereOrNull((element) =>
+            element.issuer.address == i.issuer &&
+            element.currency == i.assetCode);
+        _updateTokenBalanceInternal(
+            address: address,
+            token: i,
+            save: i._updateBalance(
+                BigRational.parseDecimal(currentUpdate?.balance ?? "0")));
       }
     });
   }

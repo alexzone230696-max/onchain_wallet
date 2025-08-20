@@ -18,12 +18,6 @@ class Web3PermissionAppbarActionView extends StatelessWidget {
           padding: EdgeInsets.zero,
           tooltipWidget: (c) => IgnorePointer(
                 child: ToolTipConstrainedBox(
-                  // padding: WidgetConstant.padding10,
-                  // constraints: const BoxConstraints(
-                  //     maxWidth: APPConst.tooltipConstrainedWidth),
-                  // decoration: BoxDecoration(
-                  //     borderRadius: WidgetConstant.border8,
-                  //     color: context.colors.surface),
                   child: Column(
                     children: [
                       ContainerWithBorder(

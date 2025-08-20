@@ -77,7 +77,7 @@ class _AddToContactListViewState<NETWORKADDRESS>
 
   ContactCore<NETWORKADDRESS>? getCurrentContact() {
     if (!formKey.ready()) return null;
-    if (this.contact != null) return contact;
+    if (contact != null) return contact;
     return _validate(address);
   }
 

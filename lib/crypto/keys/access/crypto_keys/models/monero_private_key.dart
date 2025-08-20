@@ -45,7 +45,8 @@ final class MoneroPrivateKeyData extends CryptoPrivateKeyData {
       coin: coin,
       wif: values.elementAs(3),
       keyName: values.elementAs(4),
-      publicKey: MoneroPublicKeyData.deserialize(obj: values.getCborTag(5)),
+      publicKey:
+          MoneroPublicKeyData.deserialize(obj: values.elementAsCborTag(5)),
       spendPrivateKey: MoneroPrivateKey.fromBytes(values.elementAs(6)),
       viewPrivateKey: MoneroPrivateKey.fromBytes(values.elementAs(7)),
     );
@@ -117,7 +118,7 @@ final class MoneroPrivateKeyData extends CryptoPrivateKeyData {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           coin.toCbor(),
           privateKey,
           extendedKey,

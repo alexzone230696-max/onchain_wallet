@@ -37,7 +37,8 @@ class TonContact extends ContactCore<TonAddress> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([address, CborEpochIntValue(created), name]),
+        CborSerializable.fromDynamic(
+            [address, CborEpochIntValue(created), name]),
         CborTagsConst.tonContact);
   }
 

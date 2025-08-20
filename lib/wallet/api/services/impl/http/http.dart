@@ -197,11 +197,16 @@ abstract class HTTPService<P extends APIProvider>
       final response = await t();
       if (allowStatus.isNotEmpty &&
           !allowStatus.contains(response.statusCode)) {
+        appLogger.error(
+            runtime: runtimeType,
+            functionName: "_onServiceException",
+            msg:
+                "Failed ${response.statusCode}: ${response.error() ?? response.result}");
         throw ApiProviderException.fromException(
             statusCode: response.statusCode,
             message: response.error() ?? response.result);
       }
-      return _readServiceResponse<T>(response);
+      return readServiceResponse<T>(response);
     } catch (e) {
       throw ApiProviderException.fromException(message: e);
     }
@@ -241,7 +246,7 @@ abstract class HTTPService<P extends APIProvider>
     }
   }
 
-  BaseServiceResponse<T> _readServiceResponse<T>(HTTPCallerResponse response) {
+  BaseServiceResponse<T> readServiceResponse<T>(HTTPCallerResponse response) {
     try {
       if (response.isSuccess) {
         return ServiceSuccessRespose(

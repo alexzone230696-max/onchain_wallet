@@ -28,11 +28,11 @@ final class IMoneroAddress extends ChainAccount<MoneroAddress, TokenCore,
     final CryptoCoins coin =
         CustomCoins.getSerializationCoin(values.elementAs(0));
     final keyIndex =
-        AddressDerivationIndex.deserialize(obj: values.getCborTag(1));
-    final addrDetails =
-        MoneroViewAccountDetails.deserialize(object: values.getCborTag(2));
+        AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(1));
+    final addrDetails = MoneroViewAccountDetails.deserialize(
+        object: values.elementAsCborTag(2));
     final AccountBalance address =
-        AccountBalance.deserialize(network, obj: values.getCborTag(3));
+        AccountBalance.deserialize(network, obj: values.elementAsCborTag(3));
     final networkAddress = MoneroAddress(address.toAddress);
     final int networkId = values.elementAs(4);
     if (networkId != network.value) {
@@ -63,7 +63,7 @@ final class IMoneroAddress extends ChainAccount<MoneroAddress, TokenCore,
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           coin.toCbor(),
           keyIndex.toCbor(),
           addrDetails.toCbor(),
@@ -89,12 +89,6 @@ final class IMoneroAddress extends ChainAccount<MoneroAddress, TokenCore,
 
   @override
   String get type => networkAddress.type.name;
-
-  @override
-  bool isEqual(ChainAccount other) {
-    if (other is! IMoneroAddress) return false;
-    return networkAddress == other.networkAddress;
-  }
 
   @override
   MoneroNewAddressParams toAccountParams() {

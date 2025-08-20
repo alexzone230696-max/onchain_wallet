@@ -57,7 +57,7 @@ class Web3EthreumTypdedData extends Web3EthereumRequestParam<String> {
       tags: Web3MessageTypes.walletRequest.tag,
     );
     final typedData =
-        EIP712Base.fromJson(StringUtils.toJson(values.elementAt(2)));
+        EIP712Base.fromJson(StringUtils.toJson(values.elementAs(2)));
     EIP712Domain? domain;
     if (typedData.version != EIP712Version.v1) {
       domain = EIP712Domain.fromJson((typedData as Eip712TypedData).domain);
@@ -75,7 +75,7 @@ class Web3EthreumTypdedData extends Web3EthereumRequestParam<String> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
           accessAccount.toCbor(),
           CborStringValue(StringUtils.fromJson(typedData.toJson())),
@@ -87,12 +87,16 @@ class Web3EthreumTypdedData extends Web3EthereumRequestParam<String> {
   late String content = StringUtils.fromJson(typedData.toJson());
 
   @override
-  Web3EthereumRequest<String, Web3EthreumTypdedData> toRequest(
+  Future<Web3EthereumRequest<String, Web3EthreumTypdedData>> toRequest(
       {required Web3RequestInformation request,
       required Web3RequestAuthentication authenticated,
-      required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+      required WEB3REQUESTNETWORKCONTROLLER<IEthAddress, EthereumChain,
+              Web3EthereumChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3EthereumRequest<String, Web3EthreumTypdedData>(
       params: this,
       authenticated: authenticated,

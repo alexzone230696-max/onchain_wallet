@@ -1,16 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:monero_dart/monero_dart.dart';
 import 'package:on_chain_wallet/app/constant/constant.dart';
+import 'package:on_chain_wallet/crypto/models/networks.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/transaction.dart';
 
-class TransactionView extends StatelessWidget {
-  final ChainTransaction transaction;
-  final Chain chain;
+class TransactionView<CHAINACCOUNT extends ChainAccount,
+    TRANSACTION extends ChainTransaction> extends StatelessWidget {
+  final TRANSACTION transaction;
+  final APPCHAINACCOUNTTX<CHAINACCOUNT, TRANSACTION> account;
+  final CHAINACCOUNT address;
   const TransactionView(
-      {required this.transaction, required this.chain, super.key});
+      {required this.transaction,
+      required this.account,
+      required this.address,
+      super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,8 +26,8 @@ class TransactionView extends StatelessWidget {
       onRemove: () {
         context.openSliverDialog(
             widget: (context) {
-              return TransactionModalView(
-                  transaction: transaction, chain: chain);
+              return TransactionModalView<CHAINACCOUNT, TRANSACTION>(
+                  transaction: transaction, account: account, address: address);
             },
             label: "transaction".tr,
             content: (c) => [
@@ -28,9 +36,9 @@ class TransactionView extends StatelessWidget {
                         context.openSliverDialog(
                             widget: (ctx) => DialogTextView(
                                 buttonWidget: AsyncDialogDoubleButtonView(
-                                    firstButtonPressed: () => chain
+                                    firstButtonPressed: () => account
                                             .removeTransaction(
-                                                address: chain.address,
+                                                address: address,
                                                 transaction: transaction)
                                             .then((e) {
                                           ctx.pop();
@@ -46,6 +54,8 @@ class TransactionView extends StatelessWidget {
         widgets: {
           WalletTransactionType.send: (context) =>
               Icon(Icons.upload, color: context.onPrimaryContainer),
+          WalletTransactionType.receive: (context) =>
+              Icon(Icons.download, color: context.onPrimaryContainer),
           WalletTransactionType.web3: (context) =>
               Icon(CustomIcons.web3, color: context.onPrimaryContainer),
           WalletTransactionType.web3Tx: (context) =>
@@ -92,15 +102,20 @@ class TransactionView extends StatelessWidget {
   }
 }
 
-class TransactionModalView extends StatelessWidget {
-  final ChainTransaction transaction;
-  final Chain chain;
+class TransactionModalView<CHAINACCOUNT extends ChainAccount,
+    TRANSACTION extends ChainTransaction> extends StatelessWidget {
+  final TRANSACTION transaction;
+  final APPCHAINACCOUNTTX<CHAINACCOUNT, TRANSACTION> account;
+  final CHAINACCOUNT address;
   const TransactionModalView(
-      {required this.transaction, required this.chain, super.key});
+      {required this.transaction,
+      required this.account,
+      required this.address,
+      super.key});
 
   @override
   Widget build(BuildContext context) {
-    final txUrl = chain.network.getTransactionExplorer(transaction.txId);
+    final txUrl = account.network.getTransactionExplorer(transaction.txId);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -182,6 +197,32 @@ class TransactionModalView extends StatelessWidget {
                     WidgetConstant.height20,
                   ],
                 )),
+        ConditionalWidget(
+          onActive: (context) {
+            final moneroAddress = (address as IMoneroAddress).networkAddress;
+            final moneroTx = transaction as MoneroWalletTransaction;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("proof".tr, style: context.textTheme.titleMedium),
+                WidgetConstant.height8,
+                ContainerWithBorder(
+                    onRemoveIcon: Icon(Icons.handshake,
+                        color: context.onPrimaryContainer),
+                    onRemove: () {
+                      context.to(PageRouter.moneroGenerateProof,
+                          argruments:
+                              moneroTx.generateProofRequest(moneroAddress));
+                    },
+                    child: Text("tap_to_generate_transaction_proof".tr,
+                        style: context.onPrimaryTextTheme.bodyMedium)),
+              ],
+            );
+          },
+          enable: transaction.outputs.isEmpty &&
+              transaction.network == NetworkType.monero &&
+              transaction.type == WalletTransactionType.receive,
+        ),
         ConditionalWidget(
             enable: transaction.outputs.isNotEmpty,
             onActive: (context) => Column(
@@ -282,7 +323,7 @@ class TransactionTransferOutputView extends StatelessWidget {
           ),
           switch (output.runtimeType) {
             const (MoneroWalletTransactionOutput) => _MoneroOutputView(
-                output: output as MoneroWalletTransactionOutput,
+                to: (output as MoneroWalletTransactionOutput).to,
                 transaction: transaction as MoneroWalletTransaction,
               ),
             _ => WidgetConstant.sizedBox
@@ -294,8 +335,8 @@ class TransactionTransferOutputView extends StatelessWidget {
 }
 
 class _MoneroOutputView extends StatelessWidget {
-  const _MoneroOutputView({required this.output, required this.transaction});
-  final MoneroWalletTransactionOutput output;
+  const _MoneroOutputView({required this.to, required this.transaction});
+  final MoneroAddress to;
   final MoneroWalletTransaction transaction;
 
   @override
@@ -312,7 +353,7 @@ class _MoneroOutputView extends StatelessWidget {
                 Icon(Icons.handshake, color: context.primaryContainer),
             onRemove: () {
               context.to(PageRouter.moneroGenerateProof,
-                  argruments: transaction.generateProofRequest(output));
+                  argruments: transaction.generateProofRequest(to));
             },
             child: Text("tap_to_generate_transaction_proof".tr,
                 style: context.primaryTextTheme.bodyMedium)),

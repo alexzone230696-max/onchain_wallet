@@ -3335,7 +3335,54 @@ class Localization {
           "transaction_pending_confirmation_desc":
               "Transaction is waiting for confirmation. You can close this page and continue tracking it in the Explorer or the Activity section",
           "database_initialization_failed_desc":
-              "Database initialization failed. unsupported format or missing files."
+              "Database initialization failed. unsupported format or missing files.",
+          "tracked_block_information": "Tracked Block Information",
+          "block_tracking_per_thread": "Block Tracking per Thread",
+          "generate_public_key": "Generate public key",
+          "generating_public_key_please_wait":
+              "Generating public key. Please wait",
+          "base_credential": "Base credential",
+          "stake_credential": "Stake credential",
+          "tap_to_chose_or_create_public_key":
+              "Tap to choose or create a public key",
+          "at_least_n_public_keys_required":
+              "At least ___1__ public keys required",
+          "fill_out_base_address_credential":
+              "Fill out the form for your base address credential",
+          "fill_out_base_address_stake_credential":
+              "Fill out the form for your base address stake credential",
+          "choose_public_key_or_generate_new_on":
+              "Choose a public key from your account or generate a new one",
+          "credential_type": "Credential type",
+          "reference_script": "Reference script",
+          "at_least_ada_for_collateral":
+              "at least ___1__ ADA required for collateral.",
+          "list_of_utxos": "List of UTXOs",
+          "choose_the_utxos_as_collateral":
+              "Choose the UTXOs to provide as collateral.",
+          "ada_max_collateral_amount_desc":
+              "Collateral above 25.5 ADA is unnecessary — excess will be locked and at risk.",
+          "ada_min_collateral_amount_desc":
+              "At least 2 ADA is required for collateral",
+          "ada_multi_asset_utxo_not_allowed_for_collateral":
+              "Multi-asset UTXOs are not allowed for collateral.",
+          "select_collateral_utxos_desc":
+              "Only UTXOs from the account you’ve connected to this client can be used. Multi-asset and multisig account UTXOs are not allowed. To proceed, select a suitable ADA-only UTXO in your account and then submit the request.",
+          "transaction_inputs": "Transaction inputs",
+          "transaction_outputs": "Transaction outputs",
+          "signers": "Signers",
+          "withdrawals": "Withdrawals",
+          "plutus": "Plutus",
+          "native_scripts": "Native scripts",
+          "metadata": "Metadata",
+          "votes": "Votes",
+          "vote": "Vote",
+          "account_input": "Account input",
+          "reference_input": "Reference inputs",
+          "collateral_input": "Collateral input",
+          "web3_ada_bip32_public_key_request_desc":
+              "The client is requesting access to your account’s BIP32 public key.",
+          "storage_is_not_available": "Storage is not available."
         }
       };
 }

@@ -7,7 +7,8 @@ class Web3AptosExceptionConstant {
           "Invalid Aptos transaction. The transaction must be a valid Aptos transaction and include a method like bcsToBytes.");
   static Web3RequestException get invalidTransactionChainId =>
       Web3RequestExceptionConst.message(
-          "Invalid transaction Chain id. Wallet connected to the different aptos network.");
+          "Invalid transaction Chain id. Wallet connected to the different aptos network.",
+          errorType: Web3ErrorCode.refused);
   static Web3RequestException get invalidSecondarySignerAddressesParams =>
       Web3RequestExceptionConst.invalidParameters(
           "`secondarySignerAddresses` must be a valid list of aptos address as string.");

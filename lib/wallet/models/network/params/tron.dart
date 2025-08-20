@@ -13,12 +13,12 @@ class TronNetworkParams extends NetworkCoinParams<TronAPIProvider> {
         cborBytes: bytes, object: obj, tags: CborTagsConst.tvmNetworkParam);
 
     return TronNetworkParams(
-        token: Token.deserialize(obj: values.getCborTag(2)),
+        token: Token.deserialize(obj: values.elementAsCborTag(2)),
         providers: values
             .elementAsListOf<CborTagValue>(3)
             .map((e) => TronAPIProvider.fromCborBytesOrObject(obj: e))
             .toList(),
-        chainType: ChainType.fromValue(values.elementAt(5)),
+        chainType: ChainType.fromValue(values.elementAs(5)),
         addressExplorer: values.elementAs(7),
         transactionExplorer: values.elementAs(8));
   }
@@ -32,11 +32,12 @@ class TronNetworkParams extends NetworkCoinParams<TronAPIProvider> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           const CborNullValue(),
           const CborNullValue(),
           token.toCbor(),
-          CborListValue.fixedLength(providers.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              providers.map((e) => e.toCbor()).toList()),
           const CborNullValue(),
           chainType.name,
           const CborNullValue(),

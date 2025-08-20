@@ -1,3 +1,4 @@
+import 'package:blockchain_utils/utils/string/string.dart';
 import 'package:monero_dart/monero_dart.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/impl/worker_impl.dart';
@@ -13,6 +14,10 @@ import 'package:on_chain_wallet/wallet/models/others/models/cached_object.dart';
 import 'package:on_chain_wallet/wallet/models/token/network/token.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/networks/monero.dart';
+
+class _MoneroClientConst {
+  static const int maxTxRequestPerCall = 50;
+}
 
 class MoneroClient extends NetworkClient<MoneroWalletTransaction,
     MoneroAPIProvider, BaseNetworkToken, MoneroAddress> with CryptoWokerImpl {
@@ -31,10 +36,11 @@ class MoneroClient extends NetworkClient<MoneroWalletTransaction,
   MoneroHTTPService get service => provider.rpc as MoneroHTTPService;
 
   Future<int> getHeight() async {
-    return _height.get(onFetch: () async {
+    final height = await _height.get(onFetch: () async {
       final block = await provider.request(DaemonRequestGetLastBlockHeader());
       return block.blockHeader.height;
     });
+    return height;
   }
 
   Future<DaemonGetBlocksByHeightResponse> getBlockByRange(
@@ -87,13 +93,33 @@ class MoneroClient extends NetworkClient<MoneroWalletTransaction,
 
   Future<List<TxResponse>> getTxesByTxIds(
       {required List<String> txIds, bool validateResponse = true}) async {
-    final rParams = DaemonRequestGetTransactions(txIds,
-        prune: false, decodeAsJson: false, split: false);
-    final result = await provider.request(rParams);
-    if (validateResponse && rParams.txHashes.length != result.length) {
-      throw const WalletException("some_transaction_missing");
+    int offset = 0;
+    List<TxResponse> txes = [];
+    while (offset < txIds.length) {
+      int end = offset + _MoneroClientConst.maxTxRequestPerCall;
+      if (end >= txIds.length) {
+        end = txIds.length;
+      }
+
+      final rParams = DaemonRequestGetTransactions(txIds.sublist(offset, end),
+          prune: false, decodeAsJson: false, split: false);
+      final result = await provider.request(rParams);
+      if (validateResponse) {
+        if (rParams.txHashes.length != result.length) {
+          throw const WalletException("some_transaction_missing");
+        }
+        for (int i = 0; i < rParams.txHashes.length; i++) {
+          if (!StringUtils.hexEqual(rParams.txHashes[i], result[i].txHash)) {
+            throw const WalletException("some_transaction_missing");
+          }
+        }
+      }
+      txes.addAll(result);
+      offset += result.length;
     }
-    return result;
+    assert(txes.length == txIds.length);
+
+    return txes;
   }
 
   Future<MoneroTransaction> getTx(String txId) async {
@@ -104,17 +130,6 @@ class MoneroClient extends NetworkClient<MoneroWalletTransaction,
       throw const WalletException("transaction_not_found");
     }
     return result[0].toTx();
-  }
-
-  Future<List<TxResponse>> getTxes(
-      {required List<String> txIds, bool validateResponse = true}) async {
-    final rParams = DaemonRequestGetTransactions(txIds,
-        prune: false, decodeAsJson: false, split: false);
-    final result = await provider.request(rParams);
-    if (validateResponse && rParams.txHashes.length != result.length) {
-      throw const WalletException("some_transaction_missing");
-    }
-    return result;
   }
 
   Future<DaemonIsKeyImageSpentResponse> keyImagesStatus(List<String> keyImages,

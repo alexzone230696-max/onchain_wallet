@@ -26,8 +26,8 @@ class Web3StellarSendTransactionResponse with CborSerializable {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(
-        CborListValue.fixedLength([envlope, txHash]), CborTagsConst.defaultTag);
+    return CborTagValue(CborSerializable.fromDynamic([envlope, txHash]),
+        CborTagsConst.defaultTag);
   }
 
   Map<String, dynamic> toWalletConnectJson() {
@@ -78,9 +78,9 @@ class Web3StellarSendTransaction
     return Web3StellarSendTransaction(
         account: Web3StellarChainAccount.deserialize(
             object: values.elementAs<CborTagValue>(1)),
-        transaction: values.elementAt(2),
+        transaction: values.elementAs(2),
         method: Web3StellarRequestMethods.fromId(
-            values.elementAt<List<int>>(0).last));
+            values.elementAs<List<int>>(0).last));
   }
 
   @override
@@ -89,20 +89,24 @@ class Web3StellarSendTransaction
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [method.tag, accessAccount.toCbor(), CborBytesValue(transaction)]),
         type.tag);
   }
 
   @override
-  Web3StellarRequest<Web3StellarSendTransactionResponse,
-          Web3StellarSendTransaction>
-      toRequest(
-          {required Web3RequestInformation request,
-          required Web3RequestAuthentication authenticated,
-          required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+  Future<
+      Web3StellarRequest<Web3StellarSendTransactionResponse,
+          Web3StellarSendTransaction>> toRequest(
+      {required Web3RequestInformation request,
+      required Web3RequestAuthentication authenticated,
+      required WEB3REQUESTNETWORKCONTROLLER<IStellarAddress, StellarChain,
+              Web3StellarChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3StellarRequest<Web3StellarSendTransactionResponse,
         Web3StellarSendTransaction>(
       params: this,

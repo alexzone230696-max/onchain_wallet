@@ -20,12 +20,12 @@ final class WalletRequestRemoveKey extends WalletRequest<
         object: object,
         hex: hex,
         tags: WalletRequestMethod.removeWalletKeys.tag);
-    return WalletRequestRemoveKey(values.elementAt(0));
+    return WalletRequestRemoveKey(values.elementAs(0));
   }
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([keyId]), method.tag);
+    return CborTagValue(CborSerializable.fromDynamic([keyId]), method.tag);
   }
 
   @override

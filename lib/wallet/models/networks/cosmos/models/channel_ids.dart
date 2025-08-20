@@ -20,7 +20,7 @@ class CosmosIBCChannelId with CborSerializable, Equatable {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([name, channelId]),
+    return CborTagValue(CborSerializable.fromDynamic([name, channelId]),
         CborTagsConst.cosmosIbcChannelId);
   }
 
@@ -50,7 +50,8 @@ class CosmosAccountIBCChannelIds with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(_channelIds.map((e) => e.toCbor()).toList()),
+        CborSerializable.fromDynamic(
+            _channelIds.map((e) => e.toCbor()).toList()),
         CborTagsConst.cosmosAccountChannelId);
   }
 

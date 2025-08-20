@@ -44,7 +44,7 @@ abstract class WalletStandardPageController {
     final eventType = JSEventType.fromName(type.toDart);
     final listeners = _listeners[eventType];
     if (listeners == null) {
-      throw JSWalletError(message: "Unsuported ${type.toDart} event.");
+      throw JSError(message: "Unsuported ${type.toDart} event.");
     }
     if (eventType != null) {
       _listeners[eventType]!.add(listener);
@@ -112,20 +112,59 @@ class PageRequestController {
         .toPromise;
   }
 
-  Future<T> waitForSuccessResponse<T extends JSAny?>({
-    required String method,
-    PageRequestType provider = PageRequestType.walletStandard,
-    JSArray<JSAny?>? params,
-    JSClientType? client,
-  }) async {
+  T onResponseError<T extends JSAny?>(
+      {required String method,
+      required JSWalletError error,
+      required PageRequestType provider}) {
+    throw error;
+  }
+
+  T onResponseSuccess<T extends JSAny?>(
+      {required String method,
+      required JSAny? response,
+      required PageRequestType provider}) {
+    return response as T;
+  }
+
+  Future<T> waitForSuccessResponse<T extends JSAny?>(
+      {required String method,
+      PageRequestType provider = PageRequestType.walletStandard,
+      JSArray<JSAny?>? params,
+      JSClientType? client,
+      ONRESPONEERROR<T>? onError,
+      ONRESPONSESUCCESS<T>? onSuccess}) async {
     final message = PageMessageRequest.create(
         method: method, params: params, provider: provider);
     final response = await _getWalleResponse(message: message, client: client);
     switch (response.statusType) {
       case JSWalletResponseType.success:
-        return response.data as T;
+        if (onSuccess != null) {
+          return onSuccess(
+              method: method, response: response.data, provider: provider);
+        }
+        return onResponseSuccess<T>(
+            method: method, response: response.data, provider: provider);
       case JSWalletResponseType.failed:
-        throw response.data as JSWalletError;
+        if (onError != null) {
+          return onError(
+              method: method,
+              error: response.data as JSWalletError,
+              provider: provider);
+        }
+        return onResponseError<T>(
+            method: method,
+            error: response.data as JSWalletError,
+            provider: provider);
     }
   }
 }
+
+typedef ONRESPONEERROR<T extends JSAny?> = T Function(
+    {required String method,
+    required JSWalletError error,
+    required PageRequestType provider});
+
+typedef ONRESPONSESUCCESS<T extends JSAny?> = T Function(
+    {required String method,
+    required JSAny? response,
+    required PageRequestType provider});

@@ -11,8 +11,7 @@ class UpdateCardanoProvider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NetworkAccountControllerView<CardanoClient?, ICardanoAddress?,
-            ADAChain>(
+    return NetworkAccountControllerView<ADAClient?, ICardanoAddress?, ADAChain>(
         addressRequired: false,
         clientRequired: false,
         childBulder: (wallet, account, client, address, onAccountChanged) =>
@@ -37,7 +36,7 @@ class _UpdateSolanaProviderState extends State<_UpdateCardanoProvider>
             CardanoAPIProvider,
             ADAAddress,
             ICardanoAddress,
-            CardanoClient,
+            ADAClient,
             TokenCore,
             NFTCore,
             ADAChain> {

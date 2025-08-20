@@ -51,6 +51,7 @@ class StreamIsolateMessageController {
             result = MessageArgsException("stream_does_not_exists");
             break;
           }
+
           controller.add(msg);
           result = MessageArgsMessage();
           break;

@@ -80,7 +80,9 @@ enum JSClientType {
   sui(networkName: "Sui"),
   bitcoin(networkName: "Bitcoin"),
   cosmos(networkName: "Cosmos"),
-  monero(networkName: "Monero");
+  monero(networkName: "Monero"),
+  cardano(networkName: "Cardano"),
+  bitcoinCash(networkName: "BitcoinCash");
 
   final String networkName;
   const JSClientType({required this.networkName});
@@ -108,7 +110,8 @@ enum PageMessageType {
 
 enum PageRequestType {
   walletStandard,
-  eip1993;
+  eip1993,
+  cardano;
 
   static PageRequestType fromName(String? name) {
     return values.firstWhere((e) => e.name == name,
@@ -214,6 +217,7 @@ extension type PageMessageData._(JSObject object) implements JSAny {
   PageRequestType get provider => PageRequestType.fromName(providerType);
   bool get isWalletStandard => provider == PageRequestType.walletStandard;
   bool get isEIP => provider == PageRequestType.eip1993;
+  bool get isCardanoApi => provider == PageRequestType.cardano;
 
   PageMessageRequest asRequest() {
     if (type != PageMessageType.request.name) {

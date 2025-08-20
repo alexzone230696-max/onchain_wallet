@@ -94,7 +94,8 @@ class _SetupTransactionFeeState extends State<SetupTransactionFee>
               });
             },
             title: Text("custom_fee".tr),
-            leading: Radio(value: null, groupValue: type, onChanged: (_) {}),
+            leading: RadioGroup(
+                groupValue: type, onChanged: (_) {}, child: Radio(value: null)),
             subtitle: type == null
                 ? CoinAndMarketPriceView(
                     disableTooltip: true,

@@ -60,16 +60,11 @@ class ADATransactionTransferWidget extends StatelessWidget {
           return APPStreamBuilder(
             value: value.notifier,
             builder: (context, _) {
-              return ContainerWithBorder(
-                iconAlginment: CrossAxisAlignment.start,
-                onRemoveWidget: IconButton(
-                    onPressed: () => form.onRemoveRecipients(value),
-                    icon: Icon(Icons.remove_circle,
-                        color: context.colors.onPrimaryContainer)),
+              return CustomizedContainer(
+                onTapStackIcon: () => form.onRemoveRecipients(value),
                 validateText: value.status.error,
                 validate: value.isReady,
                 enableTap: false,
-                onRemove: () {},
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -107,20 +102,16 @@ class ADATransactionTransferWidget extends StatelessWidget {
                       itemCount: value.transfers.length,
                       itemBuilder: (context, index) {
                         final transfer = value.transfers[index];
-                        return ContainerWithBorder(
+                        return CustomizedContainer(
                           backgroundColor: context.colors.onPrimaryContainer,
+                          reverseColor: context.colors.primaryContainer,
                           validate: transfer.hasAmount,
                           validateText: value.status.error,
-                          enableTap: false,
-                          onRemove: () {},
                           iconAlginment: CrossAxisAlignment.start,
-                          onRemoveWidget: IconButton(
-                              onPressed: () =>
-                                  form.onRemoveTransferAsset(value, transfer),
-                              icon: Icon(Icons.remove_circle,
-                                  color: context.colors.primaryContainer)),
-                          onRemoveIcon: Icon(Icons.remove_circle,
-                              color: context.colors.primaryContainer),
+                          onTapStackIcon: () =>
+                              form.onRemoveTransferAsset(value, transfer),
+                          // onStackIcon: Icon(Icons.remove_circle,
+                          //     color: context.colors.primaryContainer),
                           child: APPExpansionListTile(
                             title: ADATokenDetailsView(transfer.token,
                                 balance: transfer.amount),

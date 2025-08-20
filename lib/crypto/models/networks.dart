@@ -60,7 +60,7 @@ class NetworkType {
       tag: CryptoKeyConst.cardanoNetwork,
       mainNetworkId: 50,
       id: 10006,
-      caip2: 'cardano');
+      caip2: 'cip34');
   static const NetworkType cosmos = NetworkType._(
       name: "Cosmos",
       tag: CryptoKeyConst.cosmosNetwork,

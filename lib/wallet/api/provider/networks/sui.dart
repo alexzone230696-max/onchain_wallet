@@ -29,7 +29,7 @@ class SuiAPIProvider extends APIProvider {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([fullNodeUri, auth?.toCbor(), identifier]),
+        CborSerializable.fromDynamic([fullNodeUri, auth?.toCbor(), identifier]),
         CborTagsConst.suiApiServiceProvider);
   }
 }

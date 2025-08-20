@@ -75,7 +75,7 @@ class Web3AptosSignMessageResponse with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           message,
           nonce,
           chainId,
@@ -169,7 +169,7 @@ class Web3AptosSignMessage
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
           accessAccount.toCbor(),
           message,
@@ -185,13 +185,17 @@ class Web3AptosSignMessage
   final Web3AptosChainAccount accessAccount;
 
   @override
-  Web3AptosRequest<Web3AptosSignMessageResponse, Web3AptosSignMessage>
+  Future<Web3AptosRequest<Web3AptosSignMessageResponse, Web3AptosSignMessage>>
       toRequest(
           {required Web3RequestInformation request,
           required Web3RequestAuthentication authenticated,
-          required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+          required WEB3REQUESTNETWORKCONTROLLER<IAptosAddress, AptosChain,
+                  Web3AptosChainAccount>
+              chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3AptosRequest<Web3AptosSignMessageResponse, Web3AptosSignMessage>(
       params: this,
       authenticated: authenticated,

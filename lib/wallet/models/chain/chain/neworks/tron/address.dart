@@ -46,10 +46,10 @@ final class ITronAddress extends ChainAccount<TronAddress, TronToken, NFTCore,
     final CryptoCoins coin =
         CustomCoins.getSerializationCoin(values.elementAs(0));
     final keyIndex =
-        AddressDerivationIndex.deserialize(obj: values.getCborTag(1));
-    final List<int> publicKey = values.elementAt(2);
+        AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(1));
+    final List<int> publicKey = values.elementAs(2);
     final AccountBalance address =
-        AccountBalance.deserialize(network, obj: values.getCborTag(3));
+        AccountBalance.deserialize(network, obj: values.elementAsCborTag(3));
 
     final TronAddress tronAddress = TronAddress(address.toAddress);
     final int networkId = values.elementAs(4);
@@ -81,7 +81,7 @@ final class ITronAddress extends ChainAccount<TronAddress, TronToken, NFTCore,
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           coin.toCbor(),
           keyIndex.toCbor(),
           publicKey,
@@ -122,12 +122,6 @@ final class ITronAddress extends ChainAccount<TronAddress, TronToken, NFTCore,
         i._updateBalance(balance?.value ?? BigInt.zero);
       }
     }
-  }
-
-  @override
-  bool isEqual(ChainAccount other) {
-    return multiSigAccount == other.multiSigAccount &&
-        networkAddress.toAddress() == other.networkAddress.toAddress();
   }
 
   @override
@@ -176,11 +170,11 @@ final class ITronMultisigAddress extends ITronAddress
     final CryptoCoins coin =
         CustomCoins.getSerializationCoin(values.elementAs(0));
     final TronMultiSignatureAddress multiSignatureAddress =
-        TronMultiSignatureAddress.deserialize(obj: values.getCborTag(1));
+        TronMultiSignatureAddress.deserialize(obj: values.elementAsCborTag(1));
     final AccountBalance address =
-        AccountBalance.deserialize(network, obj: values.getCborTag(2));
+        AccountBalance.deserialize(network, obj: values.elementAsCborTag(2));
     final TronAddress ethAddress = TronAddress(address.toAddress);
-    final int networkId = values.elementAt(3);
+    final int networkId = values.elementAs(3);
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
     }
@@ -208,7 +202,7 @@ final class ITronMultisigAddress extends ITronAddress
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           coin.toCbor(),
           multiSignatureAccount.toCbor(),
           address.toCbor(),
@@ -223,13 +217,8 @@ final class ITronMultisigAddress extends ITronAddress
   bool get multiSigAccount => true;
 
   @override
-  List<(String, Bip32AddressIndex)> get keyDetails =>
-      multiSignatureAccount.signers
-          .map((e) => (e.publicKey, e.keyIndex))
-          .toList();
-  @override
   List<Bip32AddressIndex> signerKeyIndexes() {
-    return keyDetails.map((e) => e.$2).toList();
+    return multiSignatureAccount.signers.map((e) => e.keyIndex).toList();
   }
 
   @override

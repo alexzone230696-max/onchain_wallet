@@ -42,7 +42,7 @@ class ElectrumAPIProvider extends BaseBitcoinAPIProvider {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [url, protocol.id, auth?.toCbor(), identifier]),
         CborTagsConst.electrumApiServiceProvider);
   }

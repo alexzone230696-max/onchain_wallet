@@ -198,10 +198,7 @@ class AptosWeb3WalletConnectStateHandler extends Web3WalletConnectStateHandler<
       required Web3RequestParams? params,
       required Web3ExceptionMessage error}) async {
     final method = Web3AptosRequestMethods.fromName(message.method);
-    bool isAuthenticatedError =
-        error.code == Web3RequestExceptionConst.missingPermission.code ||
-            error.code == Web3RequestExceptionConst.bannedHost.code ||
-            error.code == Web3RequestExceptionConst.rejectedByUser.code;
+    bool isAuthenticatedError = error.errorType.isAuthError;
     if (isAuthenticatedError) {
       switch (method) {
         case Web3AptosRequestMethods.requestAccounts:

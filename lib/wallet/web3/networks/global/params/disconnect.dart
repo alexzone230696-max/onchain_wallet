@@ -17,7 +17,7 @@ class Web3DisconnectApplication
         hex: hex,
         tags: Web3MessageTypes.walletGlobalRequest.tag);
     return Web3DisconnectApplication(
-        chain: NetworkType.fromName(values.elementAt(1)));
+        chain: NetworkType.fromName(values.elementAs(1)));
   }
 
   @override
@@ -31,6 +31,6 @@ class Web3DisconnectApplication
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([method.id, chain.name]), type.tag);
+        CborSerializable.fromDynamic([method.id, chain.name]), type.tag);
   }
 }

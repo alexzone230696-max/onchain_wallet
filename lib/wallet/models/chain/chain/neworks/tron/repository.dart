@@ -9,7 +9,6 @@ base mixin TronChainRepository on Chain<
     ITronAddress,
     WalletTronNetwork,
     TronClient,
-    TronChainStorageKey,
     TronChainConfig,
     TronWalletTransaction,
     TronContact,
@@ -19,9 +18,9 @@ base mixin TronChainRepository on Chain<
     if (address.network != network.value) {
       return null;
     }
-    final storagekey = TronChainStorageKey.accountInfo;
-    final data =
-        await _storage.queryChainStorage(address: address, storage: storagekey);
+    final storagekey = TronNetworkStorageId.accountInfo;
+    final data = await _storage.queryNetworkStorage(
+        address: address, storage: storagekey);
     if (data == null) return null;
     final accountInfo = MethodUtils.nullOnException(
         () => TronAccountInfo.deserialize(bytes: data));
@@ -36,12 +35,13 @@ base mixin TronChainRepository on Chain<
     if (address.network != network.value) {
       return;
     }
-    final storageKey = TronChainStorageKey.accountInfo;
+    final storageKey = TronNetworkStorageId.accountInfo;
     if (accountInfo == null) {
-      await _storage.removeChainStorage(address: address, storage: storageKey);
+      await _storage.removeNetworkStorage(
+          address: address, storage: storageKey);
       return;
     }
-    await _storage.insertChainStorage(
+    await _storage.insertNetworkStorage(
         address: address, storage: storageKey, value: accountInfo);
   }
 
@@ -51,9 +51,9 @@ base mixin TronChainRepository on Chain<
     if (address.network != network.value) {
       return null;
     }
-    final storagekey = TronChainStorageKey.accountResource;
-    final data =
-        await _storage.queryChainStorage(address: address, storage: storagekey);
+    final storagekey = TronNetworkStorageId.accountResource;
+    final data = await _storage.queryNetworkStorage(
+        address: address, storage: storagekey);
     if (data == null) return null;
     final accountInfo = MethodUtils.nullOnException(
         () => TronAccountResourceInfo.deserialize(bytes: data));
@@ -69,12 +69,13 @@ base mixin TronChainRepository on Chain<
     if (address.network != network.value) {
       return;
     }
-    final storagekey = TronChainStorageKey.accountResource;
+    final storagekey = TronNetworkStorageId.accountResource;
     if (accountResource == null) {
-      await _storage.removeChainStorage(address: address, storage: storagekey);
+      await _storage.removeNetworkStorage(
+          address: address, storage: storagekey);
       return;
     }
-    await _storage.insertChainStorage(
+    await _storage.insertNetworkStorage(
         address: address, storage: storagekey, value: accountResource);
   }
 }

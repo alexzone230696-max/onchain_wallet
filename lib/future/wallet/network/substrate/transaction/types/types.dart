@@ -23,9 +23,7 @@ abstract class SubstrateKnownCallMethods {
       final Map<String, dynamic>? methodData =
           StringUtils.tryToJson(data[APPSubstrateConst.systemPalletName]);
       return SubstrateUnknownMethod(
-          methodName: methodData?.keys.firstOrNull,
-          content:
-              StringUtils.fromJson(data, indent: '', toStringEncodable: true));
+          methodName: methodData?.keys.firstOrNull, content: data);
     }
   }
 
@@ -38,9 +36,7 @@ abstract class SubstrateKnownCallMethods {
       final Map<String, dynamic>? methodData =
           StringUtils.tryToJson(data[APPSubstrateConst.balancePalletName]);
       return SubstrateUnknownMethod(
-          methodName: methodData?.keys.firstOrNull,
-          content:
-              StringUtils.fromJson(data, indent: '', toStringEncodable: true));
+          methodName: methodData?.keys.firstOrNull, content: data);
     }
   }
 
@@ -65,9 +61,7 @@ abstract class SubstrateKnownCallMethods {
         StringUtils.tryToJson(data[APPSubstrateConst.utilityPalletName]);
     return [
       SubstrateUnknownMethod(
-          methodName: methodData?.keys.firstOrNull,
-          content:
-              StringUtils.fromJson(data, indent: '', toStringEncodable: true))
+          methodName: methodData?.keys.firstOrNull, content: data)
     ];
   }
 
@@ -89,8 +83,7 @@ abstract class SubstrateKnownCallMethods {
           StringUtils.tryToJson(data.values.first);
       final method = SubstrateUnknownMethod(
           methodName: methodData?.keys.firstOrNull,
-          content: StringUtils.fromJson(methodData ?? data,
-              indent: '', toStringEncodable: true));
+          content: methodData ?? data);
       knownMethods.add(method);
     }
     return knownMethods;
@@ -168,7 +161,7 @@ class SubstrateTransferMethod extends SubstrateKnownCallMethods {
 }
 
 class SubstrateUnknownMethod extends SubstrateKnownCallMethods {
-  final String content;
+  final Map<String, dynamic> content;
   final String? methodName;
   const SubstrateUnknownMethod(
       {required this.content, required this.methodName})

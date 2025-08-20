@@ -14,38 +14,42 @@ class Web3EthereumChainAccount extends Web3ChainAccount<ETHAddress> {
   @override
   final int id;
   final List<int> publicKey;
-  Web3EthereumChainAccount(
-      {required super.keyIndex,
-      required super.address,
-      required super.defaultAddress,
-      required this.id,
-      required List<int> publicKey})
-      : publicKey = publicKey.asImmutableBytes;
+  Web3EthereumChainAccount({
+    required super.keyIndex,
+    required super.address,
+    required super.defaultAddress,
+    required this.id,
+    required super.identifier,
+    required List<int> publicKey,
+  }) : publicKey = publicKey.asImmutableBytes;
   @override
   Web3EthereumChainAccount clone(
       {AddressDerivationIndex? keyIndex,
       ETHAddress? address,
       bool? defaultAddress,
       int? id,
-      List<int>? publicKey}) {
+      List<int>? publicKey,
+      String? identifier}) {
     return Web3EthereumChainAccount(
         keyIndex: keyIndex ?? this.keyIndex,
         address: address ?? this.address,
         defaultAddress: defaultAddress ?? this.defaultAddress,
         id: id ?? this.id,
-        publicKey: publicKey ?? this.publicKey);
+        publicKey: publicKey ?? this.publicKey,
+        identifier: identifier ?? this.identifier);
   }
 
   factory Web3EthereumChainAccount.fromChainAccount(
       {required IEthAddress address,
       required int id,
-      required bool defaultAddress}) {
+      required bool isDefault}) {
     return Web3EthereumChainAccount(
         keyIndex: address.keyIndex,
         address: address.networkAddress,
         id: id,
-        defaultAddress: defaultAddress,
-        publicKey: address.publicKey);
+        defaultAddress: isDefault,
+        publicKey: address.publicKey,
+        identifier: address.identifier);
   }
   factory Web3EthereumChainAccount.deserialize(
       {List<int>? bytes, CborObject? object, String? hex}) {
@@ -55,22 +59,25 @@ class Web3EthereumChainAccount extends Web3ChainAccount<ETHAddress> {
         hex: hex,
         tags: CborTagsConst.web3EthereumAccount);
     return Web3EthereumChainAccount(
-        keyIndex: AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
-        address: ETHAddress(values.elementAt(1)),
-        id: values.elementAt(2),
-        defaultAddress: values.elementAt(3),
-        publicKey: values.elementAs(4));
+        keyIndex: AddressDerivationIndex.deserialize(
+            obj: values.indexAs<CborTagValue>(0)),
+        address: ETHAddress(values.valueAs(1)),
+        id: values.valueAs(2),
+        defaultAddress: values.valueAs(3),
+        publicKey: values.valueAs(4),
+        identifier: values.valueAs(5));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           keyIndex.toCbor(),
           address.address,
           id,
           defaultAddress,
-          CborBytesValue(publicKey)
+          CborBytesValue(publicKey),
+          identifier
         ]),
         CborTagsConst.web3EthereumAccount);
   }
@@ -105,7 +112,7 @@ class Web3EthereumChainIdnetifier extends Web3ChainIdnetifier {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-      CborListValue.fixedLength(
+      CborSerializable.fromDynamic(
           [chainId, supportEIP1559, id, wsIdentifier, caip2]),
       CborTagsConst.web3EthereumChainIdentifier,
     );
@@ -153,10 +160,12 @@ class Web3EthereumChainAuthenticated
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
-          CborListValue.fixedLength(accounts.map((e) => e.toCbor()).toList()),
+        CborSerializable.fromDynamic([
+          CborSerializable.fromDynamic(
+              accounts.map((e) => e.toCbor()).toList()),
           serviceIdentifier?.toCbor(),
-          CborListValue.fixedLength(networks.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              networks.map((e) => e.toCbor()).toList()),
           currentNetwork.toCbor()
         ]),
         networkType.tag);

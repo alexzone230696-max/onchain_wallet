@@ -29,8 +29,8 @@ final class NoneEncryptedRequestMoneroVerifyTxProof
 
     return NoneEncryptedRequestMoneroVerifyTxProof(
         txId: values.elementAs(0),
-        provider:
-            MoneroAPIProvider.fromCborBytesOrObject(obj: values.getCborTag(1)),
+        provider: MoneroAPIProvider.fromCborBytesOrObject(
+            obj: values.elementAsCborTag(1)),
         message: values.elementAs(2),
         address: MoneroAddress(values.elementAs(3)),
         signature: values.elementAs(4));
@@ -55,7 +55,7 @@ final class NoneEncryptedRequestMoneroVerifyTxProof
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [txId, provider.toCbor(), message, address.address, signature]),
         method.tag);
   }

@@ -3,7 +3,6 @@ import 'package:on_chain_wallet/wallet/web3/networks/monero/methods/methods.dart
 import 'package:on_chain_wallet/wallet/web3/networks/monero/params/models/sign_message.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/monero/params/models/transaction.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/monero/permission/models/account.dart';
-import 'package:on_chain_wallet/wallet/web3/networks/monero/permission/models/permission.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/serialization/cbor/cbor.dart';
 import 'package:on_chain_wallet/wallet/models/chain/account.dart';
@@ -15,8 +14,7 @@ abstract class Web3MoneroRequestParam<RESPONSE> extends Web3RequestParams<
     MoneroAddress,
     MoneroChain,
     IMoneroAddress,
-    Web3MoneroChainAccount,
-    Web3MoneroChain> {
+    Web3MoneroChainAccount> {
   @override
   abstract final Web3MoneroRequestMethods method;
 
@@ -29,7 +27,7 @@ abstract class Web3MoneroRequestParam<RESPONSE> extends Web3RequestParams<
         object: object,
         hex: hex,
         tags: Web3MessageTypes.walletRequest.tag);
-    final method = Web3NetworkRequestMethods.fromTag(values.elementAt(0));
+    final method = Web3NetworkRequestMethods.fromTag(values.elementAs(0));
     final Web3MoneroRequestParam param;
     switch (method) {
       case Web3MoneroRequestMethods.sendTransaction:
@@ -51,7 +49,7 @@ abstract class Web3MoneroRequestParam<RESPONSE> extends Web3RequestParams<
 class Web3MoneroRequest<RESPONSE,
         PARAMS extends Web3MoneroRequestParam<RESPONSE>>
     extends Web3NetworkRequest<RESPONSE, MoneroAddress, MoneroChain,
-        Web3MoneroChainAccount, IMoneroAddress, Web3MoneroChain, PARAMS> {
+        Web3MoneroChainAccount, IMoneroAddress, PARAMS> {
   Web3MoneroRequest(
       {required super.params,
       required super.info,

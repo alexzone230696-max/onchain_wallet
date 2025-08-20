@@ -28,7 +28,7 @@ class SwitchOrSelectAccountView<CHAINACCOUNT extends ChainAccount>
   @override
   Widget build(BuildContext context) {
     return ChainStreamBuilder(
-        allowNotify: [ChainNotify.address],
+        allowNotify: [DefaultChainNotify.address],
         builder: (context, chain, lastNotify) {
           return CustomScrollView(shrinkWrap: true, slivers: [
             SliverAppBar(

@@ -2,6 +2,7 @@ import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:monero_dart/monero_dart.dart';
 import 'package:on_chain_wallet/app/euqatable/equatable.dart';
 import 'package:on_chain_wallet/app/live_listener/live.dart';
+import 'package:on_chain_wallet/app/models/models/typedef.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
@@ -73,8 +74,13 @@ class MoneroAccountFetchedUtxos
     notify();
   }
 
-  void addUtxo(MoneroViewOutputDetails utxo) {
+  void addUtxo(
+      MoneroViewOutputDetails utxo, int totalSelected, DynamicVoid onMaxInput) {
     if (!_selectedUtxos.remove(utxo)) {
+      if (totalSelected >= MoneroConst.ringSize) {
+        onMaxInput();
+        return;
+      }
       _selectedUtxos.add(utxo);
     }
     _totalSelected = _selectedUtxos.length;
@@ -82,20 +88,33 @@ class MoneroAccountFetchedUtxos
     _update();
   }
 
-  void selectAll({bool select = false}) {
+  void selectAll(int totalSelected, DynamicVoid onMaxInput,
+      {bool select = false}) {
     if (select) {
-      _selectedUtxos = utxos.utxos.where((e) => !e.output.needUpdate).toList();
+      final remain =
+          MoneroConst.ringSize - totalSelected + _selectedUtxos.length;
+      _selectedUtxos =
+          utxos.utxos.where((e) => !e.output.needUpdate).take(remain).toList();
+      if (_selectedUtxos.length != utxos.utxos.length) {
+        onMaxInput();
+      }
     } else {
       _selectedUtxos = [];
     }
     _update();
   }
 
-  void toggleAll() {
+  void toggleAll(int totalSelected, DynamicVoid onMaxInput) {
     if (allSelected) {
       _selectedUtxos = [];
     } else {
-      _selectedUtxos = utxos.utxos.where((e) => !e.output.needUpdate).toList();
+      final remain =
+          MoneroConst.ringSize - totalSelected + _selectedUtxos.length;
+      _selectedUtxos =
+          utxos.utxos.where((e) => !e.output.needUpdate).take(remain).toList();
+      if (_selectedUtxos.length != utxos.utxos.length) {
+        onMaxInput();
+      }
     }
     _update();
   }

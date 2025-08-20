@@ -2,18 +2,28 @@ part of 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 
 final class ICardanoAddress
     extends ChainAccount<ADAAddress, TokenCore, NFTCore, ADAWalletTransaction> {
+  ADAAddressUtxos _utxos = ADAAddressUtxos();
+
+  void _updateUtxos(Iterable<ADAAddressUtxo> utxos) {
+    _utxos.updateUtxos(utxos);
+  }
+
+  void _setAddressUtxos(ADAAddressUtxos utxos) {
+    _utxos = utxos;
+    address._updateAddressBalance(_utxos.totalLovelace);
+  }
+
   ICardanoAddress._(
       {required super.keyIndex,
       required super.coin,
       required super.address,
       required super.network,
       required super.networkAddress,
-      required this.addressDetails,
+      required this.addressInfo,
       required super.identifier,
-      Bip32AddressIndex? rewardKeyIndex,
+      this.rewardKeyIndex,
       super.accountName})
-      : _rewardKeyIndex = rewardKeyIndex,
-        rewardAddress = CardanoUtils.extractRewardAddress(networkAddress);
+      : rewardAddress = CardanoUtils.extractRewardAddress(networkAddress);
 
   factory ICardanoAddress._newAccount(
       {required ADAAddress address,
@@ -21,9 +31,9 @@ final class ICardanoAddress
       required AddressDerivationIndex keyIndex,
       required List<int> publicKey,
       required WalletCardanoNetwork network,
-      required Bip32AddressIndex? rewardIndex,
+      required AddressDerivationIndex? rewardIndex,
       required String identifier,
-      required CardanoAddrDetails addressDetails}) {
+      required CardanoAddrDetails addressInfo}) {
     final balance = AccountBalance(address: address.address, network: network);
     return ICardanoAddress._(
         coin: coin,
@@ -31,21 +41,28 @@ final class ICardanoAddress
         keyIndex: keyIndex,
         networkAddress: address,
         network: network.value,
-        addressDetails: addressDetails,
+        addressInfo: addressInfo,
         rewardKeyIndex: rewardIndex,
         identifier: identifier);
   }
 
   factory ICardanoAddress.deserialize(WalletNetwork network,
       {List<int>? bytes, CborObject? obj}) {
+    final CborTagValue cborTag =
+        CborSerializable.decode(cborBytes: bytes, object: obj);
+    if (BytesUtils.bytesEqual(
+        cborTag.tags, CborTagsConst.cardanoMultisigAccount)) {
+      return ICardanoMultiSigAddress.deserialize(network, obj: cborTag);
+    }
     final CborListValue values = CborSerializable.cborTagValue(
         object: obj, cborBytes: bytes, tags: CborTagsConst.cardanoAccount);
+
     final CryptoCoins coin =
         CustomCoins.getSerializationCoin(values.elementAs(0));
     final keyIndex =
-        AddressDerivationIndex.deserialize(obj: values.getCborTag(1));
+        AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(1));
     final AccountBalance address =
-        AccountBalance.deserialize(network, obj: values.getCborTag(2));
+        AccountBalance.deserialize(network, obj: values.elementAsCborTag(2));
     final ADAAddress adaAddress = ADAAddress.fromAddress(address.toAddress);
     final int networkId = values.elementAs(3);
     if (networkId != network.value) {
@@ -53,9 +70,9 @@ final class ICardanoAddress
     }
 
     final CardanoAddrDetails addrDetails =
-        CardanoAddrDetails.deserialize(obj: values.getCborTag(4));
+        CardanoAddrDetails.deserialize(obj: values.elementAsCborTag(4));
     final String? accountName = values.elementAs(5);
-    final CborTagValue? rewardIndexCbor = values.getCborTag(6);
+    final CborTagValue? rewardIndexCbor = values.elementAsCborTag(6);
     final rewardIndex = rewardIndexCbor == null
         ? null
         : Bip32AddressIndex.deserialize(obj: rewardIndexCbor);
@@ -69,7 +86,7 @@ final class ICardanoAddress
         keyIndex: keyIndex,
         networkAddress: adaAddress,
         network: networkId,
-        addressDetails: addrDetails,
+        addressInfo: addrDetails,
         accountName: accountName,
         rewardKeyIndex: rewardIndex,
         identifier: identifier);
@@ -83,12 +100,12 @@ final class ICardanoAddress
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           coin.toCbor(),
           keyIndex.toCbor(),
           address.toCbor(),
           network,
-          addressDetails.toCbor(),
+          addressInfo.toCbor(),
           accountName ?? const CborNullValue(),
           rewardKeyIndex?.toCbor() ?? const CborNullValue(),
           identifier
@@ -98,22 +115,19 @@ final class ICardanoAddress
 
   @override
   List get variabels {
-    return [keyIndex, network, networkAddress.addressType, addressDetails];
+    return [keyIndex, network, networkAddress.addressType, addressInfo];
   }
 
-  final CardanoAddrDetails addressDetails;
+  final BaseCardanoAddressDetails addressInfo;
 
   final ADARewardAddress? rewardAddress;
 
-  final Bip32AddressIndex? _rewardKeyIndex;
+  final AddressDerivationIndex? rewardKeyIndex;
 
-  Bip32AddressIndex? get rewardKeyIndex => _rewardKeyIndex;
-
-  bool get isBaseAddress => networkAddress.addressType == ADAAddressType.base;
-  bool get isRewardAddress =>
-      networkAddress.addressType == ADAAddressType.reward;
+  bool get isBaseAddress => addressInfo.addressType == ADAAddressType.base;
+  bool get isRewardAddress => addressInfo.addressType == ADAAddressType.reward;
   @override
-  String? get type => networkAddress.addressType.name;
+  String? get type => addressInfo.addressType.name;
 
   List<AddressDerivationIndex> get keyIndexes =>
       [keyIndex, if (rewardKeyIndex != null) rewardKeyIndex!];
@@ -123,28 +137,125 @@ final class ICardanoAddress
     if (multiSigAccount) {
       throw WalletExceptionConst.featureUnavailableForMultiSignature;
     }
-    return [keyIndex, if (_rewardKeyIndex != null) _rewardKeyIndex];
+    return [keyIndex, if (rewardKeyIndex != null) rewardKeyIndex!];
   }
 
   @override
-  bool isEqual(ChainAccount other) {
-    if (other is! ICardanoAddress) return false;
-    return networkAddress == other.networkAddress &&
-        rewardAddress == other.rewardAddress;
-  }
-
-  @override
-  CardanoNewAddressParams toAccountParams() {
+  BaseCardanoNewAddressParams toAccountParams() {
+    final addressInfo = this.addressInfo as CardanoAddrDetails;
     return CardanoNewAddressParams(
-        addressType: addressDetails.addressType,
+        addressType: addressInfo.addressType,
         deriveIndex: keyIndex,
-        rewardKeyIndex: rewardKeyIndex,
-        addressDetails: addressDetails,
-        customHdPath: addressDetails.hdPath,
-        customHdPathKey: addressDetails.hdPathKey,
+        rewardKeyIndex: rewardKeyIndex?.cast(),
+        addressDetails: addressInfo,
+        customHdPath: addressInfo.hdPath,
+        customHdPathKey: addressInfo.hdPathKey,
         coin: coin);
   }
 
   @override
-  List<int>? get publicKey => addressDetails.publicKey;
+  List<int>? get publicKey => addressInfo.publicKey;
+
+  List<int>? get rewardPublicKey {
+    if (isRewardAddress) return publicKey;
+    if (isBaseAddress) return addressInfo.stakePubkey;
+    return null;
+  }
+}
+
+final class ICardanoMultiSigAddress extends ICardanoAddress
+    implements MultiSigCryptoAccountAddress {
+  @override
+  CardanoMultisigNewAddressParams toAccountParams() {
+    return CardanoMultisigNewAddressParams(
+        addressInfo: addressInfo, coin: coin);
+  }
+
+  factory ICardanoMultiSigAddress._newAccount(
+      {required ADAAddress address,
+      required CryptoCoins coin,
+      required WalletCardanoNetwork network,
+      required String identifier,
+      required CardanoMultiSignatureAddressDetails addressInfo}) {
+    final addressDetauls =
+        AccountBalance(address: address.address, network: network);
+    return ICardanoMultiSigAddress._(
+      coin: coin,
+      address: addressDetauls,
+      networkAddress: address,
+      network: network.value,
+      identifier: identifier,
+      addressInfo: addressInfo,
+    );
+  }
+
+  factory ICardanoMultiSigAddress.deserialize(WalletNetwork network,
+      {List<int>? bytes, CborObject? obj}) {
+    final CborListValue values = CborSerializable.cborTagValue(
+        object: obj,
+        cborBytes: bytes,
+        tags: CborTagsConst.cardanoMultisigAccount);
+    final CryptoCoins coin =
+        CustomCoins.getSerializationCoin(values.elementAs(0));
+    final AccountBalance address =
+        AccountBalance.deserialize(network, obj: values.elementAsCborTag(1));
+    final ADAAddress adaAddress = ADAAddress.fromAddress(address.toAddress);
+    final int networkId = values.elementAs(2);
+    if (networkId != network.value) {
+      throw WalletExceptionConst.incorrectNetwork;
+    }
+
+    final CardanoMultiSignatureAddressDetails addrDetails =
+        CardanoMultiSignatureAddressDetails.deserialize(
+            obj: values.elementAsCborTag(3));
+    final String? accountName = values.elementAs(4);
+    final String identifier = values.elementAs(5);
+    return ICardanoMultiSigAddress._(
+        coin: coin,
+        address: address,
+        networkAddress: adaAddress,
+        network: networkId,
+        addressInfo: addrDetails,
+        accountName: accountName,
+        identifier: identifier);
+  }
+  ICardanoMultiSigAddress._({
+    required super.coin,
+    required super.address,
+    required super.network,
+    required super.addressInfo,
+    required super.identifier,
+    // super.rewardKeyIndex,
+    super.accountName,
+    required super.networkAddress,
+  }) : super._(
+            keyIndex: MultiSigAddressIndex(),
+            rewardKeyIndex: networkAddress.addressType == ADAAddressType.base
+                ? MultiSigAddressIndex()
+                : null);
+  @override
+  CardanoMultiSignatureAddressDetails get addressInfo =>
+      super.addressInfo as CardanoMultiSignatureAddressDetails;
+
+  @override
+  CborTagValue toCbor() {
+    return CborTagValue(
+        CborSerializable.fromDynamic([
+          coin.toCbor(),
+          address.toCbor(),
+          network,
+          addressInfo.toCbor(),
+          accountName ?? const CborNullValue(),
+          identifier
+        ]),
+        CborTagsConst.cardanoMultisigAccount);
+  }
+
+  @override
+  List<Bip32AddressIndex> signerKeyIndexes() {
+    return addressInfo.keyIndexes;
+  }
+
+  @override
+  IAdressType get iAddressType => IAdressType.multisigByPublicKey;
 }

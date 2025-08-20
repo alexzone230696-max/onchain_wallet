@@ -49,6 +49,11 @@ class PageRouter {
 
   /// cardano
   static const String cardanoTransaction = "/cardano/transaction";
+  static const String cardanoMultisigAddress =
+      "/cardano/setup_multisig_address";
+  static const String cardanoMultisigAccountInfo =
+      "/cardano/multisig_account_info";
+
   static const String cosmosTransfer = "/cosmos/transfer";
   static const String cosmosTransaction = "/cosmos/transaction";
 
@@ -163,8 +168,14 @@ class PageRouter {
   static const String webViewSearch = "webview/search";
   static const String settingMenu = "setting/menu";
 
+  static const String publicKeyDeration = "account/public_key_derivation";
+
   static Widget _page(String? name) {
     switch (name) {
+      case cardanoMultisigAccountInfo:
+        return const CardanoMultisigAccountInfoView();
+      case cardanoMultisigAddress:
+        return const SetupCardanoMultisigAddress();
       case web3Request:
         return const Web3StatePageBuilder();
       case manageTokens:
@@ -381,6 +392,8 @@ class PageRouter {
 
   static String? multisigAccountInfo(NetworkType type) {
     switch (type) {
+      case NetworkType.cardano:
+        return cardanoMultisigAccountInfo;
       case NetworkType.bitcoinAndForked:
         return bitcoinMultisigAccountInfo;
       case NetworkType.bitcoinCash:

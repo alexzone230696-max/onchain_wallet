@@ -67,15 +67,15 @@ class BasicProviderAuthenticated extends ProviderAuthenticated {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, ProviderAuthType.header.tag);
     return BasicProviderAuthenticated(
-        type: ProviderAuthType.fromName(cbor.elementAt(0)),
-        key: cbor.elementAt(1),
-        value: cbor.elementAt(2));
+        type: ProviderAuthType.fromName(cbor.elementAs(0)),
+        key: cbor.elementAs(1),
+        value: cbor.elementAs(2));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([type.name, key, value]), type.tag);
+        CborSerializable.fromDynamic([type.name, key, value]), type.tag);
   }
 
   @override
@@ -118,7 +118,7 @@ class DigestProviderAuthenticated extends ProviderAuthenticated {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([password, username]), type.tag);
+        CborSerializable.fromDynamic([password, username]), type.tag);
   }
 
   @override

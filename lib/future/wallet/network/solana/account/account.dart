@@ -25,7 +25,8 @@ class SolanaAccountPageView extends StatelessWidget {
             address: chainAccount.address,
             token: p0),
       ),
-      AccountTransactionActivityView(chainAccount)
+      AccountTransactionActivityView<ISolanaAddress, SolanaWalletTransaction>(
+          account: chainAccount, address: chainAccount.address)
     ]);
   }
 }

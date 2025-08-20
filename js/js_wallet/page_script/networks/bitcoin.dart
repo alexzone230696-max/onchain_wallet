@@ -11,7 +11,7 @@ class BitcoinPageController extends WalletStandardPageController {
             signPersonalMessage: _bitcoinSignPersonalMessage.toJS);
     feature.bitcoinSignTransaction =
         JSWalletStandardSignTransactionFeature.setup(
-            signTransaction: _bitcoinSignTransaction);
+            signTransaction: _bitcoinSignTransaction.toJS);
 
     feature.bitcoingetAccountAddresses =
         JSWalletStandardGetAccountAddressesFeature.setup(

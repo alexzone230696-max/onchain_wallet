@@ -71,7 +71,7 @@ class TonWalletTransactionTransferOutput
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([amount.toCbor(), to.toFriendlyAddress()]),
+        CborSerializable.fromDynamic([amount.toCbor(), to.toFriendlyAddress()]),
         type.tag);
   }
 

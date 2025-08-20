@@ -50,11 +50,6 @@ class _PermissionInfo extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Text("client".tr,
-        //     style: context.textTheme.titleMedium?.copyWith(color: color)),
-        // Text("web3_client_desc".tr,
-        //     style: context.textTheme.bodySmall?.copyWith(color: color)),
-        // WidgetConstant.height8,
         ContainerWithBorder(
           child: Row(
             children: [

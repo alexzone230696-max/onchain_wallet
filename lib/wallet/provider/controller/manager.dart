@@ -3,7 +3,7 @@
 part of 'package:on_chain_wallet/wallet/provider/wallet_provider.dart';
 
 mixin WalletManager on _WalletController {
-  Future<List<Web3APPAuthentication>> _getAllWeb3Authenticated();
+  Future<List<Web3ApplicationAuthentication>> _getAllWeb3Authenticated();
 
   /// emit unlocking walllet
   void _onUnlock() {}
@@ -166,17 +166,12 @@ mixin WalletManager on _WalletController {
             passhrase: options.passphrase),
         encryptedMasterKey: _massterKey!.masterKey,
         key: key);
-    final List<WalletChainBackup> backupChains = [];
-    for (final i in options.chains) {
-      final chainBackup = await i.toBackup();
-      backupChains.add(chainBackup);
-    }
-    List<Web3APPAuthentication> dapps = [];
+    List<Web3ApplicationAuthentication> dapps = [];
     if (options.backupDapps) {
       dapps = await _getAllWeb3Authenticated();
     }
-    final walletBackup =
-        WalletBackup(key: encrypt, chains: backupChains, dapps: dapps);
+    final walletBackup = await _appChains.createBackup(
+        masterKey: encrypt, options: options, web3Applications: dapps);
     return walletBackup.toCbor().toCborHex();
   }
 
@@ -239,6 +234,18 @@ mixin WalletManager on _WalletController {
     return pubKeys;
   }
 
+  /// get key index public key.
+  Future<PublicKeyDerivationResult> _getKeyDerivationPublicKey(
+      AddressDerivationIndex index) async {
+    // final indexes = account.accessKeysIndexes();
+    final pubKeys = await crypto.walletArgs(
+        message: WalletRequestReadPublicKeys(AccessCryptoPrivateKeysRequest(
+            [AccessCryptoPrivateKeyRequest(index: index)])),
+        key: _walletKey!,
+        encryptedMasterKey: _massterKey!.masterKey);
+    return PublicKeyDerivationResult(key: pubKeys.first, index: index);
+  }
+
   /// signing request
   /// -[password]: required for protected wallet
   /// -[signers]: the key information for read.
@@ -281,10 +288,8 @@ mixin WalletManager on _WalletController {
     return coins.toSet().toImutableList;
   }
 
-  /// get imported key private key
-  /// -[password]: current wallet password.
-  Future<List<EncryptedCustomKey>> _getImportedAccounts(String password) async {
-    await _validatePassword(password);
+  /// get imported keys details
+  Future<List<EncryptedCustomKey>> _getImportedAccounts() async {
     return List<EncryptedCustomKey>.from(_massterKey!.customKeys);
   }
 
@@ -318,7 +323,7 @@ mixin WalletManager on _WalletController {
   /// -[chain]: network for remove
   Future<void> _removeChain(Chain chain) async {
     await _appChains.removeChain(chain);
-    // await _core._removeAccount(chain);
+    await _updateWallet();
   }
 
   /// update address balance
@@ -330,8 +335,8 @@ mixin WalletManager on _WalletController {
   }
 
   /// switch current wallet network
-  Future<void> _switchNetwork(int changeNetwork) async {
-    final change = await _appChains.switchNetwork(changeNetwork);
+  Future<void> _switchNetwork(Chain network) async {
+    final change = await _appChains.switchNetwork(network);
     if (change) {
       await _updateWallet();
     }
@@ -370,18 +375,10 @@ mixin WalletManager on _WalletController {
     for (final chain in chains) {
       final addresses = chain.addresses.clone();
       for (final address in addresses) {
-        if (address.multiSigAccount) {
-          final multiSigAccount = address as MultiSigCryptoAccountAddress;
-          for (final i in multiSigAccount.keyDetails) {
-            if (i.$2.importedKeyId == removedKey) {
-              await chain.removeAccount(address);
-              break;
-            }
-          }
-        } else {
-          if (address.keyIndex.importedKeyId == removedKey) {
-            await chain.removeAccount(address);
-          }
+        final keyIndexes = address.signerKeyIndexes();
+        if (keyIndexes
+            .any((e) => e.isImportedKey && e.importedKeyId == removedKey)) {
+          await chain.removeAccount(address);
         }
       }
     }

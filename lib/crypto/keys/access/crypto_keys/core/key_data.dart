@@ -34,12 +34,26 @@ abstract class CryptoKeyData with CborSerializable {
 }
 
 abstract final class CryptoPublicKeyData extends CryptoKeyData {
-  const CryptoPublicKeyData._() : super._();
-  abstract final CryptoPublicKeyDataType type;
-  abstract final String? extendedKey;
-  abstract final String comprossed;
-  abstract final String? chainCode;
-  abstract final String? uncomprossed;
+  const CryptoPublicKeyData._(
+      {required this.type,
+      required this.extendedKey,
+      required this.comprossed,
+      required this.chainCode,
+      required this.uncomprossed,
+      required this.curve})
+      : super._();
+  final CryptoPublicKeyDataType type;
+  final String? extendedKey;
+  final String comprossed;
+  final String? chainCode;
+  final String? uncomprossed;
+  final EllipticCurveTypes curve;
+
+  String get normalizedComprossedKey =>
+      CryptoKeyUtils.normalizePublicKeyHex(comprossed, curve);
+
+  List<int> get normalizedComprossedBytes =>
+      BytesUtils.fromHexString(normalizedComprossedKey);
 
   PublicKeysView get toViewKey => PublicKeysView._(
       extendKey: extendedKey,
@@ -83,6 +97,14 @@ abstract final class CryptoPublicKeyData extends CryptoKeyData {
 
   List<int>? chainCodeBytes() {
     return BytesUtils.tryFromHexString(chainCode);
+  }
+
+  List<int> bip32KeyBytes() {
+    return [
+      ...keyBytes(),
+      ...chainCodeBytes() ??
+          List<int>.filled(0, Bip32KeyDataConst.chaincodeByteLen)
+    ];
   }
 
   T cast<T extends CryptoPublicKeyData>() {
@@ -158,4 +180,11 @@ abstract final class CryptoPrivateKeyData extends CryptoKeyData {
     }
     return this as T;
   }
+}
+
+final class PublicKeyDerivationResult {
+  final CryptoPublicKeyData key;
+  final AddressDerivationIndex index;
+  late final PublicKeysView viewKey = key.toViewKey;
+  PublicKeyDerivationResult({required this.key, required this.index});
 }

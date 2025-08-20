@@ -14,8 +14,7 @@ abstract class Web3EthereumRequestParam<RESPONSE> extends Web3RequestParams<
     ETHAddress,
     EthereumChain,
     IEthAddress,
-    Web3EthereumChainAccount,
-    Web3EthereumChain> {
+    Web3EthereumChainAccount> {
   @override
   abstract final Web3EthereumRequestMethods method;
 
@@ -30,7 +29,7 @@ abstract class Web3EthereumRequestParam<RESPONSE> extends Web3RequestParams<
         object: object,
         hex: hex,
         tags: Web3MessageTypes.walletRequest.tag);
-    final method = Web3NetworkRequestMethods.fromTag(values.elementAt(0));
+    final method = Web3NetworkRequestMethods.fromTag(values.elementAs(0));
     final Web3EthereumRequestParam param;
     switch (method) {
       case Web3EthereumRequestMethods.addEthereumChain:
@@ -67,7 +66,7 @@ abstract class Web3EthereumRequestParam<RESPONSE> extends Web3RequestParams<
 class Web3EthereumRequest<RESPONSE,
         PARAMS extends Web3EthereumRequestParam<RESPONSE>>
     extends Web3NetworkRequest<RESPONSE, ETHAddress, EthereumChain,
-        Web3EthereumChainAccount, IEthAddress, Web3EthereumChain, PARAMS> {
+        Web3EthereumChainAccount, IEthAddress, PARAMS> {
   Web3EthereumRequest(
       {required super.params,
       required super.info,

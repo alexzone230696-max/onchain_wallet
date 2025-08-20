@@ -21,7 +21,8 @@ final class NoneEncryptedRequestHexToBytes<T>
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([CborBytesValue(hex.codeUnits)]), method.tag);
+        CborSerializable.fromDynamic([CborBytesValue(hex.codeUnits)]),
+        method.tag);
   }
 
   @override

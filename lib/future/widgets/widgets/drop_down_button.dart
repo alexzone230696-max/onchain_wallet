@@ -64,7 +64,7 @@ class AppDropDownBottom<T> extends StatelessWidget {
       validator: validator,
       isExpanded: isExpanded,
       isDense: isDense,
-      value: value,
+      initialValue: value,
       focusColor: focusColor,
       iconEnabledColor: iconEnabledColor,
       hint: hint == null ? null : Text(hint!),

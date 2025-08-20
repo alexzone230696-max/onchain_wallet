@@ -38,10 +38,10 @@ class CryptoRequestCreateHDWallet
         hex: hex,
         tags: CryptoRequestMethod.createWallet.tag);
     return CryptoRequestCreateHDWallet(
-        mnemonic: values.elementAt(0),
-        passphrase: values.elementAt(1),
-        password: values.elementAt(2),
-        checksum: values.elementAt(3));
+        mnemonic: values.elementAs(0),
+        passphrase: values.elementAs(1),
+        password: values.elementAs(2),
+        checksum: values.elementAs(3));
   }
 
   /// MasterKey, storage encryptedBytes, checksum
@@ -82,7 +82,7 @@ class CryptoRequestCreateHDWallet
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [mnemonic, passphrase, password, CborBytesValue(checksum)]),
         method.tag);
   }

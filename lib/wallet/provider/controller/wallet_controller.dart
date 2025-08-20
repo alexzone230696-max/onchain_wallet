@@ -42,26 +42,41 @@ class WalletController extends _WalletController
 
   /// setup wallet.
   static Future<WalletController> _setup(
-      WalletCore core, MainWallet wallet) async {
-    final List<Chain> chains = [];
-    final values = await core._readAccounts(wallet);
-    for (final i in values) {
-      try {
-        final chain = Chain.deserialize(bytes: i);
-        chains.add(chain);
-      } catch (e, s) {
-        appLogger.error(
-            runtime: "WalletController",
-            functionName: "_setup",
-            msg: e,
-            trace: s);
-      }
+      WalletCore core, MainWallet wallet, WalletRestoreV2? backup) async {
+    try {
+      final handler = await () async {
+        if (backup != null) {
+          return await ChainsHandler.fromBackup(backup: backup, wallet: wallet);
+        } else {
+          final List<Chain> chains = [];
+          final values = await core._readAccounts(wallet);
+          for (final i in values) {
+            try {
+              final chain = Chain.deserialize(bytes: i);
+              chains.add(chain);
+            } catch (e, s) {
+              appLogger.error(
+                  runtime: "WalletController",
+                  functionName: "_setup",
+                  msg: e,
+                  trace: s);
+              rethrow;
+            }
+          }
+          return ChainsHandler.setup(chains: chains, wallet: wallet);
+        }
+      }();
+      final controller = WalletController._(core, handler);
+      await controller._onInitController();
+      return controller;
+    } catch (e, s) {
+      appLogger.error(
+          runtime: "WalletController",
+          functionName: "_setup",
+          msg: e,
+          trace: s);
+      rethrow;
     }
-
-    final handler = await ChainsHandler.setup(chains: chains, wallet: wallet);
-    final controller = WalletController._(core, handler);
-    await controller._onInitController();
-    return controller;
   }
 
   /// dispose wallet.

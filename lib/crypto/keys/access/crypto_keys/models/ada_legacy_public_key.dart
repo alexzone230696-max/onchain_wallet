@@ -1,25 +1,20 @@
 part of 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 
 final class AdaLegacyPublicKeyData extends CryptoPublicKeyData {
-  @override
-  final String extendedKey;
-  @override
-  final String comprossed;
-  @override
-  final String? uncomprossed;
   final String hdPathKey;
   @override
-  final String chainCode;
+  String get chainCode => super.chainCode!;
   @override
   final String keyName;
   const AdaLegacyPublicKeyData._(
-      {required this.extendedKey,
-      required this.comprossed,
-      required this.uncomprossed,
+      {required super.extendedKey,
+      required super.comprossed,
+      required super.uncomprossed,
       required this.keyName,
       required this.hdPathKey,
-      required this.chainCode})
-      : super._();
+      required String super.chainCode,
+      required super.curve})
+      : super._(type: CryptoPublicKeyDataType.ada);
   factory AdaLegacyPublicKeyData._fromBip32(
       {required Bip32Base account,
       required List<int> hdPathKey,
@@ -32,7 +27,8 @@ final class AdaLegacyPublicKeyData extends CryptoPublicKeyData {
         uncomprossed: uncompresed == comperesed ? null : uncompresed,
         keyName: keyName,
         chainCode: account.chainCode.toHex(),
-        hdPathKey: BytesUtils.toHexString(hdPathKey));
+        hdPathKey: BytesUtils.toHexString(hdPathKey),
+        curve: account.curveType);
   }
   factory AdaLegacyPublicKeyData.deserialize(
       {List<int>? bytes, CborObject? obj}) {
@@ -41,24 +37,26 @@ final class AdaLegacyPublicKeyData extends CryptoPublicKeyData {
         object: obj,
         tags: CryptoKeyConst.accessAdaPubliKeyResponse);
     return AdaLegacyPublicKeyData._(
-        extendedKey: cbor.elementAs(0),
-        comprossed: cbor.elementAs(1),
-        uncomprossed: cbor.elementAs(2),
-        keyName: cbor.elementAs(3),
-        hdPathKey: cbor.elementAs(4),
-        chainCode: cbor.elementAs(5));
+        extendedKey: cbor.valueAs(0),
+        comprossed: cbor.valueAs(1),
+        uncomprossed: cbor.valueAs(2),
+        keyName: cbor.valueAs(3),
+        hdPathKey: cbor.valueAs(4),
+        chainCode: cbor.valueAs(5),
+        curve: EllipticCurveTypes.fromName(cbor.valueAs(6)));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           extendedKey,
           comprossed,
           uncomprossed ?? const CborNullValue(),
           keyName,
           hdPathKey,
-          chainCode
+          chainCode,
+          curve.name
         ]),
         type.tag);
   }
@@ -71,7 +69,4 @@ final class AdaLegacyPublicKeyData extends CryptoPublicKeyData {
   List<int> chainCodeBytes() {
     return BytesUtils.fromHexString(chainCode);
   }
-
-  @override
-  CryptoPublicKeyDataType get type => CryptoPublicKeyDataType.ada;
 }

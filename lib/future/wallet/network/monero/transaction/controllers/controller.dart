@@ -89,7 +89,10 @@ abstract class MoneroTransactionStateController
             onPressed: () {
               context.openSliverDialog(
                   widget: (p0) => TransactionModalView(
-                      chain: account, transaction: transaction),
+                        account: account,
+                        transaction: transaction,
+                        address: address,
+                      ),
                   label: "transaction".tr);
             },
             child: Text("show_proofs".tr));

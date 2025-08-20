@@ -41,10 +41,10 @@ class Web3ConnectApplication
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.id,
           chain?.name,
-          networks == null ? null : CborListValue.fixedLength(networks!)
+          networks == null ? null : CborSerializable.fromDynamic(networks!)
         ]),
         type.tag);
   }

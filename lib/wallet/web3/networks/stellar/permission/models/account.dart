@@ -19,6 +19,7 @@ class Web3StellarChainAccount extends Web3ChainAccount<StellarAddress> {
       required super.address,
       required super.defaultAddress,
       required this.id,
+      required super.identifier,
       required List<int> publicKey})
       : publicKey = publicKey.asImmutableBytes;
   @override
@@ -29,13 +30,15 @@ class Web3StellarChainAccount extends Web3ChainAccount<StellarAddress> {
     int? id,
     List<int>? publicKey,
     StellarChainType? network,
+    String? identifier,
   }) {
     return Web3StellarChainAccount(
         keyIndex: keyIndex ?? this.keyIndex,
         address: address ?? this.address,
         defaultAddress: defaultAddress ?? this.defaultAddress,
         id: id ?? this.id,
-        publicKey: publicKey ?? this.publicKey);
+        publicKey: publicKey ?? this.publicKey,
+        identifier: identifier ?? this.identifier);
   }
 
   factory Web3StellarChainAccount.fromChainAccount(
@@ -48,7 +51,8 @@ class Web3StellarChainAccount extends Web3ChainAccount<StellarAddress> {
         address: address.networkAddress,
         id: id,
         defaultAddress: isDefault,
-        publicKey: address.publicKey);
+        publicKey: address.publicKey,
+        identifier: address.identifier);
   }
 
   factory Web3StellarChainAccount.deserialize(
@@ -59,22 +63,25 @@ class Web3StellarChainAccount extends Web3ChainAccount<StellarAddress> {
         hex: hex,
         tags: CborTagsConst.web3StellarAccount);
     return Web3StellarChainAccount(
-        keyIndex: AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
-        address: StellarAddress.fromBase32Addr(values.elementAt(1)),
-        id: values.elementAt(2),
-        defaultAddress: values.elementAt(3),
-        publicKey: values.elementAs(4));
+        keyIndex: AddressDerivationIndex.deserialize(
+            obj: values.indexAs<CborTagValue>(0)),
+        address: StellarAddress.fromBase32Addr(values.valueAs(1)),
+        id: values.valueAs(2),
+        defaultAddress: values.valueAs(3),
+        publicKey: values.valueAs(4),
+        identifier: values.valueAs(5));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           keyIndex.toCbor(),
           address.toString(),
           id,
           defaultAddress,
-          CborBytesValue(publicKey)
+          CborBytesValue(publicKey),
+          identifier
         ]),
         CborTagsConst.web3StellarAccount);
   }

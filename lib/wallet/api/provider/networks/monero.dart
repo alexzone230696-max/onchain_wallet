@@ -33,7 +33,7 @@ class MoneroAPIProvider extends APIProvider {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([httpNodeUri, auth?.toCbor(), identifier]),
+        CborSerializable.fromDynamic([httpNodeUri, auth?.toCbor(), identifier]),
         CborTagsConst.moneroApiServiceProvider);
   }
 }

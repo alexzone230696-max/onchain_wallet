@@ -124,7 +124,7 @@ class __ManageAccountTokenState extends State<_ManageAccountToken>
             ProgressWithTextView(text: 'fetching_account_token_please_wait'.tr),
         child: (context) => ChainStreamBuilder(
           account: widget.account,
-          allowNotify: [ChainNotify.token],
+          allowNotify: [DefaultChainNotify.token],
           builder: (context, value, _) => CustomScrollView(
             slivers: [
               EmptyItemSliverWidgetView(

@@ -36,7 +36,7 @@ class StellarAPIProvider extends APIProvider {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           horizonUrl,
           sorobanUrl,
           auth?.toCbor(),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:monero_dart/monero_dart.dart';
 import 'package:on_chain_wallet/app/core.dart';
@@ -46,6 +48,8 @@ class _MoneroAccountSyncViewState
       GlobalKey<PageProgressState>();
   late _SyncRequest defaultTracker;
 
+  final StreamValue<void> onProgressUpdated = StreamValue(null);
+
   List<_SyncRequest> requests = [];
   Map<_SyncRequest, Widget> syncRequests = {};
   int? currentHeight;
@@ -80,8 +84,61 @@ class _MoneroAccountSyncViewState
     progressKey.backToIdle();
   }
 
+  void onTrackerUpdated() {
+    _onUpdateDefaultOffset();
+    for (final i in account.defaultTracker.requestOffsets) {
+      _onRequestTrackerUpdated(i.requestId);
+    }
+  }
+
+  void _onRequestTrackerUpdated(int requestId) {
+    final request = account.defaultTracker.requestOffsets
+        .firstWhereOrNull((e) => e.requestId == requestId);
+    final viewRequest =
+        requests.firstWhereOrNull((e) => e.requestId == requestId);
+    if (request == null || viewRequest == null) return;
+    List<MoneroBlockTrackingFailed> failedOffsets = request.failedOffsets;
+    final progressOffsets = request.currentOffsets.toList();
+    viewRequest.onChangeCurrentHeight(request.currentHeight.toDouble());
+    viewRequest.onChangeFailedOffsets(failedOffsets
+        .map((e) => _FailedOffets(
+            startHeight: e.startHeight.toDouble(),
+            endHeight: e.endHeight.toDouble()))
+        .toList());
+    viewRequest.onChangeProgressOffset(progressOffsets
+        .map((e) => _InProgressOffsets(
+            startHeight: e.startHeight.toDouble(),
+            endHeight: e.endHeight.toDouble(),
+            currentHeight: e.currentHeight.toDouble()))
+        .toList());
+  }
+
+  void _onUpdateDefaultOffset() {
+    final viewRequest = requests.firstWhereOrNull((e) => e.requestId == null);
+    if (viewRequest == null) return;
+    List<MoneroBlockTrackingFailed> failedOffsets =
+        account.defaultTracker.failedOffsets;
+    final progressOffsets = account.defaultTracker.offsets
+        .where((e) => e.requestId == null)
+        .toList();
+    viewRequest
+        .onChangeCurrentHeight(account.defaultTracker.currentHeight.toDouble());
+    viewRequest.onChangeFailedOffsets(failedOffsets
+        .map((e) => _FailedOffets(
+            startHeight: e.startHeight.toDouble(),
+            endHeight: e.endHeight.toDouble()))
+        .toList());
+    viewRequest.onChangeProgressOffset(progressOffsets
+        .map((e) => _InProgressOffsets(
+            startHeight: e.startHeight.toDouble(),
+            endHeight: e.endHeight.toDouble(),
+            currentHeight: e.currentHeight.toDouble()))
+        .toList());
+  }
+
   _SyncRequest createViewRequest(
       {required List<MoneroBlockTrackingFailed> failedOffsets,
+      required List<MoneroDefaultBlockTrackingInfo> progressOffsets,
       required int startHeight,
       required int endHeight,
       required int currentHeight,
@@ -97,6 +154,12 @@ class _MoneroAccountSyncViewState
       return _SyncedAddressWithHeight(height: e.startHeight, address: address);
     }).toList();
     return _SyncRequest(
+        inProgressOffsets: progressOffsets
+            .map((e) => _InProgressOffsets(
+                startHeight: e.startHeight.toDouble(),
+                endHeight: e.endHeight.toDouble(),
+                currentHeight: e.currentHeight.toDouble()))
+            .toList(),
         startHeight: startHeight.toDouble(),
         endHeight: endHeight.toDouble(),
         addresses: syncAddresses,
@@ -127,13 +190,16 @@ class _MoneroAccountSyncViewState
   void buildRequests({bool init = false}) {
     List<_SyncRequest> requests = [];
     final tracker = account.defaultTracker;
+
+    // tracker.
     requests.add(createViewRequest(
         startHeight: tracker.startHeight,
         endHeight: currentHeight ?? tracker.endHeight,
         addresses: tracker.accounts,
         failedOffsets: tracker.failedOffsets,
         currentHeight: tracker.currentHeight,
-        status: tracker.status.name.tr));
+        status: tracker.status.name.tr,
+        progressOffsets: tracker.offsets));
     for (final i in tracker.requestOffsets) {
       requests.add(createViewRequest(
           startHeight: i.startHeight,
@@ -142,6 +208,7 @@ class _MoneroAccountSyncViewState
           failedOffsets: i.failedOffsets,
           currentHeight: i.currentHeight,
           status: i.status.name.tr,
+          progressOffsets: i.currentOffsets,
           created: i.created,
           requestId: i.requestId));
     }
@@ -156,6 +223,8 @@ class _MoneroAccountSyncViewState
     }
   }
 
+  bool allowRefresh = false;
+
   Future<void> init() async {
     final blockId = await MethodUtils.call(() async {
       final height = await client.getHeight();
@@ -165,22 +234,46 @@ class _MoneroAccountSyncViewState
       currentHeight = blockId.result;
     }
     buildRequests(init: true);
+    allowRefresh = true;
     progressKey.backToIdle();
+    updateState();
   }
+
+  void onNotify(ChainEvent event) {
+    if (event.type != MoneroChainNotify.trackerUpdated) return;
+    onTrackerUpdated();
+    onProgressUpdated.notify();
+    updateState();
+  }
+
+  StreamSubscription<ChainEvent>? listener;
 
   @override
   void onInitOnce() {
     super.onInitOnce();
     MethodUtils.after(() async => init(),
         duration: APPConst.oneSecoundDuration);
+    listener = account.stream.listen(onNotify);
+  }
+
+  @override
+  void safeDispose() {
+    super.safeDispose();
+
+    listener?.cancel();
+    listener = null;
+    onProgressUpdated.dispose();
+    requests = [];
+    syncRequests = {};
   }
 
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: () async {
-        buildRequests();
+        onTrackerUpdated();
       },
+      notificationPredicate: (notification) => allowRefresh,
       child: PageProgress(
         key: progressKey,
         initialStatus: StreamWidgetStatus.progress,
@@ -190,7 +283,7 @@ class _MoneroAccountSyncViewState
         child: (context) => CustomScrollView(
           slivers: [
             SliverConstraintsBoxView(
-                padding: WidgetConstant.paddingHorizontal20,
+                padding: WidgetConstant.padding20,
                 sliver: MultiSliver(
                   children: [
                     SliverToBoxAdapter(
@@ -245,25 +338,46 @@ class _MoneroAccountSyncViewState
                                 style: context.textTheme.titleMedium),
                             WidgetConstant.height8,
                             ContainerWithBorder(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(defaultTracker.rangeStr,
-                                      style: context
-                                          .onPrimaryTextTheme.bodyMedium),
-                                  Slider(
-                                      value: defaultTracker.currentHeight,
-                                      label: defaultTracker.currentHeight
-                                          .toString(),
-                                      onChanged: (e) {},
-                                      divisions: defaultTracker.divisions,
-                                      min: defaultTracker.startHeight,
-                                      max: defaultTracker.endHeight,
-                                      activeColor: context.colors.primary,
-                                      inactiveColor:
-                                          context.onPrimaryContainer),
-                                ],
-                              ),
+                              onRemove: defaultTracker.inProgressOffsets.isEmpty
+                                  ? null
+                                  : () {
+                                      context.openSliverDialog(
+                                        label: "block_tracking_per_thread".tr,
+                                        sliver: (context) =>
+                                            _InProgressOffsetsView(
+                                                state: this,
+                                                notifier: onProgressUpdated),
+                                      );
+                                    },
+                              onRemoveIcon: Icon(Icons.open_in_full_outlined,
+                                  color: context.onPrimaryContainer),
+                              child: APPAnimated(
+                                  onActive: (context) => Column(
+                                        key: ValueKey(
+                                            defaultTracker.currentHeight),
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(defaultTracker.rangeStr,
+                                              style: context.onPrimaryTextTheme
+                                                  .bodyMedium),
+                                          Slider(
+                                              value:
+                                                  defaultTracker.currentHeight,
+                                              label: defaultTracker
+                                                  .currentHeight
+                                                  .toString(),
+                                              onChanged: (e) {},
+                                              divisions:
+                                                  defaultTracker.divisions,
+                                              min: defaultTracker.startHeight,
+                                              max: defaultTracker.endHeight,
+                                              activeColor:
+                                                  context.colors.primary,
+                                              inactiveColor:
+                                                  context.onPrimaryContainer),
+                                        ],
+                                      )),
                             ),
                             ConditionalWidget(
                                 enable: currentHeight != null,
@@ -325,6 +439,59 @@ class _MoneroAccountSyncViewState
           ],
         ),
       ),
+    );
+  }
+}
+
+class _InProgressOffsetsView extends StatelessWidget {
+  const _InProgressOffsetsView({required this.notifier, required this.state});
+  final _MoneroAccountSyncViewState state;
+  List<_InProgressOffsets> get inProgressOffsets =>
+      state.defaultTracker.inProgressOffsets;
+  final StreamValue<void> notifier;
+
+  @override
+  Widget build(BuildContext context) {
+    return APPStreamBuilder(
+      value: notifier,
+      builder: (context, _) {
+        return SliverConstraintsBoxView(
+            padding: WidgetConstant.padding20,
+            sliver: SliverList.separated(
+                itemBuilder: (context, index) {
+                  final defaultTracker = inProgressOffsets[index];
+                  bool complete = defaultTracker.isComplete;
+                  return APPAnimated(
+                      onActive: (context) => ContainerWithBorder(
+                            onRemove: complete ? () {} : null,
+                            enableTap: false,
+                            onRemoveWidget: Icon(Icons.check_circle,
+                                color: context.onPrimaryContainer),
+                            key: ValueKey(defaultTracker.currentHeight),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(defaultTracker.rangeStr,
+                                    style:
+                                        context.onPrimaryTextTheme.bodyMedium),
+                                Slider(
+                                    value: defaultTracker.currentHeight,
+                                    label:
+                                        defaultTracker.currentHeight.toString(),
+                                    onChanged: (e) {},
+                                    divisions: defaultTracker.divisions,
+                                    min: defaultTracker.startHeight,
+                                    max: defaultTracker.endHeight,
+                                    activeColor: context.colors.primary,
+                                    inactiveColor: context.onPrimaryContainer),
+                              ],
+                            ),
+                          ));
+                },
+                itemCount: inProgressOffsets.length,
+                separatorBuilder: (context, index) =>
+                    Divider(color: context.onPrimaryContainer)));
+      },
     );
   }
 }
@@ -402,16 +569,32 @@ class _FailedOffets {
   final String rangeStr;
 }
 
+class _InProgressOffsets {
+  final double startHeight;
+  final double endHeight;
+  final double currentHeight;
+  _InProgressOffsets(
+      {required this.startHeight,
+      required this.endHeight,
+      required this.currentHeight})
+      : rangeStr = "$startHeight/$endHeight";
+  final String rangeStr;
+  late final int divisions = (endHeight - startHeight).toInt();
+  bool get isComplete => currentHeight == endHeight;
+}
+
 class _SyncRequest {
   final double startHeight;
   final double endHeight;
   double currentHeight;
   final List<_SyncedAddressWithHeight> addresses;
-  final List<_FailedOffets> failedOffsets;
+  List<_FailedOffets> failedOffsets;
   final String status;
   final int? requestId;
   final DateTime? created;
+  List<_InProgressOffsets> inProgressOffsets;
   late final int divisions = (endHeight - startHeight).toInt();
+  bool get isComplete => currentHeight == endHeight;
   String rangeStr;
   _SyncRequest(
       {required this.startHeight,
@@ -421,6 +604,18 @@ class _SyncRequest {
       required this.currentHeight,
       required this.status,
       required this.requestId,
+      this.inProgressOffsets = const [],
       required this.created})
       : rangeStr = "${startHeight.toInt()}/${endHeight.toInt()}";
+  void onChangeFailedOffsets(List<_FailedOffets> failedOffsets) {
+    this.failedOffsets = failedOffsets;
+  }
+
+  void onChangeCurrentHeight(double currentHeight) {
+    this.currentHeight = currentHeight;
+  }
+
+  void onChangeProgressOffset(List<_InProgressOffsets> inProgressOffsets) {
+    this.inProgressOffsets = inProgressOffsets;
+  }
 }

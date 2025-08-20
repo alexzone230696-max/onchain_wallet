@@ -1585,7 +1585,7 @@ class Web3SuiSignTransactionResponse
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(transactionBytes),
           CborBytesValue(signature),
           digest
@@ -1630,7 +1630,7 @@ class Web3SuiSignAndExecuteTransactionResponse
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           digest,
           effects,
           CborBytesValue(StringUtils.encodeJson(excuteResponse)),
@@ -1684,7 +1684,7 @@ class Web3SuiSignOrExecuteTransaction
         tags: Web3MessageTypes.walletRequest.tag);
     final Map<String, dynamic> transaction =
         StringUtils.toJson(values.elementAs<String>(2));
-    final method = Web3NetworkRequestMethods.fromTag(values.elementAt(0));
+    final method = Web3NetworkRequestMethods.fromTag(values.elementAs(0));
     return Web3SuiSignOrExecuteTransaction(
         account: Web3SuiChainAccount.deserialize(
             object: values.elementAs<CborTagValue>(1)),
@@ -1711,7 +1711,7 @@ class Web3SuiSignOrExecuteTransaction
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
           accessAccount.toCbor(),
           CborStringValue(StringUtils.fromJson(transaction.toJson())),
@@ -1722,14 +1722,18 @@ class Web3SuiSignOrExecuteTransaction
   }
 
   @override
-  Web3SuiRequest<Web3SuiSignOrExcuteTransactionResponse,
-          Web3SuiSignOrExecuteTransaction>
-      toRequest(
-          {required Web3RequestInformation request,
-          required Web3RequestAuthentication authenticated,
-          required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+  Future<
+      Web3SuiRequest<Web3SuiSignOrExcuteTransactionResponse,
+          Web3SuiSignOrExecuteTransaction>> toRequest(
+      {required Web3RequestInformation request,
+      required Web3RequestAuthentication authenticated,
+      required WEB3REQUESTNETWORKCONTROLLER<ISuiAddress, SuiChain,
+              Web3SuiChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3SuiRequest<Web3SuiSignOrExcuteTransactionResponse,
         Web3SuiSignOrExecuteTransaction>(
       params: this,

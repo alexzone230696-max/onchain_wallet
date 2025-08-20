@@ -49,7 +49,7 @@ abstract class TronTransactionStateController2<
     int totalSigner = 1;
     if (address.multiSigAccount) {
       final multiSigAccount = address as ITronMultisigAddress;
-      totalSigner = multiSigAccount.keyDetails.length;
+      totalSigner = multiSigAccount.multiSignatureAccount.signers.length;
     }
     return TronSimulateTransaction(
         transaction: rawTransaction,

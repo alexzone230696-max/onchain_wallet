@@ -35,9 +35,9 @@ class CryptoRequestReadMasterKey
       final CborListValue values =
           CborSerializable.decode(cborBytes: encryptedMasterKey);
       return CryptoRequestReadMasterKey(
-          version: values.elementAt(0),
-          nonce: values.elementAt(1),
-          walletData: values.elementAt(2),
+          version: values.elementAs(0),
+          nonce: values.elementAs(1),
+          walletData: values.elementAs(2),
           key: key);
     } catch (e) {
       throw WalletExceptionConst.incorrectWalletData;
@@ -52,10 +52,10 @@ class CryptoRequestReadMasterKey
         hex: hex,
         tags: CryptoRequestMethod.readMasterKey.tag);
     return CryptoRequestReadMasterKey(
-        version: values.elementAt(0),
-        nonce: values.elementAt(1),
-        walletData: values.elementAt(2),
-        key: values.elementAt(3));
+        version: values.elementAs(0),
+        nonce: values.elementAs(1),
+        walletData: values.elementAs(2),
+        key: values.elementAs(3));
   }
 
   static WalletMasterKeys getWalletMasterKeys(
@@ -85,7 +85,7 @@ class CryptoRequestReadMasterKey
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           version,
           CborBytesValue(nonce),
           CborBytesValue(walletData),

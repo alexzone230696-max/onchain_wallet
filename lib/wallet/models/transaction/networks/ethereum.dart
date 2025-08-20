@@ -70,7 +70,7 @@ class EthWalletTransactionTransferOutput
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([amount.toCbor(), to.address]), type.tag);
+        CborSerializable.fromDynamic([amount.toCbor(), to.address]), type.tag);
   }
 
   @override

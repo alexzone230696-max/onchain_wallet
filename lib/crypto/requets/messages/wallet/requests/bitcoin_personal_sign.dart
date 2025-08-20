@@ -43,9 +43,9 @@ final class WalletRequestBitcoinSignMessage extends WalletRequest<
         hex: hex,
         tags: WalletRequestMethod.bitcoinSignMessage.tag);
     return WalletRequestBitcoinSignMessage._(
-        message: values.elementAt(0),
-        index: Bip32AddressIndex.deserialize(obj: values.getCborTag(1)),
-        messagePrefix: values.elementAt(2),
+        message: values.elementAs(0),
+        index: Bip32AddressIndex.deserialize(obj: values.elementAsCborTag(1)),
+        messagePrefix: values.elementAs(2),
         mode: values.elemetMybeAs<BIP137Mode, CborIntValue>(
             3, (e) => BIP137Mode.fromValue(e.value)),
         useTaproot: values.elementAs(4));
@@ -54,7 +54,7 @@ final class WalletRequestBitcoinSignMessage extends WalletRequest<
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(message),
           index.toCbor(),
           messagePrefix,

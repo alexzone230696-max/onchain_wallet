@@ -59,15 +59,15 @@ final class MoneroNewAddressParams extends NewAccountParams<IMoneroAddress> {
         hex: hex,
         tags: NewAccountParamsType.moneroNewAddressParams.tag);
     return MoneroNewAddressParams(
-        deriveIndex:
-            AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
-        major: values.elementAs(1),
-        minor: values.elementAs(2),
-        coin: CustomCoins.getSerializationCoin(values.elementAt(3)),
-        addrDetails: values
-            .getCborTag(4)
-            ?.to((e) => MoneroViewAccountDetails.deserialize(object: e)),
-        network: MoneroNetwork.fromName(values.elementAs(5)));
+      deriveIndex:
+          AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(0)),
+      major: values.elementAs(1),
+      minor: values.elementAs(2),
+      coin: CustomCoins.getSerializationCoin(values.elementAs(3)),
+      addrDetails: values.elemetMybeAs<MoneroViewAccountDetails, CborTagValue>(
+          4, (e) => MoneroViewAccountDetails.deserialize(object: e)),
+      network: MoneroNetwork.fromName(values.elementAs(5)),
+    );
   }
 
   @override
@@ -96,13 +96,13 @@ final class MoneroNewAddressParams extends NewAccountParams<IMoneroAddress> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.dynamicLength([
+        CborListValue<CborObject>.definite([
           deriveIndex.toCbor(),
-          major,
-          minor,
+          CborIntValue(major),
+          CborIntValue(minor),
           coin.toCbor(),
-          addrDetails?.toCbor(),
-          network.name
+          addrDetails?.toCbor() ?? const CborNullValue(),
+          CborStringValue(network.name)
         ]),
         type.tag);
   }

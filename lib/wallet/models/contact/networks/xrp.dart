@@ -47,7 +47,7 @@ class RippleContact extends ContactCore<XRPAddress> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [address, addressObject.tag, CborEpochIntValue(created), name]),
         CborTagsConst.rippleContact);
   }

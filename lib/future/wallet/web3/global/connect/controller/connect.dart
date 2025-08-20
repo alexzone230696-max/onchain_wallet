@@ -1,6 +1,8 @@
-import 'package:on_chain_wallet/crypto/models/networks.dart';
-import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
+import 'package:on_chain_wallet/future/wallet/web3/global/core/controller.dart';
+import 'package:on_chain_wallet/future/wallet/web3/pages/page_progress.dart';
+import 'package:on_chain_wallet/future/wallet/web3/types/types.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
 
 class Web3GlobalRequestConnectStateController
@@ -14,9 +16,9 @@ class Web3GlobalRequestConnectStateController
   Web3GlobalRequestConnectStateController(
       {required this.request, required this.wallet});
 
-  Future<bool> onUpdateApplication(List<NetworkType> networks) async {
+  Future<bool> onUpdateApplication(Web3PermissionUpdateResponse update) async {
     progressKey.response(text: "client_permission_have_been_updated".tr);
-    request.completeResponse(networks);
+    request.completeResponse(update.chains);
     return true;
   }
 

@@ -23,7 +23,8 @@ class RippleAccountPageView extends StatelessWidget {
               token: p0);
         },
       ),
-      AccountTransactionActivityView(account)
+      AccountTransactionActivityView<IXRPAddress, XRPWalletTransaction>(
+          account: account, address: account.address)
     ]);
   }
 }

@@ -46,7 +46,7 @@ class _TronPageControllerConst {
     if (privateKey.isA<JSString>()) {
       final key = (privateKey as JSString).toDart;
       if (key.length == 64 || key.length == 66) {
-        throw JSWalletError(
+        throw JSError(
             message: _TronPageControllerConst.providedPrivateKeyError);
       }
     }

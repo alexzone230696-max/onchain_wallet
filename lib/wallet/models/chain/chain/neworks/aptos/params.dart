@@ -40,7 +40,7 @@ final class AptosNewAddressParams implements NewAccountParams<IAptosAddress> {
         tags: NewAccountParamsType.aptosNewAddressParams.tag);
     return AptosNewAddressParams._(
         deriveIndex:
-            AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
+            AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(0)),
         coin: CustomCoins.getSerializationCoin(values.elementAs(1)),
         address: values.elemetMybeAs<AptosAddress, CborStringValue>(
             2, (e) => AptosAddress(e.value)),
@@ -72,7 +72,7 @@ final class AptosNewAddressParams implements NewAccountParams<IAptosAddress> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           deriveIndex.toCbor(),
           coin.toCbor(),
           address?.address,
@@ -129,10 +129,10 @@ final class AptosMultiSigNewAddressParams implements AptosNewAddressParams {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.dynamicLength([
+        CborListValue<CborObject>.definite([
           coin.toCbor(),
           multiSignatureAddress.toCbor(),
-          address.address,
+          CborStringValue(address.address),
         ]),
         type.tag);
   }

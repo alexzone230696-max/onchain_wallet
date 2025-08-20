@@ -99,7 +99,7 @@ abstract class NetworkClient<TRANSACTION extends ChainTransaction,
       });
     }
 
-    runTimer();
+    MethodUtils.after(runTimer, duration: Duration(seconds: 1));
 
     return controller!.stream;
   }

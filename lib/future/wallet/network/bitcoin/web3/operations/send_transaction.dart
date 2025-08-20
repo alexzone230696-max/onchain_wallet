@@ -28,7 +28,7 @@ import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/params/models/send_
 class Web3BitcoinSendTransactionStateController
     extends Web3BitcoinTransactionStateController<
         String,
-        Web3BitcoinSendTransaction,
+        BaseWeb3BitcoinSendTransaction,
         IWeb3BitcoinSendTransactionData,
         IWeb3BitcoinPaymentTransaction,
         IWeb3BitcoinSignedPaymentTransaction>

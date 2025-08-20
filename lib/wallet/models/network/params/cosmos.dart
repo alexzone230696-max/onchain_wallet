@@ -107,7 +107,7 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
         bytes, obj, CborTagsConst.cosmosNetworkParams);
 
     return CosmosNetworkParams(
-        token: Token.deserialize(obj: values.getCborTag(2)),
+        token: Token.deserialize(obj: values.elementAsCborTag(2)),
         providers: values
             .elementAsListOf<CborTagValue>(3)
             .map((e) => CosmosAPIProvider.fromCborBytesOrObject(obj: e))
@@ -136,20 +136,22 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           const CborNullValue(),
           const CborNullValue(),
           token.toCbor(),
-          CborListValue.fixedLength(providers.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              providers.map((e) => e.toCbor()).toList()),
           chainType.name,
           hrp,
           denom,
-          CborListValue.fixedLength(feeTokens.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              feeTokens.map((e) => e.toCbor()).toList()),
           networkType.value,
           bip32CoinType,
           chainId,
           networkConstantUri,
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               keysAlgs.map((e) => CborStringValue(e.name)).toList()),
           transactionExplorer,
           addressExplorer,

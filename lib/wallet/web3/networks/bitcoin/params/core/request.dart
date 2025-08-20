@@ -10,15 +10,17 @@ import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/params/models/send_
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/params/models/sign_message.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/params/models/transaction.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/permission/models/account.dart';
-import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/permission/models/permission.dart';
 
-abstract class Web3BitcoinRequestParam<RESPONSE> extends Web3RequestParams<
-    RESPONSE,
-    BitcoinBaseAddress,
-    BitcoinChain,
-    IBitcoinAddress,
-    Web3BitcoinChainAccount,
-    Web3BitcoinChain> {
+abstract class BaseWeb3BitcoinRequestParam<
+        RESPONSE,
+        ADDRESS extends IBitcoinAddress,
+        WEB3CHAINACCOUNT extends Web3BitcoinChainAccount>
+    extends Web3RequestParams<RESPONSE, BitcoinBaseAddress, BitcoinChain,
+        ADDRESS, WEB3CHAINACCOUNT> {}
+
+abstract class Web3BitcoinRequestParam<RESPONSE>
+    extends BaseWeb3BitcoinRequestParam<RESPONSE, IBitcoinAddress,
+        Web3BitcoinChainAccount> {
   @override
   abstract final Web3BitcoinRequestMethods method;
 
@@ -31,7 +33,7 @@ abstract class Web3BitcoinRequestParam<RESPONSE> extends Web3RequestParams<
         object: object,
         hex: hex,
         tags: Web3MessageTypes.walletRequest.tag);
-    final method = Web3NetworkRequestMethods.fromTag(values.elementAt(0));
+    final method = Web3NetworkRequestMethods.fromTag(values.elementAs(0));
     final Web3BitcoinRequestParam param;
     switch (method) {
       case Web3BitcoinRequestMethods.signTransaction:
@@ -57,10 +59,33 @@ abstract class Web3BitcoinRequestParam<RESPONSE> extends Web3RequestParams<
   }
 }
 
+abstract class BaseWeb3BitcoinRequest<
+    RESPONSE,
+    ADDRESS extends IBitcoinAddress,
+    WEB3CHAINACCOUNT extends Web3BitcoinChainAccount,
+    PARAMS extends BaseWeb3BitcoinRequestParam<RESPONSE, ADDRESS,
+        WEB3CHAINACCOUNT>> extends Web3NetworkRequest<RESPONSE,
+    BitcoinBaseAddress, BitcoinChain, WEB3CHAINACCOUNT, ADDRESS, PARAMS> {
+  BaseWeb3BitcoinRequest(
+      {required super.params,
+      required super.info,
+      required super.authenticated,
+      required super.chain,
+      required super.accounts});
+
+  BaseWeb3BitcoinRequest<R, IBitcoinAddress, Web3BitcoinChainAccount, P> cast<
+      R,
+      P extends BaseWeb3BitcoinRequestParam<R, IBitcoinAddress,
+          Web3BitcoinChainAccount>>() {
+    return this as BaseWeb3BitcoinRequest<R, IBitcoinAddress,
+        Web3BitcoinChainAccount, P>;
+  }
+}
+
 class Web3BitcoinRequest<RESPONSE,
         PARAMS extends Web3BitcoinRequestParam<RESPONSE>>
-    extends Web3NetworkRequest<RESPONSE, BitcoinBaseAddress, BitcoinChain,
-        Web3BitcoinChainAccount, IBitcoinAddress, Web3BitcoinChain, PARAMS> {
+    extends BaseWeb3BitcoinRequest<RESPONSE, IBitcoinAddress,
+        Web3BitcoinChainAccount, PARAMS> {
   Web3BitcoinRequest(
       {required super.params,
       required super.info,
@@ -68,7 +93,7 @@ class Web3BitcoinRequest<RESPONSE,
       required super.chain,
       required super.accounts});
 
-  Web3BitcoinRequest<R, P> cast<R, P extends Web3BitcoinRequestParam<R>>() {
-    return this as Web3BitcoinRequest<R, P>;
-  }
+  // Web3BitcoinRequest<R, P> cast<R, P extends Web3BitcoinRequestParam<R>>() {
+  //   return this as Web3BitcoinRequest<R, P>;
+  // }
 }

@@ -43,7 +43,7 @@ class RippleAPIProvider extends APIProvider {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [uri, protocol.id, auth?.toCbor(), identifier]),
         CborTagsConst.rippleApiServiceProvider);
   }

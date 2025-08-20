@@ -30,8 +30,8 @@ final class CosmosNewAddressParams extends NewAccountParams<ICosmosAddress> {
         tags: NewAccountParamsType.cosmosNewAddressParams.tag);
     return CosmosNewAddressParams(
         deriveIndex:
-            AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
-        coin: CustomCoins.getSerializationCoin(values.elementAt(1)),
+            AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(0)),
+        coin: CustomCoins.getSerializationCoin(values.elementAs(1)),
         algorithm: CosmosKeysAlgs.fromName(values.elementAs(2)));
   }
 
@@ -66,7 +66,7 @@ final class CosmosNewAddressParams extends NewAccountParams<ICosmosAddress> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [deriveIndex.toCbor(), coin.toCbor(), algorithm.name]),
         type.tag);
   }

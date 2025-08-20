@@ -280,12 +280,11 @@ class _SetupCardanoAddressViewState extends State<SetupCardanoAddressView>
             await context.openMaxExtendSliverBottomSheet<Bip32AddressIndex>(
                 "setup_derivation".tr,
                 child: SetupDerivationModeView(
-                  coin: coin,
-                  chainAccout: chainAccount,
-                  customKeys: customKeys,
-                  seedGenerationType: seedGenerationType,
-                  defaultDerivation: defaultStakeKey,
-                ));
+                    coin: coin,
+                    chainAccout: chainAccount,
+                    customKeys: customKeys,
+                    seedGenerationType: seedGenerationType,
+                    defaultDerivation: defaultStakeKey));
         if (stakeDerivation == null) return null;
         stakeDerivation = stakeDerivation.copyWith(keyName: "stake_key");
       }

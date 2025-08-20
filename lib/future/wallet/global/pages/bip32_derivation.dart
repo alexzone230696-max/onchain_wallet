@@ -6,22 +6,18 @@ import 'package:on_chain_wallet/app/core.dart' show WalletException;
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/crypto/utils/utils.dart';
-import 'package:on_chain_wallet/wallet/wallet.dart'
-    show BlockchainConst, WalletNetwork;
+import 'package:on_chain_wallet/wallet/wallet.dart' show BlockchainConst;
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 
 class Bip32KeyDerivationView extends StatefulWidget {
   const Bip32KeyDerivationView(
       {super.key,
       required this.coin,
-      required this.curve,
-      required this.network,
       required this.defaultPath,
       required this.seedGeneration});
   final CryptoCoins coin;
-  final EllipticCurveTypes curve;
+  // final EllipticCurveTypes curve;
   final SeedTypes seedGeneration;
-  final WalletNetwork network;
   final String? defaultPath;
 
   @override
@@ -100,12 +96,14 @@ class _Bip32KeyDerivationViewState extends State<Bip32KeyDerivationView>
     pathTextFieldKey.currentState?.updateText(v);
   }
 
+  late final EllipticCurveTypes curve = widget.coin.conf.type;
+
   @override
   void onInitOnce() {
     super.onInitOnce();
     path = widget.defaultPath ?? "";
     isSubstrate = widget.coin.proposal == SubstratePropoosal.substrate;
-    isSupportNoneHardend = widget.curve != EllipticCurveTypes.ed25519;
+    isSupportNoneHardend = curve != EllipticCurveTypes.ed25519;
   }
 
   @override

@@ -35,11 +35,11 @@ final class ISolanaAddress extends ChainAccount<SolAddress, SolanaSPLToken,
     final CryptoCoins coin =
         CustomCoins.getSerializationCoin(values.elementAs(0));
     final keyIndex =
-        AddressDerivationIndex.deserialize(obj: values.getCborTag(1));
+        AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(1));
     final AccountBalance address =
-        AccountBalance.deserialize(network, obj: values.getCborTag(2));
+        AccountBalance.deserialize(network, obj: values.elementAsCborTag(2));
     final SolAddress solAddress = SolAddress(address.toAddress);
-    final int networkId = values.elementAt(3);
+    final int networkId = values.elementAs(3);
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
     }
@@ -63,7 +63,7 @@ final class ISolanaAddress extends ChainAccount<SolAddress, SolanaSPLToken,
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           coin.toCbor(),
           keyIndex.toCbor(),
           address.toCbor(),
@@ -91,12 +91,6 @@ final class ISolanaAddress extends ChainAccount<SolAddress, SolanaSPLToken,
       AssociatedTokenAccountProgramUtils.associatedTokenAccount(
               mint: mint, owner: networkAddress, tokenProgramId: tokenProgramId)
           .address;
-
-  @override
-  bool isEqual(ChainAccount other) {
-    if (other is! ISolanaAddress) return false;
-    return other.networkAddress == networkAddress;
-  }
 
   @override
   SolanaNewAddressParams toAccountParams() {

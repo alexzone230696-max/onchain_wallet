@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/select_provider.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/transaction_activity.dart';
@@ -40,7 +41,8 @@ class CardanoAccountPageView extends StatelessWidget {
   Widget build(BuildContext context) {
     return TabBarView(physics: WidgetConstant.noScrollPhysics, children: [
       _CardanoAccountPage(chainAccount: chainAccount),
-      AccountTransactionActivityView(chainAccount)
+      AccountTransactionActivityView<ICardanoAddress, ADAWalletTransaction>(
+          account: chainAccount, address: chainAccount.address)
     ]);
   }
 }
@@ -55,7 +57,16 @@ class _CardanoAccountPage extends StatelessWidget {
       AccountManageProviderIcon(service: chainAccount.service),
       SliverToBoxAdapter(
           child: Column(
-        children: [],
+        children: [
+          AppListTile(
+            title: Text("multi_signature".tr),
+            subtitle: Text("establishing_multi_sig_addr".tr),
+            trailing: const Icon(Icons.arrow_forward),
+            onTap: () {
+              context.to(PageRouter.cardanoMultisigAddress);
+            },
+          ),
+        ],
       ))
     ]);
   }

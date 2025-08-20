@@ -39,16 +39,16 @@ class TonMnemonicToPrivateKeyMessage
         object: object,
         tags: CryptoRequestMethod.tonMnemonicToPrivateKey.tag);
     return TonMnemonicToPrivateKeyMessage(
-        mnemonic: values.elementAt(0),
-        password: values.elementAt(1),
-        validateTonMnemonic: values.elementAt(2),
-        coin: CustomCoins.getSerializationCoin(values.elementAt(3)));
+        mnemonic: values.elementAs(0),
+        password: values.elementAs(1),
+        validateTonMnemonic: values.elementAs(2),
+        coin: CustomCoins.getSerializationCoin(values.elementAs(3)));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           mnemonic,
           password ?? const CborNullValue(),
           validateTonMnemonic,
@@ -98,13 +98,13 @@ class TonMenmonicGenerateMessage
         object: object,
         tags: CryptoRequestMethod.generateMnemonic.tag);
     return TonMenmonicGenerateMessage(
-        password: values.elementAt(0), wordsNum: values.elementAt(1));
+        password: values.elementAs(0), wordsNum: values.elementAs(1));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [password ?? const CborNullValue(), wordsNum]),
         method.tag);
   }

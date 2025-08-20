@@ -5,13 +5,16 @@ class Web3SuiExceptionConstant {
   static Web3RequestException retrieveObjectFailed(
           {required String objectId, String? error}) =>
       Web3RequestExceptionConst.message(
-          "Failed retrieve tranaction object $objectId.${error == null ? '' : ' Error: $error'}");
+          "Failed retrieve tranaction object $objectId.${error == null ? '' : ' Error: $error'}",
+          errorType: Web3ErrorCode.rpcError);
   static final Web3RequestException mismatchMoveCallArguments =
       Web3RequestExceptionConst.message(
-          "Invalid tranaction Move call arguments. Mismatch between move call required parameters and arguments.");
+          "Invalid tranaction Move call arguments. Mismatch between move call required parameters and arguments.",
+          errorType: Web3ErrorCode.invalidParams);
   static Web3RequestException fialedToParseTransactionObject(String objectId) =>
       Web3RequestExceptionConst.message(
-          "Invalid tranaction: Failed to parse transaction object $objectId");
+          "Invalid tranaction: Failed to parse transaction object $objectId",
+          errorType: Web3ErrorCode.invalidParams);
   static Web3RequestException get unsuportedTransactionVersion =>
       Web3RequestExceptionConst.unsuportedfeatures(
           "Unknow Sui transaction version.");

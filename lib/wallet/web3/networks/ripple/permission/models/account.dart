@@ -16,6 +16,7 @@ class Web3XRPChainAccount extends Web3ChainAccount<XRPAddress> {
       required super.address,
       required super.defaultAddress,
       required this.id,
+      required super.identifier,
       this.publicKey});
   @override
   Web3XRPChainAccount clone({
@@ -24,13 +25,15 @@ class Web3XRPChainAccount extends Web3ChainAccount<XRPAddress> {
     bool? defaultAddress,
     int? id,
     List<int>? publicKey,
+    String? identifier,
   }) {
     return Web3XRPChainAccount(
         keyIndex: keyIndex ?? this.keyIndex,
         address: address ?? this.address,
         defaultAddress: defaultAddress ?? this.defaultAddress,
         id: id ?? this.id,
-        publicKey: publicKey ?? this.publicKey);
+        publicKey: publicKey ?? this.publicKey,
+        identifier: identifier ?? this.identifier);
   }
 
   factory Web3XRPChainAccount.fromChainAccount(
@@ -42,9 +45,9 @@ class Web3XRPChainAccount extends Web3ChainAccount<XRPAddress> {
         address: address.networkAddress,
         id: id,
         defaultAddress: isDefault,
-        publicKey: address.multiSigAccount
-            ? null
-            : address.toXRPPublicKey().toBytes());
+        publicKey:
+            address.multiSigAccount ? null : address.toXRPPublicKey().toBytes(),
+        identifier: address.identifier);
   }
 
   factory Web3XRPChainAccount.deserialize(
@@ -55,22 +58,25 @@ class Web3XRPChainAccount extends Web3ChainAccount<XRPAddress> {
         hex: hex,
         tags: CborTagsConst.web3XRPAccount);
     return Web3XRPChainAccount(
-        keyIndex: AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
-        address: XRPAddress(values.elementAt(1)),
-        id: values.elementAt(2),
-        defaultAddress: values.elementAt(3),
-        publicKey: values.elementAs(4));
+        keyIndex: AddressDerivationIndex.deserialize(
+            obj: values.indexAs<CborTagValue>(0)),
+        address: XRPAddress(values.valueAs(1)),
+        id: values.valueAs(2),
+        defaultAddress: values.valueAs(3),
+        publicKey: values.valueAs(4),
+        identifier: values.valueAs(5));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           keyIndex.toCbor(),
           address.address,
           id,
           defaultAddress,
-          publicKey
+          publicKey,
+          identifier
         ]),
         CborTagsConst.web3XRPAccount);
   }

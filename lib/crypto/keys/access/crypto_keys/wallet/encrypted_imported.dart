@@ -65,7 +65,7 @@ final class EncryptedCustomKey with Equatable, CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           publicKey,
           id,
           coin.toCbor(),

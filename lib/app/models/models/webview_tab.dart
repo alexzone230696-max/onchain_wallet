@@ -71,7 +71,7 @@ class WebViewTab with CborSerializable, Equatable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           id,
           url,
           title,

@@ -6,6 +6,8 @@ import 'package:on_chain_wallet/wallet/web3/core/messages/messages.dart';
 import 'package:on_chain_wallet/wallet/web3/core/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/aptos/params/core/request.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/params/core/request.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/bitcoin_cash/params/core/request.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/cardano/params/params.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/cosmos/params/core/request.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ethereum/params/core/request.dart';
 import 'package:on_chain_wallet/wallet/web3/core/permission/permission.dart';
@@ -53,19 +55,20 @@ abstract class Web3GlobalRequestParams<RESPONSE>
         object: object,
         hex: hex,
         tags: Web3MessageTypes.walletGlobalRequest.tag);
-    final network = Web3GlobalRequestMethods.fromId(values.elementAt(0));
+    final network = Web3GlobalRequestMethods.fromId(values.elementAs(0));
     final Web3GlobalRequestParams param;
     switch (network) {
       case Web3GlobalRequestMethods.disconnect:
         param = Web3DisconnectApplication.deserialize(
             bytes: bytes, object: object, hex: hex);
         break;
-      case Web3GlobalRequestMethods.switchNetwork:
-        param = Web3SwitchApplicationNetwork.deserialize(
-            bytes: bytes, object: object, hex: hex);
-        break;
+
       case Web3GlobalRequestMethods.connect:
         param = Web3ConnectApplication.deserialize(
+            bytes: bytes, object: object, hex: hex);
+        break;
+      case Web3GlobalRequestMethods.connectSilent:
+        param = Web3SilentConnectApplication.deserialize(
             bytes: bytes, object: object, hex: hex);
         break;
       default:
@@ -79,20 +82,18 @@ abstract class Web3GlobalRequestParams<RESPONSE>
 }
 
 typedef WEB3REQUESTPARAMSRESPONSE<RESPONSE> = Web3RequestParams<RESPONSE,
-    dynamic, Chain, NETWORKCHAINACCOUNT<dynamic>, Web3ChainAccount, Web3Chain>;
+    dynamic, Chain, NETWORKCHAINACCOUNT<dynamic>, Web3ChainAccount>;
+typedef WEB3REQUESTNETWORKCONTROLLER<WALLETACCOUNT extends ChainAccount,
+        CHAIN extends Chain, CHAINACCOUNT extends Web3ChainAccount>
+    = NetworkController<WALLETACCOUNT, CHAIN, CHAINACCOUNT, Web3InternalChain>;
 
 abstract class Web3RequestParams<
-    RESPONSE,
-    NETWORKADDRESS,
-    CHAIN extends Chain,
-    WALLETACCOUNT extends ChainAccount,
-    CHAINACCOUNT extends Web3ChainAccount,
-    WEB3CHAIN extends Web3Chain<
+        RESPONSE,
         NETWORKADDRESS,
-        CHAIN,
-        WALLETACCOUNT,
-        CHAINACCOUNT,
-        WalletNetwork>> extends Web3WalletRequestParams<RESPONSE> {
+        CHAIN extends Chain,
+        WALLETACCOUNT extends ChainAccount,
+        CHAINACCOUNT extends Web3ChainAccount>
+    extends Web3WalletRequestParams<RESPONSE> {
   @override
   abstract final Web3NetworkRequestMethods method;
   List<CHAINACCOUNT> get requiredAccounts;
@@ -101,23 +102,24 @@ abstract class Web3RequestParams<
 
   @override
   Web3MessageTypes get type => Web3MessageTypes.walletRequest;
-  Web3NetworkRequest toRequest(
+  Future<Web3NetworkRequest> toRequest(
       {required Web3RequestInformation request,
       required Web3RequestAuthentication authenticated,
-      required List<CHAIN> chains});
-  (CHAIN, List<WALLETACCOUNT>) findRequestChain(
+      required WEB3REQUESTNETWORKCONTROLLER<WALLETACCOUNT, CHAIN, CHAINACCOUNT>
+          chainController});
+  Future<(CHAIN, List<WALLETACCOUNT>)> findRequestChain(
       {required Web3RequestInformation request,
       required Web3RequestAuthentication authenticated,
-      required List<Chain> chains}) {
-    final networkChains = chains.whereType<CHAIN>().toList();
-    if (authenticated is Web3APPAuthentication) {
-      final web3Chain =
-          authenticated.getChainFromNetworkType<WEB3CHAIN>(method.network);
-      final chain = web3Chain.getCurrentPermissionChain(
-          networkChains, requiredAccounts.firstOrNull);
-      final accounts = web3Chain.getAccountsPermission(
-          accounts: requiredAccounts, chain: chain);
-      return (chain, accounts);
+      required WEB3REQUESTNETWORKCONTROLLER<WALLETACCOUNT, CHAIN, CHAINACCOUNT>
+          chainController}) async {
+    final networkChains = chainController.networks;
+    if (authenticated is Web3ApplicationAuthentication) {
+      final accounts = await chainController.getWeb3AuthenticatedAccounts(
+          authenticated, requiredAccounts);
+      if (accounts == null) {
+        throw Web3RequestExceptionConst.missingPermission;
+      }
+      return accounts;
     }
     if (requiredAccounts.isEmpty) {
       throw Web3RequestExceptionConst.missingPermission;
@@ -136,6 +138,7 @@ abstract class Web3RequestParams<
       }
       return acc;
     }).toList();
+
     return (chain, walletAccounts.cast<WALLETACCOUNT>());
   }
 
@@ -147,7 +150,7 @@ abstract class Web3RequestParams<
         hex: hex,
         tags: Web3MessageTypes.walletRequest.tag);
     final network =
-        Web3NetworkRequestMethods.fromTag(values.elementAt(0)).network;
+        Web3NetworkRequestMethods.fromTag(values.elementAs(0)).network;
     final Web3RequestParams param;
     switch (network) {
       case NetworkType.ethereum:
@@ -168,6 +171,10 @@ abstract class Web3RequestParams<
         break;
       case NetworkType.monero:
         param = Web3MoneroRequestParam.deserialize(
+            bytes: bytes, object: object, hex: hex);
+        break;
+      case NetworkType.cardano:
+        param = Web3ADARequestParam.deserialize(
             bytes: bytes, object: object, hex: hex);
         break;
       case NetworkType.ton:
@@ -198,11 +205,15 @@ abstract class Web3RequestParams<
         param = Web3BitcoinRequestParam.deserialize(
             bytes: bytes, object: object, hex: hex);
         break;
+      case NetworkType.bitcoinCash:
+        param = Web3BitcoinCashRequestParam.deserialize(
+            bytes: bytes, object: object, hex: hex);
+        break;
       default:
         throw Web3RequestExceptionConst.internalError;
     }
     if (param is! Web3RequestParams<RESPONSE, NETWORKADDRESS, CHAIN,
-        WALLETACCOUNT, CHAINACCOUNT, WEB3CHAIN>) {
+        WALLETACCOUNT, CHAINACCOUNT>) {
       throw Web3RequestExceptionConst.internalError;
     }
     return param;

@@ -15,8 +15,7 @@ abstract class Web3SubstrateRequestParam<RESPONSE> extends Web3RequestParams<
     BaseSubstrateAddress,
     SubstrateChain,
     ISubstrateAddress,
-    Web3SubstrateChainAccount,
-    Web3SubstrateChain> {
+    Web3SubstrateChainAccount> {
   @override
   abstract final Web3SubstrateRequestMethods method;
   @override
@@ -30,7 +29,7 @@ abstract class Web3SubstrateRequestParam<RESPONSE> extends Web3RequestParams<
         object: object,
         hex: hex,
         tags: Web3MessageTypes.walletRequest.tag);
-    final method = Web3NetworkRequestMethods.fromTag(values.elementAt(0));
+    final method = Web3NetworkRequestMethods.fromTag(values.elementAs(0));
     final Web3SubstrateRequestParam param;
     switch (method) {
       case Web3SubstrateRequestMethods.signTransaction:
@@ -55,14 +54,8 @@ abstract class Web3SubstrateRequestParam<RESPONSE> extends Web3RequestParams<
 
 class Web3SubstrateRequest<RESPONSE,
         PARAMS extends Web3SubstrateRequestParam<RESPONSE>>
-    extends Web3NetworkRequest<
-        RESPONSE,
-        BaseSubstrateAddress,
-        SubstrateChain,
-        Web3SubstrateChainAccount,
-        ISubstrateAddress,
-        Web3SubstrateChain,
-        PARAMS> {
+    extends Web3NetworkRequest<RESPONSE, BaseSubstrateAddress, SubstrateChain,
+        Web3SubstrateChainAccount, ISubstrateAddress, PARAMS> {
   Web3SubstrateRequest(
       {required super.params,
       required super.info,

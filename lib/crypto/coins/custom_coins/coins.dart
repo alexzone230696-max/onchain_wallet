@@ -1,4 +1,5 @@
 import 'package:blockchain_utils/bip/bip/bip.dart';
+import 'package:blockchain_utils/bip/ecc/curve/elliptic_curve_types.dart';
 import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 import 'conf.dart';
 
@@ -51,12 +52,36 @@ class CustomCoins extends BipCoins {
     return coin;
   }
 
+  static List<CryptoCoins> fromCurve<T extends CryptoCoins>(
+      EllipticCurveTypes type,
+      {CoinProposal? proposal}) {
+    List<CryptoCoins> coins;
+    switch (proposal) {
+      case CustomProposal.cip0019:
+        coins = _fromCurve(type);
+        break;
+      case null:
+        return [
+          ..._fromCurve(type),
+          ...CryptoCoins.fromCurve(type, proposal: proposal)
+        ];
+      default:
+        coins = CryptoCoins.fromCurve(type, proposal: proposal);
+        break;
+    }
+    return coins;
+  }
+
   static CustomCoins? fromName(String name) {
     try {
       return values.firstWhere((element) => element.name == name);
     } on StateError {
       return null;
     }
+  }
+
+  static List<CustomCoins> _fromCurve(EllipticCurveTypes type) {
+    return values.where((element) => element.conf.type == type).toList();
   }
 }
 

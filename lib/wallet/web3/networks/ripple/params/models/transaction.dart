@@ -55,10 +55,10 @@ final class Web3XRPTransactionSignatureResponse with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           txnSignature,
           signingPubKey,
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               signers?.map((e) => e.toCbor()).toList() ?? [])
         ]),
         CborTagsConst.defaultTag);
@@ -103,7 +103,7 @@ final class Web3XRPTransactionSignatureMultiSignerResponse
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([account, txnSignature, signingPubKey]),
+        CborSerializable.fromDynamic([account, txnSignature, signingPubKey]),
         CborTagsConst.defaultTag);
   }
 }
@@ -131,7 +131,7 @@ final class Web3XRPTransactionResponse with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([signature.toCbor(), txBlob, txId]),
+        CborSerializable.fromDynamic([signature.toCbor(), txBlob, txId]),
         CborTagsConst.defaultTag);
   }
 
@@ -193,18 +193,23 @@ class Web3XRPSendTransaction
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [method.tag, CborBytesValue(txBlob), account.toCbor()]),
         type.tag);
   }
 
   @override
-  Web3XRPRequest<Web3XRPTransactionResponse, Web3XRPSendTransaction> toRequest(
-      {required Web3RequestInformation request,
-      required Web3RequestAuthentication authenticated,
-      required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+  Future<Web3XRPRequest<Web3XRPTransactionResponse, Web3XRPSendTransaction>>
+      toRequest(
+          {required Web3RequestInformation request,
+          required Web3RequestAuthentication authenticated,
+          required WEB3REQUESTNETWORKCONTROLLER<IXRPAddress, XRPChain,
+                  Web3XRPChainAccount>
+              chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3XRPRequest<Web3XRPTransactionResponse, Web3XRPSendTransaction>(
         params: this,
         authenticated: authenticated,

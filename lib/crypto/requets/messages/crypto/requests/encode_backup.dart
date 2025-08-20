@@ -29,18 +29,18 @@ class CryptoRequestEncodeBackup
         hex: hex,
         tags: CryptoRequestMethod.encodeBackup.tag);
     final encoding = SecretWalletEncoding.values.firstWhere(
-        (element) => element.name == values.elementAt<String>(2),
+        (element) => element.name == values.elementAs<String>(2),
         orElse: () => throw WalletExceptionConst.dataVerificationFailed);
     return CryptoRequestEncodeBackup(
-        password: values.elementAt(0),
-        backup: values.elementAt(1),
+        password: values.elementAs(0),
+        backup: values.elementAs(1),
         encoding: encoding);
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [password, CborBytesValue(backup), encoding.name]),
         method.tag);
   }

@@ -1,4 +1,5 @@
 import 'package:on_chain_wallet/app/live_listener/live.dart';
+import 'package:on_chain_wallet/app/models/models/typedef.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/monero/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
@@ -50,6 +51,9 @@ mixin MoneroTransactionUtxosController on DisposableMixin {
     }
   }
 
+  int get _totalSelected =>
+      accountUtxos.value.fold(0, (p, c) => p + c.selectedUtxos.length);
+
   void _updateAmount() {
     final total =
         accountUtxos.value.fold(BigInt.zero, (p, c) => p + c.totalUtxo);
@@ -59,22 +63,23 @@ mixin MoneroTransactionUtxosController on DisposableMixin {
     _updateTotoalSelectedUtxos();
   }
 
-  void onUpdateUtxo(
-      MoneroAccountFetchedUtxos address, MoneroViewOutputDetails utxo) {
-    address.addUtxo(utxo);
+  void onUpdateUtxo(MoneroAccountFetchedUtxos address,
+      MoneroViewOutputDetails utxo, DynamicVoid onMaxInput) {
+    address.addUtxo(utxo, _totalSelected, onMaxInput);
     totalUtxos.value.updateBalance();
     _updateAmount();
   }
 
-  void onToggleAddressUtxos(MoneroAccountFetchedUtxos address) {
-    address.toggleAll();
+  void onToggleAddressUtxos(
+      MoneroAccountFetchedUtxos address, DynamicVoid onMaxInput) {
+    address.toggleAll(_totalSelected, onMaxInput);
     totalUtxos.value.updateBalance();
     _updateAmount();
   }
 
-  void onToggleAllUtxos() {
+  void onToggleAllUtxos(DynamicVoid onMaxInput) {
     for (final i in accountUtxos.value) {
-      i.selectAll(select: !_allSelected);
+      i.selectAll(_totalSelected, onMaxInput, select: !_allSelected);
       totalUtxos.value.updateBalance();
     }
     _updateAmount();

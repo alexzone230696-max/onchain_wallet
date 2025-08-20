@@ -2,7 +2,6 @@ import 'dart:js_interop';
 import 'package:blockchain_utils/utils/string/string.dart';
 import 'package:on_chain_bridge/web/web.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/app/utils/list/extension.dart';
 import 'package:on_chain_wallet/wallet/web3/utils/web3_validator_utils.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
 import '../../models/models/exception.dart';
@@ -227,7 +226,7 @@ abstract class Web3JSStateHandler<
   @override
   Future<JSWalletNetworkEvent> initChain(Web3APPData? authenticated) async {
     return await lock.synchronized(() async {
-      final currentState = this._state;
+      final currentState = _state;
       final state = createState(authenticated);
       final event = _createStateEvent(currentState, state);
       _state = state;

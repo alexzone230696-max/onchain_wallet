@@ -1,29 +1,41 @@
 part of 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 
+enum ChainsHandlerInstance { main, background }
+
+const instances = ChainsHandlerInstance.background;
+
 class ChainsHandler {
   MainWallet _wallet;
   MainWallet get wallet => _wallet;
-
   StreamSubscription<bool>? _networkStream;
   StreamSubscription<dynamic>? _ping;
+  final Map<NetworkType, NetworkController> _networks;
+  Chain _chain;
+  String get id => _wallet.key;
+
+  WalletNetwork get network => _chain.network;
+  Chain get chain => _chain;
 
   ChainsHandler._(
-      {required Map<int, Chain> networks,
+      {required List<NetworkController> networks,
       required int network,
-      required MainWallet wallet})
-      : _network = network,
-        _networks = networks,
-        _wallet = wallet;
+      required MainWallet wallet,
+      required Chain chain})
+      : _networks = {for (final i in networks) i.type: i},
+        _wallet = wallet,
+        _chain = chain;
 
   static Future<ChainsHandler> setup(
-      {required List<Chain> chains, required MainWallet wallet}) async {
+      {required List<Chain> chains,
+      required MainWallet wallet,
+      bool isBackup = false}) async {
     for (final i in chains) {
       if (i.id != wallet.key) {
         throw WalletExceptionConst.invalidData(
             messsage: "Invalid chain data. different wallet ids detected.");
       }
     }
-    final toMap = {for (final i in chains) i.network.value: i};
+    final Map<int, Chain> toMap = {for (final i in chains) i.network.value: i};
     List<Chain> newChains = [];
     for (final i in ChainConst.defaultCoins.keys) {
       if (toMap.containsKey(i)) {
@@ -34,26 +46,82 @@ class ChainsHandler {
       newChains.add(chain);
       toMap.addAll({chain.network.value: chain});
     }
-    await Future.wait(newChains.map((e) => e.save()));
+    if (isBackup) {
+      await Future.wait(toMap.values.map((e) => e._saveAccount()));
+    } else {
+      await Future.wait(newChains.map((e) => e._saveAccount()));
+    }
+
     int currentNetwork = wallet.network;
     if (!toMap.containsKey(wallet.network)) {
       currentNetwork = 0;
     }
+    final List<Chain> n = toMap.values.toList();
     return ChainsHandler._(
-        networks: toMap, network: currentNetwork, wallet: wallet);
+        networks: List.generate(NetworkType.values.length, (i) {
+          final networkType = NetworkType.values[i];
+          final chains = n.where((e) => e.network.type == networkType).toList();
+          switch (networkType) {
+            case NetworkType.aptos:
+              return AptosNetworkController(
+                  networks: chains.cast(), id: wallet.key);
+            case NetworkType.bitcoinAndForked:
+              return BitcoinNetworkController(
+                  networks: chains.cast(), id: wallet.key);
+            case NetworkType.bitcoinCash:
+              return BitcoinCashNetworkController(
+                  networks: chains.cast(), id: wallet.key);
+            case NetworkType.ethereum:
+              return EthereumNetworkController(
+                  networks: chains.cast(), id: wallet.key);
+            case NetworkType.xrpl:
+              return XRPNetworkController(
+                  networks: chains.cast(), id: wallet.key);
+            case NetworkType.cardano:
+              return ADANetworkController(
+                  networks: chains.cast(), id: wallet.key);
+            case NetworkType.cosmos:
+              return CosmosNetworkController(
+                  networks: chains.cast(), id: wallet.key);
+            case NetworkType.monero:
+              return MoneroNetworkController(
+                  networks: chains.cast(), id: wallet.key);
+            case NetworkType.sui:
+              return SuiNetworkController(
+                  networks: chains.cast(), id: wallet.key);
+            case NetworkType.solana:
+              return SolanaNetworkController(
+                  networks: chains.cast(), id: wallet.key);
+            case NetworkType.stellar:
+              return StellarNetworkController(
+                  networks: chains.cast(), id: wallet.key);
+            case NetworkType.substrate:
+              return SubstrateNetworkController(
+                  networks: chains.cast(), id: wallet.key);
+            case NetworkType.tron:
+              return TronNetworkController(
+                  networks: chains.cast(), id: wallet.key);
+            case NetworkType.ton:
+              return TonNetworkController(
+                  networks: chains.cast(), id: wallet.key);
+            default:
+              throw UnimplementedError("Unknown network type $networkType");
+          }
+        }),
+        network: currentNetwork,
+        wallet: wallet,
+        chain: toMap[currentNetwork]!);
   }
 
-  final Map<int, Chain> _networks;
-  String get id => _wallet.key;
-  int _network;
-
-  bool get hasChain => _networks.isNotEmpty;
-  WalletNetwork get network => _networks[_network]!.network;
-  Chain get chain => _networks[_network]!;
-  List<ChainAccount> get accounts =>
-      _networks.values.map((e) => e.addresses).expand((e) => e).toList();
-  List<WalletNetwork> networks() =>
-      _networks.values.map((e) => e.network).toList();
+  static Future<ChainsHandler> fromBackup(
+      {required WalletRestoreV2 backup, required MainWallet wallet}) async {
+    final handler = await setup(
+        chains: backup.networks.map((e) => e.chain).toList(),
+        wallet: wallet,
+        isBackup: true);
+    await handler.restoreBackup(backup);
+    return handler;
+  }
 
   void updateWalletData(MainWallet wallet) {
     if (_wallet.key != wallet.key) {
@@ -63,51 +131,50 @@ class ChainsHandler {
   }
 
   List<String> coinIds() {
-    final ids = _networks.values
-        .map((e) => e.tokens().map((e) => e.token.market?.apiId))
-        .expand((e) => e)
-        .where((element) => element != null);
-    final networkIds = _networks.values
-        .map((e) => e.network.token.market?.apiId)
-        .where((element) => element != null);
-    return List<String>.from([...ids, ...networkIds]);
+    return _networks.values.expand((e) => e.coinIds()).toList();
   }
 
-  List<Chain> chains({NetworkType? type}) {
-    if (type == null) return _networks.values.toList();
-    if (type.isBitcoin) {
-      return _networks.values.where((e) => e.network.type.isBitcoin).toList();
-    }
-    return _networks.values.where((e) => e.network.type == type).toList();
+  List<Chain> chains() {
+    return _networks.values.expand((e) => e.getChains()).toList();
   }
 
-  Future<bool> switchNetwork(int networkId) async {
-    if (_network == networkId || !_networks.containsKey(networkId)) {
+  NetworkController controller(NetworkType type) {
+    return _networks[type]!;
+  }
+
+  Future<bool> switchNetwork(Chain network) async {
+    if (_chain == network ||
+        !_networks[network.network.type]!
+            ._networks
+            .containsKey(network.network.value)) {
       return false;
     }
     final currentChain = chain;
-    _network = networkId;
+    _chain = network;
     await currentChain.dispose();
     await chain.init();
     final emit = ChainWalletChainChangeEvent(prv: currentChain, current: chain);
     await _emitChainChanged(emit);
-    updateWalletData(_wallet.updateNetwork(networkId));
+    updateWalletData(_wallet.updateNetwork(network.network.value));
     return true;
   }
 
   Future<Chain> updateImportNetwork(WalletNetwork network) async {
+    final controller = _networks[network.type];
+    if (controller == null) {
+      throw WalletExceptionConst.dataVerificationFailed;
+    }
     int networkId = network.value;
-    Chain? existChain = _networks[networkId];
+    Chain? existChain = controller._networks[networkId];
     if (!network.isWalletNetwork) {
       if (!network.supportImportNetwork) {
         throw const WalletException("invalid_network_information");
       }
-      if (_networks.values.any((e) =>
-          e.network.type == network.type &&
-          e.network.identifier == network.identifier)) {
+      final chains = controller.getChains();
+      if (chains.any((e) => e.network.identifier == network.identifier)) {
         throw const WalletException("network_chain_id_already_exist");
       }
-      final ids = _networks.values.map((e) => e.network.value).toList();
+      final ids = _networks.values.expand((e) => e._networks.keys).toList();
       networkId = StrUtils.findFirstMissingNumber(ids,
           start: ChainConst.importedNetworkStartId);
       if (networkId > ChainConst.maxNetworkId) {
@@ -118,21 +185,22 @@ class ChainsHandler {
         throw const WalletException("invalid_network_information");
       }
     } else {
-      if (existChain == null ||
-          _networks[networkId]!.network.type != network.type) {
+      if (existChain == null) {
         throw const WalletException("invalid_network_information");
       }
     }
     if (existChain != null) {
+      existChain._disposeInternal();
       existChain = existChain.copyWith(network: network);
       existChain = Chain.deserialize(bytes: existChain.toCbor().encode());
     } else {
       existChain = Chain.setup(network: network, id: id);
     }
-    await existChain.save();
-    _networks[networkId] = existChain;
-    if (existChain.network.value == _network) {
-      await existChain.init();
+    await existChain._saveAccount();
+    controller._updateNetwork(existChain);
+    if (existChain.network.value == chain.network.value) {
+      _chain = existChain;
+      await _chain.init();
     }
     return existChain;
   }
@@ -146,85 +214,108 @@ class ChainsHandler {
     if (!removeChain.network.isWalletNetwork || hasDefaultNetwork != null) {
       throw WalletExceptionConst.dataVerificationFailed;
     }
-    if (_network == removeChain.network.value) {
-      final changeNetwork = _networks.keys.firstWhere((e) =>
-          e != removeChain.network.value &&
-          _networks[e]!.network.type == removeChain.network.type);
+    final controller = _networks[removeChain.network.type];
+    if (controller == null) {
+      throw WalletExceptionConst.dataVerificationFailed;
+    }
+    if (chain == removeChain) {
+      final changeNetwork =
+          controller._networks.values.firstWhere((e) => e != removeChain);
       await switchNetwork(changeNetwork);
     }
-    _networks.remove(removeChain.network.value);
+    controller._removeNetwork(removeChain);
+    await removeChain._removeAccount();
+    removeChain._disposeInternal();
   }
 
-  List<Web3ChainNetworkData> getWeb3NetworkData() {
-    return _networks.values
-        .where((e) => e.network.supportWeb3)
-        .map((e) {
-          final serviceIdentifier = e.serviceIdentifier;
-          return switch (e.network.type) {
-            NetworkType.ethereum => Web3ChainNetworkData<WalletEthereumNetwork>(
-                network: e.network.toNetwork(),
-                serviceIdentifier: serviceIdentifier),
-            NetworkType.tron => Web3ChainNetworkData<WalletTronNetwork>(
-                network: e.network.toNetwork(),
-                serviceIdentifier: serviceIdentifier),
-            NetworkType.solana => Web3ChainNetworkData<WalletSolanaNetwork>(
-                network: e.network.toNetwork(),
-                serviceIdentifier: serviceIdentifier),
-            NetworkType.stellar => Web3ChainNetworkData<WalletStellarNetwork>(
-                network: e.network.toNetwork(),
-                serviceIdentifier: serviceIdentifier),
-            NetworkType.ton => Web3ChainNetworkData<WalletTonNetwork>(
-                network: e.network.toNetwork(),
-                serviceIdentifier: serviceIdentifier),
-            NetworkType.substrate =>
-              Web3ChainNetworkData<WalletSubstrateNetwork>(
-                  network: e.network.toNetwork(),
-                  serviceIdentifier: serviceIdentifier),
-            NetworkType.aptos => Web3ChainNetworkData<WalletAptosNetwork>(
-                network: e.network.toNetwork(),
-                serviceIdentifier: serviceIdentifier),
-            NetworkType.sui => Web3ChainNetworkData<WalletSuiNetwork>(
-                network: e.network.toNetwork(),
-                serviceIdentifier: serviceIdentifier),
-            NetworkType.cosmos => Web3ChainNetworkData<WalletCosmosNetwork>(
-                network: e.network.toNetwork(),
-                serviceIdentifier: serviceIdentifier),
-            NetworkType.xrpl => Web3ChainNetworkData<WalletXRPNetwork>(
-                network: e.network.toNetwork(),
-                serviceIdentifier: serviceIdentifier),
-            NetworkType.monero => Web3ChainNetworkData<WalletMoneroNetwork>(
-                network: e.network.toNetwork(),
-                serviceIdentifier: serviceIdentifier),
-            NetworkType.bitcoinCash ||
-            NetworkType.bitcoinAndForked =>
-              Web3ChainNetworkData<WalletBitcoinNetwork>(
-                  network: e.network.toNetwork(),
-                  serviceIdentifier: serviceIdentifier),
-            _ => throw UnimplementedError()
-          };
-        })
-        .toList()
-        .cast();
+  Future<List<Web3InternalChain>> getWeb3InternalChains(
+      Web3ApplicationAuthentication authenticated,
+      {List<NetworkType>? networks}) {
+    networks ??= NetworkType.values;
+    return Future.wait(networks.map(
+        (e) => _networks[e]!.getWeb3InternalChainAuthenticated(authenticated)));
+  }
+
+  Future<void> disconnectWeb3Chain(Web3ApplicationAuthentication app,
+      {List<NetworkType>? networks}) async {
+    networks ??= NetworkType.values;
+    await Future.wait(
+        networks.map((e) => _networks[e]!.disconnectWeb3Chain(app)));
+  }
+
+  Future<Web3APPData> createAuth(Web3ApplicationAuthentication app,
+      {List<NetworkType>? networks}) async {
+    networks ??= NetworkType.values;
+
+    return Web3APPData(
+        token: app.token,
+        networks: networks,
+        applicationId: app.applicationId,
+        chains: app.active
+            ? await Future.wait(networks
+                .map((e) => _networks[e]!.createWeb3ChainAuthenticated(app)))
+            : []);
+  }
+
+  Future<WalletBackup> createBackup(
+      {required GenerateWalletBackupOptions options,
+      required String masterKey,
+      List<Web3ApplicationAuthentication> web3Applications = const []}) async {
+    final networkBackups = await Future.wait(_networks.values.map((e) =>
+        e.getNetworksBackup(
+            options.chains.where((c) => c.network.type == e.type).toList())));
+    final chainBackups = await Future.wait(_networks.values
+        .map((e) => e.getChainBackup(web3Applications: web3Applications)));
+    return WalletBackup(
+        key: masterKey,
+        networks: networkBackups.expand((e) => e).toList(),
+        chains: chainBackups.expand((e) => e).toList());
+  }
+
+  Future<void> restoreBackup(WalletRestoreV2 backup) async {
+    await Future.wait(_networks.values.map((e) => e.restoreNetworksBackup(backup
+        .networks
+        .where((c) => c.chain.network.type == e.type)
+        .toList())));
+    await Future.wait(_networks.values.map((e) => e.restoreChainBackup(
+        backup.chains.where((c) => c.chainID == e.type.id).toList())));
+  }
+
+  Future<void> updateWeb3InternalChains(
+      {required Web3ApplicationAuthentication app,
+      required List<Web3InternalChain> chains}) async {
+    if (app.active) {
+      await Future.wait(chains.map((e) =>
+          _networks[e.type]!.updateWeb3InternalChain(app: app, web3Chain: e)));
+    } else {
+      await Future.wait(
+          _networks.values.map((e) => e.disconnectWeb3Chain(app)));
+    }
   }
 
   Future<void> _emitChainChanged(ChainWalletChainChangeEvent event) async {
     for (final i in _networks.entries) {
-      await i.value._onWalletEvent(event);
+      for (final n in i.value._networks.values) {
+        await n._onWalletEvent(event);
+      }
     }
   }
 
   void _onConnectionStatus(bool isOnline) {
     final event = ChainWalletConnectionEvent(isOnline);
     for (final i in _networks.entries) {
-      i.value._onWalletEvent(event);
+      for (final n in i.value._networks.values) {
+        n._onWalletEvent(event);
+      }
     }
   }
 
   Future<void> _onPing(var _) async {
     final event = ChainWalletPingEvent();
-    final aciveNetworks = _networks.values.where((e) => e.haveAddress);
-    for (final i in aciveNetworks) {
-      await i._onWalletEvent(event);
+    for (final i in _networks.entries) {
+      for (final n in i.value._networks.values) {
+        n._onWalletEvent(event);
+      }
     }
   }
 
@@ -244,7 +335,9 @@ class ChainsHandler {
     _networkStream = null;
     _ping = null;
     for (final i in _networks.values) {
-      i._disposeInternal();
+      for (final n in i._networks.values) {
+        n._disposeInternal();
+      }
     }
   }
 }

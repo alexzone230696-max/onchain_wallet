@@ -49,11 +49,11 @@ class BitcoinWalletTransaction extends ChainTransaction {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           txId,
           time,
           totalOutput?.toCbor(),
-          CborListValue.fixedLength(outputs.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(outputs.map((e) => e.toCbor()).toList()),
           web3Client?.toCbor(),
           type.value,
           status.value,
@@ -123,7 +123,7 @@ class BitcoinWalletTransactionScriptOutput
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([name, content, amount?.amount.balance]),
+        CborSerializable.fromDynamic([name, content, amount?.amount.balance]),
         type.tag);
   }
 }
@@ -149,7 +149,7 @@ class BitcoinWalletTransactionTransferOutput
         tags: WalletTransactionOutputType.transfer.tag);
     return BitcoinWalletTransactionTransferOutput(
         amount: WalletTransactionIntegerAmount.deserialize(network,
-            object: values.getCborTag(0)),
+            object: values.elementAsCborTag(0)),
         to: BitcoinNetworkAddress.parse(
             address: values.elementAs(1),
             network: network.coinParam.transacationNetwork));
@@ -158,6 +158,6 @@ class BitcoinWalletTransactionTransferOutput
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([amount.toCbor(), to.address]), type.tag);
+        CborSerializable.fromDynamic([amount.toCbor(), to.address]), type.tag);
   }
 }

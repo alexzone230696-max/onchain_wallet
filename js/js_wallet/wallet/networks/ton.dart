@@ -85,58 +85,6 @@ class TonWeb3JSStateHandler extends Web3JSStateHandler<
             WalletMessageResponse, Web3JsClientRequest, JSWalletNetworkEvent> {
   TonWeb3JSStateHandler(
       {required super.sendMessageToClient, required super.sendInternalMessage});
-  // @override
-  // Web3TonSignMessage toSignMessageRequest(
-  //     {required Web3JsClientRequest params,
-  //     required TonWeb3JSStateAccount state,
-  //     required Web3TonRequestMethods method,
-  //     Web3ChainDefaultIdnetifier? network}) {
-  //   return Web3ValidatorUtils.parseParams2(() {
-  //     final param = params.elementAsJsObject<JSTonSignMessageParams>(0,
-  //         method: method, keys: JSTonSignMessageParams.properties);
-  //     Web3TonChainAccount account =
-  //         state.getJsAddressChainAccountOrThrow(param.account);
-  //     List<int> message =
-  //         params.objectAsBytes(param.message, "message", encoding: [
-  //       StringEncoding.hex,
-  //       StringEncoding.base64,
-  //       StringEncoding.utf8,
-  //     ]);
-  //     return Web3TonSignMessage(
-  //         accessAccount: account,
-  //         challeng: BytesUtils.toHexString(message),
-  //         content: StringUtils.tryDecode(message));
-  //   });
-  // }
-
-  // @override
-  // Web3TonSendTransaction toSignTransactionRequest(
-  //     {required Web3JsClientRequest params,
-  //     required TonWeb3JSStateAccount state,
-  //     required Web3TonRequestMethods method,
-  //     Web3ChainDefaultIdnetifier? network}) {
-  //   return Web3ValidatorUtils.parseParams2(() {
-  //     final txParams =
-  //         params.elementAsJsObject<JSTonSendOrSignTransactionParams>(0,
-  //             keys: JSTonSendOrSignTransactionParams.properties);
-  //     const List<String> keys = ["messages", "validUntil"];
-  //     Web3TonChainAccount account =
-  //         state.getJsAddressChainAccountOrThrow(txParams.account);
-  //     Map<String, dynamic> data = params.objectAsMap(txParams, keys: keys);
-  //     final int validUntil = Web3ValidatorUtils.parseInt(
-  //         key: "validUntil", method: method, json: data);
-  //     final List<Map<String, dynamic>> messagesJson = Web3ValidatorUtils
-  //         .parseList<List<Map<String, dynamic>>, Map<String, dynamic>>(
-  //             key: "messages", method: method, json: data);
-  //     List<Web3TonTransactionMessage> messages =
-  //         messagesJson.map(Web3TonTransactionMessage.fromJson).toList();
-  //     return Web3TonSendTransaction(
-  //         account: account,
-  //         validUntil: validUntil,
-  //         method: method,
-  //         messages: messages);
-  //   });
-  // }
 
   @override
   Future<Web3MessageCore> request(Web3JsClientRequest params,

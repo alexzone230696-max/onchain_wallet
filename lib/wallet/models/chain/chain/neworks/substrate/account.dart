@@ -9,8 +9,7 @@ final class SubstrateChain extends Chain<
     ISubstrateAddress,
     WalletSubstrateNetwork,
     SubstrateClient,
-    DefaultChainStorageKey,
-    DefaultChainConfig,
+    DefaultNetworkConfig,
     SubstrateWalletTransaction,
     SubstrateContact,
     SubstrateNewAddressParams> {
@@ -18,23 +17,23 @@ final class SubstrateChain extends Chain<
       {required super.network,
       required super.addressIndex,
       required super.id,
-      required super.config,
+      DefaultNetworkConfig? config,
       required super.client,
       required super.addresses})
-      : super._();
+      : super._(config: config ?? DefaultNetworkConfig.defaultConfig);
   @override
   SubstrateChain copyWith(
       {WalletSubstrateNetwork? network,
       InternalStreamValue<IntegerBalance>? totalBalance,
-      List<ISubstrateAddress>? addresses,
+      List<ChainAccount>? addresses,
       int? addressIndex,
       SubstrateClient? client,
       String? id,
-      DefaultChainConfig? config}) {
+      DefaultNetworkConfig? config}) {
     return SubstrateChain._(
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
-        addresses: addresses ?? _addresses,
+        addresses: addresses?.cast<ISubstrateAddress>() ?? _addresses,
         client: client ?? _client,
         id: id ?? this.id,
         config: config ?? this.config);
@@ -50,7 +49,6 @@ final class SubstrateChain extends Chain<
         id: id,
         addressIndex: 0,
         client: client,
-        config: DefaultChainConfig(),
         addresses: []);
   }
 
@@ -62,7 +60,7 @@ final class SubstrateChain extends Chain<
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
     }
-    final String id = cbor.elementAt<String>(2);
+    final String id = cbor.elementAs<String>(2);
     final List<ISubstrateAddress> accounts = cbor
         .elementAsListOf<CborTagValue>(3)
         .map((e) => ISubstrateAddress.deserialize(network, obj: e))
@@ -73,19 +71,15 @@ final class SubstrateChain extends Chain<
         addresses: accounts,
         addressIndex: addressIndex,
         client: client,
-        id: id,
-        config: DefaultChainConfig());
+        id: id);
   }
 
   @override
-  Future<void> updateAddressBalance(ISubstrateAddress address,
-      {bool tokens = true, bool saveAccount = true}) async {
-    _isAccountAddress(address);
-    await initAddress(address);
+  Future<void> _updateAddressBalanceInternal(ISubstrateAddress address,
+      {bool tokens = true}) async {
     await onClient(onConnect: (client) async {
       final balance = await client.getAccountBalance(address.networkAddress);
-      _updateAddressBalanceInternal(
-          address: address, balance: balance, saveAccount: saveAccount);
+      address.address._updateAddressBalance(balance);
     });
   }
 

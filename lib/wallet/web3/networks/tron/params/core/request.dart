@@ -10,12 +10,7 @@ import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/core.dart';
 
 abstract class Web3TronRequestParam<RESPONSE> extends Web3RequestParams<
-    RESPONSE,
-    TronAddress,
-    TronChain,
-    ITronAddress,
-    Web3TronChainAccount,
-    Web3TronChain> {
+    RESPONSE, TronAddress, TronChain, ITronAddress, Web3TronChainAccount> {
   @override
   abstract final Web3TronRequestMethods method;
   Web3TronRequestParam();
@@ -30,7 +25,7 @@ abstract class Web3TronRequestParam<RESPONSE> extends Web3RequestParams<
         object: object,
         hex: hex,
         tags: Web3MessageTypes.walletRequest.tag);
-    final method = Web3NetworkRequestMethods.fromTag(values.elementAt(0));
+    final method = Web3NetworkRequestMethods.fromTag(values.elementAs(0));
     final Web3TronRequestParam param;
     switch (method) {
       case Web3TronRequestMethods.signTransaction:
@@ -53,7 +48,7 @@ abstract class Web3TronRequestParam<RESPONSE> extends Web3RequestParams<
 
 class Web3TronRequest<RESPONSE, PARAMS extends Web3TronRequestParam<RESPONSE>>
     extends Web3NetworkRequest<RESPONSE, TronAddress, TronChain,
-        Web3TronChainAccount, ITronAddress, Web3TronChain, PARAMS> {
+        Web3TronChainAccount, ITronAddress, PARAMS> {
   Web3TronRequest(
       {required super.params,
       required super.info,

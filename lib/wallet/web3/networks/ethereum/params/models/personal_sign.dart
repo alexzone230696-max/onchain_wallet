@@ -69,7 +69,7 @@ class Web3EthreumPersonalSign extends Web3EthereumRequestParam<String> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
           accessAccount.toCbor(),
           CborBytesValue(BytesUtils.fromHexString(message)),
@@ -83,12 +83,16 @@ class Web3EthreumPersonalSign extends Web3EthereumRequestParam<String> {
   }
 
   @override
-  Web3EthereumRequest<String, Web3EthreumPersonalSign> toRequest(
+  Future<Web3EthereumRequest<String, Web3EthreumPersonalSign>> toRequest(
       {required Web3RequestInformation request,
       required Web3RequestAuthentication authenticated,
-      required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+      required WEB3REQUESTNETWORKCONTROLLER<IEthAddress, EthereumChain,
+              Web3EthereumChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3EthereumRequest<String, Web3EthreumPersonalSign>(
       params: this,
       authenticated: authenticated,

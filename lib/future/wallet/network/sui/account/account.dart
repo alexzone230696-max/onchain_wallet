@@ -25,7 +25,8 @@ class SuiAccountPageView extends StatelessWidget {
               token: p0);
         },
       ),
-      AccountTransactionActivityView(chainAccount)
+      AccountTransactionActivityView<ISuiAddress, SuiWalletTransaction>(
+          account: chainAccount, address: chainAccount.address)
     ]);
   }
 }

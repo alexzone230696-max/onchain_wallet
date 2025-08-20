@@ -49,7 +49,7 @@ class Web3AptosSendTransaction extends Web3AptosRequestParam<List<int>> {
         object: object,
         hex: hex,
         tags: Web3MessageTypes.walletRequest.tag);
-    final method = Web3NetworkRequestMethods.fromTag(values.elementAt(0));
+    final method = Web3NetworkRequestMethods.fromTag(values.elementAs(0));
     return Web3AptosSendTransaction(
         account: Web3AptosChainAccount.deserialize(
             object: values.elementAs<CborTagValue>(1)),
@@ -74,14 +74,14 @@ class Web3AptosSendTransaction extends Web3AptosRequestParam<List<int>> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
           accessAccount.toCbor(),
           CborBytesValue(transaction.toBcs()),
           feePayer?.address,
           secondarySignerAddresses == null
               ? null
-              : CborListValue.fixedLength(secondarySignerAddresses!
+              : CborSerializable.fromDynamic(secondarySignerAddresses!
                   .map((e) => CborStringValue(e.address))
                   .toList())
         ]),
@@ -89,12 +89,16 @@ class Web3AptosSendTransaction extends Web3AptosRequestParam<List<int>> {
   }
 
   @override
-  Web3AptosRequest<List<int>, Web3AptosSendTransaction> toRequest(
+  Future<Web3AptosRequest<List<int>, Web3AptosSendTransaction>> toRequest(
       {required Web3RequestInformation request,
       required Web3RequestAuthentication authenticated,
-      required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+      required WEB3REQUESTNETWORKCONTROLLER<IAptosAddress, AptosChain,
+              Web3AptosChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3AptosRequest<List<int>, Web3AptosSendTransaction>(
       params: this,
       authenticated: authenticated,

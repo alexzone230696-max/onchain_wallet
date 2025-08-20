@@ -19,10 +19,12 @@ class Web3BitcoinExceptionConstant {
       Web3RequestExceptionConst.invalidParameters(
           "The PSBT request must include either an 'account' for single-address spending or 'accounts' for multiple-address spending, along with a valid base64-encoded PSBT string containing valid inputs and outputs.");
   static Web3RequestException get noRelatedInput =>
-      Web3RequestExceptionConst.message("No related inputs found for signing.");
+      Web3RequestExceptionConst.message("No related inputs found for signing.",
+          errorType: Web3ErrorCode.refused);
   static Web3RequestException unsuportedSigningMessageAccount(String address) =>
       Web3RequestExceptionConst.message(
-          "The $address address does not support message signing. Only non-multisig accounts are allowed to sign messages.");
+          "The $address address does not support message signing. Only non-multisig accounts are allowed to sign messages.",
+          errorType: Web3ErrorCode.refused);
   static Web3RequestException parsingOutputScriptFailed(String data) =>
       Web3RequestExceptionConst.invalidParameters(
           "Failed to parse output script. Please ensure it is a valid Bitcoin script serialized as hex.");

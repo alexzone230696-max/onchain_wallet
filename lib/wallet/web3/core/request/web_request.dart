@@ -149,25 +149,25 @@ class Web3RequestApplicationInformation extends Web3RequestInformation {
 
   @override
   List get variabels => [applicationId, requestId];
-
-  // @override
-  // String? get origin => info.url;
 }
 
-class Web3RequestWalletConnectpplicationInformation
+class Web3RequestWalletConnectApplicationInformation
     extends Web3RequestInformation {
   final Web3ClientInfo info;
   final Web3MessageCore request;
   @override
   final String requestId;
-  Web3RequestWalletConnectpplicationInformation._(
-      {required this.info, required this.request, required this.requestId});
-  factory Web3RequestWalletConnectpplicationInformation(
+  Web3RequestWalletConnectApplicationInformation._(
+      {required this.info,
+      required this.request,
+      required this.requestId,
+      required super.client});
+  factory Web3RequestWalletConnectApplicationInformation(
       {required Web3ClientInfo info,
       required Web3MessageCore request,
       required String requestId}) {
-    return Web3RequestWalletConnectpplicationInformation._(
-        info: info, request: request, requestId: requestId);
+    return Web3RequestWalletConnectApplicationInformation._(
+        info: info, request: request, requestId: requestId, client: info);
   }
 
   String get applicationId => info.identifier;
@@ -183,9 +183,11 @@ abstract class Web3Request<RESPONSE, PARAMS extends Web3WalletRequestParams,
   final PARAMS params;
   const Web3Request(
       {required this.authenticated, required this.info, required this.params});
-
-  void updateActivity() {
-    authenticated.addActivity(this);
+  Web3AccountAcitvity createActivity() {
+    return Web3AccountAcitvity(
+        method: params.method.name,
+        path: info.client?.url,
+        requestId: info.requestId);
   }
 
   void completeResponse(RESPONSE response) {
@@ -212,16 +214,18 @@ abstract class Web3Request<RESPONSE, PARAMS extends Web3WalletRequestParams,
   }
 }
 
+enum Web3NetworkRequestMode {
+  silent,
+}
+
 abstract class Web3NetworkRequest<
         RESPONSE,
         NETWORKADDRESS,
         CHAIN extends Chain,
         CHANACCOUNT extends Web3ChainAccount,
         WALLETACCOUNT extends NETWORKCHAINACCOUNT,
-        WEB3CHAIN extends Web3Chain<NETWORKADDRESS, CHAIN, WALLETACCOUNT,
-            CHANACCOUNT, WalletNetwork>,
         PARAMS extends Web3RequestParams<RESPONSE, NETWORKADDRESS, CHAIN,
-            WALLETACCOUNT, CHANACCOUNT, WEB3CHAIN>>
+            WALLETACCOUNT, CHANACCOUNT>>
     extends Web3Request<RESPONSE, PARAMS, Web3RequestAuthentication> {
   Web3NetworkRequest(
       {required super.params,
@@ -233,4 +237,15 @@ abstract class Web3NetworkRequest<
 
   final CHAIN chain;
   final List<WALLETACCOUNT> accounts;
+
+  @override
+  Web3AccountAcitvity createActivity() {
+    final address = params.requiredAccounts.firstOrNull;
+    return Web3AccountAcitvity(
+        method: params.method.name,
+        path: info.client?.url,
+        address: address?.addressStr,
+        id: chain.network.value,
+        requestId: info.requestId);
+  }
 }

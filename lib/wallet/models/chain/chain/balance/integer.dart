@@ -92,7 +92,8 @@ class IntegerBalance implements BalanceCore<BigInt, Token> {
     _largerThanZero = _balance > BigInt.zero;
   }
 
-  bool _internalUpdateBalance([BigInt? updateBalance]) {
+  @override
+  bool _internalUpdateBalance(BigInt? updateBalance) {
     if (updateBalance == null) return false;
     if (updateBalance == _balance) return false;
     _updateBalance(updateBalance);

@@ -413,11 +413,13 @@ class _MoneroMnemonicChooseOptionPage extends StatelessWidget {
           WidgetConstant.height8,
           ...List.generate(
             _MnemonicOption.values.length,
-            (index) => RadioListTile(
-              value: _MnemonicOption.values[index],
+            (index) => RadioGroup(
               groupValue: state.option,
-              title: Text(_MnemonicOption.values[index].name.tr),
               onChanged: state.onChangeOption,
+              child: RadioListTile(
+                value: _MnemonicOption.values[index],
+                title: Text(_MnemonicOption.values[index].name.tr),
+              ),
             ),
           ),
           Row(

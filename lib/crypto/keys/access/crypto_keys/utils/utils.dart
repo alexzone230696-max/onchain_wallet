@@ -341,23 +341,39 @@ class CryptoKeyUtils {
     return "$id$prefix";
   }
 
-  static String toPublicKeyHex(List<int> keyBytes, CryptoCoins coin) {
-    final publicKey = IPublicKey.fromBytes(keyBytes, coin.conf.type);
-    List<int> bytes = publicKey.compressed;
-    switch (coin.conf.type) {
-      case EllipticCurveTypes.ed25519:
-        bytes = bytes.sublist(1);
-        break;
-      default:
-    }
+  static String toPublicKeyHex(List<int> keyBytes, EllipticCurveTypes type) {
+    List<int> bytes = toPublicBytes(keyBytes, type);
     return BytesUtils.toHexString(bytes, prefix: "0x");
   }
 
-  static List<int> toPublicBytes(IPublicKey publicKey) {
-    List<int> bytes = publicKey.compressed;
-    switch (publicKey.curve) {
+  static String normalizePublicKeyHex(
+      String keyBytes, EllipticCurveTypes type) {
+    final key = StringUtils.normalizeHex(keyBytes);
+    switch (type) {
       case EllipticCurveTypes.ed25519:
-        bytes = bytes.sublist(1);
+      case EllipticCurveTypes.ed25519Kholaw:
+        assert(key.length >= Ed25519KeysConst.pubKeyByteLen * 2,
+            "invalid public key");
+        if (key.length <= Ed25519KeysConst.pubKeyByteLen * 2) {
+          return key;
+        }
+        return key.substring(key.length - Ed25519KeysConst.pubKeyByteLen * 2);
+      default:
+        return key;
+    }
+  }
+
+  static List<int> toPublicBytes(List<int> publicKey, EllipticCurveTypes type) {
+    final key = IPublicKey.fromBytes(publicKey, type);
+    List<int> bytes = key.compressed;
+    switch (key.curve) {
+      case EllipticCurveTypes.ed25519:
+      case EllipticCurveTypes.ed25519Kholaw:
+        if (bytes.length ==
+            Ed25519KeysConst.pubKeyByteLen +
+                Ed25519KeysConst.pubKeyPrefix.length) {
+          bytes = bytes.sublist(1);
+        }
         break;
       default:
     }

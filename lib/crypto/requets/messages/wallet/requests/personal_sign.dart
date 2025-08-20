@@ -39,16 +39,16 @@ final class WalletRequestSignMessage
         hex: hex,
         tags: WalletRequestMethod.signMessage.tag);
     return WalletRequestSignMessage(
-        message: values.elementAt(0),
-        index: Bip32AddressIndex.deserialize(obj: values.getCborTag(1)),
-        payloadLength: values.elementAt(2),
-        network: NetworkType.fromTag(values.elementAt(3)));
+        message: values.elementAs(0),
+        index: Bip32AddressIndex.deserialize(obj: values.elementAsCborTag(1)),
+        payloadLength: values.elementAs(2),
+        network: NetworkType.fromTag(values.elementAs(3)));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(message),
           index.toCbor(),
           payloadLength,

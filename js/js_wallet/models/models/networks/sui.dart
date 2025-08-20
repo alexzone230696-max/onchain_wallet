@@ -31,7 +31,7 @@ class SuiJSConstant {
   static const String signMessageRequestName = "sui_signMessage";
   static const String signPersonalMessageRequestName =
       "sui_signPersonalMessage";
-  static final JSWalletError invalidTransaction = JSWalletError(
+  static final JSError invalidTransaction = JSError(
       message:
           "Invalid Sui transaction. The transaction must include transactionBlock with the blockData property for v1, or transaction with the toJSON property for v2.");
 }

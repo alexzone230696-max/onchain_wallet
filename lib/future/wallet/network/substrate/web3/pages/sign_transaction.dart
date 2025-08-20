@@ -7,6 +7,7 @@ import 'package:on_chain_wallet/future/wallet/transaction/pages/fee.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/web3_request_page_builder.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/types/types.dart';
+import 'package:on_chain_wallet/future/widgets/widgets/json/json/widgets.dart';
 
 class Web3SubstrateSignTransactionStateView extends StatelessWidget {
   final WebSubstrateSignTransactionStateController controller;
@@ -147,12 +148,19 @@ class _UnknownMethodView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('content'.tr, style: context.onPrimaryTextTheme.titleMedium),
+              Text('transaction_content'.tr,
+                  style: context.onPrimaryTextTheme.titleMedium),
               WidgetConstant.height8,
               ContainerWithBorder(
                 backgroundColor: context.onPrimaryContainer,
-                child: LargeTextContainer(
-                    text: method.content, color: context.primaryContainer),
+                onRemove: () {
+                  context.openDialogPage(
+                    '',
+                    child: (context) => JsonView(
+                        text: method.content, title: 'transaction_content'.tr),
+                  );
+                },
+                child: Text("content".tr),
               ),
             ],
           ),

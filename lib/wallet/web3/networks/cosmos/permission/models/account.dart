@@ -18,6 +18,7 @@ class Web3CosmosChainAccount extends Web3ChainAccount<CosmosBaseAddress> {
       required super.defaultAddress,
       required this.id,
       required this.algo,
+      required super.identifier,
       required List<int> publicKey})
       : publicKey = publicKey.asImmutableBytes;
 
@@ -29,6 +30,7 @@ class Web3CosmosChainAccount extends Web3ChainAccount<CosmosBaseAddress> {
     int? id,
     CosmosKeysAlgs? algo,
     List<int>? publicKey,
+    String? identifier,
   }) {
     return Web3CosmosChainAccount(
         keyIndex: keyIndex ?? this.keyIndex,
@@ -36,7 +38,8 @@ class Web3CosmosChainAccount extends Web3ChainAccount<CosmosBaseAddress> {
         defaultAddress: defaultAddress ?? this.defaultAddress,
         id: id ?? this.id,
         algo: algo ?? this.algo,
-        publicKey: publicKey ?? this.publicKey);
+        publicKey: publicKey ?? this.publicKey,
+        identifier: identifier ?? this.identifier);
   }
 
   factory Web3CosmosChainAccount.fromChainAccount(
@@ -49,7 +52,8 @@ class Web3CosmosChainAccount extends Web3ChainAccount<CosmosBaseAddress> {
         id: id,
         defaultAddress: isDefault,
         publicKey: address.publicKey,
-        algo: address.algorithm);
+        algo: address.algorithm,
+        identifier: address.identifier);
   }
 
   factory Web3CosmosChainAccount.deserialize(
@@ -60,24 +64,27 @@ class Web3CosmosChainAccount extends Web3ChainAccount<CosmosBaseAddress> {
         hex: hex,
         tags: CborTagsConst.web3CosmosAccount);
     return Web3CosmosChainAccount(
-        keyIndex: AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
-        address: CosmosBaseAddress(values.elementAt(1)),
-        id: values.elementAt(2),
-        defaultAddress: values.elementAt(3),
-        publicKey: values.elementAs(4),
-        algo: CosmosKeysAlgs.fromName(values.elementAs(5)));
+        keyIndex: AddressDerivationIndex.deserialize(
+            obj: values.indexAs<CborTagValue>(0)),
+        address: CosmosBaseAddress(values.valueAs(1)),
+        id: values.valueAs(2),
+        defaultAddress: values.valueAs(3),
+        publicKey: values.valueAs(4),
+        algo: CosmosKeysAlgs.fromName(values.valueAs(5)),
+        identifier: values.valueAs(6));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           keyIndex.toCbor(),
           address.address,
           id,
           defaultAddress,
           CborBytesValue(publicKey),
-          algo.name
+          algo.name,
+          identifier
         ]),
         CborTagsConst.web3CosmosAccount);
   }
@@ -113,7 +120,7 @@ class Web3CosmoshainIdnetifier extends Web3ChainIdnetifier {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([chainId, id, wsIdentifier, caip2, hrp]),
+        CborSerializable.fromDynamic([chainId, id, wsIdentifier, caip2, hrp]),
         CborTagsConst.web3CosmosChainIdentifier);
   }
 }

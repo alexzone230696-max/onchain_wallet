@@ -54,11 +54,11 @@ class SubstrateWalletTransaction extends ChainTransaction {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           txId,
           time,
           totalOutput?.toCbor(),
-          CborListValue.fixedLength(outputs.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(outputs.map((e) => e.toCbor()).toList()),
           web3Client?.toCbor(),
           type.value,
           status.value,
@@ -118,7 +118,7 @@ class SubstrateWalletTransactionTransferOutput
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([amount.toCbor(), to.address]), type.tag);
+        CborSerializable.fromDynamic([amount.toCbor(), to.address]), type.tag);
   }
 
   @override
@@ -154,6 +154,7 @@ class SubstrateWalletTransactionOperationOutput
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([name, amount?.toCbor(), content]), type.tag);
+        CborSerializable.fromDynamic([name, amount?.toCbor(), content]),
+        type.tag);
   }
 }

@@ -68,14 +68,14 @@ class _NetworkAccountControllerViewState<CL extends NetworkClient?,
       progressKey.errorText(result.error!, backToIdle: false);
       return;
     }
-    this.address = updateAddress;
+    address = updateAddress;
     progressKey.backToIdle();
   }
 
   Future<void> _checkAccounts() async {
     try {
       progressKey.progressText("page_retrieval_requirment".tr);
-      this.account = null;
+      account = null;
       this.client = null;
       this.address = null;
 
@@ -103,7 +103,7 @@ class _NetworkAccountControllerViewState<CL extends NetworkClient?,
       if (widget.initAccount) {
         await accout.init();
       }
-      this.account = accout;
+      account = accout;
       this.client = client;
       this.address = address;
       progressKey.backToIdle();

@@ -29,7 +29,7 @@ final class WalletRequestDeriveAddress
         hex: hex,
         tags: WalletRequestMethod.deriveAddress.tag);
     final addrParams =
-        NewAccountParams.deserialize(object: values.getCborTag(0));
+        NewAccountParams.deserialize(object: values.elementAsCborTag(0));
 
     return WalletRequestDeriveAddress(addressParams: addrParams);
   }
@@ -37,7 +37,7 @@ final class WalletRequestDeriveAddress
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([addressParams.toCbor()]), method.tag);
+        CborSerializable.fromDynamic([addressParams.toCbor()]), method.tag);
   }
 
   @override

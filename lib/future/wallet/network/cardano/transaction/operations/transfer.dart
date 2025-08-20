@@ -265,10 +265,40 @@ class ADATransactionTransferOperation extends ADATransactionStateController {
     onStateUpdated();
   }
 
+  NativeScripts? buildNativeScripts({required List<ADAAddress> addresses}) {
+    Set<NativeScript> scripts = {};
+    for (final i in addresses) {
+      final address = account.addresses.firstWhere(
+          (e) => e.networkAddress == i || e.rewardAddress == i,
+          orElse: () => throw WalletExceptionConst.signerAccountNotFound);
+      bool isRewardOfBaseAddress = address.rewardAddress == i;
+      if (!address.multiSigAccount) continue;
+      final mAccount = address as ICardanoMultiSigAddress;
+      final BaseCardanoMultiSignatureCredential? cred =
+          switch (isRewardOfBaseAddress) {
+        true => mAccount.addressInfo.stakeCredential,
+        false => mAccount.addressInfo.credential
+      };
+      if (cred == null) throw WalletExceptionConst.invalidAccountDetails;
+      if (cred.type == CardanoCredentialType.script) {
+        final script = cred as CardanoMultiSignatureScript;
+        scripts.add(script.script);
+      }
+
+      ///187633
+    }
+    if (scripts.isEmpty) return null;
+    return NativeScripts(scripts.toList());
+  }
+
   @override
   Future<IADATransactionData> buildTransactionData(
       {bool simulate = false}) async {
     final remain = remainingAmount.value.toOutput();
+    final nativeScript = buildNativeScripts(addresses: [
+      ..._utxos.map((e) => e.address.networkAddress),
+      ...certificateBuilders.map((e) => e.signer).whereType<ADAAddress>()
+    ]);
     return IADATransactionData(
         fee: txFee.fee,
         utxos: _utxos,
@@ -279,7 +309,8 @@ class ADATransactionTransferOperation extends ADATransactionStateController {
         metadata: buildTransactionMemo(),
         certificates: certificateBuilders,
         deposits: deposit.map((e) => e.toDepositBuilder()).toList(),
-        refundDeposits: refund.map((e) => e.toDepositBuilder()).toList());
+        refundDeposits: refund.map((e) => e.toDepositBuilder()).toList(),
+        nativeScript: nativeScript);
   }
 
   @override
@@ -292,6 +323,7 @@ class ADATransactionTransferOperation extends ADATransactionStateController {
         deposits: transaction.deposits,
         metadata: transaction.metadata,
         mints: transaction.mints,
+        nativeScripts: transaction.nativeScript,
         refundDeposits: transaction.refundDeposits);
     builder.setFee(transaction.fee.fee.balance);
     return IADATransaction(
@@ -342,8 +374,7 @@ class ADATransactionTransferOperation extends ADATransactionStateController {
   TransactionOperations get operation => ADATransactionOperations.transfer;
 
   @override
-  Future<void> initForm(CardanoClient client,
-      {bool updateAccount = true}) async {
+  Future<void> initForm(ADAClient client, {bool updateAccount = true}) async {
     await super.initForm(client, updateAccount: updateAccount);
     remainingAmount.value.onUpdateProtocolParams(latestEpochParams);
   }

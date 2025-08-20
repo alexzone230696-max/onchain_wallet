@@ -38,7 +38,7 @@ class RippleNFToken with Equatable implements NFTCore {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           flags,
           nftokenId,
           nftokenTaxon,

@@ -18,14 +18,14 @@ class CoingeckoCoin with CborSerializable, JsonSerialization {
     final CborListValue cbor = CborSerializable.decodeCborTags(
         bytes, obj, CborTagsConst.coingeckoInfo);
     return CoingeckoCoin(
-        apiId: cbor.elementAt(0),
-        coinName: cbor.elementAt(1),
-        symbol: cbor.elementAt(2));
+        apiId: cbor.elementAs(0),
+        coinName: cbor.elementAs(1),
+        symbol: cbor.elementAs(2));
   }
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([apiId, coinName, symbol]),
+    return CborTagValue(CborSerializable.fromDynamic([apiId, coinName, symbol]),
         CborTagsConst.coingeckoInfo);
   }
 

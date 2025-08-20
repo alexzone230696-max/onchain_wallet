@@ -20,14 +20,14 @@ final class WalletRequestImportNewKey extends WalletRequest<
         object: object,
         hex: hex,
         tags: WalletRequestMethod.updateWalletKeys.tag);
-    return WalletRequestImportNewKey(
-        ImportedKeyStorage.fromCborBytesOrObject(obj: values.getCborTag(0)));
+    return WalletRequestImportNewKey(ImportedKeyStorage.fromCborBytesOrObject(
+        obj: values.elementAsCborTag(0)));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([newKey.toCbor()]), method.tag);
+        CborSerializable.fromDynamic([newKey.toCbor()]), method.tag);
   }
 
   @override

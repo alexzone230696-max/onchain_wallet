@@ -43,7 +43,7 @@ class _ImportAccountState extends State<_ImportAccount> with SafeState {
   final Set<EncryptedCustomKey> importedKeys = {};
   void getAccounts() async {
     final wallet = context.watch<WalletProvider>(StateConst.main);
-    final result = await wallet.wallet.getImportedAccounts(widget.password);
+    final result = await wallet.wallet.getImportedAccounts();
     if (result.hasError) {
       progressKey.errorText(result.error!.tr, backToIdle: false);
     } else {

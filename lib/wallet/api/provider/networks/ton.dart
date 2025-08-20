@@ -54,7 +54,7 @@ class TonAPIProvider extends APIProvider {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [uri, protocol.id, apiType.name, auth?.toCbor(), identifier]),
         CborTagsConst.tonApiServiceProvider);
   }

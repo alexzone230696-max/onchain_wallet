@@ -45,7 +45,7 @@ final class SuiNewAddressParams extends NewAccountParams<ISuiAddress> {
         tags: NewAccountParamsType.suiNewAddressParams.tag);
     return SuiNewAddressParams(
         deriveIndex:
-            AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
+            AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(0)),
         coin: CustomCoins.getSerializationCoin(values.elementAs(1)),
         address: values.elemetMybeAs<SuiAddress, CborStringValue>(
             2, (e) => SuiAddress(e.value)),
@@ -74,7 +74,7 @@ final class SuiNewAddressParams extends NewAccountParams<ISuiAddress> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           deriveIndex.toCbor(),
           coin.toCbor(),
           address?.address,
@@ -122,7 +122,7 @@ final class SuiMultiSigNewAddressParams implements SuiNewAddressParams {
         hex: hex,
         tags: NewAccountParamsType.suiMultisigNewAddressParams.tag);
     return SuiMultiSigNewAddressParams(
-        coin: CustomCoins.getSerializationCoin(values.elementAt(0)),
+        coin: CustomCoins.getSerializationCoin(values.elementAs(0)),
         multiSignatureAddress:
             SuiMultisigAccountInfo.deserialize(object: values.elementAs(1)),
         address: SuiAddress(values.elementAs(2)));
@@ -131,10 +131,10 @@ final class SuiMultiSigNewAddressParams implements SuiNewAddressParams {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.dynamicLength([
+        CborListValue<CborObject>.definite([
           coin.toCbor(),
           multiSignatureAddress.toCbor(),
-          address.address,
+          CborStringValue(address.address),
         ]),
         type.tag);
   }

@@ -353,7 +353,7 @@ class _NetworksView extends StatelessWidget {
                 onTap: selected == net
                     ? null
                     : () {
-                        context.pop(net.value);
+                        context.pop(networks[index]);
                       },
                 child: Padding(
                   padding: WidgetConstant.padding5,
@@ -422,7 +422,7 @@ class SwitchNetworkIcon extends StatelessWidget {
             (value) {
               if (value == null) return;
               if (context.mounted) {
-                if (value is int) {
+                if (value is Chain) {
                   context.wallet.wallet.switchNetwork(value);
                 } else {
                   context.mybeTo(PageRouter.importNetwork(value));

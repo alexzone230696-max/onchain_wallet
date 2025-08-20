@@ -78,7 +78,7 @@ class __BipAccountPublicKeyState extends State<_BipAccountPublicKey>
   ICardanoAddress? isAdaLegacy() {
     if (widget.account is ICardanoAddress) {
       final account = widget.account.cast<ICardanoAddress>();
-      if (account.addressDetails.isLegacy) {
+      if (account.addressInfo.isLegacy) {
         return account;
       }
     }
@@ -133,8 +133,8 @@ class __BipAccountPublicKeyState extends State<_BipAccountPublicKey>
                   _HDPathDetails(byronLegacy: adaLegacyAddress),
                   AnimatedSwitcher(
                     duration: APPConst.animationDuraion,
-                    child:
-                        _KeysView(key: ValueKey(publicKey), pubKey: publicKey),
+                    child: PublicKeysDataView(
+                        key: ValueKey(publicKey), pubKey: publicKey),
                   )
                 ],
               ),
@@ -153,7 +153,9 @@ class _HDPathDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (byronLegacy == null) return WidgetConstant.sizedBox;
+    final addressInfo = byronLegacy?.addressInfo as CardanoAddrDetails?;
+    if (addressInfo == null) return WidgetConstant.sizedBox;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -163,11 +165,10 @@ class _HDPathDetails extends StatelessWidget {
           onRemove: () {},
           onRemoveIcon: CopyTextIcon(
             isSensitive: false,
-            dataToCopy: byronLegacy!.addressDetails.hdPath!,
+            dataToCopy: addressInfo.hdPath!,
             color: context.onPrimaryContainer,
           ),
-          child:
-              Text(byronLegacy!.addressDetails.hdPath!.or("non_derivation".tr)),
+          child: Text(addressInfo.hdPath!.or("non_derivation".tr)),
         ),
         WidgetConstant.height20,
         Text("hd_path_key".tr, style: context.textTheme.titleMedium),
@@ -175,10 +176,9 @@ class _HDPathDetails extends StatelessWidget {
         ContainerWithBorder(
           onRemove: () {},
           onRemoveIcon: CopyTextIcon(
-              isSensitive: false,
-              dataToCopy: byronLegacy!.addressDetails.hdPathKeyHex!),
+              isSensitive: false, dataToCopy: addressInfo.hdPathKeyHex!),
           child: Text(
-            byronLegacy!.addressDetails.hdPathKeyHex!,
+            addressInfo.hdPathKeyHex!,
             style: context.onPrimaryTextTheme.bodyMedium,
           ),
         ),
@@ -188,9 +188,12 @@ class _HDPathDetails extends StatelessWidget {
   }
 }
 
-class _KeysView extends StatelessWidget {
+class PublicKeysDataView extends StatelessWidget {
   final PublicKeysView pubKey;
-  const _KeysView({super.key, required this.pubKey});
+  final Color? color;
+  final Color? reverse;
+  const PublicKeysDataView(
+      {super.key, required this.pubKey, this.color, this.reverse});
 
   @override
   Widget build(BuildContext context) {

@@ -27,6 +27,6 @@
 //   @override
 //   CborTagValue toCbor() {
 //     return CborTagValue(
-//         CborListValue.fixedLength([method.tag, chainId]), type.tag);
+//         CborSerializable.fromDynamic([method.tag, chainId]), type.tag);
 //   }
 // }

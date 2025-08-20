@@ -46,7 +46,7 @@ class Web3SubstrateSendTransactionResponse with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(signature),
           signedTransaction == null ? null : CborBytesValue(signedTransaction!),
           id
@@ -166,7 +166,7 @@ class Web3SubstrateSendTransaction
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
           accessAccount.toCbor(),
           assetId == null ? null : CborBytesValue(assetId!),
@@ -181,7 +181,7 @@ class Web3SubstrateSendTransaction
           specVersion,
           tip,
           transactionVersion,
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               signedExtensions.map((e) => CborStringValue(e)).toList()),
           version,
           withSignedTransaction
@@ -190,14 +190,18 @@ class Web3SubstrateSendTransaction
   }
 
   @override
-  Web3SubstrateRequest<Web3SubstrateSendTransactionResponse,
-          Web3SubstrateSendTransaction>
-      toRequest(
-          {required Web3RequestInformation request,
-          required Web3RequestAuthentication authenticated,
-          required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+  Future<
+      Web3SubstrateRequest<Web3SubstrateSendTransactionResponse,
+          Web3SubstrateSendTransaction>> toRequest(
+      {required Web3RequestInformation request,
+      required Web3RequestAuthentication authenticated,
+      required WEB3REQUESTNETWORKCONTROLLER<ISubstrateAddress, SubstrateChain,
+              Web3SubstrateChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3SubstrateRequest<Web3SubstrateSendTransactionResponse,
         Web3SubstrateSendTransaction>(
       params: this,

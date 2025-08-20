@@ -117,7 +117,6 @@ abstract final class ChainAccount<X, T extends TokenCore, N extends NFTCore,
     return [keyIndex];
   }
 
-  bool isEqual(ChainAccount other);
   IAdressType get iAddressType => IAdressType.singleKey;
 
   bool get multiSigAccount => iAddressType.isMultisig;
@@ -165,9 +164,7 @@ enum IAdressType {
   bool get isMultisigByPublicKey => this == IAdressType.multisigByPublicKey;
 }
 
-abstract class MultiSigCryptoAccountAddress {
-  abstract final List<(String, Bip32AddressIndex)> keyDetails;
-}
+abstract class MultiSigCryptoAccountAddress {}
 
 class AccountBalance {
   AccountBalance({
@@ -210,7 +207,7 @@ class AccountBalance {
 
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [address, currencyBalance, CborEpochIntValue(updated)]),
         CborTagsConst.address);
   }

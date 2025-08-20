@@ -8,11 +8,10 @@ import 'package:on_chain_wallet/wallet/web3/networks/sui/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/sui/params/models/sign_message.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/sui/params/models/transaction.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/sui/permission/models/account.dart';
-import 'package:on_chain_wallet/wallet/web3/networks/sui/permission/models/permission.dart';
 import 'package:on_chain/sui/src/address/address/address.dart';
 
 abstract class Web3SuiRequestParam<RESPONSE> extends Web3RequestParams<RESPONSE,
-    SuiAddress, SuiChain, ISuiAddress, Web3SuiChainAccount, Web3SuiChain> {
+    SuiAddress, SuiChain, ISuiAddress, Web3SuiChainAccount> {
   @override
   abstract final Web3SuiRequestMethods method;
 
@@ -25,7 +24,7 @@ abstract class Web3SuiRequestParam<RESPONSE> extends Web3RequestParams<RESPONSE,
         object: object,
         hex: hex,
         tags: Web3MessageTypes.walletRequest.tag);
-    final method = Web3NetworkRequestMethods.fromTag(values.elementAt(0));
+    final method = Web3NetworkRequestMethods.fromTag(values.elementAs(0));
     final Web3SuiRequestParam param;
     switch (method) {
       case Web3SuiRequestMethods.signTransaction:
@@ -52,7 +51,7 @@ abstract class Web3SuiRequestParam<RESPONSE> extends Web3RequestParams<RESPONSE,
 
 class Web3SuiRequest<RESPONSE, PARAMS extends Web3SuiRequestParam<RESPONSE>>
     extends Web3NetworkRequest<RESPONSE, SuiAddress, SuiChain,
-        Web3SuiChainAccount, ISuiAddress, Web3SuiChain, PARAMS> {
+        Web3SuiChainAccount, ISuiAddress, PARAMS> {
   Web3SuiRequest(
       {required super.params,
       required super.info,

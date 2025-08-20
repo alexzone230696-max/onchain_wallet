@@ -54,10 +54,10 @@ final class IBitcoinCashAddress extends IBitcoinAddress {
     final CryptoCoins coin =
         CustomCoins.getSerializationCoin(cbor.elementAs(0));
     final keyIndex =
-        AddressDerivationIndex.deserialize(obj: cbor.getCborTag(1));
+        AddressDerivationIndex.deserialize(obj: cbor.elementAsCborTag(1));
     final List<int> publicKey = cbor.elementAs(2);
     final AccountBalance address =
-        AccountBalance.deserialize(network, obj: cbor.getCborTag(3));
+        AccountBalance.deserialize(network, obj: cbor.elementAsCborTag(3));
     final BitcoinAddressType bitcoinAddressType =
         BitcoinAddressType.fromValue(cbor.elementAs(4));
     final int networkId = cbor.elementAs(5);
@@ -94,7 +94,7 @@ final class IBitcoinCashAddress extends IBitcoinAddress {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           coin.toCbor(),
           keyIndex.toCbor(),
           publicKey,
@@ -114,11 +114,6 @@ final class IBitcoinCashAddress extends IBitcoinAddress {
   // @override
   @override
   String get baseAddress => networkAddress.addressProgram;
-
-  @override
-  bool isEqual(ChainAccount other) {
-    return baseAddress == other.baseAddress;
-  }
 
   @override
   NewAccountParams toAccountParams() {
@@ -167,9 +162,10 @@ final class IBitcoinCashMultiSigAddress extends IBitcoinCashAddress
     final CryptoCoins coin =
         CustomCoins.getSerializationCoin(values.elementAs(0));
     final BitcoinMultiSignatureAddress multiSignatureAddress =
-        BitcoinMultiSignatureAddress.deserialize(obj: values.getCborTag(1));
+        BitcoinMultiSignatureAddress.deserialize(
+            obj: values.elementAsCborTag(1));
     final AccountBalance address =
-        AccountBalance.deserialize(network, obj: values.getCborTag(2));
+        AccountBalance.deserialize(network, obj: values.elementAsCborTag(2));
     final BitcoinAddressType bitcoinAddressType =
         BitcoinAddressType.fromValue(values.elementAs(3));
     final int networkId = values.elementAs(4);
@@ -178,7 +174,7 @@ final class IBitcoinCashMultiSigAddress extends IBitcoinCashAddress
       throw WalletExceptionConst.incorrectNetwork;
     }
     final keyIndex =
-        AddressDerivationIndex.deserialize(obj: values.getCborTag(5));
+        AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(5));
 
     final bitcoinAddress = BlockchainAddressUtils.toBitcoinAddress(
         address.toAddress,
@@ -252,7 +248,7 @@ final class IBitcoinCashMultiSigAddress extends IBitcoinCashAddress
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           coin.toCbor(),
           multiSignatureAddress.toCbor(),
           address.toCbor(),
@@ -278,14 +274,8 @@ final class IBitcoinCashMultiSigAddress extends IBitcoinCashAddress
       multiSignatureAddress.signers.map((e) => e.publicKey).toList();
 
   @override
-  List<(String, Bip32AddressIndex)> get keyDetails =>
-      multiSignatureAddress.signers
-          .map((e) => (e.publicKey, e.keyIndex))
-          .toList();
-
-  @override
   List<Bip32AddressIndex> signerKeyIndexes() {
-    return keyDetails.map((e) => e.$2).toList();
+    return multiSignatureAddress.signers.map((e) => e.keyIndex).toList();
   }
 
   @override

@@ -1,60 +1,30 @@
 part of 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 
-enum CosmosChainStorage implements ChainStorageKey {
-  contacts(0),
-  transaction(1),
-  token(2),
-  nft(3),
-  channelIds(11);
-
-  @override
-  bool get isSharedStorage => false;
-  @override
-  final int storageId;
-  const CosmosChainStorage(this.storageId);
+class CosmosNetowkStorageId extends DefaultNetworkStorageId {
+  static const CosmosNetowkStorageId channelIds = CosmosNetowkStorageId(11);
+  const CosmosNetowkStorageId(super.storageId);
+  static const List<DefaultNetworkStorageId> values = [
+    ...DefaultNetworkStorageId.values,
+    channelIds
+  ];
 }
 
-class CosmosChainConfig extends ChainConfig<CosmosChainStorage> {
-  CosmosChainConfig();
-  factory CosmosChainConfig.deserialize(
+class CosmosNetworkConfig extends DefaultNetworkConfig<CosmosNetowkStorageId> {
+  CosmosNetworkConfig()
+      : super(supportToken: true, supportNft: false, supportWeb3: true);
+  factory CosmosNetworkConfig.deserialize(
       {List<int>? bytes, CborObject? object, String? hex}) {
-    return CosmosChainConfig();
+    return CosmosNetworkConfig();
   }
-
-  @override
-  double get appbarHeight => 0;
-
-  @override
-  bool get hasAction => false;
-
-  @override
-  CosmosChainStorage? get nftStorageKey => null;
-
-  @override
-  CosmosChainStorage? get tokenStorageKey => CosmosChainStorage.token;
-
-  @override
-  CosmosChainStorage get transactionStorageKey =>
-      CosmosChainStorage.transaction;
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([]), CborTagsConst.cosmosChainConfig);
+        CborSerializable.fromDynamic([]), CborTagsConst.cosmosChainConfig);
   }
 
   @override
-  List<CosmosChainStorage> get storageKeys => CosmosChainStorage.values;
-
-  @override
-  CosmosChainStorage get contactsStorageKey => CosmosChainStorage.contacts;
-
-  @override
-  List<CosmosChainStorage> get addressStorage => [
-        CosmosChainStorage.transaction,
-        CosmosChainStorage.nft,
-        CosmosChainStorage.token
-      ];
+  List<DefaultNetworkStorageId> get storageKeys => CosmosNetowkStorageId.values;
 }
 
 final class CosmosChain extends Chain<
@@ -66,8 +36,7 @@ final class CosmosChain extends Chain<
     ICosmosAddress,
     WalletCosmosNetwork,
     CosmosClient,
-    ChainStorageKey,
-    CosmosChainConfig,
+    CosmosNetworkConfig,
     CosmosWalletTransaction,
     CosmosContact,
     CosmosNewAddressParams> with CosmosChainRepository {
@@ -83,15 +52,15 @@ final class CosmosChain extends Chain<
   CosmosChain copyWith(
       {WalletCosmosNetwork? network,
       InternalStreamValue<IntegerBalance>? totalBalance,
-      List<ICosmosAddress>? addresses,
+      List<ChainAccount>? addresses,
       int? addressIndex,
       CosmosClient? client,
       String? id,
-      CosmosChainConfig? config}) {
+      CosmosNetworkConfig? config}) {
     return CosmosChain._(
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
-        addresses: addresses ?? _addresses,
+        addresses: addresses?.cast<ICosmosAddress>() ?? _addresses,
         client: client ?? _client,
         id: id ?? this.id,
         config: config ?? this.config);
@@ -107,7 +76,7 @@ final class CosmosChain extends Chain<
         addressIndex: 0,
         client: client,
         addresses: [],
-        config: CosmosChainConfig());
+        config: CosmosNetworkConfig());
   }
   factory CosmosChain.deserialize(
       {required WalletCosmosNetwork network,
@@ -117,7 +86,7 @@ final class CosmosChain extends Chain<
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
     }
-    final String id = cbor.elementAt<String>(2);
+    final String id = cbor.elementAs<String>(2);
     final List<ICosmosAddress> accounts = cbor
         .elementAsListOf<CborTagValue>(3)
         .map((e) => ICosmosAddress.deserialize(network, obj: e))
@@ -129,26 +98,23 @@ final class CosmosChain extends Chain<
         addressIndex: addressIndex,
         client: client,
         id: id,
-        config: CosmosChainConfig());
+        config: CosmosNetworkConfig());
   }
 
   @override
-  Future<void> updateAddressBalance(ICosmosAddress address,
-      {bool tokens = true, bool saveAccount = true}) async {
-    _isAccountAddress(address);
-    await initAddress(address);
+  Future<void> _updateAddressBalanceInternal(ICosmosAddress address,
+      {bool tokens = true}) async {
     await onClient(onConnect: (client) async {
       final balances = await client.getAddressCoins(address.networkAddress);
       final nativeToken =
           balances.firstWhereOrNull((e) => e.denom == network.coinParam.denom);
-      _updateAddressBalanceInternal(
-          address: address,
-          balance: nativeToken?.amount ?? BigInt.zero,
-          saveAccount: saveAccount);
+      address.address._updateAddressBalance(nativeToken?.amount ?? BigInt.zero);
       for (final i in address.tokens) {
         final balance = balances.firstWhereOrNull((e) => e.denom == i.denom);
-        i._updateBalance(balance?.amount ?? BigInt.zero);
-        _saveToken(address: address, token: i);
+        _updateTokenBalanceInternal(
+            address: address,
+            token: i,
+            save: i._updateBalance(balance?.amount ?? BigInt.zero));
       }
     });
   }
@@ -169,22 +135,17 @@ final class CosmosChain extends Chain<
   Future<void> updateTokenBalance(
       {required ICosmosAddress address,
       required List<CW20Token> tokens}) async {
-    _isAccountAddress(address);
     await onClient(onConnect: (client) async {
       final balances = await client.getAddressCoins(address.networkAddress);
       final nativeToken =
           balances.firstWhereOrNull((e) => e.denom == network.coinParam.denom);
-      _updateAddressBalanceInternal(
-          address: address,
-          balance: nativeToken?.amount ?? BigInt.zero,
-          saveAccount: true);
+      address.address._updateAddressBalance(nativeToken?.amount ?? BigInt.zero);
       for (final i in tokens) {
         final balance = balances.firstWhereOrNull((e) => e.denom == i.denom);
-        final addressToken =
-            address.tokens.firstWhereOrNull((e) => e.denom == i.denom);
-        i._updateBalance(balance?.amount ?? BigInt.zero);
-        addressToken?._updateBalance(balance?.amount ?? BigInt.zero);
-        _saveToken(address: address, token: i);
+        _updateTokenBalanceInternal(
+            address: address,
+            token: i,
+            save: i._updateBalance(balance?.amount ?? BigInt.zero));
       }
     });
   }

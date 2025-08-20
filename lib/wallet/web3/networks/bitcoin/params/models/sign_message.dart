@@ -46,16 +46,30 @@ class Web3BitcoinSignMessageResponse with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [CborBytesValue(signature), CborBytesValue(digest)]),
         CborTagsConst.defaultTag);
   }
 }
 
+abstract class BaseWeb3BitcoinSignMessage<ADDRESS extends IBitcoinAddress,
+        WEB3CHAINACCOUNT extends Web3BitcoinChainAccount>
+    extends BaseWeb3BitcoinRequestParam<Web3BitcoinSignMessageResponse, ADDRESS,
+        WEB3CHAINACCOUNT> {
+  abstract final String message;
+  abstract final String? messagePrefix;
+  abstract final String? content;
+}
+
 class Web3BitcoinSignMessage
-    extends Web3BitcoinRequestParam<Web3BitcoinSignMessageResponse> {
+    extends Web3BitcoinRequestParam<Web3BitcoinSignMessageResponse>
+    implements
+        BaseWeb3BitcoinSignMessage<IBitcoinAddress, Web3BitcoinChainAccount> {
+  @override
   final String message;
+  @override
   final String? messagePrefix;
+  @override
   final String? content;
   Web3BitcoinSignMessage._(
       {required this.accessAccount,
@@ -94,8 +108,8 @@ class Web3BitcoinSignMessage
     final method = Web3NetworkRequestMethods.fromTag(values.elementAs(0));
     return Web3BitcoinSignMessage(
         method: method,
-        account:
-            Web3BitcoinChainAccount.deserialize(object: values.getCborTag(1)),
+        account: Web3BitcoinChainAccount.deserialize(
+            object: values.elementAsCborTag(1)),
         message: values.elementAs(2),
         content: values.elementAs(3),
         messagePrefix: values.elementAs(4));
@@ -107,7 +121,7 @@ class Web3BitcoinSignMessage
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
           accessAccount.toCbor(),
           message,
@@ -120,13 +134,18 @@ class Web3BitcoinSignMessage
   final Web3BitcoinChainAccount accessAccount;
 
   @override
-  Web3BitcoinRequest<Web3BitcoinSignMessageResponse, Web3BitcoinSignMessage>
-      toRequest(
-          {required Web3RequestInformation request,
-          required Web3RequestAuthentication authenticated,
-          required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+  Future<
+      Web3BitcoinRequest<Web3BitcoinSignMessageResponse,
+          Web3BitcoinSignMessage>> toRequest(
+      {required Web3RequestInformation request,
+      required Web3RequestAuthentication authenticated,
+      required WEB3REQUESTNETWORKCONTROLLER<IBitcoinAddress, BitcoinChain,
+              Web3BitcoinChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3BitcoinRequest<Web3BitcoinSignMessageResponse,
         Web3BitcoinSignMessage>(
       params: this,

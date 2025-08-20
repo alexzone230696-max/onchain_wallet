@@ -15,13 +15,17 @@ class Web3GlobalRequestMethods extends Web3RequestMethods {
       id: Web3GlobalConst.disconnectTag, name: "disconnect");
   static const Web3GlobalRequestMethods connect = Web3GlobalRequestMethods._(
       id: Web3GlobalConst.connectTag, name: "connect");
+  static const Web3GlobalRequestMethods connectSilent =
+      Web3GlobalRequestMethods._(
+          id: Web3GlobalConst.connectSilentTag, name: "connect_silent");
   static const Web3GlobalRequestMethods switchNetwork =
       Web3GlobalRequestMethods._(
           id: Web3GlobalConst.switchNetwork, name: "switch_network");
   static const List<Web3GlobalRequestMethods> values = [
     disconnect,
     connect,
-    switchNetwork
+    switchNetwork,
+    connectSilent,
   ];
   static Web3GlobalRequestMethods fromId(int? id) {
     return values.firstWhere((e) => e.id == id,

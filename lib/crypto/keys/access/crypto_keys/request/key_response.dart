@@ -19,7 +19,8 @@ final class CryptoPrivateKeysResponse with CborSerializable {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(keys.map((e) => e.toCbor()).toList(),
+    return CborTagValue(
+        CborListValue.definite(keys.map((e) => e.toCbor()).toList()),
         CryptoKeyConst.accessPrivateKeysRequest);
   }
 }
@@ -43,7 +44,8 @@ final class CryptoPublicKeysResponse with CborSerializable {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(keys.map((e) => e.toCbor()).toList(),
+    return CborTagValue(
+        CborListValue.definite(keys.map((e) => e.toCbor()).toList()),
         CryptoKeyConst.accessPublicKeysRequest);
   }
 }

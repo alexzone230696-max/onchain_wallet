@@ -33,7 +33,8 @@ class TronAccountPageView extends StatelessWidget {
                 token: p0 as TronTRC20Token);
           },
         ),
-        AccountTransactionActivityView(chainAccount)
+        AccountTransactionActivityView<ITronAddress, TronWalletTransaction>(
+            account: chainAccount, address: chainAccount.address)
       ]),
     );
   }

@@ -31,21 +31,3 @@ class SyncRequestController<RESPONE, REQUEST> {
     controller.close();
   }
 }
-
-class SyncRequestController2<RESPONE, REQUEST> {
-  // final Stream<RESPONE> stream;
-  // final StreamController<REQUEST> controller;
-  final List<SyncRequestController<RESPONE, REQUEST>> _subs = [];
-
-  SyncRequestController2();
-  void close() {
-    for (final i in _subs) {
-      i.close();
-    }
-    _subs.clear();
-  }
-
-  void addSub(SyncRequestController<RESPONE, REQUEST> s) {
-    _subs.add(s);
-  }
-}

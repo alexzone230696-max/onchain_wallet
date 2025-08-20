@@ -42,12 +42,13 @@ class BitcoinParams extends NetworkCoinParams<BaseBitcoinAPIProvider> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           const CborNullValue(),
           const CborNullValue(),
           token.toCbor(),
           transacationNetwork.value,
-          CborListValue.fixedLength(providers.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              providers.map((e) => e.toCbor()).toList()),
           const CborNullValue(),
           addressExplorer,
           transactionExplorer,

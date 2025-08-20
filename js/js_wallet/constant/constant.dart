@@ -29,5 +29,5 @@ class JSWalletConstant {
 
   static const String activationEventName = "WALLET_ACTIVATION";
   static final methodDisabled =
-      JSWalletError(message: "this feature disabled by wallet provider.");
+      JSError(message: "this feature disabled by wallet provider.");
 }

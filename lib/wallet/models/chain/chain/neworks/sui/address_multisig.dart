@@ -41,18 +41,25 @@ class SuiMultisigAccountPublicKeyInfo with CborSerializable, Equatable {
         publicKey: values.elementAs(0),
         weight: values.elementAs(1),
         keyScheme: SuiSupportKeyScheme.fromValue(values.elementAs(2)),
-        keyIndex: Bip32AddressIndex.deserialize(obj: values.getCborTag(3)));
+        keyIndex:
+            Bip32AddressIndex.deserialize(obj: values.elementAsCborTag(3)));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        [CborBytesValue(publicKey), weight, keyScheme.value, keyIndex.toCbor()],
+        CborListValue<CborObject>.definite([
+          CborBytesValue(publicKey),
+          CborIntValue(weight),
+          CborIntValue(keyScheme.value),
+          keyIndex.toCbor()
+        ]),
         CborTagsConst.suiMultisigAccountPublicKey);
   }
 
   String toHex() {
-    return CryptoKeyUtils.toPublicKeyHex(publicKey, keyIndex.currencyCoin);
+    return CryptoKeyUtils.toPublicKeyHex(
+        publicKey, keyIndex.currencyCoin.conf.type);
   }
 
   @override
@@ -132,9 +139,12 @@ class SuiMultisigAccountInfo with CborSerializable {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue([
-      CborListValue.fixedLength(publicKeys.map((e) => e.toCbor()).toList()),
-      threshold
-    ], CborTagsConst.suiMultisigAccountInfo);
+    return CborTagValue(
+        CborListValue<CborObject>.definite([
+          CborSerializable.fromDynamic(
+              publicKeys.map((e) => e.toCbor()).toList()),
+          CborIntValue(threshold)
+        ]),
+        CborTagsConst.suiMultisigAccountInfo);
   }
 }

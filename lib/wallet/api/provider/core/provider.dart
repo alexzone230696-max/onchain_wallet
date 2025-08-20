@@ -127,14 +127,15 @@ class DefaultProviderIdentifier extends ProviderIdentifier {
     final CborTagValue tag =
         CborSerializable.decode(cborBytes: bytes, hex: hex, object: cbor);
     final network = NetworkType.fromTag(tag.tags);
-    final values = tag.getList;
+    final values = tag.valueAs<CborListValue>();
     return DefaultProviderIdentifier(
         identifier: values.elementAs(0), network: network);
   }
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(CborListValue.fixedLength([identifier]), network.tag);
+    return CborTagValue(
+        CborSerializable.fromDynamic([identifier]), network.tag);
   }
 
   @override

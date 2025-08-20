@@ -30,8 +30,8 @@ final class Web3MoneroTransactionProofsResponse with CborSerializable {
 
   @override
   CborTagValue toCbor() {
-    return CborTagValue(
-        CborListValue.fixedLength([address, proof]), CborTagsConst.defaultTag);
+    return CborTagValue(CborSerializable.fromDynamic([address, proof]),
+        CborTagsConst.defaultTag);
   }
 }
 
@@ -61,9 +61,9 @@ final class Web3MoneroTransactionResponse with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           txId,
-          CborListValue.fixedLength(proofs.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(proofs.map((e) => e.toCbor()).toList()),
         ]),
         CborTagsConst.defaultTag);
   }
@@ -98,7 +98,7 @@ final class Web3MoneroTransactionParams with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([destination.address, amount]),
+        CborSerializable.fromDynamic([destination.address, amount]),
         CborTagsConst.defaultTag);
   }
 }
@@ -160,9 +160,9 @@ class Web3MoneroSendTransaction
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
-          CborListValue.fixedLength(
+          CborSerializable.fromDynamic(
               destintions.map((e) => e.toCbor()).toList()),
           account.toCbor()
         ]),
@@ -170,13 +170,18 @@ class Web3MoneroSendTransaction
   }
 
   @override
-  Web3MoneroRequest<Web3MoneroTransactionResponse, Web3MoneroSendTransaction>
-      toRequest(
-          {required Web3RequestInformation request,
-          required Web3RequestAuthentication authenticated,
-          required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+  Future<
+      Web3MoneroRequest<Web3MoneroTransactionResponse,
+          Web3MoneroSendTransaction>> toRequest(
+      {required Web3RequestInformation request,
+      required Web3RequestAuthentication authenticated,
+      required WEB3REQUESTNETWORKCONTROLLER<IMoneroAddress, MoneroChain,
+              Web3MoneroChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3MoneroRequest<Web3MoneroTransactionResponse,
             Web3MoneroSendTransaction>(
         params: this,

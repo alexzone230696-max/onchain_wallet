@@ -58,7 +58,7 @@ class CryptoRequestRestoreBackupMasterKey extends CryptoRequest<
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [passphrase, CborBytesValue(backup), CborBytesValue(key)]),
         method.tag);
   }

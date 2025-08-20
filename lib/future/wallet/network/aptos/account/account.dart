@@ -23,7 +23,8 @@ class AptosAccountPageView extends StatelessWidget {
               token: token);
         },
       ),
-      AccountTransactionActivityView(chainAccount)
+      AccountTransactionActivityView<IAptosAddress, AptosWalletTransaction>(
+          account: chainAccount, address: chainAccount.address)
     ]);
   }
 }

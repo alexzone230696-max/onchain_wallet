@@ -13,7 +13,7 @@ mixin TronTransactionMemoController<TXDATA extends ITronTransactionData>
   }
 
   void onRemoveMemo() {
-    this.memo.setValue(null);
+    memo.setValue(null);
   }
 
   @override

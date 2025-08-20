@@ -4,19 +4,16 @@ import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
 import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
-import 'package:on_chain_wallet/wallet/web3/core/core.dart';
 
-typedef HASPERMISSION<ACCOUNT, CHAINACCOUNT> = CHAINACCOUNT? Function(ACCOUNT);
+typedef HASPERMISSION<ACCOUNT> = bool Function(ACCOUNT);
 typedef OnChangeCurrentChain<CHAIN> = void Function(CHAIN?);
 typedef ADDPERMISSIONACCOUNT<ACCOUNT> = void Function(ACCOUNT);
-typedef ONCHANGEDEFAULTACCOUNT<CHAINACCOUNT> = void Function(CHAINACCOUNT?);
+typedef ONCHANGEDEFAULTACCOUNT<ACCOUNT> = void Function(ACCOUNT);
 
 class UpdateChainPermissionWidget<
-        NETWORKADDRESS,
-        CHAIN extends APPCHAINNETWORK<NETWORKADDRESS>,
-        ADDRESS extends NETWORKCHAINACCOUNT<NETWORKADDRESS>,
-        CHAINACCOUNT extends Web3ChainAccount<NETWORKADDRESS>>
-    extends StatefulWidget {
+    NETWORKADDRESS,
+    ADDRESS extends NETWORKCHAINACCOUNT<NETWORKADDRESS>,
+    CHAIN extends APPCHAINACCOUNT<ADDRESS>> extends StatefulWidget {
   const UpdateChainPermissionWidget(
       {required this.chain,
       required this.chains,
@@ -27,45 +24,43 @@ class UpdateChainPermissionWidget<
       required this.onChangeDefaultAccount,
       required this.activities,
       required this.menuItems,
+      required this.isDefaultAddress,
+      required this.addresses,
+      this.extraPages = const {},
       super.key});
+  final HASPERMISSION<ADDRESS> isDefaultAddress;
   final CHAIN chain;
   final List<CHAIN> chains;
+  final List<ADDRESS> addresses;
   final DynamicVoid onUpdateState;
-  final HASPERMISSION<ADDRESS, CHAINACCOUNT> hasPermission;
+  final HASPERMISSION<ADDRESS> hasPermission;
   final OnChangeCurrentChain<CHAIN> onChangeChain;
   final ADDPERMISSIONACCOUNT<ADDRESS> addAccount;
-  final ONCHANGEDEFAULTACCOUNT<CHAINACCOUNT> onChangeDefaultAccount;
+  final ONCHANGEDEFAULTACCOUNT<ADDRESS> onChangeDefaultAccount;
   final List<Web3ActivityViewItem> activities;
   final List<DropdownMenuItem<CHAIN>> menuItems;
+  final Map<String, WidgetContext> extraPages;
 
   @override
   State<UpdateChainPermissionWidget> createState() =>
-      _UpdateChainPermissionWidgetState<NETWORKADDRESS, CHAIN, ADDRESS,
-          CHAINACCOUNT>();
+      _UpdateChainPermissionWidget2State<NETWORKADDRESS, ADDRESS, CHAIN>();
 }
 
-enum _Web3PermissionViewPage {
-  accounts,
-  histories;
-}
-
-class _UpdateChainPermissionWidgetState<
+class _UpdateChainPermissionWidget2State<
         NETWORKADDRESS,
-        CHAIN extends APPCHAINNETWORK<NETWORKADDRESS>,
         ADDRESS extends NETWORKCHAINACCOUNT<NETWORKADDRESS>,
-        CHAINACCOUNT extends Web3ChainAccount<NETWORKADDRESS>>
-    extends State<
-        UpdateChainPermissionWidget<NETWORKADDRESS, CHAIN, ADDRESS,
-            CHAINACCOUNT>> with AutomaticKeepAliveClientMixin {
-  _Web3PermissionViewPage page = _Web3PermissionViewPage.accounts;
+        CHAIN extends APPCHAINACCOUNT<ADDRESS>>
+    extends State<UpdateChainPermissionWidget<NETWORKADDRESS, ADDRESS, CHAIN>>
+    with
+        AutomaticKeepAliveClientMixin,
+        SafeState<UpdateChainPermissionWidget<NETWORKADDRESS, ADDRESS, CHAIN>> {
+  List<_ChainPermissionPages> pages = [];
+//  late _ChainPermissionPages page;
+  String? page;
 
   void onChangeTab(int tab) {
-    if (tab == 0) {
-      page = _Web3PermissionViewPage.accounts;
-    } else {
-      page = _Web3PermissionViewPage.histories;
-    }
-    setState(() {});
+    page = pages.elementAt(tab).name;
+    updateState();
   }
 
   Chain? chain;
@@ -74,18 +69,23 @@ class _UpdateChainPermissionWidgetState<
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (widget.chain != chain) {
-      page = _Web3PermissionViewPage.accounts;
+      page = pages.elementAtOrNull(0)?.name;
       MethodUtils.after(
           () async => DefaultTabController.of(context).animateTo(0));
     }
   }
 
   @override
-  void didUpdateWidget(
-      covariant UpdateChainPermissionWidget<NETWORKADDRESS, CHAIN, ADDRESS,
-              CHAINACCOUNT>
-          oldWidget) {
-    super.didUpdateWidget(oldWidget);
+  void onInitOnce() {
+    super.onInitOnce();
+    final allPages = [
+      "accounts".tr,
+      ...widget.extraPages.entries.map((e) => e.key),
+      "histories".tr
+    ];
+    assert(allPages.toSet().length == allPages.length, "duplicate page name");
+    pages =
+        allPages.indexed.map((e) => _ChainPermissionPages(e.$2, e.$1)).toList();
   }
 
   @override
@@ -110,78 +110,28 @@ class _UpdateChainPermissionWidgetState<
           pinned: false,
           floating: true,
           snap: true,
-          bottom: TabBar(onTap: onChangeTab, tabs: [
-            Tab(text: "accounts".tr),
-            Tab(text: "history".tr),
-          ])),
-      APPSliverAnimatedSwitcher(enable: page, widgets: {
-        _Web3PermissionViewPage.accounts: (context) {
-          return SliverPadding(
-              padding: WidgetConstant.paddingHorizontal10,
-              sliver: ChainStreamBuilder(
-                  allowNotify: [ChainNotify.account, ChainNotify.address],
-                  builder: (context, chain, lastNotify) {
-                    return APPSliverAnimatedSwitcher(
-                        enable: chain.haveAddress,
-                        widgets: {
-                          true: (context) => SliverList.builder(
-                              addAutomaticKeepAlives: false,
-                              itemBuilder: (c, index) {
-                                final addr = chain.addresses[index];
-                                final permission =
-                                    widget.hasPermission(addr as ADDRESS);
-                                return ContainerWithBorder(
-                                  enableTap: false,
-                                  onRemove: () {
-                                    widget.addAccount(addr);
-                                  },
-                                  onRemoveWidget: Column(
-                                    children: [
-                                      IconButton(
-                                        onPressed: () =>
-                                            widget.addAccount(addr),
-                                        icon: IgnorePointer(
-                                          child: Checkbox(
-                                              value: permission != null,
-                                              onChanged: (e) {}),
-                                        ),
-                                      ),
-                                      APPAnimatedSize(
-                                          isActive: permission != null,
-                                          onActive: (context) => IconButton(
-                                              tooltip: "default_address".tr,
-                                              onPressed: () =>
-                                                  widget.onChangeDefaultAccount(
-                                                      permission),
-                                              icon: IgnorePointer(
-                                                child: Radio<bool>(
-                                                    toggleable: true,
-                                                    value: permission!
-                                                        .defaultAddress,
-                                                    groupValue: true,
-                                                    onChanged: (e) {}),
-                                              )),
-                                          onDeactive: (context) =>
-                                              WidgetConstant.sizedBox)
-                                    ],
-                                  ),
-                                  child: AddressDetailsView(
-                                      address: addr,
-                                      color: context.onPrimaryContainer),
-                                );
-                              },
-                              itemCount: widget.chain.addresses.length),
-                          false: (context) => SliverFillRemaining(
-                              hasScrollBody: false,
-                              child: NoAccountFoundInChainWidget(widget.chain))
-                        });
-                  },
-                  account: widget.chain));
+          bottom: TabBar(
+              onTap: onChangeTab,
+              tabs: pages.map((e) => Tab(text: e.name)).toList())),
+      SliverConstraintsBoxView(
+          sliver: APPSliverAnimatedSwitcher<String>(enable: page, widgets: {
+        "Accounts": (context) {
+          return SelectWeb3PermissionAccountView<NETWORKADDRESS, ADDRESS,
+                  CHAIN>(
+              isDefaultAddress: widget.isDefaultAddress,
+              chain: widget.chain,
+              addresses: widget.addresses,
+              hasPermission: widget.hasPermission,
+              addAccount: widget.addAccount,
+              onChangeDefaultAccount: widget.onChangeDefaultAccount,
+              addressWidget: (p0, p1) => AddressDetailsView(
+                  address: p1, color: context.onPrimaryContainer));
         },
-        _Web3PermissionViewPage.histories: (context) {
+        "Histories": (context) {
           return _Web3ActivitiesView(widget.activities);
-        }
-      })
+        },
+        ...widget.extraPages
+      }))
     ]);
   }
 
@@ -246,5 +196,98 @@ class _Web3ActivitiesView extends StatelessWidget {
         separatorBuilder: (context, index) => WidgetConstant.divider,
       ),
     ]);
+  }
+}
+
+class _ChainPermissionPages {
+  final String name;
+  final int index;
+  const _ChainPermissionPages(this.name, this.index);
+}
+
+typedef WEB3PERMISSIONADDRESSWIDGET<ADDRESS> = Widget Function(
+    BuildContext, ADDRESS);
+
+class SelectWeb3PermissionAccountView<
+    NETWORKADDRESS,
+    ADDRESS extends NETWORKCHAINACCOUNT<NETWORKADDRESS>,
+    CHAIN extends APPCHAINACCOUNT<ADDRESS>> extends StatelessWidget {
+  final HASPERMISSION<ADDRESS>? isDefaultAddress;
+  final CHAIN chain;
+  final List<ADDRESS> addresses;
+  final HASPERMISSION<ADDRESS> hasPermission;
+  final ADDPERMISSIONACCOUNT<ADDRESS> addAccount;
+  final ONCHANGEDEFAULTACCOUNT<ADDRESS>? onChangeDefaultAccount;
+  final WEB3PERMISSIONADDRESSWIDGET<ADDRESS> addressWidget;
+  const SelectWeb3PermissionAccountView(
+      {this.isDefaultAddress,
+      required this.chain,
+      required this.addresses,
+      required this.hasPermission,
+      required this.addAccount,
+      required this.addressWidget,
+      this.onChangeDefaultAccount,
+      super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ChainStreamBuilder(
+        allowNotify: [DefaultChainNotify.account, DefaultChainNotify.address],
+        builder: (context, chain, lastNotify) {
+          return APPSliverAnimatedSwitcher(
+              enable: addresses.isNotEmpty,
+              widgets: {
+                true: (context) => SliverList.builder(
+                    addAutomaticKeepAlives: false,
+                    itemBuilder: (c, index) {
+                      final addr = addresses[index];
+                      final hasPermission = this.hasPermission(addr);
+                      return ContainerWithBorder(
+                        enableTap: false,
+                        onRemove: () {
+                          addAccount(addr);
+                        },
+                        onRemoveWidget: Column(
+                          children: [
+                            IconButton(
+                              onPressed: () => addAccount(addr),
+                              icon: IgnorePointer(
+                                child: Checkbox(
+                                    value: hasPermission, onChanged: (e) {}),
+                              ),
+                            ),
+                            ConditionalWidget(
+                                enable: onChangeDefaultAccount != null &&
+                                    isDefaultAddress != null,
+                                onActive: (context) => APPAnimatedSize(
+                                    isActive: hasPermission,
+                                    onActive: (context) => IconButton(
+                                        tooltip: "default_address".tr,
+                                        onPressed: () =>
+                                            onChangeDefaultAccount!(addr),
+                                        icon: IgnorePointer(
+                                          child: RadioGroup(
+                                            groupValue: true,
+                                            onChanged: (e) {},
+                                            child: Radio<bool>(
+                                              toggleable: true,
+                                              value: isDefaultAddress!(addr),
+                                            ),
+                                          ),
+                                        )),
+                                    onDeactive: (context) =>
+                                        WidgetConstant.sizedBox))
+                          ],
+                        ),
+                        child: addressWidget(context, addr),
+                      );
+                    },
+                    itemCount: addresses.length),
+                false: (context) => SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: NoAccountFoundInChainWidget(chain))
+              });
+        },
+        account: chain);
   }
 }

@@ -48,7 +48,8 @@ class DecimalBalance implements BalanceCore<BigRational, NonDecimalToken> {
     _viewPrice = StrUtils.to3Digits(_price, separator: ",");
   }
 
-  bool _internalUpdateBalance([BigRational? updateBalance]) {
+  @override
+  bool _internalUpdateBalance(BigRational? updateBalance) {
     if (updateBalance == null) return false;
     if (_balance == updateBalance) return false;
     _updateBalance(updateBalance);

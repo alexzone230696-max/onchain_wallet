@@ -55,7 +55,7 @@ class CosmosFeeToken with CborSerializable {
       {List<int>? bytes, CborObject? obj}) {
     final CborListValue values = CborSerializable.decodeCborTags(
         bytes, obj, CborTagsConst.cosmosNativeToken);
-    final token = Token.deserialize(obj: values.getCborTag(0));
+    final token = Token.deserialize(obj: values.elementAsCborTag(0));
     return CosmosFeeToken._(
         token: token,
         denom: values.elementAs(1),
@@ -70,7 +70,7 @@ class CosmosFeeToken with CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           token.toCbor(),
           CborStringValue(denom),
           lowGasPrice?.balance,

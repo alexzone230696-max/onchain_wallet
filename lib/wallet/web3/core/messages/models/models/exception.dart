@@ -8,14 +8,17 @@ import 'package:on_chain_wallet/wallet/web3/core/permission/models/authenticated
 class Web3ExceptionMessage extends Web3MessageCore {
   final String message;
   final int code;
-  final String walletCode;
+  final Web3ErrorCode errorType;
   final String? data;
+  final String? customError;
   final Web3APPData? authenticated;
+  // final Web3ErrorCode type;
 
   Web3ExceptionMessage(
       {required this.message,
       required this.code,
-      required this.walletCode,
+      required this.errorType,
+      this.customError,
       this.data,
       this.authenticated});
 
@@ -27,20 +30,27 @@ class Web3ExceptionMessage extends Web3MessageCore {
         object: object,
         tags: Web3MessageTypes.error.tag);
     return Web3ExceptionMessage(
-        message: values.elementAt(0),
-        code: values.elementAt(1),
-        walletCode: values.elementAt(2),
-        data: values.elementAt(3),
-        authenticated: values.elemetMybeAs<Web3APPData, CborObject>(4, (p0) {
+        message: values.valueAs(0),
+        code: values.valueAs(1),
+        errorType: Web3ErrorCode.fromWalletCode(values.valueAs(2)),
+        data: values.valueAs(3),
+        authenticated: values.indexMaybeAs<Web3APPData, CborTagValue>(4, (p0) {
           return Web3APPData.deserialize(object: p0);
-        }));
+        }),
+        customError: values.valueAs(5));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
-            [message, code, walletCode, data, authenticated?.toCbor()]),
+        CborSerializable.fromDynamic([
+          message,
+          code,
+          errorType.walletCode,
+          data,
+          authenticated?.toCbor(),
+          customError
+        ]),
         type.tag);
   }
 
@@ -49,6 +59,6 @@ class Web3ExceptionMessage extends Web3MessageCore {
 
   Web3RequestException toException() {
     return Web3RequestException(
-        message: message, code: code, walletCode: walletCode, data: data);
+        message: message, errorCode: code, type: errorType, data: data);
   }
 }

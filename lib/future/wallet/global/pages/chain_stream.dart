@@ -11,9 +11,11 @@ class ChainStreamBuilder<T extends Chain> extends StatefulWidget {
   final T account;
   final List<ChainNotify>? allowNotify;
   final CHAINSTREAMBUILER builder;
+  final String? debugName;
   const ChainStreamBuilder(
       {required this.builder,
       required this.account,
+      this.debugName,
       this.allowNotify,
       super.key});
 

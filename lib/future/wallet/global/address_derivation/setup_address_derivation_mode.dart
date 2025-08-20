@@ -147,8 +147,6 @@ class _SetupDerivationModeView2State extends State<SetupDerivationModeView>
                               AddressDerivationIndex>("key_derivation".tr,
                           child: Bip32KeyDerivationView(
                               coin: coin,
-                              curve: coin.conf.type,
-                              network: network,
                               defaultPath: nextDerivation.hdPath,
                               seedGeneration: widget.seedGenerationType),
                           centerContent: false);
@@ -198,23 +196,27 @@ class _SetupDerivationModeView2State extends State<SetupDerivationModeView>
         ),
         Text("generate_from_hd_wallet".tr),
         WidgetConstant.height8,
-        RadioListTile<EncryptedCustomKey?>(
-            value: null,
-            groupValue: selectedCustomKey,
-            onChanged: onChangeCustomKey,
-            title: Text("hd_wallet".tr),
-            subtitle: Text("generate_from_hd_wallet".tr)),
+        RadioGroup(
+          groupValue: selectedCustomKey,
+          onChanged: onChangeCustomKey,
+          child: RadioListTile<EncryptedCustomKey?>(
+              value: null,
+              title: Text("hd_wallet".tr),
+              subtitle: Text("generate_from_hd_wallet".tr)),
+        ),
         Column(
           children: List.generate(customKeys.length, (index) {
             final key = customKeys[index];
 
-            return RadioListTile(
-              value: key,
+            return RadioGroup(
               groupValue: selectedCustomKey,
               onChanged: onChangeCustomKey,
-              title: OneLineTextWidget(key.name ?? key.publicKey),
-              subtitle:
-                  Text("imported_at".tr.replaceOne(key.created.toString())),
+              child: RadioListTile(
+                value: key,
+                title: OneLineTextWidget(key.name ?? key.publicKey),
+                subtitle:
+                    Text("imported_at".tr.replaceOne(key.created.toString())),
+              ),
             );
           }),
         ),

@@ -67,7 +67,7 @@ class Web3SolanaSignInParams extends Web3SolanaSignParams {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           account.toCbor(),
           CborStringValue(StringUtils.fromJson(message.toJson())),
         ]),
@@ -147,7 +147,7 @@ class Web3SolanaSignMessageParams extends Web3SolanaSignParams {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           account.toCbor(),
           data,
           content,
@@ -223,21 +223,27 @@ class Web3SolanaSignMessage
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
-          CborListValue.fixedLength(messages.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              messages.map((e) => e.toCbor()).toList()),
         ]),
         type.tag);
   }
 
   @override
-  Web3SolanaRequest<List<Web3SolanaSignMessageResponse>, Web3SolanaSignMessage>
-      toRequest(
-          {required Web3RequestInformation request,
-          required Web3RequestAuthentication authenticated,
-          required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+  Future<
+      Web3SolanaRequest<List<Web3SolanaSignMessageResponse>,
+          Web3SolanaSignMessage>> toRequest(
+      {required Web3RequestInformation request,
+      required Web3RequestAuthentication authenticated,
+      required WEB3REQUESTNETWORKCONTROLLER<ISolanaAddress, SolanaChain,
+              Web3SolanaChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3SolanaRequest<List<Web3SolanaSignMessageResponse>,
         Web3SolanaSignMessage>(
       params: this,

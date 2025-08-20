@@ -31,9 +31,9 @@ final class RippleNewAddressParams extends NewAccountParams<IXRPAddress> {
         tags: NewAccountParamsType.rippleNewAddressParams.tag);
     return RippleNewAddressParams(
       deriveIndex:
-          AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
-      tag: values.elementAt(1),
-      coin: CustomCoins.getSerializationCoin(values.elementAt(2)),
+          AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(0)),
+      tag: values.elementAs(1),
+      coin: CustomCoins.getSerializationCoin(values.elementAs(2)),
     );
   }
   @override
@@ -65,7 +65,8 @@ final class RippleNewAddressParams extends NewAccountParams<IXRPAddress> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([deriveIndex.toCbor(), tag, coin.toCbor()]),
+        CborSerializable.fromDynamic(
+            [deriveIndex.toCbor(), tag, coin.toCbor()]),
         type.tag);
   }
 
@@ -116,10 +117,10 @@ final class RippleMultiSigNewAddressParams implements RippleNewAddressParams {
         tags: NewAccountParamsType.rippleMultiSigNewAddressParams.tag);
     return RippleMultiSigNewAddressParams._(
       masterAddress: XRPAddress(values.elementAs(0)),
-      multiSigAccount:
-          RippleMultiSignatureAddress.deserialize(obj: values.getCborTag(1)),
+      multiSigAccount: RippleMultiSignatureAddress.deserialize(
+          obj: values.elementAsCborTag(1)),
       tag: values.elementAs(1),
-      coin: CustomCoins.getSerializationCoin(values.elementAt(2)),
+      coin: CustomCoins.getSerializationCoin(values.elementAs(2)),
     );
   }
 
@@ -139,7 +140,8 @@ final class RippleMultiSigNewAddressParams implements RippleNewAddressParams {
         network: network,
         address: masterAddress,
         coin: coin,
-        identifier: NewAccountParams.toIdentifier(masterAddress.toAddress()),
+        identifier: NewAccountParams.toIdentifier(masterAddress.toAddress(),
+            multisigAddress: multiSigAccount.toCbor().encode()),
         multiSigAccount: multiSigAccount,
         tag: tag);
   }
@@ -147,7 +149,7 @@ final class RippleMultiSigNewAddressParams implements RippleNewAddressParams {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           masterAddress.address,
           multiSigAccount.toCbor(),
           tag,

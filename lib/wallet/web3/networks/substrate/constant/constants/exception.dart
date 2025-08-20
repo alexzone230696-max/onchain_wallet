@@ -10,5 +10,6 @@ class Web3SubstrateExceptionConstant {
           "Unsuported metadata version.");
   static Web3RequestException get differentRuntimeMetadata =>
       Web3RequestExceptionConst.message(
-          "Invalid runtime information: The node returned a different genesis hash or a spec version that does not match your request.");
+          "Invalid runtime information: The node returned a different genesis hash or a spec version that does not match your request.",
+          errorType: Web3ErrorCode.invalidParams);
 }

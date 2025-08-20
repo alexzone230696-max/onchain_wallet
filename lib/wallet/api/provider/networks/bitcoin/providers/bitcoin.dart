@@ -100,7 +100,7 @@ class BitcoinExplorerAPIProvider extends BaseBitcoinAPIProvider {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
+        CborSerializable.fromDynamic(
             [explorerType.name, auth?.toCbor(), identifier]),
         CborTagsConst.bitcoinExplorerApiProvider);
   }

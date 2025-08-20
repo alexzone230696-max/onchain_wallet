@@ -31,7 +31,7 @@ final class StellarNewAddressParams extends NewAccountParams<IStellarAddress> {
         tags: NewAccountParamsType.stellarNewAddressParams.tag);
     return StellarNewAddressParams(
       deriveIndex:
-          AddressDerivationIndex.deserialize(obj: values.getCborTag(0)),
+          AddressDerivationIndex.deserialize(obj: values.elementAsCborTag(0)),
       id: values.elementAs(1),
       coin: CustomCoins.getSerializationCoin(values.elementAs(2)),
     );
@@ -67,7 +67,7 @@ final class StellarNewAddressParams extends NewAccountParams<IStellarAddress> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([deriveIndex.toCbor(), id, coin.toCbor()]),
+        CborSerializable.fromDynamic([deriveIndex.toCbor(), id, coin.toCbor()]),
         type.tag);
   }
 

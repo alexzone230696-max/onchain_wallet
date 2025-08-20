@@ -22,7 +22,8 @@ class RippleMultiSigSignerDetails with Equatable, CborSerializable {
 
     final List<int> publicKey = cbor.elementAs(0);
     final int weight = cbor.elementAs(1);
-    final keyIndex = Bip32AddressIndex.deserialize(obj: cbor.getCborTag(2));
+    final keyIndex =
+        Bip32AddressIndex.deserialize(obj: cbor.elementAsCborTag(2));
     return RippleMultiSigSignerDetails(
         publicKey: publicKey, weight: weight, keyIndex: keyIndex);
   }
@@ -36,7 +37,7 @@ class RippleMultiSigSignerDetails with Equatable, CborSerializable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           CborBytesValue(BytesUtils.fromHexString(publicKey)),
           weight,
           keyIndex.toCbor()
@@ -69,15 +70,18 @@ class RippleMultiSignatureAddress with Equatable, CborSerializable {
       throw WalletExceptionConst.invalidAccountDetails;
     }
 
+    /// make sure signers is sorted because of account identifier
+    final sortedSigners = signers.clone()
+      ..sort((a, b) => a.publicKey.compareTo(b.publicKey));
     return RippleMultiSignatureAddress._(
-        signers: signers, threshold: threshold, isRegular: isRegularKey);
+        signers: sortedSigners, threshold: threshold, isRegular: isRegularKey);
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
-          CborListValue.fixedLength(signers.map((e) => e.toCbor()).toList()),
+        CborSerializable.fromDynamic([
+          CborSerializable.fromDynamic(signers.map((e) => e.toCbor()).toList()),
           threshold,
           CborBoleanValue(isRegular)
         ]),

@@ -77,7 +77,7 @@ class ExtrinsicPayloadInfo {
   final String payload;
   final List<int> payloadBytes;
   final String serializedExtrinsic;
-  final String? payloadInfo;
+  final Object? payloadInfo;
   final String method;
   final SubstrateDefaultExtrinsic? extrinsic;
   ExtrinsicPayloadInfo._(
@@ -98,10 +98,7 @@ class ExtrinsicPayloadInfo {
         payload: BytesUtils.toHexString(payload, prefix: "0x"),
         serializedExtrinsic:
             BytesUtils.toHexString(serializedExtrinsic, prefix: "0x"),
-        payloadInfo: payloadInfo == null
-            ? null
-            : StringUtils.fromJson(payloadInfo,
-                indent: '', toStringEncodable: true),
+        payloadInfo: payloadInfo,
         method: BytesUtils.toHexString(method, prefix: "0x"),
         payloadBytes: payload,
         extrinsic: extrinsic);

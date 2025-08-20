@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
+import 'package:on_chain_wallet/future/widgets/widgets/json/json/widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 
@@ -19,8 +20,18 @@ class SubstrateShowPayloadInfoWidget extends StatelessWidget {
         Text("payload_info".tr, style: context.textTheme.titleMedium),
         WidgetConstant.height8,
         ContainerWithBorder(
-            child: LargeTextContainer(
-                color: context.onPrimaryContainer, text: payload.payloadInfo!)),
+          onRemoveIcon:
+              Icon(Icons.open_in_full, color: context.onPrimaryContainer),
+          onRemove: () {
+            context.openDialogPage(
+              '',
+              child: (context) => JsonView(
+                  text: payload.payloadInfo!, title: 'payload_info'.tr),
+            );
+          },
+          child:
+              Text("content".tr, style: context.onPrimaryTextTheme.bodyMedium),
+        ),
         WidgetConstant.height20,
         Text("serialized_call".tr, style: context.textTheme.titleMedium),
         WidgetConstant.height8,

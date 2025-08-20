@@ -65,7 +65,7 @@ final class PrivateKeyData extends CryptoPrivateKeyData {
         extendedKey: cbor.elementAs(2),
         wif: cbor.elementAs(3),
         keyName: cbor.elementAs(4),
-        publicKey: PublicKeyData.deserialize(obj: cbor.getCborTag(5)));
+        publicKey: PublicKeyData.deserialize(obj: cbor.elementAsCborTag(5)));
   }
 
   factory PrivateKeyData._(
@@ -85,7 +85,7 @@ final class PrivateKeyData extends CryptoPrivateKeyData {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           coin.toCbor(),
           privateKey,
           extendedKey,

@@ -4,6 +4,7 @@ import 'package:on_chain_wallet/app/serialization/cbor/cbor.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 
 class Web3AccountAcitvity with CborSerializable, Equatable {
+  final String requestId;
   final String method;
   final DateTime date;
   final String? path;
@@ -11,6 +12,7 @@ class Web3AccountAcitvity with CborSerializable, Equatable {
   final int? id;
   Web3AccountAcitvity({
     required this.method,
+    required this.requestId,
     DateTime? date,
     required this.path,
     this.id,
@@ -24,21 +26,22 @@ class Web3AccountAcitvity with CborSerializable, Equatable {
         hex: hex,
         tags: CborTagsConst.permissionActivityTag);
     return Web3AccountAcitvity(
-        method: values.elementAt(0),
-        date: values.elementAt(1),
-        path: values.elementAt(2),
-        address: values.elementAt(3),
-        id: values.elementAs(4));
+        method: values.valueAs(0),
+        requestId: values.valueAs(1),
+        date: values.valueAs(2),
+        path: values.valueAs(3),
+        address: values.valueAs(4),
+        id: values.valueAs(5));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength(
-            [method, CborEpochFloatValue(date), path, address, id]),
+        CborSerializable.fromDynamic(
+            [method, requestId, CborEpochFloatValue(date), path, address, id]),
         CborTagsConst.permissionActivityTag);
   }
 
   @override
-  List get variabels => [method, date, path, address, id];
+  List get variabels => [method, requestId, date, path, address, id];
 }

@@ -13,6 +13,7 @@ class APPDatabaseConst {
   static const int web3AuthStorage = 100000;
   static const int web3WcSessionStorageId = 1;
   static const int web3WcMessageId = 2;
+  static const int web3Activities = 3;
 
   static const ITableReadStructA appSettingQuery = ITableReadStructA(
       tableName: mainTableName,

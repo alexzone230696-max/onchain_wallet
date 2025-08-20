@@ -13,8 +13,10 @@ import '../../models/models.dart';
 import '../../models/models/networks/wallet_standard.dart';
 import '../../utils/utils.dart';
 import 'package:on_chain_bridge/web/web.dart';
+import '../networks/ada.dart';
 import '../networks/aptos.dart';
 import '../networks/bitcoin.dart';
+import '../networks/bitcoin_cash.dart';
 import '../networks/cosmos.dart';
 import '../networks/ethereum.dart';
 import '../networks/monero.dart';
@@ -79,10 +81,16 @@ abstract class Web3JSWalletHandler
     JSClientType.bitcoin: BitcoinWeb3JSStateHandler(
         sendMessageToClient: _sendEventToClient,
         sendInternalMessage: _sendInternalWalletMessage),
+    JSClientType.bitcoinCash: BitcoinCashWeb3JSStateHandler(
+        sendMessageToClient: _sendEventToClient,
+        sendInternalMessage: _sendInternalWalletMessage),
     JSClientType.xrpl: RippleWeb3JSStateHandler(
         sendMessageToClient: _sendEventToClient,
         sendInternalMessage: _sendInternalWalletMessage),
     JSClientType.monero: MoneroWeb3JSStateHandler(
+        sendMessageToClient: _sendEventToClient,
+        sendInternalMessage: _sendInternalWalletMessage),
+    JSClientType.cardano: ADAWeb3JSStateHandler(
         sendMessageToClient: _sendEventToClient,
         sendInternalMessage: _sendInternalWalletMessage),
   };
@@ -185,10 +193,7 @@ abstract class Web3JSWalletHandler
             Web3GlobalRequestMethods.fromName(request.method);
         if (globalMethod != null) {
           message = await _onGlobalRequest(
-            request: request,
-            globalMethod: globalMethod,
-            client: client,
-          );
+              request: request, globalMethod: globalMethod, client: client);
         } else {
           final handler = _networks[client];
           if (handler == null) {

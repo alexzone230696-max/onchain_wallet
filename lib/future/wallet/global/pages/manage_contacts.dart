@@ -55,7 +55,7 @@ class __ManageAccountContactsState extends State<_ManageAccountContacts> {
         ),
         SliverConstraintsBoxView(
             sliver: ChainStreamBuilder(
-                allowNotify: [ChainNotify.contacts],
+                allowNotify: [DefaultChainNotify.contacts],
                 builder: (context, chain, lastNotify) {
                   return EmptyItemSliverWidgetView(
                     isEmpty: contacts.isEmpty,

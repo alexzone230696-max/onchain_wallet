@@ -21,13 +21,13 @@ final class WalletRequestReadPublicKeys
         tags: WalletRequestMethod.readPublicKeys.tag);
     return WalletRequestReadPublicKeys(
         AccessCryptoPrivateKeysRequest.fromCborBytesOrObject(
-            obj: values.getCborTag(0)));
+            obj: values.elementAsCborTag(0)));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([request.toCbor()]), method.tag);
+        CborSerializable.fromDynamic([request.toCbor()]), method.tag);
   }
 
   @override

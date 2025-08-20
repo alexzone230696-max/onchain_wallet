@@ -45,7 +45,7 @@ class SolanaNetworkParams extends NetworkCoinParams<SolanaAPIProvider> {
         bytes, obj, CborTagsConst.solNetworkParam);
 
     return SolanaNetworkParams(
-        token: Token.deserialize(obj: values.getCborTag(2)),
+        token: Token.deserialize(obj: values.elementAsCborTag(2)),
         providers: values
             .elementAsListOf<CborTagValue>(3)
             .map((e) => SolanaAPIProvider.fromCborBytesOrObject(obj: e))
@@ -68,11 +68,12 @@ class SolanaNetworkParams extends NetworkCoinParams<SolanaAPIProvider> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           const CborNullValue(),
           const CborNullValue(),
           token.toCbor(),
-          CborListValue.fixedLength(providers.map((e) => e.toCbor()).toList()),
+          CborSerializable.fromDynamic(
+              providers.map((e) => e.toCbor()).toList()),
           chainType.name,
           const CborNullValue(),
           chainId,

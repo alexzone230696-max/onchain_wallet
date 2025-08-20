@@ -31,8 +31,8 @@ class Web3TronSignTransaction extends Web3TronRequestParam<Transaction> {
       tags: Web3MessageTypes.walletRequest.tag,
     );
     return Web3TronSignTransaction(
-        transaction: values.elementAt(1),
-        txId: values.elementAt(2),
+        transaction: values.elementAs(1),
+        txId: values.elementAs(2),
         accessAccount: Web3TronChainAccount.deserialize(
             object: values.elementAs<CborTagValue>(3)));
   }
@@ -43,7 +43,7 @@ class Web3TronSignTransaction extends Web3TronRequestParam<Transaction> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([
+        CborSerializable.fromDynamic([
           method.tag,
           CborBytesValue(transaction),
           txId,
@@ -53,12 +53,16 @@ class Web3TronSignTransaction extends Web3TronRequestParam<Transaction> {
   }
 
   @override
-  Web3TronRequest<Transaction, Web3TronSignTransaction> toRequest(
+  Future<Web3TronRequest<Transaction, Web3TronSignTransaction>> toRequest(
       {required Web3RequestInformation request,
       required Web3RequestAuthentication authenticated,
-      required List<Chain> chains}) {
-    final chain = super.findRequestChain(
-        request: request, authenticated: authenticated, chains: chains);
+      required WEB3REQUESTNETWORKCONTROLLER<ITronAddress, TronChain,
+              Web3TronChainAccount>
+          chainController}) async {
+    final chain = await super.findRequestChain(
+        request: request,
+        authenticated: authenticated,
+        chainController: chainController);
     return Web3TronRequest<Transaction, Web3TronSignTransaction>(
       params: this,
       authenticated: authenticated,
