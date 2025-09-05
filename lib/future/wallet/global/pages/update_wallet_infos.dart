@@ -84,7 +84,6 @@ class _UpdateWalletInfosWidgetState extends State<UpdateWalletInfosWidget>
     if (platformCredential.object != null) {
       platformCredential = ShimmerAction(object: null);
     } else {
-      Logg.error("called ?!");
       platformCredential.setAction(false);
       final credential = await MethodUtils.call(() async {
         return await PlatformCryptoMethods.createPlatformCredential(
@@ -94,7 +93,6 @@ class _UpdateWalletInfosWidgetState extends State<UpdateWalletInfosWidget>
             accountId: widget.wallet.key,
             reason: "authenticate".tr);
       });
-      Logg.error("credential $credential");
       if (credential.hasError) {
         context.showAlert(credential.localizationError);
       } else {

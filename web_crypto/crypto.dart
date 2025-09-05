@@ -1,7 +1,6 @@
 import 'package:blockchain_utils/crypto/crypto/crypto.dart';
 import 'package:blockchain_utils/crypto/quick_crypto.dart';
 import 'package:blockchain_utils/utils/utils.dart';
-import 'package:on_chain_wallet/app/dev/logging.dart' show Logg;
 import 'package:on_chain_wallet/crypto/isolate/controller/message_controller.dart';
 import 'package:on_chain_wallet/crypto/requets/argruments/argruments.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/models/models.dart';
@@ -26,7 +25,6 @@ late _WebIsolateInitialData _cryptoHandler;
 bool _init = false;
 
 String _readKey(String key) {
-  Logg.log("is key called?!");
   if (_init) return "";
   try {
     _init = true;

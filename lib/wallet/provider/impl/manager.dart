@@ -66,16 +66,11 @@ mixin WalletsManager on _WalletCore {
     if (!homePageStatus.isSetup) {
       return;
     }
-    try {
-      crypto.init(useIsolate);
-      _wallets = await _readWallet();
-      await _initPage();
-      if (initialPassword != null) {
-        await _controller._login(password: initialPassword);
-      }
-    } catch (e, s) {
-      Logg.error("here $e $s");
-      rethrow;
+    crypto.init(useIsolate);
+    _wallets = await _readWallet();
+    await _initPage();
+    if (initialPassword != null) {
+      await _controller._login(password: initialPassword);
     }
   }
 

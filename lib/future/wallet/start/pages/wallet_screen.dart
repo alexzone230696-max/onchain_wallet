@@ -49,7 +49,6 @@ class _APPPage extends StatelessWidget {
         return value.action.rebuild;
       },
       builder: (context, value) {
-        Logg.error("state updated ${value.action} ${value.status}");
         return APPAnimated(
             isActive: wallet.wallet.isOpen,
             onDeactive: (context) {

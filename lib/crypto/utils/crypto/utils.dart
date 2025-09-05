@@ -22,13 +22,11 @@ class WorkerCryptoUtils {
   static List<int> hashKeyNew(
       {required List<int> key, required List<int> checksum}) {
     final hash = QuickCrypto.sha256Hash(key);
-    return Logg.def(
-        () => PBKDF2.deriveKey(
-            mac: () => HMAC(() => SHA512(), hash),
-            salt: checksum,
-            iterations: keyItration,
-            length: WalletProviderConst.encryptionKeyLength),
-        "hash key");
+    return PBKDF2.deriveKey(
+        mac: () => HMAC(() => SHA512(), hash),
+        salt: checksum,
+        iterations: keyItration,
+        length: WalletProviderConst.encryptionKeyLength);
   }
 
   static List<int> encryptChacha(

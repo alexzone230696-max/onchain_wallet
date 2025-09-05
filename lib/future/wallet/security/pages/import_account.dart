@@ -231,7 +231,6 @@ class _ImportAccountState extends State<_ImportAccount>
       _error = result.localizationError;
       controller.errorText(result.localizationError,
           backToIdle: false, showBackButton: true);
-      Logg.log("here?");
     } else {
       controller.successText("address_imported_desc1".tr, backToIdle: false);
     }

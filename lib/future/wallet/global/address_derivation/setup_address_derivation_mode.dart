@@ -101,7 +101,6 @@ class _SetupDerivationModeView2State extends State<SetupDerivationModeView>
         defaultKeyIndex: nextKeyIndex,
         seedGeneration: widget.seedGenerationType);
     assert(derivationKey.importedKey == key.importedKeyId);
-    Logg.log("key ${derivationKey.subId} ${key.subId}");
     assert(derivationKey.subId == key.subId);
     assert(widget.seedGenerationType == key.seedGeneration);
     context.pop(key);

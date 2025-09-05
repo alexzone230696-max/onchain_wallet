@@ -214,7 +214,6 @@ class SuccessTransactionTextView extends StatelessWidget {
         allowNotify: [DefaultChainNotify.transaction],
         builder: (context, account, _) {
           final status = transaction?.status;
-          Logg.error("Status $status");
           return _ProgressWithTextView(
               text: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,

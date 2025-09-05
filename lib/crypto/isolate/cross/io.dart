@@ -260,7 +260,6 @@ class _WorkerConnection {
         final encryptedMessage = msg.cast<WorkerEncryptedMessage>();
         final decrypt =
             chacha.decrypt(encryptedMessage.nonce, encryptedMessage.message);
-        Logg.log("dec ${decrypt != null}");
         return (CborMessageResponseArgs.deserialize(decrypt!), id);
       }
       if (msg.type == WorkerMessageType.cbor) {
@@ -458,7 +457,6 @@ class _IoEncryptedIsolateInitialData {
           args: args, id: id, encryptedPart: encryptedPart);
       return (response, encrypted, id);
     } catch (e) {
-      Logg.error("got error here ?");
       return (
         EncryptedIsolateMessageController.verificationFailed,
         encrypted ?? true,

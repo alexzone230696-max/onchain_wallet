@@ -197,7 +197,6 @@ class MnemonicStateController with DisposableMixin, StreamStateController {
 
   Future<void> generateMnemonic() async {
     if (page == SetupMnemonicPage.generate && !formKey.ready()) return;
-    Logg.error("come generate menemonic");
     pageController.progressText("generating_mnemonic_please_wait".tr);
     page = SetupMnemonicPage.generate;
     final result = await MethodUtils.call(() async {
@@ -209,7 +208,6 @@ class MnemonicStateController with DisposableMixin, StreamStateController {
           wordCounts: mnemonic?.mnemonicWords.length ?? wordCounts.number,
           type: type);
     }, delay: type == MnemonicType.bip39 ? APPConst.oneSecoundDuration : null);
-    Logg.error("mn response $result ${result.trace}");
     if (result.hasResult) {
       _mnemonic = result.result;
       page = SetupMnemonicPage.review;

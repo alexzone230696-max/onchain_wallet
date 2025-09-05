@@ -164,7 +164,6 @@ class _WorkerConnection {
 
   static Future<web.Worker> _buildExtentionWorker() async {
     final url = PlatformUtils.assetPath(_extentionJs);
-    Logg.log("data $url");
     return web.Worker(url, WorkerOptions()..type = "module");
   }
 
@@ -205,20 +204,15 @@ class _WorkerConnection {
     final Completer<_WorkerConnection> completer = Completer();
     String? moudle;
     final ByteBuffer? wasm;
-    Logg.log("come herwe!");
     try {
       wasm = await _loadWasm(mode: mode);
       moudle = await _loadModuleScript(mode: mode);
     } catch (e) {
       throw FailedIsolateInitialization.failed;
     }
-    Logg.log("wasm $wasm");
-    Logg.log("module ${moudle?.length}");
     final k = X25519Keypair.generate();
     final worker = await _buildWorker();
-    Logg.log("worker done!");
     void onEvent(MessageEvent event) {
-      Logg.log("got event ?!");
       final String key = event.data.dartify() as String;
       final List<int> sharedKey =
           X25519.scalarMult(k.privateKey, BytesUtils.fromHexString(key));
@@ -259,7 +253,6 @@ class _WorkerConnection {
       "isStream": mode != WorkerMode.main,
       "key": k.publicKeyHex()
     }.jsify()!);
-    Logg.log("call");
     final result = await completer.future.timeout(const Duration(minutes: 2));
     worker.removeEventListener("message", workerListener);
     worker.addEventListener("message", result.onResponse.toJS);

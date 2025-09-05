@@ -45,7 +45,6 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
       {required WalletRestoreV2 backup,
       required String password,
       required WalletUpdateInfosData walletInfos}) async {
-    Logg.log("wKey ${backup.wallet.key}");
     return await _callSynchronized(() async {
       await _setup(
           hdWallet: backup.wallet,
@@ -325,7 +324,6 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
             (request.password == null && request.platformCredential != true)
         ? null
         : APPConst.animationDuraion;
-    Logg.log("duration $duration");
     final result = await _callSynchronized(
       () async {
         if (!isUnlock ||
@@ -508,11 +506,7 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
       required CryptoRestoreBackupMasterKeyResponse resotreKey,
       required MainWallet wallet,
       required List<int> memoryKey}) async {
-    // Logg.log("r ${resotreKey.masterKey.sub}");
-    // throw Exception();
     final setupKey = resotreKey.masterKey;
-    Logg.log(
-        "R ${resotreKey.checksum} ${backup.checksum} ${resotreKey.isValid}");
     final bool validChekcsum =
         BytesUtils.bytesEqual(backup.checksum, resotreKey.checksum);
     if (!resotreKey.isValid || !validChekcsum) {
@@ -567,8 +561,6 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
 
       validateChains.add(chain);
     }
-
-    Logg.log("accounts ${invalidAddresses.length}");
 
     for (final i in backup.networks) {
       i.chain.dispose();

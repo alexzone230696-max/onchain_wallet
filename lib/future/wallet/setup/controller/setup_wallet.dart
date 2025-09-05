@@ -140,14 +140,12 @@ class SetupWalletStateController with DisposableMixin, StreamStateController {
     final mainWallet = this.mainWallet;
     if (mainWallet == null) return;
     pageController.progressText("launch_the_wallet".tr);
-    Logg.log("s main wallet!");
     final result = await switch (backup == null) {
       true => walletProvider.wallet.setup(
           hdWallet: mainWallet, password: password, walletInfos: setting),
       false => walletProvider.wallet.setupBackup(
           backup: backup!, password: password, walletInfos: setting)
     };
-    Logg.log("Done!");
     if (result.hasError) {
       pageController.errorText(result.localizationError);
     } else {

@@ -204,16 +204,14 @@ mixin JSExtensionBackgroudHandler on JSExtensionBackgroudStorageHandler {
         default:
           throw Web3RequestExceptionConst.internalError;
       }
-    } on Web3RequestException catch (e, s) {
-      Logg.error("got error $e $s");
+    } on Web3RequestException catch (e) {
       return WalletEvent(
           clientId: event.clientId,
           data: e.toResponseMessage().toCbor().encode(),
           requestId: event.requestId,
           type: WalletEventTypes.exception,
           target: WalletEventTarget.background);
-    } catch (e, s) {
-      Logg.error("got error $e $s");
+    } catch (e) {
       return WalletEvent(
           clientId: event.clientId,
           data: Web3RequestExceptionConst.internalError

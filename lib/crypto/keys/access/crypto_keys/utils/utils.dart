@@ -189,8 +189,7 @@ class CryptoKeyUtils {
         default:
           throw AppCryptoExceptionConst.invalidExtendedKey;
       }
-    } catch (e, s) {
-      Logg.error("err $e $s");
+    } catch (e) {
       throw AppCryptoExceptionConst.invalidExtendedKey;
     }
   }

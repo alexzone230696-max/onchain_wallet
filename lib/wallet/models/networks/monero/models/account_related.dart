@@ -1765,13 +1765,11 @@ class MoneroSyncAccountsInfos with CborSerializable, Equatable {
   }
 
   List<MoneroSyncAccountInfo> getAddresses() {
-    return Logg.def(
-        () => _indexes
-            .map((e) => MoneroSyncAccountInfo(
-                address: primaryAccount.getAddress(e.index),
-                startHeight: e.startHeight))
-            .toList(),
-        'acc');
+    return _indexes
+        .map((e) => MoneroSyncAccountInfo(
+            address: primaryAccount.getAddress(e.index),
+            startHeight: e.startHeight))
+        .toList();
   }
 
   MoneroAccountKeys getAccountKeys() {

@@ -191,29 +191,25 @@ class _MoneroAccountSyncViewState
     List<_SyncRequest> requests = [];
     final tracker = account.defaultTracker;
 
-    requests.add(Logg.def(
-        () => createViewRequest(
-            startHeight: tracker.startHeight,
-            endHeight: currentHeight ?? tracker.endHeight,
-            addresses: tracker.accounts,
-            failedOffsets: tracker.failedOffsets,
-            currentHeight: tracker.currentHeight,
-            status: tracker.status.name.tr,
-            progressOffsets: tracker.offsets),
-        'load'));
+    requests.add(createViewRequest(
+        startHeight: tracker.startHeight,
+        endHeight: currentHeight ?? tracker.endHeight,
+        addresses: tracker.accounts,
+        failedOffsets: tracker.failedOffsets,
+        currentHeight: tracker.currentHeight,
+        status: tracker.status.name.tr,
+        progressOffsets: tracker.offsets));
     for (final i in tracker.requestOffsets) {
-      requests.add(Logg.def(
-          () => createViewRequest(
-              startHeight: i.startHeight,
-              endHeight: i.endHeight,
-              addresses: i.accounts,
-              failedOffsets: i.failedOffsets,
-              currentHeight: i.currentHeight,
-              status: i.status.name.tr,
-              progressOffsets: i.currentOffsets,
-              created: i.created,
-              requestId: i.requestId),
-          'load2'));
+      requests.add(createViewRequest(
+          startHeight: i.startHeight,
+          endHeight: i.endHeight,
+          addresses: i.accounts,
+          failedOffsets: i.failedOffsets,
+          currentHeight: i.currentHeight,
+          status: i.status.name.tr,
+          progressOffsets: i.currentOffsets,
+          created: i.created,
+          requestId: i.requestId));
     }
     this.requests = requests;
     buildRequestsItems();
@@ -236,7 +232,7 @@ class _MoneroAccountSyncViewState
     if (blockId.hasResult) {
       currentHeight = blockId.result;
     }
-    Logg.def(() => buildRequests(init: true), "load");
+    buildRequests(init: true);
     allowRefresh = true;
     progressKey.backToIdle();
     updateState();
