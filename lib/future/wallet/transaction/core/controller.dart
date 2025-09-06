@@ -6,6 +6,7 @@ import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/pages/state_warning.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
@@ -179,10 +180,7 @@ abstract class TransactionStateController<
     final warning = stateStatus.value.warning;
     if (context != null && warning != null) {
       final accept = await context.openSliverDialog(
-          widget: (context) => DialogTextView(
-                text: warning,
-                buttonWidget: DialogDoubleButtonView(),
-              ));
+          widget: (context) => TransactionStateWarningView(warning: warning));
       if (accept != true) return;
     }
     setPageProgress(text: "creating_transaction".tr);

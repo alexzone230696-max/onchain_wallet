@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
 import 'package:on_chain_wallet/app/constant/global/app.dart';
-import 'package:on_chain_wallet/app/dev/logging.dart';
 import 'package:on_chain_wallet/app/utils/method/utiils.dart';
 import 'package:on_chain_wallet/crypto/platform_methods/cross/methods.dart';
 import 'package:on_chain_wallet/crypto/types/credential.dart';
@@ -96,6 +95,9 @@ class _UpdateWalletInfosWidgetState extends State<UpdateWalletInfosWidget>
       if (credential.hasError) {
         context.showAlert(credential.localizationError);
       } else {
+        if (credential.result == null) {
+          context.showAlert("no_biometric_enrolled".tr);
+        }
         platformCredential = ShimmerAction(object: credential.result);
       }
       platformCredential.setAction(true);

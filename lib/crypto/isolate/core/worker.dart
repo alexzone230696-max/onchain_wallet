@@ -36,7 +36,7 @@ abstract class IsolateCryptoWoker {
     } on TimeoutException {
       if (mode != WorkerMode.main) rethrow;
       final result = onMain();
-      assert(false, "failed to run isolate");
+      // assert(false, "failed to run isolate");
       return result;
     }
   }

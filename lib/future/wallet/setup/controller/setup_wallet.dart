@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:on_chain_wallet/app/dev/logging.dart';
 import 'package:on_chain_wallet/app/live_listener/live.dart';
 import 'package:on_chain_wallet/app/models/models/typedef.dart';
 import 'package:on_chain_wallet/app/utils/string/password.dart';
@@ -83,7 +82,7 @@ class SetupWalletStateController with DisposableMixin, StreamStateController {
       if (mnemonic == null) return;
       final acceptTerms = await onShowTerms();
       if (acceptTerms != true) return;
-      pageController.progressText("setup_sub_wallet_please_wait".tr);
+      pageController.progressText("setup_wallet_please_wait".tr);
       mainWallet = await walletProvider.wallet.createWallet(
           mnemonic: mnemonic.mnemonic.toStr(),
           passphrase: mnemonic.passphrase,
@@ -103,7 +102,7 @@ class SetupWalletStateController with DisposableMixin, StreamStateController {
       if (mnemonic == null) return;
       final acceptTerms = await onShowTerms();
       if (acceptTerms != true) return;
-      pageController.progressText("setup_sub_wallet_please_wait".tr);
+      pageController.progressText("launch_the_wallet".tr);
       final subWalletData = WalletImportSubWalletData(
           mnemonic: mnemonic.mnemonic.toStr(),
           passphrase: mnemonic.passphrase,

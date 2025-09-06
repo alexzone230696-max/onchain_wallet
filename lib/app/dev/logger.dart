@@ -4,7 +4,7 @@ enum LoggerMode { dev, silent }
 
 enum LogType { debug, warning, error }
 
-const appLogger = _APPLogger(mode: LoggerMode.dev);
+const appLogger = _APPLogger(mode: LoggerMode.silent);
 
 typedef LOGWHEN = bool Function();
 

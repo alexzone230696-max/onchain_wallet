@@ -2686,7 +2686,7 @@ class Localization {
           "enter_sub_wallet_name": "Enter a name for the subwallet",
           "sub_wallet_import_to_current_main_wallet_desc":
               "This subwallet will be added to your current main wallet.",
-          "setup_sub_wallet_please_wait": "Setup sub wallet. Please wait",
+          "setup_wallet_please_wait": "Setup wallet. Please wait",
           "wallet_has_been_imported":
               "The wallet has been successfully imported.",
           "input_you_wallet_password": "Input your wallet password",
@@ -2731,7 +2731,11 @@ class Localization {
           "unlocking_transaction_please_wait":
               "Unlocking transaction. Please wait",
           "monero_successful_unlock_tx_desc":
-              "Unlock successful. transactions have been unlocked and merged into your account."
+              "Unlock successful. transactions have been unlocked and merged into your account.",
+          "no_biometric_enrolled": "No biometric enrolled",
+          "no_error_found": "No error found.",
+          "transaction_state_warning_desc":
+              "There are warnings with this transaction. Do you want to continue?"
         }
       };
 }

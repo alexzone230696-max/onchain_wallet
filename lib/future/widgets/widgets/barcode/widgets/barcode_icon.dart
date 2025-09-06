@@ -14,16 +14,15 @@ class BarcodeScannerIconView extends StatelessWidget {
     final hasBarcodeScanner = context.wallet.appSetting.supportBarcodeScanner;
     if (!hasBarcodeScanner) return WidgetConstant.sizedBox;
     return IconButton(
-      onPressed: () {
-        context
-            .to<String>(PageRouter.barcodeScanner, argruments: isSensitive)
-            .then((s) {
-          if (s != null) {
-            onBarcodeScanned(s);
-          }
-        });
-      },
-      icon: const Icon(Icons.qr_code),
-    );
+        onPressed: () {
+          context
+              .to<String>(PageRouter.barcodeScanner, argruments: isSensitive)
+              .then((s) {
+            if (s != null) {
+              onBarcodeScanned(s);
+            }
+          });
+        },
+        icon: const Icon(Icons.qr_code));
   }
 }

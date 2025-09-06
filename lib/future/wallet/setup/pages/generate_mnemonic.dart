@@ -44,25 +44,27 @@ class _MnemonicViewState extends State<SetupMnemonicView>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("setup_mnemonic".tr)),
-      body: SensitiveContent(
-        sensitivity: ContentSensitivity.sensitive,
-        child: StreamPageProgress(
-          controller: controller.pageController,
-          builder: (context) => CustomScrollView(
-            slivers: [
-              SliverConstraintsBoxView(
-                  padding: WidgetConstant.padding20,
-                  sliver: APPSliverAnimatedSwitcher<SetupMnemonicPage>(
-                      enable: controller.page,
-                      widgets: {
-                        SetupMnemonicPage.generate: (context) =>
-                            _SetupMnemonicView(controller),
-                        SetupMnemonicPage.review: (context) =>
-                            _ReviewMnemonic(controller),
-                        SetupMnemonicPage.verify: (context) =>
-                            _VerifyMnemonic(controller),
-                      }))
-            ],
+      body: UnfocusableChild(
+        child: SensitiveContent(
+          sensitivity: ContentSensitivity.sensitive,
+          child: StreamPageProgress(
+            controller: controller.pageController,
+            builder: (context) => CustomScrollView(
+              slivers: [
+                SliverConstraintsBoxView(
+                    padding: WidgetConstant.padding20,
+                    sliver: APPSliverAnimatedSwitcher<SetupMnemonicPage>(
+                        enable: controller.page,
+                        widgets: {
+                          SetupMnemonicPage.generate: (context) =>
+                              _SetupMnemonicView(controller),
+                          SetupMnemonicPage.review: (context) =>
+                              _ReviewMnemonic(controller),
+                          SetupMnemonicPage.verify: (context) =>
+                              _VerifyMnemonic(controller),
+                        }))
+              ],
+            ),
           ),
         ),
       ),

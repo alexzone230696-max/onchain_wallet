@@ -92,8 +92,9 @@ mixin MoneroTransactionUtxosController on DisposableMixin {
     for (final i in accountUtxos.value) {
       i.dispose();
     }
-    accountUtxos.dispose();
     accountUtxos.value = [];
+    accountUtxos.dispose();
+
     totalUtxos.dispose();
   }
 }

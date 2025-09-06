@@ -302,20 +302,20 @@ class ChainsHandler {
 
   void _onConnectionStatus(bool isOnline) {
     final event = ChainWalletConnectionEvent(isOnline);
-    // for (final i in _networks.entries) {
-    //   for (final n in i.value._networks.values) {
-    //     n._onWalletEvent(event);
-    //   }
-    // }
+    for (final i in _networks.entries) {
+      for (final n in i.value._networks.values) {
+        n._onWalletEvent(event);
+      }
+    }
   }
 
   Future<void> _onPing(var _) async {
     final event = ChainWalletPingEvent();
-    // for (final i in _networks.entries) {
-    //   for (final n in i.value._networks.values) {
-    //     await n._onWalletEvent(event);
-    //   }
-    // }
+    for (final i in _networks.entries) {
+      for (final n in i.value._networks.values) {
+        await n._onWalletEvent(event);
+      }
+    }
   }
 
   Future<void> init() async {

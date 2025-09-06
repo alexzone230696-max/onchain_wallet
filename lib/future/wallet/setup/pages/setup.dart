@@ -64,31 +64,33 @@ class _WalletSetupPageWidgetState extends State<WalletSetupPageWidget>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("setup".tr), centerTitle: false),
-      body: StreamPageProgress(
-        controller: controller.pageController,
-        builder: (context) => Center(
-          child: CustomScrollView(
-            shrinkWrap: true,
-            slivers: [
-              SliverConstraintsBoxView(
-                padding: WidgetConstant.padding20,
-                sliver: APPSliverAnimatedSwitcher<WalletStupPage>(
-                    enable: controller.page,
-                    widgets: {
-                      WalletStupPage.main: (context) => ConditionalWidget(
-                            enable: controller.type.isMainWallet,
-                            onActive: (context) =>
-                                _OnSetupWalletPassword(controller),
-                            onDeactive: (context) =>
-                                _SetupSubWalletOptions(controller),
-                          ),
-                      WalletStupPage.mainWalletSetting: (context) =>
-                          SliverToBoxAdapter(
-                            child: _MainWalletSettingsView(controller),
-                          )
-                    }),
-              ),
-            ],
+      body: UnfocusableChild(
+        child: StreamPageProgress(
+          controller: controller.pageController,
+          builder: (context) => Center(
+            child: CustomScrollView(
+              shrinkWrap: true,
+              slivers: [
+                SliverConstraintsBoxView(
+                  padding: WidgetConstant.padding20,
+                  sliver: APPSliverAnimatedSwitcher<WalletStupPage>(
+                      enable: controller.page,
+                      widgets: {
+                        WalletStupPage.main: (context) => ConditionalWidget(
+                              enable: controller.type.isMainWallet,
+                              onActive: (context) =>
+                                  _OnSetupWalletPassword(controller),
+                              onDeactive: (context) =>
+                                  _SetupSubWalletOptions(controller),
+                            ),
+                        WalletStupPage.mainWalletSetting: (context) =>
+                            SliverToBoxAdapter(
+                              child: _MainWalletSettingsView(controller),
+                            )
+                      }),
+                ),
+              ],
+            ),
           ),
         ),
       ),

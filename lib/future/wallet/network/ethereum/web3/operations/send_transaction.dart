@@ -206,6 +206,7 @@ class Web3EthereumSendTransactionStateController
   Future<void> initForm(EthereumClient client) async {
     _transactionData = await buildTransactionData(simulate: false);
     await buildFee();
+    txFee.stream.listen((_) => onStateUpdated());
   }
 
   @override
@@ -218,5 +219,11 @@ class Web3EthereumSendTransactionStateController
     final txId = await buildSignAndSendTransaction();
     return Web3RequestTransactionResponseData.submitTx(
         response: txId.txId, txIds: [txId]);
+  }
+
+  @override
+  TransactionStateStatus getStateStatus() {
+    if (txFee.isPending) return TransactionStateStatus.error();
+    return super.getStateStatus();
   }
 }

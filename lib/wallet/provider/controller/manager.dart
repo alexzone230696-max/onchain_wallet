@@ -73,7 +73,7 @@ mixin WalletManager on _WalletController {
         throw WalletExceptionConst.authFailed;
       }
       final auth = await PlatformCryptoMethods.authenticate(
-          credential: pCredential, reason: 'reason');
+          credential: pCredential, reason: APPConst.authenticateReason);
       if (auth != BiometricResult.success) {
         throw WalletExceptionConst.authFailed;
       }

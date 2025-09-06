@@ -517,8 +517,16 @@ class WalletBackupStateController with DisposableMixin, StreamStateController {
     backup = v;
   }
 
+  bool hasValidBackup = true;
+
+  void onPasteBackup(String v) {
+    backup = v.trim();
+    hasValidBackup = onValidateBackup(backup) == null;
+    onStateUpdated();
+  }
+
   String? onValidateBackup(String? v) {
-    if (v == null || v.isEmpty || !StringUtils.isHexBytes(backup)) {
+    if (v == null || v.isEmpty || !StringUtils.isHexBytes(backup.trim())) {
       return "bcakup_validator".tr;
     }
     return null;
@@ -542,7 +550,7 @@ class WalletBackupStateController with DisposableMixin, StreamStateController {
   }
 
   Future<void> validateBackup() async {
-    if (!formKey.ready()) return;
+    if (!formKey.ready() || !hasValidBackup) return;
     pageController.progressText("validate_backup_content".tr);
     final result = await MethodUtils.call(() async {
       WalletBackup walletBackup;

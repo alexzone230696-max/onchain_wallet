@@ -1,6 +1,5 @@
 import 'package:blockchain_utils/crypto/crypto/crypto.dart';
 import 'package:blockchain_utils/crypto/quick_crypto.dart';
-import 'package:on_chain_wallet/app/dev/logging.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 
 class WorkerCryptoUtils {

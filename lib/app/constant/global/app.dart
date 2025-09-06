@@ -58,6 +58,7 @@ class APPConst {
   static final APPImage sui = APPImage.local("assets/image/sui.png");
   static const String name = "OnChain";
   static const String applicationId = "com.mrtnetwork.on_chain_wallet";
+  static const String authenticateReason = "Authenticate to proceed";
   static const Duration animationDuraion = Duration(milliseconds: 400);
   static const Duration milliseconds100 = Duration(milliseconds: 100);
   static const Duration milliseconds200 = Duration(milliseconds: 200);
