@@ -1,4 +1,7 @@
+import 'package:blockchain_utils/utils/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:on_chain_wallet/future/future.dart';
+import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/widgets/widgets/json/json/interactive_json_preview/interactive_json_preview.dart';
 
 class JsonView extends StatefulWidget {
@@ -17,8 +20,9 @@ class JsonView extends StatefulWidget {
   State<JsonView> createState() => _JsonViewState();
 }
 
-class _JsonViewState extends State<JsonView> {
+class _JsonViewState extends State<JsonView> with SafeState<JsonView> {
   bool selectable = false;
+  String? _asString;
 
   @override
   void initState() {
@@ -27,17 +31,42 @@ class _JsonViewState extends State<JsonView> {
   }
 
   void toggleSelectable() {
-    setState(() => selectable = !selectable);
+    updateState(() => selectable = !selectable);
+  }
+
+  String asString() {
+    return _asString ??=
+        StringUtils.tryFromJson(widget.text, toStringEncodable: true) ??
+            widget.text.toString();
   }
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      shrinkWrap: true,
-      slivers: [
-        SliverAppBar(title: Text(widget.title)),
-        InteractiveJsonPreview(data: widget.text)
-      ],
-    );
+    return CustomScrollView(shrinkWrap: true, slivers: [
+      SliverAppBar(
+        title: Text(widget.title),
+        actions: [
+          IconButton(
+              onPressed: toggleSelectable,
+              icon: APPAnimated(
+                isActive: selectable,
+                onDeactive: (context) => Icon(Icons.text_fields_outlined),
+                onActive: (context) => Icon(Icons.code),
+              )),
+          CopyTextIcon(dataToCopy: asString()),
+          CloseButton(),
+          WidgetConstant.width8,
+        ],
+      ),
+      ConditionalWidget(
+          enable: selectable,
+          onActive: (context) => SliverPadding(
+                padding: WidgetConstant.padding20,
+                sliver: SliverToBoxAdapter(
+                  child: SelectableText(asString()),
+                ),
+              ),
+          onDeactive: (context) => InteractiveJsonPreview(data: widget.text))
+    ]);
   }
 }

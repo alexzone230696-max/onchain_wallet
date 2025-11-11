@@ -1,6 +1,6 @@
 part of 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 
-final class ImportedKeyStorage with CborSerializable, Equatable {
+final class ImportedKeyStorage with CborSerializable, Equality {
   ImportedKeyStorage._(
       {required this.checksum,
       required this.extendedPrivateKey,

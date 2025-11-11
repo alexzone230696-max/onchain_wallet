@@ -1,11 +1,11 @@
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:on_chain_wallet/app/constant/global/serialization.dart';
-import 'package:on_chain_wallet/app/euqatable/equatable.dart';
+import 'package:blockchain_utils/utils/equatable/equatable.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
 
 import 'image.dart';
 
-class WebViewTab with CborSerializable, Equatable {
+class WebViewTab with CborSerializable, Equality {
   final String id;
   final String url;
   final String? path;

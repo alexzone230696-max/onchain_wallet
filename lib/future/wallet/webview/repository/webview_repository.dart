@@ -22,7 +22,9 @@ class WebViewRepository with BaseRepository, CryptoWokerImpl {
 
   Future<WebViewHistoryStorage> _getHistories() async {
     final data = await queriesStorageData(
-        storage: storage, storageId: WebViewStorageType.hisotry.storageId);
+        storage: storage,
+        storageId: WebViewStorageType.hisotry.storageId,
+        limit: 500);
     final tabs = data.map((e) => WebViewTab.deserialize(bytes: e)).toList();
     return WebViewHistoryStorage(tabs);
   }
@@ -61,12 +63,14 @@ class WebViewRepository with BaseRepository, CryptoWokerImpl {
   }
 
   Future<void> saveHistory(WebViewTab tab) async {
-    _histories.addNewTab(tab);
-    await insertStorage(
-        storage: storage,
-        value: tab,
-        key: tab.lastVisit.microsecondsSinceEpoch.toString(),
-        storageId: WebViewStorageType.hisotry.storageId);
+    if (tab.host == null) return;
+    if (_histories.addNewTab(tab)) {
+      await insertStorage(
+          storage: storage,
+          value: tab,
+          key: tab.lastVisit.microsecondsSinceEpoch.toString(),
+          storageId: WebViewStorageType.hisotry.storageId);
+    }
   }
 
   Future<void> updateTab(WebViewTab tab) async {

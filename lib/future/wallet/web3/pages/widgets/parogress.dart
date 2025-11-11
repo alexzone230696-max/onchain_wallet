@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:blockchain_utils/exception/exception/exception.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
@@ -37,6 +38,8 @@ enum Web3ProgressStatus {
         return Web3ProgressStatus.idle;
     }
   }
+
+  bool get inProgress => this == Web3ProgressStatus.progress;
 }
 
 class StreamWeb3PageProgressController extends StreamValue<Web3ProgressStatus> {
@@ -218,7 +221,7 @@ class StreamWeb3PageProgressController extends StreamValue<Web3ProgressStatus> {
 
   void setInitialState() {
     _responseWidget = null;
-    silent = initialStatus;
+    // silent = initialStatus;
   }
 }
 
@@ -268,6 +271,7 @@ class _StreamWeb3PageProgressState extends State<StreamWeb3PageProgress>
     status = controller.value;
     _listener = controller.stream.listen(onChangeStatus);
     currentWidget = widget.initialWidget;
+
     key = ScaffoldMessenger.maybeOf(context);
     key?.clearSnackBars();
   }

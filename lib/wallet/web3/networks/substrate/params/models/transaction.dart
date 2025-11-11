@@ -65,7 +65,7 @@ class Web3SubstrateSendTransaction
   final List<int>? metadataHash;
   final List<int> call;
   final int? mode;
-  final int nonce;
+  final BigInt nonce;
   final int specVersion;
   final BigInt tip;
   final int transactionVersion;
@@ -107,7 +107,7 @@ class Web3SubstrateSendTransaction
             key: "tip", method: method, json: json, sign: false),
         specVersion: Web3ValidatorUtils.parseInt<int>(
             key: "specVersion", method: method, json: json, sign: false),
-        nonce: Web3ValidatorUtils.parseInt<int>(
+        nonce: Web3ValidatorUtils.parseBigInt<BigInt>(
             key: "nonce", method: method, json: json, sign: false),
         mode: Web3ValidatorUtils.parseInt<int?>(
             key: "mode", method: method, json: json, sign: false),

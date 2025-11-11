@@ -7,8 +7,8 @@ import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/controllers/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/widgets/nfts/accept.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
 
@@ -145,11 +145,18 @@ class RippleTransactionNFTAcceptOfferOperation
       SubmittableTransactionType.nftokenAcceptOffer;
 
   @override
-  Future<void> initForm(XRPClient client, {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: updateAccount);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required XRPClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super.initForm(
+        context: context, client: client, updateAccount: updateAccount);
     tokens
         .get(onFetch: () async => client.accountTokens(address))
         .catchError((_) => <RippleIssueToken>[]);
+    return this;
   }
 
   @override

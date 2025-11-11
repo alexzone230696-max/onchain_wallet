@@ -326,4 +326,9 @@ class Web3RequestExceptionConst {
   static Web3RequestException get invalidRpcUrl =>
       Web3RequestExceptionConst.invalidParameters(
           "rpcUrl must start with a valid scheme: http, https, ws, or wss.");
+
+  static Web3RequestException unsuportedSigningMessageAccount(String address) =>
+      Web3RequestExceptionConst.message(
+          "The $address address does not support message signing. Only non-multisig accounts are allowed to sign messages.",
+          errorType: Web3ErrorCode.refused);
 }

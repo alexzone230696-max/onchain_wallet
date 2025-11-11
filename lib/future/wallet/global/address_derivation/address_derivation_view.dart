@@ -2,10 +2,10 @@ import 'package:blockchain_utils/bip/bip/conf/core/coins.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
@@ -115,7 +115,12 @@ class _NetworkGenericAddressDerivationViewState
       case NetworkType.aptos:
         enableMultisig = supportMultisig && true;
         break;
-
+      case NetworkType.substrate:
+        final network =
+            widget.chain.network.toNetwork<WalletSubstrateNetwork>();
+        supportMultisig = !network.coinParam.substrateChainType.isEthereum;
+        enableMultisig = supportMultisig && widget.chain.haveAddress;
+        break;
       case NetworkType.ethereum:
       case NetworkType.solana:
       case NetworkType.tron:

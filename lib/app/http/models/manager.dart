@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:http/retry.dart' as r;
+
 import 'package:http/http.dart' as http;
+import 'package:http/retry.dart' as r;
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/app/http/isolate/models/message.dart';
+import 'package:on_chain_wallet/app/live_listener/timout.dart';
 
 class HttpClientManagerConst {
   static const Duration idleTimeout = Duration(minutes: 3);
@@ -81,7 +83,7 @@ class HttpClientManager {
       final identifier = "${uri.host}_${authenticated.hashCode}";
       if (_clients.containsKey(identifier)) {
         final cachedClient = _clients[identifier]!;
-        cachedClient.resetTimer();
+        cachedClient.startTimer();
         return cachedClient;
       }
 
@@ -100,13 +102,13 @@ class HttpClientManager {
         client = _DigestAuthCachedClient(
             client: newClient,
             onDispose: () => _clients.remove(identifier),
-            idleTimeout: idleTimeout,
+            timeoutDuration: idleTimeout,
             authenticated: authenticated as DigestProviderAuthenticated);
       } else {
         client = _CachedClient(
             client: newClient,
             onDispose: () => _clients.remove(identifier),
-            idleTimeout: idleTimeout,
+            timeoutDuration: idleTimeout,
             authenticated: authenticated);
       }
       _clients[identifier] = client;
@@ -155,37 +157,33 @@ class _Client<T extends ProviderAuthenticated?> {
 }
 
 abstract class _CachedClientImpl<T extends ProviderAuthenticated?>
-    extends _Client<T> {
+    extends _Client<T> with TimerEvent {
   final DynamicVoid onDispose;
-  final Duration idleTimeout;
-  Timer? _timer;
+  @override
+  final Duration timeoutDuration;
+
+  // Timer? _timer;
   _CachedClientImpl(
       {required this.onDispose,
-      required this.idleTimeout,
+      required this.timeoutDuration,
       required super.client,
       required super.authenticated}) {
-    _startTimer();
-  }
-  void resetTimer() {
-    _timer?.cancel();
-    _startTimer();
+    startTimer();
   }
 
-  void stopTime() {
-    _timer?.cancel();
-    _timer = null;
-  }
-
-  void _startTimer() {
-    _timer = Timer(idleTimeout, () {
-      client.close();
+  @override
+  void onTimerEvent() {
+    super.onTimerEvent();
+    try {
       onDispose();
-    });
+    } finally {
+      dispose();
+    }
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    cancelTimer();
     client.close();
   }
 }
@@ -194,7 +192,7 @@ class _CachedClient extends _CachedClientImpl {
   _CachedClient(
       {required super.client,
       required super.onDispose,
-      required super.idleTimeout,
+      required super.timeoutDuration,
       super.authenticated});
 }
 
@@ -209,7 +207,7 @@ class _DigestAuthCachedClient
   _DigestAuthCachedClient(
       {required super.client,
       required super.onDispose,
-      required super.idleTimeout,
+      required super.timeoutDuration,
       required super.authenticated});
 }
 

@@ -2,7 +2,7 @@ part of 'package:on_chain_wallet/wallet/provider/wallet_provider.dart';
 
 // ignore: library_private_types_in_public_api
 mixin WalletsManager on _WalletCore {
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   WalletController? _wallet;
   WalletController get _controller {
     if (_wallet == null) {
@@ -95,7 +95,7 @@ mixin WalletsManager on _WalletCore {
       required WalletActionEventType Function() action,
       Duration? delay = APPConst.animationDuraion,
       LockId lockId = LockId.one}) async {
-    return await _lock.synchronized(() async {
+    return await _lock.run(() async {
       final request = action();
       final event =
           _buildEvent(action: request, status: WalletActionEventStatus.pending);

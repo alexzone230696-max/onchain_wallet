@@ -2,6 +2,10 @@
 
 import 'dart:io';
 
+import 'package:on_chain_wallet/app/dev/logging.dart';
+
+// import 'package:on_chain_wallet/app/core.dart';
+
 // import 'package:on_chain_wallet/app/core.dart';
 
 const _extensionDir = "requirement/extensions/";
@@ -346,6 +350,10 @@ class _ExtensionAndWebScriptsBuilder {
     final bool scripts = !commands.contains("--no-scripts");
     final bool extension = chrome | firefox | opera | ie;
     bool compileApp = !commands.contains("--no-app");
+    final bool page = commands.contains("--script-page");
+    final bool content = commands.contains("--script-content");
+    final bool background = commands.contains("--script-background");
+    final bool isScriptPart = page || content || background;
     final String baseHref = "--base-href=/onchain_wallet/";
     // final String baseHref = "--base-href=/";
     if (clean) {
@@ -366,10 +374,22 @@ class _ExtensionAndWebScriptsBuilder {
       await buildHttpJs(minify: minify);
     }
     if (extension && scripts) {
-      await buildBackground(minify: minify);
-      await buildPage(minify: minify);
-      await buildContent(minify: minify);
-      await buildContent(minify: minify, isMozila: true);
+      if (!isScriptPart) {
+        await buildBackground(minify: minify);
+        await buildPage(minify: minify);
+        await buildContent(minify: minify);
+        await buildContent(minify: minify, isMozila: true);
+      }
+      if (page) {
+        await buildPage(minify: minify);
+      }
+      if (background) {
+        await buildBackground(minify: minify);
+      }
+      if (content) {
+        await buildContent(minify: minify);
+        await buildContent(minify: minify, isMozila: true);
+      }
     }
     if (!hasValidCryptoAssets(extension)) {
       _error(
@@ -413,6 +433,7 @@ class _ExtensionAndWebScriptsBuilder {
         file = File("${_extensionDir}content.js");
         file.copySync("web/content.js");
       }
+      Logg.log("yes is chrome!");
       if (chrome || ie) {
         file = File("${_extensionDir}chrome_manifest.json");
         file.copySync("web/manifest.json");
@@ -438,34 +459,37 @@ class _ExtensionAndWebScriptsBuilder {
         file.copySync("web/manifest.json");
       }
     }
-    if (!compileApp) return;
-    const String command = 'flutter';
-    final List<String> args = [
-      'build',
-      'web',
-      if (wasm) '--wasm',
-      if (!minify) '--debug' else '--release',
-      if (extension) '--csp',
-      "--no-web-resources-cdn",
-      if (!extension) baseHref,
-    ];
-    await _FlutterCommands.doProcess(command, args, shell: Platform.isWindows);
-    if (extension) {
-      const canvasUri =
-          r"https://www\.gstatic\.com/flutter-canvaskit/([a-f0-9]+)/";
-      final file = File("${_buildWebDir}main.dart.js");
-      String data = await file.readAsString();
-      final regex = RegExp(canvasUri);
-      final match = regex.firstMatch(data);
-      if (match != null && match.groupCount == 1) {
-        final part = match.group(0);
-        if (part != null) {
-          data = data.replaceFirst(part, "/canvaskit/");
-          await file.writeAsString(data);
-          _log("canvaskit replaced $part");
+    if (compileApp) {
+      const String command = 'flutter';
+      final List<String> args = [
+        'build',
+        'web',
+        if (wasm) '--wasm',
+        if (!minify) '--debug' else '--release',
+        if (extension) '--csp',
+        "--no-web-resources-cdn",
+        if (!extension) baseHref,
+      ];
+      await _FlutterCommands.doProcess(command, args,
+          shell: Platform.isWindows);
+      if (extension) {
+        const canvasUri =
+            r"https://www\.gstatic\.com/flutter-canvaskit/([a-f0-9]+)/";
+        final file = File("${_buildWebDir}main.dart.js");
+        String data = await file.readAsString();
+        final regex = RegExp(canvasUri);
+        final match = regex.firstMatch(data);
+        if (match != null && match.groupCount == 1) {
+          final part = match.group(0);
+          if (part != null) {
+            data = data.replaceFirst(part, "/canvaskit/");
+            await file.writeAsString(data);
+            _log("canvaskit replaced $part");
+          }
         }
       }
     }
+
     if (releaseLocation != null) {
       if (chrome) {
         final chromeDir = Directory("${releaseLocation}chrome/");

@@ -1,14 +1,16 @@
 import 'dart:async';
+
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/marketcap/prices/coingecko.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
 import 'package:on_chain_wallet/wallet/chain/account.dart';
+import 'package:on_chain_wallet/wallet/models/models.dart';
 
 class LiveCurrencies with HttpImpl {
-  final _syncRequest = SynchronizedLock();
+  final _syncRequest = SafeAtomicLock();
   final CoingeckoPriceHandler _currenciesPrice = CoingeckoPriceHandler({});
   StreamSubscription? _prices;
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   late final StreamValue<Currency> _currency =
       StreamValue<Currency>(Currency.USD);
   StreamValue<Currency> get currency => _currency;
@@ -77,7 +79,7 @@ class LiveCurrencies with HttpImpl {
   }
 
   Future<void> _onPredioc(dynamic _) async {
-    await _syncRequest.synchronized(() async {
+    await _syncRequest.run(() async {
       await MethodUtils.call(() async {
         return await _getCoinList();
       });
@@ -97,21 +99,21 @@ class LiveCurrencies with HttpImpl {
   }
 
   Future<void> _streamPrices() async {
-    await _lock.synchronized(() {
+    await _lock.run(() {
       if (_prices != null) return;
       _prices = Stream.periodic(const Duration(seconds: 15)).listen(_onPredioc);
     });
   }
 
   Future<void> dispose() async {
-    await _lock.synchronized(() {
+    await _lock.run(() {
       _prices?.cancel();
       _prices = null;
     });
   }
 
   Future<void> streamPrices(List<String> ids) async {
-    await _syncRequest.synchronized(() async {
+    await _syncRequest.run(() async {
       await _streamPrices();
       _currenciesPrice.addCoinsIds(ids);
     });

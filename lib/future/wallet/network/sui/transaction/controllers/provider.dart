@@ -4,8 +4,8 @@ import 'package:on_chain/sui/src/transaction/const/constant.dart';
 import 'package:on_chain/sui/src/transaction/types/types.dart';
 import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 import 'package:on_chain_wallet/app/live_listener/live.dart';
+import 'package:on_chain_wallet/app/utils/sync/cached_object.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/sui/client/client.dart';
-import 'package:on_chain_wallet/wallet/models/others/models/cached_object.dart';
 
 mixin SuiTransactionApiController on DisposableMixin {
   SuiClient get client;

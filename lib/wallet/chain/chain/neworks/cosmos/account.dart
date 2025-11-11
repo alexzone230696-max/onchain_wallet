@@ -10,17 +10,45 @@ class CosmosNetowkStorageId extends DefaultNetworkStorageId {
 }
 
 class CosmosNetworkConfig extends DefaultNetworkConfig<CosmosNetowkStorageId> {
-  CosmosNetworkConfig()
-      : super(supportToken: true, supportNft: false, supportWeb3: true);
+  CosmosNetworkConfig(
+      {super.supportToken = true,
+      super.supportNft = false,
+      super.supportWeb3 = true,
+      super.enableProvider = true});
   factory CosmosNetworkConfig.deserialize(
-      {List<int>? bytes, CborObject? object, String? hex}) {
-    return CosmosNetworkConfig();
+      {List<int>? cborBytes, String? cborHex, CborObject? cborObject}) {
+    final values = CborSerializable.cborTagValue(
+        cborBytes: cborBytes, hex: cborHex, object: cborObject);
+    return CosmosNetworkConfig(
+      supportToken: values.valueAs<bool?>(0) ?? true,
+      supportNft: values.valueAs<bool?>(1) ?? false,
+      supportWeb3: values.valueAs<bool?>(2) ?? true,
+      enableProvider: values.valueAs<bool?>(3) ?? true,
+    );
+  }
+  @override
+  CosmosNetworkConfig copyWith(
+      {bool? supportToken,
+      bool? supportNft,
+      bool? supportWeb3,
+      bool? enableProvider}) {
+    return CosmosNetworkConfig(
+        supportToken: supportToken ?? this.supportToken,
+        supportNft: supportNft ?? this.supportNft,
+        supportWeb3: supportWeb3 ?? this.supportWeb3,
+        enableProvider: enableProvider ?? this.enableProvider);
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborSerializable.fromDynamic([]), CborTagsConst.cosmosChainConfig);
+        CborSerializable.fromDynamic([
+          supportToken,
+          supportNft,
+          supportWeb3,
+          enableProvider,
+        ]),
+        CborTagsConst.cosmosChainConfig);
   }
 
   @override
@@ -45,7 +73,7 @@ final class CosmosChain extends Chain<
       required super.addressIndex,
       required super.id,
       required super.config,
-      required super.client,
+      required super.service,
       required super.addresses,
       super.totalBalance})
       : super._();
@@ -54,7 +82,7 @@ final class CosmosChain extends Chain<
       {WalletCosmosNetwork? network,
       List<ChainAccount>? addresses,
       int? addressIndex,
-      CosmosClient? client,
+      ProviderIdentifier? service,
       String? id,
       CosmosNetworkConfig? config,
       BigInt? totalBalance}) {
@@ -62,7 +90,7 @@ final class CosmosChain extends Chain<
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
         addresses: addresses?.cast<ICosmosAddress>() ?? _addresses,
-        client: client ?? _client,
+        service: service ?? _serviceIdentifier,
         id: id ?? this.id,
         config: config ?? this.config,
         totalBalance: totalBalance ?? this.totalBalance._value.balance);
@@ -71,19 +99,17 @@ final class CosmosChain extends Chain<
   factory CosmosChain.setup(
       {required WalletCosmosNetwork network,
       required String id,
-      CosmosClient? client}) {
+      ProviderIdentifier? service}) {
     return CosmosChain._(
         network: network,
         id: id,
         addressIndex: 0,
-        client: client,
+        service: service,
         addresses: [],
         config: CosmosNetworkConfig());
   }
   factory CosmosChain.deserialize(
-      {required WalletCosmosNetwork network,
-      required CborListValue cbor,
-      CosmosClient? client}) {
+      {required WalletCosmosNetwork network, required CborListValue cbor}) {
     final int networkId = cbor.elementAs(0);
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
@@ -94,14 +120,20 @@ final class CosmosChain extends Chain<
         .map((e) => ICosmosAddress.deserialize(network, obj: e))
         .toList();
     int addressIndex = cbor.elementAs(4);
+    final config = CosmosNetworkConfig.deserialize(cborObject: cbor.indexAs(5));
+    final ProviderIdentifier? service = MethodUtils.nullOnException(() {
+      final CborTagValue? identifier = cbor.elementAs(6);
+      if (identifier == null) return null;
+      return ProviderIdentifier.deserialize(cbor: identifier);
+    });
     BigInt? totalBalance = cbor.elementAs<BigInt?>(7);
     return CosmosChain._(
         network: network,
         addresses: accounts,
         addressIndex: addressIndex,
-        client: client,
+        service: service,
         id: id,
-        config: CosmosNetworkConfig(),
+        config: config,
         totalBalance: totalBalance);
   }
 

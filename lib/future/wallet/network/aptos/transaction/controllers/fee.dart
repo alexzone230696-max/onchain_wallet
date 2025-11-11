@@ -1,14 +1,16 @@
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:on_chain/aptos/src/transaction/constants/const.dart';
 import 'package:on_chain/aptos/src/transaction/types/types.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/wallet/network/aptos/transaction/types/types.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
+
 import 'provider.dart';
 
 mixin AptosTransactionFeeController on AptosTransactionApiController {
   WalletAptosNetwork get network;
   final Cancelable _cancelable = Cancelable();
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
 
   late final AptosTransactionFeeData txFee = AptosTransactionFeeData(
       select: AptosTransactionFee(gasUnitPrice: BigInt.zero, network: network),
@@ -38,7 +40,7 @@ mixin AptosTransactionFeeController on AptosTransactionApiController {
 
   Future<void> estimateFee() async {
     _cancelable.cancel();
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       setDefaultFee();
       txFee.setPending();
       final fee = await MethodUtils.call(() async => await simulateFee());

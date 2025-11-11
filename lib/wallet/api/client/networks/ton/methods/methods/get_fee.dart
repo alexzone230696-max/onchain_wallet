@@ -8,11 +8,13 @@ class TonRquestGetFee extends TonApiRequest<TonTransactionFeeDetails, dynamic> {
   final TonAddress address;
   final TonApiType api;
   final WalletTonNetwork network;
+  final List<OutActionSendMsg> messages;
   TonRquestGetFee(
       {required this.message,
       required this.address,
       required this.api,
-      required this.network});
+      required this.network,
+      required this.messages});
   TonApiRequest? _request;
   TonApiRequest _getRequest() {
     if (!api.isTonCenter) {
@@ -56,7 +58,7 @@ class TonRquestGetFee extends TonApiRequest<TonTransactionFeeDetails, dynamic> {
                 (e) => !e.success && e.resultDescription != null)
             ?.resultDescription;
     return TonTransactionFeeDetails(
-        actionPhase: r.transaction.actionPhase?.fwdFees ?? BigInt.zero,
+        actionPhase: r.transaction.actionPhase?.totalFees ?? BigInt.zero,
         gasFee: r.transaction.computePhase?.gasFees ?? BigInt.zero,
         storageFee: r.transaction.storagePhase?.feesCollected ?? BigInt.zero,
         success: succes,

@@ -77,7 +77,7 @@ abstract class Web3WalletConnectStateHandler<
 
   @override
   Future<STATE> getState() async {
-    return await lock.synchronized(() {
+    return await lock.run(() {
       return _state;
     });
   }
@@ -131,7 +131,7 @@ abstract class Web3WalletConnectStateHandler<
 
   @override
   Future<WalletConnectClientEvent> initChain(Web3APPData authenticated) async {
-    return await lock.synchronized(() async {
+    return await lock.run(() async {
       final currentState = _state;
       final state = createState(authenticated);
       final event = _createStateEvent(currentState, state);

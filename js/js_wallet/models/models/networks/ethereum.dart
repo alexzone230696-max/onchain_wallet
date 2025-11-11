@@ -1,5 +1,8 @@
 import 'dart:js_interop';
+
 import 'package:on_chain_bridge/web/web.dart';
+import 'package:on_chain_wallet/app/dev/logging.dart';
+
 import '../../../constant/constant.dart';
 import '../../models.dart';
 import 'wallet_standard.dart';
@@ -26,6 +29,7 @@ extension type EIP1193(JSObject _) implements JSAny {
   external JSPromise<JSAny?> requestPromis(EthereumRequestParams params);
   external set on(JSFunction f);
   external set removeListener(JSFunction f);
+  // external set autoRefreshOnNetworkChange(JSFunction f);
   external set disconnect(JSFunction f);
   external set enable(JSFunction f);
   external set connect(JSFunction f);
@@ -41,6 +45,8 @@ extension type EIP1193(JSObject _) implements JSAny {
   external set selectedAddress(String? _);
   @JS("selectedAddress")
   external String? get selectedAddress;
+
+  external JSAny? get autoRefreshOnNetworkChange;
 
   @JS("isOnChain")
   external set isOnChain(bool? _);
@@ -98,6 +104,7 @@ extension type EIP6963._(JSObject _) implements JSOBJ {
       jsWindow.dispatchEvent(event);
       jsWindow.removeEventListener(
           JSEthereumConst.eip6963Request, onRequestProvider.toJS);
+      Logg.log("is here!3");
     }
 
     jsWindow.addEventListener(

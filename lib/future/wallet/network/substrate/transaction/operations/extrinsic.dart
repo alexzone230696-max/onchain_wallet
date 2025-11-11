@@ -1,8 +1,8 @@
 import 'dart:async';
+
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/app/utils/method/utiils.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/metadata/forms/metadata.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/controllers/controller.dart';
@@ -29,12 +29,13 @@ class _ExtrinsicConstants {
   static const String disabledVariantName = "Disabled";
   static const String checkMortality = "CheckMortality";
   static const String era = "Era";
+  static const String some = "Some";
 }
 
 enum BuildExtrinsicPage { payload, extrinsic, review }
 
 class SubstrateTransactionExtrinsicOperation
-    extends SubstrateTransactionStateController {
+    extends SubstrateTransactionStateController<ISubstrateTransactionData> {
   SubstrateTransactionExtrinsicOperation(
       {required super.walletProvider,
       required super.account,
@@ -73,6 +74,14 @@ class SubstrateTransactionExtrinsicOperation
     return null;
   }
 
+  MetadataFormValidatorNumeric? _getNoncePayloadField() {
+    for (final i in _ExtrinsicConstants.knownNoncesFields) {
+      final field = _getPayloadField<MetadataFormValidatorNumeric>(i);
+      if (field != null) return field;
+    }
+    return null;
+  }
+
   void _onPayloadNonceChanged(BigRational? nonce) {
     if (nonce != null) {
       final exNonce =
@@ -93,7 +102,7 @@ class SubstrateTransactionExtrinsicOperation
         exEra.setVariant(variant: eraVariant, type: indexType);
         MethodUtils.nullOnException(() {
           exEra.validator.value?.cast<MetadataFormValidatorNumeric>().setValue(
-              validator.cast<MetadataFormValidatorNumeric>().value.value!);
+              validator.cast<MetadataFormValidatorNumeric>().value.value);
         });
       }
     }
@@ -114,12 +123,22 @@ class SubstrateTransactionExtrinsicOperation
     }
   }
 
-  MetadataFormValidatorNumeric? _getNoncePayloadField() {
-    for (final i in _ExtrinsicConstants.knownNoncesFields) {
-      final field = _getPayloadField<MetadataFormValidatorNumeric>(i);
-      if (field != null) return field;
-    }
-    return null;
+  void _updateExtrinsicFields() {
+    final era = _getPayloadField<MetadataFormValidatorVariant>(
+            _ExtrinsicConstants.era) ??
+        _getPayloadField<MetadataFormValidatorVariant>(
+            _ExtrinsicConstants.checkMortality);
+    _onPayloadEraChanged(era?.validator.value);
+    final nonceField = _getNoncePayloadField();
+    _onPayloadNonceChanged(nonceField?.value.value);
+    final mode = _getPayloadField<MetadataFormValidatorVariant>(
+        _ExtrinsicConstants.mode);
+    mode?.trySetVariant(
+        name: _ExtrinsicConstants.disabledVariantName, metadata: metadata);
+    _onPayloadModeChanged(mode?.validator.value);
+    final tip = _getPayloadField<MetadataFormValidatorBigInt>("tip") ??
+        _getPayloadField<MetadataFormValidatorBigInt>("Tip");
+    _onPayloadTipChanged(tip?.value.value);
   }
 
   Future<void> _filedPayloadFields(ISubstrateAddress address) async {
@@ -137,18 +156,13 @@ class SubstrateTransactionExtrinsicOperation
     if (eraVariant != null) {
       final indexType = metadata.getTypeInfo(eraVariant);
       era?.setVariant(variant: eraVariant, type: indexType);
-      MethodUtils.nullOnException(() => era?.validator.value
+      era?.validator.value
           ?.cast<MetadataFormValidatorNumeric>()
-          .setIntValue(finalizeBlock.eraValue));
-      era?.validator.stream.listen(_onPayloadEraChanged);
-      _onPayloadEraChanged(era?.validator.value);
+          .setValue(BigRational.from(finalizeBlock.eraValue));
     }
-
-    final form = _getNoncePayloadField();
-    form?.setIntValue(nonce);
-    form?.value.stream.listen(_onPayloadNonceChanged);
-    _onPayloadNonceChanged(form?.value.value);
-
+    final nonceField = _getNoncePayloadField();
+    nonceField?.setBigIntIntValue(nonce);
+    _onPayloadNonceChanged(nonceField?.value.value);
     _getPayloadField<MetadataFormValidatorNumeric>(
             _ExtrinsicConstants.checkTxVersion)
         ?.setIntValue(metadata.runtimeVersion.transactionVersion);
@@ -172,13 +186,9 @@ class SubstrateTransactionExtrinsicOperation
         _ExtrinsicConstants.mode);
     mode?.trySetVariant(
         name: _ExtrinsicConstants.disabledVariantName, metadata: metadata);
-    mode?.validator.stream.listen(_onPayloadModeChanged);
-    _onPayloadModeChanged(mode?.validator.value);
     final tip = _getPayloadField<MetadataFormValidatorBigInt>("tip") ??
         _getPayloadField<MetadataFormValidatorBigInt>("Tip");
     tip?.setValue(BigRational.zero);
-    tip?.value.stream.listen(_onPayloadTipChanged);
-    _onPayloadTipChanged(tip?.value.value);
   }
 
   String? _getFromsError() {
@@ -197,6 +207,7 @@ class SubstrateTransactionExtrinsicOperation
     onStateUpdated();
     if (!stateStatus.value.isReady) return;
     _payload = _buildTransaction();
+    _updateExtrinsicFields();
     page.setValue(BuildExtrinsicPage.extrinsic);
   }
 
@@ -207,6 +218,12 @@ class SubstrateTransactionExtrinsicOperation
     _extrinsicInfo = _createSignedExtrinsic(transaction: payload);
     page.setValue(BuildExtrinsicPage.review);
     estimateFee();
+  }
+
+  @override
+  Future<void> estimateFee() async {
+    if (_extrinsicInfo == null) return;
+    return super.estimateFee();
   }
 
   void onEditPayload() {
@@ -264,10 +281,12 @@ class SubstrateTransactionExtrinsicOperation
     final buffer = DynamicByteTracker();
     List<int>? encodeSignature;
     if (signature != null) {
-      final encodedAddress = metadata.encodeSigner(address.networkAddress);
-      encodeSignature = metadata.encodeSignature(
-          algorithm: address.keyIndex.currencyCoin.conf.type,
-          signature: signature);
+      final encodedAddress = metadata.extrinsic.encodeSigner(
+          address: address.networkAddress, metadata: metadata.metadata);
+      encodeSignature = List<int>.from(metadata.extrinsic.encodeSignature(
+          algorithm: address.coin.conf.type,
+          signature: signature,
+          metadata: metadata.metadata));
       buffer.add(encodedAddress);
       buffer.add(encodeSignature);
     }
@@ -366,10 +385,38 @@ class SubstrateTransactionExtrinsicOperation
         payloadInfo: extrinsicInfo);
   }
 
+  SubstrateFeeConfig? _getFeeConfig() {
+    final nativeAssetLocation = metadata.chargeAssetTxPaymentNativeLocation();
+    if (nativeAssetLocation == null) return null;
+
+    // if()
+    final assetId =
+        _getExtrinsicField<MetadataFormValidatorVariant>("asset_id");
+    if (assetId == null) return null;
+    final value = assetId.toJson();
+    if (value is Map && value.containsKey(_ExtrinsicConstants.some)) {
+      final assetIdentifier = value[_ExtrinsicConstants.some];
+      SubstrateFeeConfig? token = feeTokens
+          .firstWhereOrNull(
+              (e) => Equality.deepEqual(assetIdentifier, e.feeConfig?.feeId))
+          ?.feeConfig;
+      return token;
+    }
+    return null;
+  }
+
+  @override
+  Future<ISubstrateTransactionData> buildTransactionData(
+      {bool simulate = false}) async {
+    return ISubstrateTransactionData(
+        fee: txFee.fee, feeAssetConfig: _getFeeConfig());
+  }
+
   @override
   Future<ISubstrateTransaction> buildTransaction(
       {bool simulate = false}) async {
     final transactionData = await buildTransactionData(simulate: simulate);
+    //  final assetId = _getPayloadField<MetadataFormValidatorVariant>("asset_id");
     return ISubstrateTransaction(
         account: address, transactionData: transactionData, payload: payload);
   }
@@ -380,7 +427,7 @@ class SubstrateTransactionExtrinsicOperation
           IWalletTransaction<SubstrateWalletTransaction,
               ISubstrateAddress>>> buildWalletTransaction(
       {required ISubstrateSignedTransaction signedTx,
-      required SubmitTransactionSuccess txId}) async {
+      required SubmitSubstrateTransactionSuccess txId}) async {
     final methodBytes =
         BytesUtils.fromHexString(signedTx.finalTransactionData.payload.method);
     final decode = metadata.metadata.decodeCall(methodBytes);
@@ -397,6 +444,7 @@ class SubstrateTransactionExtrinsicOperation
             name: e.name.camelCase);
       }
     }).toList();
+
     final totalAmount = operations
         .whereType<SubstrateTransferMethod>()
         .fold<BigInt>(BigInt.zero, (p, c) => p + c.value);
@@ -407,7 +455,7 @@ class SubstrateTransactionExtrinsicOperation
         totalOutput: WalletTransactionIntegerAmount(
             amount: totalAmount, network: network),
         outputs: outputs,
-        extrinsics: extrinsic.serializeHex());
+        extrinsics: signedTx.finalTransactionData.serializeHex());
     return [
       IWalletTransaction(
           transaction: transaction, account: signedTx.transaction.account)
@@ -422,13 +470,19 @@ class SubstrateTransactionExtrinsicOperation
 
   @override
   Widget widgetBuilder(BuildContext context) {
-    return SubstrateTransactionExtrinsicWidget(form: this);
+    return SubstrateTransactionExtrinsicWidget(
+        form: this, mainContext: context);
   }
 
   @override
-  Future<void> initForm(SubstrateClient client,
-      {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: updateAccount);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required SubstrateClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super.initForm(
+        context: context, client: client, updateAccount: updateAccount);
     final fields = metadata.extrinsic;
     _extrinsicValidators = [
       ...fields.extrinsicValidators
@@ -440,6 +494,7 @@ class SubstrateTransactionExtrinsicOperation
           .map((e) => MetadataFormValidator.fromType(e))
     ].immutable;
     await _filedPayloadFields(address);
+    return this;
   }
 
   @override
@@ -448,4 +503,17 @@ class SubstrateTransactionExtrinsicOperation
 
   @override
   List<LiveFormField<Object?, Object>> get fields => [page];
+
+  @override
+  void dispose() {
+    super.dispose();
+    for (final i in _extrinsicValidators) {
+      i.dispose();
+    }
+    for (final i in _payloadValidators) {
+      i.dispose();
+    }
+    _extrinsicValidators = [];
+    _payloadValidators = [];
+  }
 }

@@ -218,6 +218,7 @@ class _ReviewMnemonicState extends State<_ReviewMnemonic>
         CustomizedContainer(
           onStackIcon: Icons.remove_red_eye,
           onTapStackIcon: onToggleShowMnemonic,
+          enableTap: false,
           child: Column(
             children: [
               Stack(

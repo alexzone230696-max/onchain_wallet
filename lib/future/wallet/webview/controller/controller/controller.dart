@@ -22,7 +22,7 @@ class WebViewController
   @override
   final WalletRouteObserver observer;
   final Cancelable _cancelable = Cancelable();
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   @override
   final UIWallet walletCore;
   WebViewController({required this.walletCore, required this.observer});
@@ -208,7 +208,7 @@ class WebViewController
   void onPageStart(WebViewEvent event) async {
     _cancelable.cancel();
 
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       onWeb3ClinetDisconnected(latestClient.value.client);
       super.onPageStart(event);
       final execute = await MethodUtils.call(
@@ -236,7 +236,7 @@ class WebViewController
       return;
     }
     if (isWorker) {
-      final bool isWalletRequest = await _lock.synchronized(() async {
+      final bool isWalletRequest = await _lock.run(() async {
         final requestType =
             WalletJSScriptStatus.fromJSWalletEvent(request.type);
         if (requestType != null) {

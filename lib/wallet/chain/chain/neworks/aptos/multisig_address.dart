@@ -1,6 +1,6 @@
 part of 'package:on_chain_wallet/wallet/chain/chain/chain.dart';
 
-class AptosMultisigAccountPublicKeyInfo with CborSerializable, Equatable {
+class AptosMultisigAccountPublicKeyInfo with CborSerializable, Equality {
   /// public key bytes
   final List<int> publicKey;
 

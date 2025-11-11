@@ -1,4 +1,5 @@
 import 'package:blockchain_utils/utils/utils.dart';
+import 'package:on_chain_bridge/models/files/picked_file_data.dart';
 import 'package:on_chain_wallet/app/platform_methods/cross/methods.dart';
 
 class PlatformUtils {
@@ -42,5 +43,15 @@ class PlatformUtils {
 
   static Future<String?> readClipboard() {
     return PlatformMethods.readClipboard();
+  }
+
+  static Future<PickedFileContent?> pickFile(
+      {PickFileContentEncoding encoding = PickFileContentEncoding.utf8}) async {
+    final file = await PlatformMethods.pickFile(encoding: encoding);
+    return file;
+  }
+
+  static Future<void> saveFile({required String filePath}) async {
+    return await PlatformMethods.saveFile(filePath: filePath);
   }
 }

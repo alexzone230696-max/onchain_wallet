@@ -6,7 +6,6 @@ import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/monero/account/state.dart';
 import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
-
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
 enum _SyncOptionsPage {
@@ -229,7 +228,7 @@ class _MoneroSyncOptionsViewState
       }
       payments = toViewPayment(unlockedInfo.result);
       if (payments!.isEmpty) {
-        progressKey.successProgress(
+        progressKey.success(
             progressWidget: ProgressWithTextView(
               text: "monero_empty_outputs_desc".tr,
               icon: const Icon(Icons.hourglass_empty),
@@ -337,7 +336,7 @@ class _MoneroSyncOptionsViewState
     }
     payments = toViewPayment(unlockedInfo.result);
     if (payments!.isEmpty) {
-      progressKey.successProgress(
+      progressKey.success(
           progressWidget: ProgressWithTextView(
             text: "monero_empty_outputs_desc".tr,
             icon: const Icon(Icons.hourglass_empty),

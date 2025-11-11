@@ -18,7 +18,7 @@ class EraseWalletView extends StatelessWidget {
         },
         title: "delete_wallet".tr,
         subtitle: PageTitleSubtitle(
-            title: "delete_wallet_confirmation".tr,
+            title: "delete_wallet".tr,
             body: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -159,7 +159,7 @@ class _EraseWalletViewState extends State<_EraseWalletView>
                     children: [
                       WidgetConstant.height20,
                       PageTitleSubtitle(
-                          title: "delete_wallet_confirmation".tr,
+                          title: "delete_wallet".tr,
                           body: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

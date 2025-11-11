@@ -1,7 +1,7 @@
 import 'package:blockchain_utils/helper/extensions/extensions.dart';
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:on_chain/solana/solana.dart';
 import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
-import 'package:on_chain_wallet/app/synchronized/basic_lock.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
@@ -36,6 +36,7 @@ class SolanaTransactionFeeData
 
 abstract class BaseSolanaTransactionController
     extends TransactionStateController<
+        SolanaSPLToken,
         ISolanaAddress,
         SolanaClient,
         WalletSolanaNetwork,
@@ -44,7 +45,8 @@ abstract class BaseSolanaTransactionController
         ISolanaTransaction,
         ISolanaSignedTransaction,
         SolanaWalletTransaction,
-        SubmitTransactionSuccess<ISolanaSignedTransaction>> {
+        SubmitTransactionSuccess<ISolanaSignedTransaction>,
+        SolanaTransactionFeeData> {
   BaseSolanaTransactionController(
       {required super.walletProvider,
       required super.account,
@@ -149,7 +151,7 @@ enum SolanaAccountStatus {
 }
 
 class SolanaTransferDetails extends TransferOutputDetails<SolAddress> {
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   final bool isPubKey;
   SolAddress getPdaAddress(SolAddress mint) {
     return isPubKey
@@ -177,7 +179,7 @@ class SolanaTransferDetails extends TransferOutputDetails<SolAddress> {
       {required SolAddress owner,
       required SolanaClient client,
       SolanaSPLToken? token}) async {
-    final instructions = await _lock.synchronized(() async {
+    final instructions = await _lock.run(() async {
       SolAddress? pda;
       SolanaAccountStatus status = SolanaAccountStatus.initialized;
       if (_status.isUnknown) {

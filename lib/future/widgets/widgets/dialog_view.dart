@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/constant/global/app.dart';
 import 'package:on_chain_wallet/app/core.dart' show MethodUtils;
-import 'package:on_chain_wallet/future/widgets/widgets/conditional_widget.dart';
-import 'package:on_chain_wallet/future/widgets/widgets/progress_bar/widgets/progress.dart';
 import 'package:on_chain_wallet/app/models/models/typedef.dart'
     show DynamicVoid, FutureT;
-import 'constraints_box_view.dart';
-import 'widget_constant.dart';
+import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 
 class DialogView extends StatelessWidget {
@@ -138,6 +135,37 @@ class DialogDoubleButtonView extends StatelessWidget {
   }
 }
 
+class DialogSingleButtonView extends StatelessWidget {
+  const DialogSingleButtonView({
+    super.key,
+    this.buttonLabel,
+    this.onTap,
+  });
+  final String? buttonLabel;
+  final DynamicVoid? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: WidgetConstant.paddingOnlyTop20,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextButton(
+              onPressed: () {
+                if (onTap != null) {
+                  onTap?.call();
+                } else {
+                  context.pop(true);
+                }
+              },
+              child: Text(buttonLabel ?? "yes".tr)),
+        ],
+      ),
+    );
+  }
+}
+
 class DialogTextView extends StatelessWidget {
   const DialogTextView({super.key, this.text, this.widget, this.buttonWidget});
   final String? text;
@@ -149,6 +177,38 @@ class DialogTextView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [subtitle, buttonWidget ?? WidgetConstant.sizedBox],
+    );
+  }
+}
+
+class DialogTitleAndMultiTextView extends StatelessWidget {
+  const DialogTitleAndMultiTextView(
+      {super.key,
+      required this.title,
+      required this.content,
+      this.buttonWidget});
+  final String title;
+  final List<String> content;
+  final Widget? buttonWidget;
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        PageTitleSubtitle(
+            title: title,
+            titleStyle: context.textTheme.titleMedium,
+            body: RichText(
+              text: TextSpan(
+                  style: context.textTheme.bodyMedium,
+                  children: content
+                      .map((e) => TextSpan(
+                          text: "- $e", children: [TextSpan(text: "\n")]))
+                      .toList()),
+            )),
+        ConditionalWidget(
+            enable: buttonWidget != null, onActive: (context) => buttonWidget!)
+      ],
     );
   }
 }

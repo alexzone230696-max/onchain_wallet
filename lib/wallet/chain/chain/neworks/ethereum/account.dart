@@ -17,17 +17,17 @@ final class EthereumChain extends Chain<
       {required super.network,
       required super.addressIndex,
       required super.id,
-      DefaultNetworkConfig? config,
+      required super.config,
       required super.addresses,
-      required super.client,
+      required super.service,
       super.totalBalance})
-      : super._(config: config ?? DefaultNetworkConfig.defaultConfig);
+      : super._();
   @override
   EthereumChain copyWith(
       {WalletEthereumNetwork? network,
       List<ChainAccount>? addresses,
       int? addressIndex,
-      EthereumClient? client,
+      ProviderIdentifier? service,
       String? id,
       DefaultNetworkConfig? config,
       BigInt? totalBalance}) {
@@ -35,7 +35,7 @@ final class EthereumChain extends Chain<
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
         addresses: addresses?.cast<IEthAddress>() ?? _addresses,
-        client: client ?? _client,
+        service: service ?? _serviceIdentifier,
         id: id ?? this.id,
         config: config ?? this.config,
         totalBalance: totalBalance ?? this.totalBalance._value.balance);
@@ -44,19 +44,18 @@ final class EthereumChain extends Chain<
   factory EthereumChain.setup(
       {required WalletEthereumNetwork network,
       required String id,
-      EthereumClient? client}) {
+      ProviderIdentifier? service}) {
     return EthereumChain._(
         network: network,
         id: id,
         addressIndex: 0,
-        client: client,
-        addresses: []);
+        service: service,
+        addresses: [],
+        config: DefaultNetworkConfig.defaultConfig);
   }
 
   factory EthereumChain.deserialize(
-      {required WalletEthereumNetwork network,
-      required CborListValue cbor,
-      EthereumClient? client}) {
+      {required WalletEthereumNetwork network, required CborListValue cbor}) {
     final int networkId = cbor.elementAs(0);
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
@@ -68,12 +67,20 @@ final class EthereumChain extends Chain<
         .toList();
 
     int addressIndex = cbor.elementAs(4);
+    final DefaultNetworkConfig config =
+        DefaultNetworkConfig.deserialize(cborObject: cbor.indexAs(5));
+    final ProviderIdentifier? service = MethodUtils.nullOnException(() {
+      final CborTagValue? identifier = cbor.elementAs(6);
+      if (identifier == null) return null;
+      return ProviderIdentifier.deserialize(cbor: identifier);
+    });
     final BigInt? totalBalance = cbor.elementAs(7);
     return EthereumChain._(
         network: network,
         addresses: accounts,
         addressIndex: addressIndex,
-        client: client,
+        config: config,
+        service: service,
         id: id,
         totalBalance: totalBalance);
   }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show TextInputFormatter;
+import 'package:on_chain_wallet/app/core.dart' show MethodUtils, StrUtils;
 import 'package:on_chain_wallet/app/models/models/typedef.dart'
     show NullStringString, StringVoid, DynamicVoid;
-import 'package:on_chain_wallet/app/core.dart' show MethodUtils, StrUtils;
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 
@@ -45,7 +45,9 @@ class AppTextField extends StatefulWidget {
       this.autofocus = false,
       this.canRequestFocus = true,
       this.errorBuilder,
-      this.onTap});
+      this.onTap,
+      this.authoValidateMode = AutovalidateMode.always});
+  final AutovalidateMode authoValidateMode;
   final TextEditingController? controller;
   final bool autofocus;
   final bool canRequestFocus;
@@ -170,7 +172,7 @@ class AppTextFieldState extends State<AppTextField>
         onChanged: onChange,
         textDirection: direction,
         enableInteractiveSelection: widget.enableInteractiveSelection,
-        autovalidateMode: AutovalidateMode.onUserInteraction,
+        autovalidateMode: widget.authoValidateMode,
         keyboardType: widget.keyboardType,
         focusNode: widget.focusNode,
         errorBuilder: widget.errorBuilder,

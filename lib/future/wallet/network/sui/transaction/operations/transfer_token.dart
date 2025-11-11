@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:on_chain/bcs/move/types/types.dart';
 import 'package:on_chain/sui/src/transaction/types/types.dart';
@@ -7,9 +8,9 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/sui/transaction/controllers/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/sui/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/sui/transaction/widgets/transfer_token.dart';
+import 'package:on_chain_wallet/future/wallet/network/sui/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
-import 'package:on_chain_wallet/future/wallet/network/sui/web3/types/types.dart';
 
 class SuiTransactionTransferTokenOperation
     extends SuiTransactionStateController<ISuiTransactionDataTokenTransfer> {
@@ -194,8 +195,14 @@ class SuiTransactionTransferTokenOperation
   TransactionOperations get operation => SuiTransactionOperations.tokenTransfer;
 
   @override
-  Future<void> initForm(SuiClient client, {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: false);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required SuiClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super
+        .initForm(context: context, client: client, updateAccount: false);
     if (!address.tokens.contains(token)) {
       await account.updateTokenBalance(address: address, tokens: [token]);
     } else {
@@ -203,6 +210,7 @@ class SuiTransactionTransferTokenOperation
     }
     _tokenBalanceListener =
         token.streamBalance.stream.listen((_) => onAccountUpdated());
+    return this;
   }
 
   @override

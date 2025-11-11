@@ -1,13 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/future/constant/constant.dart';
-import 'package:on_chain_wallet/future/router/page_router.dart';
-import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/wallet.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/crypto/types/networks.dart';
-
-import 'chain_stream.dart';
+import 'package:on_chain_wallet/future/constant/constant.dart';
+import 'package:on_chain_wallet/future/future.dart';
+import 'package:on_chain_wallet/future/router/page_router.dart';
+import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
+import 'package:on_chain_wallet/future/wallet/network/aptos/provider/select_provider.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class AccountManageProviderIcon extends StatelessWidget {
   const AccountManageProviderIcon({super.key, required this.service});
@@ -70,13 +72,11 @@ class SelectProviderView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChainStreamBuilder(
-        allowNotify: [DefaultChainNotify.client],
-        builder: (context, account, _) => switch (account.network.type) {
-              NetworkType.aptos => _SelectAptosProviderView(account.cast()),
-              _ => _SelectProviderView(chain: account)
-            },
-        account: context.wallet.wallet.currentChain);
+    final account = context.wallet.wallet.currentChain;
+    return switch (account.network.type) {
+      NetworkType.aptos => SelectAptosProviderView(account.cast()),
+      _ => _SelectProviderView(chain: account)
+    };
     // return;
   }
 }
@@ -89,66 +89,75 @@ class _SelectProviderView extends StatefulWidget {
   State<_SelectProviderView> createState() => _SelectProviderViewState();
 }
 
-class _SelectProviderViewState extends State<_SelectProviderView>
-    with SafeState {
-  WalletNetwork get network => widget.chain.network;
-  NetworkServiceProtocol? service;
+// abstract class SelectProviderViewState extends State<_SelectProviderView>
+//     with SafeState<_SelectProviderView> {}
 
-  bool get isTron => network.type == NetworkType.tron;
-  List<APIProvider> providers = [];
-
-  void onTapProvider(APIProvider provider) {
-    if (provider.identifier == service?.provider.identifier) {
-      context
-          .openSliverBottomSheet("network_provider_log_details".tr, slivers: [
-        _ProviderLogsView(
-            tracker: service!.tracker, provider: service!.provider),
-      ]);
-      return;
-    }
-    if (isTron) return;
-    final identifier = DefaultProviderIdentifier(
-        identifier: provider.identifier, network: network.type);
-    context.wallet
-        .setAccountProvider(provider: identifier, account: widget.chain);
-  }
-
-  void onUpdateProvider() async {
-    await context.to(PageRouter.updateProvider(widget.chain.network),
-        argruments: widget.chain.network);
+mixin SelectProviderViewState<
+    W extends StatefulWidget,
+    PROVIDER extends APIProvider,
+    SERVICE extends NetworkServiceProtocol> on SafeState<W> {
+  StreamSubscription<ChainEvent>? listener;
+  APPCHAINPROVIDER<PROVIDER> get chain;
+  WalletNetwork get network => chain.network;
+  SERVICE? service;
+  List<PROVIDER> providers = [];
+  late bool isEnable = chain.config.enableProvider;
+  Future<void> onUpdateProvider() async {
+    await context.to(PageRouter.updateProvider(network), argruments: network);
     updateState();
   }
 
+  void onTapProvider(PROVIDER provider) {
+    final identifier = DefaultProviderIdentifier(
+        identifier: provider.identifier, network: network.type);
+    context.wallet.setAccountProvider(provider: identifier, account: chain);
+  }
+
+  void onToggleProvider() {
+    isEnable = !isEnable;
+    chain.toggleServiceProvider(isEnable);
+    updateState();
+  }
+
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
+
+  Future<void> init() async {
+    providers = await chain.getProviders();
+    service = chain.service as SERVICE?;
+    progressKey.backToIdle();
+  }
+
+  Future<void> onAccountUpdate(ChainEvent event) async {
+    if (!event.status.isComplete) return;
+    if (event.type == DefaultChainNotify.client) {
+      service = chain.service as SERVICE?;
+      updateState();
+    } else if (event.type == DefaultChainNotify.updateProvider) {
+      await init();
+      updateState();
+    }
+  }
+
   @override
-  void didUpdateWidget(covariant _SelectProviderView oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    providers = network.getAllProviders();
-    service = widget.chain.service;
+  void safeDispose() {
+    super.safeDispose();
+    listener?.cancel();
+    listener = null;
   }
 
   @override
   void onInitOnce() {
-    providers = network.getAllProviders();
-    service = widget.chain.service;
     super.onInitOnce();
+    init();
+    listener = chain.stream.listen(onAccountUpdate);
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget providerStateBuilder(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("network".tr, style: context.textTheme.titleMedium),
-          if (isTron) Text("network_tron_provider_desc".tr),
-          WidgetConstant.height8,
-          ContainerWithBorder(
-              child: Text(network.coinParam.token.name,
-                  style: context.onPrimaryTextTheme.bodyMedium)),
-          WidgetConstant.height20,
-          Text("choose_provider".tr, style: context.textTheme.titleMedium),
-          Text("select_provider_desc".tr),
-          WidgetConstant.height8,
           ListView.builder(
             physics: WidgetConstant.noScrollPhysics,
             shrinkWrap: true,
@@ -156,11 +165,12 @@ class _SelectProviderViewState extends State<_SelectProviderView>
               final provider = providers.elementAt(index);
               final bool isSelected =
                   service?.provider.identifier == provider.identifier;
-              return _ProviderView(
+              return ProviderInfoWidget(
                   onTapProvider: onTapProvider,
                   provider: provider,
                   isSelected: isSelected,
-                  tracker: service?.tracker.icon);
+                  connect: chain.serviceStatus.isConnect,
+                  service: service);
             },
             itemCount: providers.length,
           ),
@@ -177,31 +187,132 @@ class _SelectProviderViewState extends State<_SelectProviderView>
       ),
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamPageProgress(
+      controller: progressKey,
+      builder: (context) {
+        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text("network".tr, style: context.textTheme.titleMedium),
+          WidgetConstant.height8,
+          ContainerWithBorder(
+              child: Text(network.coinParam.token.name,
+                  style: context.onPrimaryTextTheme.bodyMedium)),
+          ChainStreamBuilder(
+              allowNotify: [DefaultChainNotify.client],
+              builder: (context, chain, lastNotify) {
+                // bool disable = !isE
+                return Shimmer(
+                    onActive: (enable, context) => Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              WidgetConstant.height20,
+                              AppCheckListTile(
+                                value: isEnable,
+                                contentPadding: EdgeInsets.zero,
+                                title: Text("service_provider".tr,
+                                    style: context.textTheme.titleMedium),
+                                subtitle: Text(
+                                    "enable_disable_service_provider_desc".tr),
+                                onChanged: (s) {
+                                  onToggleProvider();
+                                },
+                              ),
+                              IgnorePointer(
+                                ignoring: !isEnable,
+                                child: Opacity(
+                                  opacity: isEnable
+                                      ? APPConst.defaultOpacity
+                                      : APPConst.disabledOpacity,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      ConditionalWidget(
+                                          enable: providers.isNotEmpty,
+                                          onActive: (context) => Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    WidgetConstant.height20,
+                                                    Text("choose_provider".tr,
+                                                        style: context.textTheme
+                                                            .titleMedium),
+                                                    Text("select_provider_desc"
+                                                        .tr),
+                                                    WidgetConstant.height8,
+                                                  ])),
+                                      providerStateBuilder(context)
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ]),
+                    enable: lastNotify == null);
+              },
+              account: chain)
+        ]);
+      },
+    );
+  }
 }
 
-typedef _ONTAPPROVIDER<T extends APIProvider> = Function(T);
+class _SelectProviderViewState extends State<_SelectProviderView>
+    with
+        SafeState<_SelectProviderView>,
+        SelectProviderViewState<_SelectProviderView, APIProvider,
+            NetworkServiceProtocol> {
+  @override
+  Chain get chain => widget.chain;
+  @override
+  void didUpdateWidget(covariant _SelectProviderView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // providers = network.getAllProviders();
+    service = widget.chain.service;
+  }
+}
 
-class _ProviderView<T extends APIProvider> extends StatelessWidget {
-  const _ProviderView({
+typedef ONTAPPROVIDER<T extends APIProvider> = Function(T);
+
+class ProviderInfoWidget<T extends APIProvider> extends StatelessWidget {
+  const ProviderInfoWidget({
     super.key,
     required this.onTapProvider,
     required this.provider,
     required this.isSelected,
-    this.tracker,
+    required this.connect,
+    this.service,
   });
   final bool isSelected;
-  final IconData? tracker;
+  final bool connect;
+  final NetworkServiceProtocol? service;
   final T provider;
-  final _ONTAPPROVIDER<T> onTapProvider;
+  final ONTAPPROVIDER<T> onTapProvider;
 
   @override
   Widget build(BuildContext context) {
-    return ContainerWithBorder(
-      onRemoveIcon: isSelected
-          ? Icon(tracker, color: context.onPrimaryContainer)
-          : WidgetConstant.sizedBox,
+    return CustomizedContainer(
+      onStackIcon: Icons.open_in_full,
+      validate: !isSelected || (isSelected && connect),
+      onTapStackIcon: (!isSelected || !connect)
+          ? null
+          : () {
+              context.openSliverBottomSheet("network_provider_log_details".tr,
+                  slivers: [
+                    ProviderLogsView(
+                        tracker: service!.tracker, provider: service!.provider),
+                  ]);
+            },
+      onRemoveIcon: ConditionalWidget(
+        enable: isSelected,
+        onActive: (context) {
+          if (!connect) return Icon(Icons.refresh);
+          return Icon(Icons.check_circle, color: context.onPrimaryContainer);
+        },
+      ),
       onRemove: () => onTapProvider(provider),
-      enableTap: isSelected ? false : true,
+      enableTap: (isSelected && connect) ? false : true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -228,147 +339,7 @@ class _ProviderView<T extends APIProvider> extends StatelessWidget {
   }
 }
 
-class _SelectAptosProviderView extends StatefulWidget {
-  const _SelectAptosProviderView(this.chain);
-  final AptosChain chain;
-
-  @override
-  State<_SelectAptosProviderView> createState() =>
-      __SelectAptosProviderViewState();
-}
-
-class __SelectAptosProviderViewState extends State<_SelectAptosProviderView>
-    with SafeState<_SelectAptosProviderView> {
-  WalletAptosNetwork get network => widget.chain.network;
-  AptosHTTPService? service;
-  List<AptosAPIProvider> fullNodeProvers = [];
-  List<AptosAPIProvider> graphQlProviders = [];
-  void onTapProvider(AptosAPIProvider provider) {
-    if (provider.identifier == service?.provider.identifier) {
-      context
-          .openSliverBottomSheet("network_provider_log_details".tr, slivers: [
-        _ProviderLogsView(
-            tracker: service!.tracker, provider: service!.provider),
-      ]);
-      return;
-    }
-    AptosProviderIdentifier? identifier;
-    switch (provider.type) {
-      case AptosAPIProviderType.fullnode:
-        final graphQL = graphQlProviders.firstWhereOrNull(
-            (e) => e.identifier == service?.graphQlProvider.identifier,
-            orElse: () => graphQlProviders.firstOrNull);
-        if (graphQL != null) {
-          identifier = AptosProviderIdentifier(
-              fullNodeIdentifier: provider.identifier,
-              graphQlIdentifier: graphQL.identifier);
-        }
-
-        break;
-      case AptosAPIProviderType.graphQl:
-        final fullNode = fullNodeProvers.firstWhereOrNull(
-            (e) => e.identifier == service?.provider.identifier,
-            orElse: () => fullNodeProvers.firstOrNull);
-        if (fullNode != null) {
-          identifier = AptosProviderIdentifier(
-              fullNodeIdentifier: fullNode.identifier,
-              graphQlIdentifier: provider.identifier);
-        }
-        break;
-    }
-    if (identifier != null) {
-      context.wallet
-          .setAccountProvider(provider: identifier, account: widget.chain);
-    }
-  }
-
-  void onUpdateProvider() async {
-    await context.to(PageRouter.updateProvider(widget.chain.network),
-        argruments: widget.chain.network);
-    updateState();
-  }
-
-  void checkProviders() {
-    final allProviders = network.getAllProviders().cast<AptosAPIProvider>();
-    fullNodeProvers = allProviders
-        .where((e) => e.type == AptosAPIProviderType.fullnode)
-        .toList();
-    graphQlProviders = allProviders
-        .where((e) => e.type == AptosAPIProviderType.graphQl)
-        .toList();
-    service = widget.chain.service as AptosHTTPService;
-  }
-
-  @override
-  void onInitOnce() {
-    checkProviders();
-    super.onInitOnce();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("network".tr, style: context.textTheme.titleMedium),
-          WidgetConstant.height8,
-          ContainerWithBorder(
-              child: Text(network.coinParam.token.name,
-                  style: context.onPrimaryTextTheme.bodyMedium)),
-          WidgetConstant.height20,
-          Text("choose_provider".tr, style: context.textTheme.titleMedium),
-          Text("aptos_select_provider_desc".tr),
-          WidgetConstant.height20,
-          Text("full_node".tr, style: context.textTheme.titleMedium),
-          WidgetConstant.height8,
-          ListView.builder(
-            physics: WidgetConstant.noScrollPhysics,
-            shrinkWrap: true,
-            itemBuilder: (context, index) {
-              final provider = fullNodeProvers.elementAt(index);
-              final bool isSelected =
-                  service?.provider.identifier == provider.identifier;
-              return _ProviderView(
-                  onTapProvider: onTapProvider,
-                  provider: provider,
-                  isSelected: isSelected,
-                  tracker: service?.tracker.icon);
-            },
-            itemCount: fullNodeProvers.length,
-          ),
-          WidgetConstant.height20,
-          Text("graphql".tr, style: context.textTheme.titleMedium),
-          WidgetConstant.height8,
-          ListView.builder(
-              physics: WidgetConstant.noScrollPhysics,
-              shrinkWrap: true,
-              itemBuilder: (context, index) {
-                final provider = graphQlProviders.elementAt(index);
-                final bool isSelected =
-                    service?.graphQlProvider.identifier == provider.identifier;
-                return _ProviderView(
-                    onTapProvider: onTapProvider,
-                    provider: provider,
-                    isSelected: isSelected,
-                    tracker: service?.tracker.icon);
-              },
-              itemCount: graphQlProviders.length),
-          if (network.supportCustomNode)
-            ContainerWithBorder(
-              onRemove: onUpdateProvider,
-              onRemoveIcon:
-                  Icon(Icons.add_box, color: context.onPrimaryContainer),
-              child: Text("network_add_provider".tr,
-                  style: context.onPrimaryTextTheme.bodyMedium),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-extension _TooltipMessage on APIServiceTracker? {
+extension ProviderQuickTooltipMessageExtension on APIServiceTracker? {
   String message() {
     if (this == null) {
       return "network_no_provider_detected";
@@ -482,16 +453,17 @@ class _ProviderRequestViewState extends State<_ProviderRequestView>
   }
 }
 
-class _ProviderLogsView extends StatefulWidget {
-  const _ProviderLogsView({required this.tracker, required this.provider});
+class ProviderLogsView extends StatefulWidget {
+  const ProviderLogsView(
+      {super.key, required this.tracker, required this.provider});
   final APIServiceTracker tracker;
   final APIProvider provider;
 
   @override
-  State<_ProviderLogsView> createState() => _ProviderLogsViewState();
+  State<ProviderLogsView> createState() => _ProviderLogsViewState();
 }
 
-class _ProviderLogsViewState extends State<_ProviderLogsView> with SafeState {
+class _ProviderLogsViewState extends State<ProviderLogsView> with SafeState {
   ApiRequest? full;
 
   void onSetFullView(ApiRequest? request) {

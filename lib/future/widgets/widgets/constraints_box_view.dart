@@ -105,9 +105,6 @@ class FullWidthWrapper extends StatelessWidget {
   final Widget child;
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: child,
-    );
+    return SizedBox(width: double.infinity, child: child);
   }
 }

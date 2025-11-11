@@ -1,10 +1,11 @@
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:blockchain_utils/helper/helper.dart';
 import 'package:blockchain_utils/utils/binary/utils.dart';
+import 'package:blockchain_utils/utils/equatable/equatable.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/types/networks.dart';
-import 'package:on_chain_wallet/wallet/constant/constant.dart';
 import 'package:on_chain_wallet/wallet/chain/account.dart';
+import 'package:on_chain_wallet/wallet/constant/constant.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/networks/ada.dart';
@@ -124,7 +125,7 @@ enum WalletTransactionStatus {
   }
 }
 
-abstract class ChainTransaction with CborSerializable, Equatable {
+abstract class ChainTransaction with CborSerializable, Equality {
   final WalletTransactionType type;
   final String txId;
   final DateTime time;

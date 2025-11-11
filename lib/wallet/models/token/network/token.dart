@@ -274,3 +274,32 @@ class EthereumNetworkToken extends BaseNetworkToken {
     setSuccess(tokenWithMetadata: _token.updateToken(token));
   }
 }
+
+class SubstrateNetworkToken extends BaseNetworkToken {
+  SubstrateToken _token;
+  @override
+  SubstrateToken get token => _token;
+  SubstrateNetworkToken(
+      {required SubstrateToken token,
+      super.status = NetworkTokenFetchingStatus.idle})
+      : _token = token;
+  void setSuccess({SubstrateToken? tokenWithMetadata}) {
+    if (_status.isClose) return;
+    if (tokenWithMetadata == null) {
+      _status = NetworkTokenFetchingStatus.success;
+      notify();
+      return;
+    }
+
+    final token = _token;
+    _token = tokenWithMetadata;
+    _status = NetworkTokenFetchingStatus.success;
+    notify();
+    token.streamBalance.dispose();
+  }
+
+  @override
+  void updaetTokenMetadata(Token token) {
+    setSuccess(tokenWithMetadata: _token.updateToken(token));
+  }
+}

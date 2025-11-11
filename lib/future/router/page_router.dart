@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/pages/transaction_state_builder.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network.dart';
-import 'package:on_chain_wallet/crypto/types/networks.dart';
 
 class PageRouter {
   ///TransactionStateBuilder
@@ -44,7 +44,11 @@ class PageRouter {
   // substrate transfer
   static const String substrateTransfer = "/substrate/transfer";
   static const String substrateTransaction = "/substrate/transaction";
+  static const String substrateMultisigTransaction =
+      "/substrate/multi_signature/transaction";
   static const String importSubstrateNetwork = "/substrate/networks/import";
+  static const String substrateMultisigAddress =
+      "/substrate/setup_multisig_address";
 
   /// cardano
   static const String cardanoTransaction = "/cardano/transaction";
@@ -182,8 +186,8 @@ class PageRouter {
         return const ManageAccountTokenView();
       case transaction:
         return const TransactionStateBuilder();
-      // case setup:
-      //   return const SetupWallet();
+      case substrateMultisigAddress:
+        return const SetupSubstrateMultisigAddress();
       case suiMultisigAddress:
         return const SetupSuiMultisigAddress();
       case setupBitcoinMultsig:
@@ -304,7 +308,8 @@ class PageRouter {
         return const SubstrateImportChainView();
       case updateNetwork:
         return const UpdateNetworkView();
-
+      case substrateMultisigTransaction:
+        return const SubstrateMultisigAddressTxesView();
       case bitcoinMultisigAccountInfo:
       case bitcoinCashMultisigAccountInfo:
         return const BitcoinMultisigAccountInfoView();
@@ -416,6 +421,8 @@ class PageRouter {
         return setupBitcoinMultsig;
       case NetworkType.sui:
         return suiMultisigAddress;
+      case NetworkType.substrate:
+        return substrateMultisigAddress;
       case NetworkType.aptos:
         return aptosMultisigAddress;
       case NetworkType.xrpl:

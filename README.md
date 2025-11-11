@@ -105,7 +105,10 @@ Welcome to OnChain Wallet, the open-source wallet crafted for the decentralized 
 ### Substrate
 
 - **Features:** Provides seamless support for Kusama, Polkadot transactions, and standalone chains.
-- **Highlights:** Enables importing Substrate networks, interacting with metadata, creating extrinsics, querying storage, and making runtime calls.
+- **Highlights:**
+  - Enables importing Substrate networks, interacting with metadata, creating extrinsics, querying storage, and making runtime calls.
+  - Multisig account
+  - XCM Transfer between chains.
 - **Web3:** 
   - Wallet Standard (available on extension, Android, and macOS platforms.).
   - Plkadot.js Injected (available on extension, Android, and macOS platforms.).

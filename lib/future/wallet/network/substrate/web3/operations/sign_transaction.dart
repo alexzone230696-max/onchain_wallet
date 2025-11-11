@@ -1,19 +1,20 @@
 import 'dart:async';
+
 import 'package:blockchain_utils/helper/helper.dart';
 import 'package:blockchain_utils/utils/binary/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/controllers/signer.dart';
+import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/web3/controllers/controllers.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/web3/pages/sign_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/substrate/constant/constants/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/substrate/params/models/transaction.dart';
 import 'package:polkadot_dart/polkadot_dart.dart';
-import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/types/types.dart';
 
 class WebSubstrateSignTransactionStateController
     extends Web3SubstrateTransactionStateController<
@@ -54,20 +55,19 @@ class WebSubstrateSignTransactionStateController
         return e;
       }).toList();
       final era = MortalEra(index: params.era[0], era: params.era[1]);
-      final extrinsic = SubstrateDefaultExtrinsic(
+      final extrinsic = DynamicExtrinsicBuilder(
           era: era,
           nonce: params.nonce,
           mode: params.mode,
+          metadataFields: metadata.extrinsic,
           specVersion: metadata.runtimeVersion.specVersion,
           transactionVersion: metadata.runtimeVersion.transactionVersion,
           genesis: params.genesisHash,
           mortality: params.blockHash,
           tip: params.tip,
           metadataHash: params.metadataHash,
-          assetId: params.assetId);
-      final extraFields = extrinsic.encode(
-          fields: metadata.extrinsic.extrinsicPayloadValidators,
-          metadata: metadata.metadata);
+          chargeAssetTxPaymentBytes: params.assetId);
+      final extraFields = extrinsic.encodeExtrinsicPayload(metadata.metadata);
       final List<int> serializedExtrinsic =
           [...params.call, ...extraFields].asImmutableBytes;
       final extrinsicPayloadInfo = ExtrinsicPayloadInfo(
@@ -183,11 +183,13 @@ class WebSubstrateSignTransactionStateController
   }
 
   @override
-  Future<ExtrinsicInfo> simulateTransaction() async {
+  Future<SubstrateEstimateTransaction> simulateTransaction() async {
     final transaction = await buildTransaction(simulate: true);
     final signedTransaction =
         await signTransaction(transaction, fakeSignature: true);
-    return signedTransaction.finalTransactionData;
+    return SubstrateEstimateTransaction(
+        extrinsic: signedTransaction.finalTransactionData,
+        owner: defaultAccount.networkAddress);
   }
 
   @override

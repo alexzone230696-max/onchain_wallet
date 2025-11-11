@@ -7,7 +7,7 @@ mixin WalletConnectRelayClient on WalletConnectCore {
   final Map<String, WcPairingClient> _pendingClients = {};
   final Map<int, PublishRequest> _publishedMessage = {};
   StreamSubscription<dynamic>? _predioc;
-  final SynchronizedLock _lock = SynchronizedLock();
+  final SafeAtomicLock _lock = SafeAtomicLock();
   final StreamController<WcInternalEvent> _internalEmitter =
       StreamController<WcInternalEvent>.broadcast(sync: true);
   Stream<WcInternalEvent> get onEvent => _internalEmitter.stream;
@@ -24,7 +24,7 @@ mixin WalletConnectRelayClient on WalletConnectCore {
     },
   );
   Future<bool> _messageExists(RelayClientSubscribeResponse message) async {
-    return _lock.synchronized(() async {
+    return _lock.run(() async {
       _pendingMessages[message.topic] ??= [];
       final hashCode = message.hashCode;
       if (_pendingMessages[message.topic]!.contains(hashCode)) {
@@ -40,7 +40,7 @@ mixin WalletConnectRelayClient on WalletConnectCore {
   }
 
   Future<void> _publish(PublishRequest request) async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       if (request.isComplete) return;
       final timeout = request.timeout();
       try {
@@ -84,7 +84,7 @@ mixin WalletConnectRelayClient on WalletConnectCore {
 
   Future<dynamic> _subscribe(
       {required String topic, bool keepTopics = true}) async {
-    return await _lock.synchronized(() async {
+    return await _lock.run(() async {
       if (_subscribeTopics.contains(topic)) return;
       if (keepTopics) _topics.add(topic);
       try {

@@ -1,12 +1,11 @@
+import 'package:blockchain_utils/bip/bip.dart';
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:on_chain_wallet/app/error/exception.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
 import 'package:on_chain_wallet/wallet/api/provider/provider.dart';
-
+import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/params/params.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
-import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
-import 'package:blockchain_utils/bip/bip.dart';
 
 enum SuiChainType {
   devnet(0),
@@ -24,7 +23,7 @@ enum SuiChainType {
   }
 }
 
-class SuiNetworkParams extends NetworkCoinParams<SuiAPIProvider> {
+class SuiNetworkParams extends NetworkCoinParams {
   final String identifier;
   final SuiChainType suiChain;
 
@@ -35,10 +34,6 @@ class SuiNetworkParams extends NetworkCoinParams<SuiAPIProvider> {
 
     return SuiNetworkParams(
         token: Token.deserialize(obj: values.elementAsCborTag(0)),
-        providers: values
-            .elementAsListOf<CborTagValue>(1)
-            .map((e) => SuiAPIProvider.fromCborBytesOrObject(obj: e))
-            .toList(),
         chainType: ChainType.fromValue(values.elementAs(2)),
         identifier: values.elementAs(3),
         addressExplorer: values.elementAs(4),
@@ -48,7 +43,6 @@ class SuiNetworkParams extends NetworkCoinParams<SuiAPIProvider> {
   }
   SuiNetworkParams(
       {required super.token,
-      required super.providers,
       required super.chainType,
       required this.identifier,
       required this.suiChain,
@@ -61,8 +55,6 @@ class SuiNetworkParams extends NetworkCoinParams<SuiAPIProvider> {
     return CborTagValue(
         CborSerializable.fromDynamic([
           token.toCbor(),
-          CborSerializable.fromDynamic(
-              providers.map((e) => e.toCbor()).toList()),
           chainType.name,
           identifier,
           addressExplorer,
@@ -74,7 +66,7 @@ class SuiNetworkParams extends NetworkCoinParams<SuiAPIProvider> {
   }
 
   @override
-  NetworkCoinParams<SuiAPIProvider> updateParams(
+  NetworkCoinParams updateParams(
       {List<APIProvider>? updateProviders,
       Token? token,
       String? transactionExplorer,
@@ -83,7 +75,6 @@ class SuiNetworkParams extends NetworkCoinParams<SuiAPIProvider> {
     return SuiNetworkParams(
         token: NetworkCoinParams.validateUpdateParams(
             token: this.token, updateToken: token),
-        providers: updateProviders?.cast<SuiAPIProvider>() ?? providers,
         chainType: chainType,
         identifier: identifier,
         addressExplorer: addressExplorer,

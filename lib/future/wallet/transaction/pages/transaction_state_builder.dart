@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
@@ -16,39 +17,61 @@ class TransactionStateBuilder extends StatefulWidget {
 class _TransactionStateBuilderState extends State<TransactionStateBuilder>
     with SafeState<TransactionStateBuilder> {
   late TransactionStateController controller;
+  late TransactionStateController internalController;
 
-  void switchAccount(ChainAccount? address) {
+  Future<void> init() async {
+    final controller = await this.controller.init(context);
+    if (!identical(controller, internalController)) {
+      internalController = controller;
+      updateState();
+      await internalController.init(context);
+    }
+  }
+
+  Future<void> switchAccount(ChainAccount? address) async {
     if (address == null) return;
-    final currentController = controller;
-    currentController.setPageProgress();
-    final newController = controller.cloneController(address);
+    final currentController = internalController;
+    final initController = controller;
+    currentController.setPageProgress(text: "switching_account_please_wait".tr);
+    await MethodUtils.wait(duration: APPConst.animationDuraion);
+    final newController = internalController.cloneController(address);
+    internalController = newController;
     controller = newController;
     updateState();
-    controller.init();
-    currentController.dispose();
+    await init();
+    MethodUtils.after(() async {
+      currentController.dispose();
+      if (!identical(currentController, initController)) {
+        initController.dispose();
+      }
+    }, duration: APPConst.animationDuraion);
   }
 
   @override
   void onInitOnce() {
     super.onInitOnce();
     controller = context.getArgruments();
-    controller.init();
+    internalController = controller;
+    init();
   }
 
   @override
   void safeDispose() {
     super.safeDispose();
     controller.dispose();
+    if (!identical(controller, internalController)) {
+      internalController.dispose();
+    }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext ctx) {
     return NetworkAccountControllerView<NetworkClient, ChainAccount, Chain>(
-        key: ValueKey(controller),
-        title: controller.operation.value.tr,
+        key: ValueKey(internalController),
+        title: internalController.operation.value.tr,
         childBulder: (wallet, account, client, address, _) {
           return StreamPageProgress(
-            controller: controller.pageKey,
+            controller: internalController.pageKey,
             initialWidget:
                 ProgressWithTextView(text: 'retrieving_network_condition'.tr),
             builder: (context) {
@@ -61,20 +84,22 @@ class _TransactionStateBuilderState extends State<TransactionStateBuilder>
                       ContainerWithBorder(
                         onRemoveIcon:
                             Icon(Icons.edit, color: context.onPrimaryContainer),
-                        onRemove: () {
-                          context
-                              .selectOrSwitchAccount(
-                                  account: controller.account,
-                                  showMultiSig: true)
-                              .then(switchAccount);
-                        },
+                        onRemove: internalController.swtichAddressEnabled
+                            ? () {
+                                context
+                                    .selectOrSwitchAccount(
+                                        account: internalController.account,
+                                        showMultiSig: true)
+                                    .then(switchAccount);
+                              }
+                            : null,
                         child: AddressDetailsView(
-                            address: controller.address,
+                            address: internalController.address,
                             color: context.onPrimaryContainer,
-                            key: ValueKey(controller.address)),
+                            key: ValueKey(internalController.address)),
                       ),
                       WidgetConstant.height20,
-                      controller.onPageBuilder(context),
+                      internalController.onPageBuilder(ctx)
                     ]))
               ]);
             },
@@ -82,7 +107,7 @@ class _TransactionStateBuilderState extends State<TransactionStateBuilder>
         },
         addressRequired: true,
         clientRequired: true,
-        account: controller.account,
+        account: internalController.account,
         initAccount: true);
   }
 }

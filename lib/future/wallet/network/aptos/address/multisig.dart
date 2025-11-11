@@ -2,8 +2,10 @@ import 'package:blockchain_utils/bip/bip/conf/bip/bip_coins.dart';
 import 'package:blockchain_utils/bip/bip/conf/bip44/bip44_coins.dart';
 import 'package:blockchain_utils/bip/ecc/curve/elliptic_curve_types.dart';
 import 'package:blockchain_utils/utils/binary/utils.dart';
+import 'package:blockchain_utils/utils/equatable/equatable.dart';
 import 'package:blockchain_utils/utils/numbers/utils/int_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:on_chain/aptos/aptos.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
@@ -13,9 +15,8 @@ import 'package:on_chain_wallet/future/wallet/global/global.dart';
 import 'package:on_chain_wallet/future/wallet/network/aptos/account/state.dart';
 import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/wallet/models/networks/aptos/models/types.dart';
-import 'package:on_chain/aptos/aptos.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 enum _Pages { threshold, pickAddresses, review }
 
@@ -513,7 +514,7 @@ class _PickAddress extends StatelessWidget {
                       IconButton(
                           tooltip: 'generate_public_key'.tr,
                           onPressed: state.addPublicKey,
-                          icon: Icon(Icons.add)),
+                          icon: Icon(Icons.add_box)),
                     ],
                   ),
                   child: Text("tap_to_chose_or_create_public_key".tr),
@@ -632,6 +633,7 @@ class _SelectedAddressView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomizedContainer(
+      enableTap: false,
       onTapStackIcon: onRemove == null ? null : () => onRemove!(signer),
       onStackIcon: Icons.remove_circle,
       child: Column(children: [
@@ -664,48 +666,7 @@ class _SelectedAddressView extends StatelessWidget {
   }
 }
 
-// class _ShowAddressView extends StatelessWidget {
-//   final _AptosSigner account;
-//   final __SetupAptosMultisigAddressState state;
-//   const _ShowAddressView({required this.account, required this.state});
-//   @override
-//   Widget build(BuildContext context) {
-//     return ContainerWithBorder(
-//       backgroundColor: context.onPrimaryContainer,
-//       child: Column(children: [
-//         ConditionalWidget(
-//           enable: account.account != null,
-//           onActive: (context) => ContainerWithBorder(
-//               backgroundColor: context.primaryContainer,
-//               child: AddressDetailsView(
-//                   showBalance: false,
-//                   address: account.account!,
-//                   color: context.onPrimaryContainer)),
-//         ),
-//         ContainerWithBorder(
-//             backgroundColor: context.primaryContainer,
-//             child: CopyableTextWidget(
-//               text: account.publicKeyHex,
-//               color: context.onPrimaryContainer,
-//               widget: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   OneLineTextWidget(account.publicKeyHex,
-//                       style: context.onPrimaryTextTheme.bodyMedium),
-//                   AddressDrivationInfo(account.keyIndex,
-//                       color: context.onPrimaryContainer),
-//                 ],
-//               ),
-//             )),
-//       ]),
-//       // child: AddressDetailsView(
-//       //     address: account, color: context.colors.primaryContainer),
-//     );
-//   }
-// }
-
-//
-class _AptosSigner with Equatable {
+class _AptosSigner with Equality {
   final Bip32AddressIndex keyIndex;
   final List<int> publicKey;
   final IAptosAddress? account;

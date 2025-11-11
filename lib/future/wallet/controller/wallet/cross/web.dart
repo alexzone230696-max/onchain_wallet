@@ -1,14 +1,17 @@
 import 'dart:async';
+
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_bridge/platform_interface.dart';
 import 'package:on_chain_bridge/web/api/chrome/api/core.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/crypto/impl/worker_impl.dart';
 import 'package:on_chain_wallet/future/wallet/controller/extension/impl/extention_wallet.dart';
 import 'package:on_chain_wallet/future/wallet/controller/wallet/ui_wallet.dart';
 import 'package:on_chain_wallet/future/wallet/web3/controller/web3_request_controller.dart';
 import 'package:on_chain_wallet/wallet/models/access/wallet_access.dart';
 import 'package:on_chain_wallet/wallet/provider/wallet_provider.dart';
-import 'package:on_chain_wallet/crypto/impl/worker_impl.dart';
+
 import 'io.dart';
 
 UIWallet uiWallet(GlobalKey<NavigatorState> navigatorKey, int storageVersion) {
@@ -22,14 +25,14 @@ UIWallet uiWallet(GlobalKey<NavigatorState> navigatorKey, int storageVersion) {
 class ExtentionWallet extends UIWallet
     with CryptoWokerImpl, Web3RequestControllerImpl, ExtentionWalletHandler {
   ExtentionWallet({required super.navigatorKey, required super.storageVersion});
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
 
   // @override
   // Future<MethodResult<WalletLockTime>> login_(String password) async {
   // final bool isReadOnly = this.isReadOnly || isLock;
   // final result = await super.login_(password);
   // if (isReadOnly && isUnlock) {
-  //   await _lock.synchronized(() async {
+  //   await _lock.run(() async {
   //     await saveLoginHistory(password);
   //   });
   // }
@@ -44,7 +47,7 @@ class ExtentionWallet extends UIWallet
     final bool isReadOnly = this.isReadOnly || isLock;
     final result = await super.login_(request);
     if (isReadOnly && isUnlock && password != null) {
-      await _lock.synchronized(() async {
+      await _lock.run(() async {
         await saveLoginHistory(password);
       });
     }
@@ -53,7 +56,7 @@ class ExtentionWallet extends UIWallet
 
   @override
   Future<void> lock() async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       await clearLoginHistory();
     });
     await super.lock();
@@ -65,12 +68,12 @@ class ExtentionWallet extends UIWallet
       String? initialPassword,
       DateTime? locktime}) async {
     crypto.init(true);
-    final loginHistory = await _lock.synchronized(() async {
+    final loginHistory = await _lock.run(() async {
       return await getLoginHistory();
     });
     await super.initWallet(initialPassword: loginHistory);
     if (loginHistory != null && isUnlock) {
-      _lock.synchronized(() async {
+      _lock.run(() async {
         return await saveLoginHistory(loginHistory);
       });
     }

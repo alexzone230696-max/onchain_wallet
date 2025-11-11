@@ -2,7 +2,6 @@ import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 import 'package:on_chain_wallet/crypto/utils/substrate/substrate.dart';
-import 'package:on_chain_wallet/wallet/constant/networks/substrate.dart';
 import 'package:polkadot_dart/polkadot_dart.dart';
 
 abstract class LookupField {
@@ -55,42 +54,30 @@ class RuntimeMethodLookupField extends LookupField {
       : validators = validators.immutable;
 }
 
-class ExtrinsicLookupField extends LookupField {
-  final MetadataTypeInfo call;
-  final MetadataTypeInfo address;
-  final MetadataTypeInfo signature;
-  final List<MetadataTypeInfo> extrinsicValidators;
-  final List<MetadataTypeInfo> extrinsicPayloadValidators;
-  final TransactionExtrinsicInfo extrinsicInfo;
-  ExtrinsicLookupField({
-    required List<MetadataTypeInfo> extrinsicValidators,
-    required List<MetadataTypeInfo> extrinsicPayloadValidators,
-    required this.call,
-    required this.extrinsicInfo,
-    required this.address,
-    required this.signature,
-  })  : extrinsicValidators = extrinsicValidators.immutable,
-        extrinsicPayloadValidators = extrinsicPayloadValidators.immutable;
-}
-
 class ExtrinsicPayloadInfo {
   final String payload;
   final List<int> payloadBytes;
+  final List<int> callHash;
   final String serializedExtrinsic;
   final Object? payloadInfo;
+  final List<int> methodBytes;
   final String method;
-  final SubstrateDefaultExtrinsic? extrinsic;
+  final DynamicExtrinsicBuilder? extrinsic;
   ExtrinsicPayloadInfo._(
       {required this.payload,
       required this.serializedExtrinsic,
       required this.payloadInfo,
       required this.method,
       required this.extrinsic,
-      required List<int> payloadBytes})
-      : payloadBytes = payloadBytes.toImutableBytes;
+      required List<int> methodBytes,
+      required List<int> payloadBytes,
+      required List<int> callHash})
+      : payloadBytes = payloadBytes.asImmutableBytes,
+        callHash = callHash.asImmutableBytes,
+        methodBytes = methodBytes.asImmutableBytes;
   factory ExtrinsicPayloadInfo(
       {required List<int> serializedExtrinsic,
-      SubstrateDefaultExtrinsic? extrinsic,
+      DynamicExtrinsicBuilder? extrinsic,
       Object? payloadInfo,
       required List<int> method}) {
     final payload = SubstrateUtils.createPayload(serializedExtrinsic);
@@ -101,7 +88,9 @@ class ExtrinsicPayloadInfo {
         payloadInfo: payloadInfo,
         method: BytesUtils.toHexString(method, prefix: "0x"),
         payloadBytes: payload,
-        extrinsic: extrinsic);
+        extrinsic: extrinsic,
+        callHash: SubstrateUtils.callHash(method),
+        methodBytes: method);
   }
 }
 
@@ -160,229 +149,38 @@ class ExtrinsicInfo {
   }
 }
 
-class SubstrateDefaultExtrinsic {
-  final MortalEra era;
-  final int nonce;
-  final int specVersion;
-  final int transactionVersion;
-  final List<int> genesis;
-  final List<int> mortality;
-  final List<int>? metadataHash;
-  final int? mode;
-  final BigInt? tip;
-  final List<int>? assetId;
-
-  static final SubstrateDefaultExtrinsic fake = SubstrateDefaultExtrinsic(
-      era: MortalEra(index: 189, era: 1),
-      nonce: 0,
-      specVersion: 0,
-      transactionVersion: 0,
-      genesis: List<int>.filled(32, 0),
-      mortality: List<int>.filled(32, 0));
-  SubstrateDefaultExtrinsic(
-      {required this.era,
-      required this.nonce,
-      required this.specVersion,
-      required this.transactionVersion,
-      required List<int> genesis,
-      required List<int> mortality,
-      List<int>? assetId,
-      this.metadataHash,
-      this.mode,
-      this.tip})
-      : genesis = genesis.asImmutableBytes,
-        mortality = mortality.asImmutableBytes,
-        assetId = assetId?.asImmutableBytes;
-
-  static bool hasField<E extends MetadataTypeInfo>(
-      List<MetadataTypeInfo<dynamic>> ext, String name) {
-    for (final i in ext) {
-      final type = i.findType<E>(name);
-      if (type != null) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  void _encodeField(
-      {required int lookupId,
-      required Object? input,
-      required MetadataApi metadata,
-      required DynamicByteTracker buffer}) {
-    final encode =
-        metadata.encodeLookup(id: lookupId, value: input, fromTemplate: false);
-    buffer.add(encode);
-  }
-
-  List<int> encode(
-      {required List<MetadataTypeInfo<dynamic>> fields,
-      required MetadataApi metadata}) {
-    final buffer = DynamicByteTracker();
-    for (final i in fields) {
-      final names = i.getTypeNames();
-      if (names.isEmpty) continue;
-      for (final n in names) {
-        final typeId = i.findType(n)!.typeId;
-        try {
-          switch (n) {
-            case "Era":
-              _encodeField(
-                  lookupId: typeId,
-                  buffer: buffer,
-                  input: era.scaleJsonSerialize(),
-                  metadata: metadata);
-              break;
-            case "T::Nonce":
-            case "CheckNonce":
-            case "nonce":
-              _encodeField(
-                  lookupId: typeId,
-                  buffer: buffer,
-                  input: nonce,
-                  metadata: metadata);
-              break;
-            case "BalanceOf<T>":
-            case "PalletBalanceOf<T>":
-            case "ChargeTransactionPayment":
-            case "ChargeTransactionPayment<T>":
-              _encodeField(
-                  lookupId: typeId,
-                  buffer: buffer,
-                  input: BigInt.zero,
-                  metadata: metadata);
-              break;
-            case "tip":
-              _encodeField(
-                  lookupId: typeId,
-                  buffer: buffer,
-                  input: tip ?? BigInt.zero,
-                  metadata: metadata);
-              break;
-            case "CheckSpecVersion":
-              _encodeField(
-                  lookupId: typeId,
-                  buffer: buffer,
-                  input: specVersion,
-                  metadata: metadata);
-              break;
-            case "CheckTxVersion":
-              _encodeField(
-                  lookupId: typeId,
-                  buffer: buffer,
-                  input: transactionVersion,
-                  metadata: metadata);
-              break;
-            case "CheckGenesis":
-              _encodeField(
-                  lookupId: typeId,
-                  buffer: buffer,
-                  input: genesis,
-                  metadata: metadata);
-              break;
-            case "CheckMortality":
-              if (i.typeName == MetadataTypes.variant) {
-                _encodeField(
-                    lookupId: typeId,
-                    buffer: buffer,
-                    input: era.scaleJsonSerialize(),
-                    metadata: metadata);
-              } else {
-                _encodeField(
-                    lookupId: typeId,
-                    buffer: buffer,
-                    input: mortality,
-                    metadata: metadata);
-              }
-              break;
-            case "mode":
-              if (mode == 1) {
-                _encodeField(
-                    lookupId: typeId,
-                    buffer: buffer,
-                    input: {"Enabled": null},
-                    metadata: metadata);
-              } else {
-                _encodeField(
-                    lookupId: typeId,
-                    buffer: buffer,
-                    input: {"Disabled": null},
-                    metadata: metadata);
-              }
-
-              break;
-            case "CheckMetadataHash":
-              if (metadataHash != null) {
-                buffer.add(metadataHash!);
-              } else {
-                _encodeField(
-                    lookupId: typeId,
-                    buffer: buffer,
-                    input: {"None": null},
-                    metadata: metadata);
-              }
-
-              break;
-            case "asset_id":
-              if (assetId != null) {
-                buffer.add(assetId!);
-              } else {
-                _encodeField(
-                    lookupId: typeId,
-                    buffer: buffer,
-                    input: {"None": null},
-                    metadata: metadata);
-              }
-
-              break;
-            default:
-              throw UnimplementedError("field not found ${i.name} $n");
-          }
-        } catch (e) {
-          throw WalletException.error('extrinsic_encoding_failed');
-        }
-      }
-    }
-    return buffer.toBytes();
-  }
-}
-
-enum SubstrateTransferType {
-  transferKeepAlive("transfer_keep_alive"),
-  transferAllowDeath("transfer_allow_death");
-
-  final String methodName;
-  const SubstrateTransferType(this.methodName);
-}
-
 class SubstrateDefaultTransfer {
   final BaseSubstrateAddress address;
   final BigInt value;
   SubstrateDefaultTransfer({required this.address, required this.value});
-  Object _getDest() {
-    return switch (address.runtimeType) {
-      const (SubstrateAddress) => {"Id": address.toBytes()},
-      const (SubstrateEthereumAddress) => address.toBytes(),
-      _ => throw UnsupportedError("Unknow substrate address type")
+  Object _getDest(SubstrateAddressEncodingType type) {
+    return switch (type) {
+      SubstrateAddressEncodingType.substrate => {"Id": address.toBytes()},
+      SubstrateAddressEncodingType.key32 ||
+      SubstrateAddressEncodingType.ethereum =>
+        address.toBytes(),
     };
   }
 
   Map<String, dynamic> toJson(
-      {SubstrateTransferType method = SubstrateTransferType.transferAllowDeath,
+      {required SubstrateAddressEncodingType addressType,
+      BalancesCallPalletMethod method =
+          BalancesCallPalletMethod.transferAllowDeath,
       bool usePallet = false}) {
     final toJson = {
-      method.methodName: {"dest": _getDest(), "value": value}
+      method.method: {"dest": _getDest(addressType), "value": value}
     };
     if (!usePallet) return toJson;
-    return {APPSubstrateConst.balancePalletName: toJson};
+    return {SubtrateMetadataPallet.balances.name: toJson};
   }
 
   List<int> encode(
       {required MetadataApi metadata,
-      SubstrateTransferType method =
-          SubstrateTransferType.transferAllowDeath}) {
+      required SubstrateAddressEncodingType addressType,
+      BalancesCallPalletMethod method =
+          BalancesCallPalletMethod.transferAllowDeath}) {
     final Map<String, dynamic> input = {
-      method.methodName: {"dest": _getDest(), "value": value}
+      method.method: {"dest": _getDest(addressType), "value": value}
     };
     return metadata.encodeCall(
         palletNameOrIndex: "balances", value: input, fromTemplate: false);

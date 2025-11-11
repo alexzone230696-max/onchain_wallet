@@ -211,6 +211,13 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
     return [];
   }
 
+  T? chainController<T extends NetworkController>(NetworkType type) {
+    if (isOpen) {
+      return _controller._appChains.controller<T>(type);
+    }
+    return null;
+  }
+
   Future<MethodResult<void>> removeImportedKey(
       EncryptedCustomKey key, WalletCredentialResponseVerify credential) {
     return _callSynchronized(() async {
@@ -223,7 +230,8 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
     final result = await _callSynchronized(
         () async => await _controller._switchNetwork(network),
         action: () => WalletActionEventType.switchNetwork);
-    assert(!result.hasError, "failed to switch network ${result.message}");
+    assert(!result.hasError,
+        "failed to switch network ${result.message} ${result.trace}");
   }
 
   Future<MethodResult<List<PublicKeyDerivationResult>>> getAccountPubKys(
@@ -242,16 +250,35 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
     return result;
   }
 
-  Future<void> updateImportNetwork(WalletNetwork network) async {
+  Future<void> updateNetwork(WalletNetwork network) async {
     final result = await _callSynchronized(
-        () async => await _controller._updateImportNetwork(network),
-        action: () => network.isWalletNetwork
-            ? WalletActionEventType.updateAccount
-            : WalletActionEventType.importNetwork,
+        () async => await _controller._updateNetwork(network),
+        action: () => WalletActionEventType.updateAccount,
         conditionStatus: () =>
-            !network.isWalletNetwork || network.value == this.network.value);
+            network.isWalletNetwork && network.value == this.network.value);
     return result.result;
   }
+
+  Future<void> importNewNetwork(
+      {required WalletNetwork network,
+      required List<APIProvider> providers}) async {
+    final result = await _callSynchronized(
+        () async => await _controller._importNewNetwork(network, providers),
+        action: () => WalletActionEventType.importNetwork,
+        conditionStatus: () => !network.isWalletNetwork);
+    return result.result;
+  }
+
+  // Future<void> updateImportNetwork(WalletNetwork network) async {
+  //   final result = await _callSynchronized(
+  //       () async => await _controller._updateImportNetwork(network),
+  //       action: () => network.isWalletNetwork
+  //           ? WalletActionEventType.updateAccount
+  //           : WalletActionEventType.importNetwork,
+  //       conditionStatus: () =>
+  //           !network.isWalletNetwork || network.value == this.network.value);
+  //   return result.result;
+  // }
 
   Future<MethodResult<void>> removeChain(Chain chain) async {
     final result = await _callSynchronized(
@@ -463,10 +490,12 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
   Future<WalletRestoreV2> restoreWalletBackupV3(
       {required WalletBackup backup,
       required String? passhphrase,
-      required String password}) async {
+      required String password,
+      LivePercentProgressBar? progress,
+      bool verify = true}) async {
     try {
       if (backup.type != WalletBackupTypes.walletV3) {
-        throw WalletExceptionConst.invalidBackup;
+        throw WalletExceptionConst.invalidBackupData;
       }
       if (passhphrase?.isEmpty ?? false) {
         throw AppCryptoExceptionConst.invalidMnemonicPassphrase;
@@ -488,16 +517,13 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
           wallet:
               newWallet.updateData(resotreKey.encryptedKey.storageDataB64()),
           resotreKey: resotreKey,
-          memoryKey: memoryKey);
+          memoryKey: memoryKey,
+          progress: progress,
+          verify: verify);
 
       ///
-    } on WalletException catch (e) {
-      if (e == WalletExceptionConst.invalidBackupChecksum) {
-        rethrow;
-      }
-      throw WalletExceptionConst.invalidBackup;
-    } catch (e) {
-      throw WalletExceptionConst.invalidBackup;
+    } catch (_) {
+      throw WalletExceptionConst.invalidBackupData;
     }
   }
 
@@ -505,7 +531,9 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
       {required WalletBackup backup,
       required CryptoRestoreBackupMasterKeyResponse resotreKey,
       required MainWallet wallet,
-      required List<int> memoryKey}) async {
+      required List<int> memoryKey,
+      LivePercentProgressBar? progress,
+      bool verify = false}) async {
     final setupKey = resotreKey.masterKey;
     final bool validChekcsum =
         BytesUtils.bytesEqual(backup.checksum, resotreKey.checksum);
@@ -519,40 +547,114 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
           verifiedChecksum: false,
           wallet: wallet);
     }
+
     final List<WalletNetworkBackup> validateChains = [];
     List<ChainAccount> invalidAddresses = [];
+    List<String> validateImportedKeys = [];
+    List<int> validateSubwallets = [];
+    bool validateMainWallet = false;
+    bool isValidKeyIndex({int? subId, String? importedKey}) {
+      if (subId == null && importedKey == null) return true;
+      if (subId != null) {
+        return (resotreKey.encryptedKey.hasSubwallet(subId) &&
+            wallet.hasSubwallet(subId));
+      }
+      return resotreKey.encryptedKey.hasImportedKey(importedKey!);
+    }
 
+    Future<bool> isValidAddress(
+        {required Chain chain,
+        required ChainAccount address,
+        int? subId,
+        String? imported,
+        bool verify = false}) async {
+      if (!verify) {
+        if (subId != null) {
+          if (validateSubwallets.contains(subId)) return true;
+          if (!isValidKeyIndex(subId: subId)) return false;
+        } else if (imported != null) {
+          if (validateImportedKeys.contains(imported)) return true;
+          if (!isValidKeyIndex(importedKey: imported)) return false;
+        } else {
+          if (validateMainWallet) {
+            return true;
+          }
+        }
+      }
+      final addr = await crypto.walletArgs(
+          memoryKey: memoryKey,
+          message: WalletRequestDeriveAddress(
+              addressParams: address.toAccountParams()),
+          masterKey: resotreKey.encryptedKey.masterKey);
+      final account =
+          addr.accountParams.toAccount(chain.network, addr.publicKey);
+      final valid = address.identifier == account.identifier;
+      if (!verify) {}
+      if (valid) {
+        if (subId != null) {
+          validateSubwallets.add(subId);
+        } else if (imported != null) {
+          validateImportedKeys.add(imported);
+        } else {
+          validateMainWallet = true;
+        }
+      }
+
+      return valid;
+    }
+
+    Future<ChainAccount?> reGenerateAddress(
+        {required Chain chain,
+        required ChainAccount address,
+        bool verify = false}) async {
+      final network = chain.network;
+      final keyIndexes = address.signerKeyIndexes();
+      for (final i in keyIndexes) {
+        if (!isValidKeyIndex(subId: i.subId, importedKey: i.importedKeyId)) {
+          return null;
+        }
+      }
+      if (address.multiSigAccount) {
+        final multiSigAccount =
+            address.toAccountParams().toAccount(network, null);
+        final isValid = address.identifier == multiSigAccount.identifier;
+        if (isValid) return multiSigAccount;
+      } else {
+        final keyIndexs = address.signerKeyIndexes();
+        ChainAccount? validAddress;
+        for (final i in keyIndexs) {
+          final isValid = await isValidAddress(
+              chain: chain,
+              address: address,
+              imported: i.importedKeyId,
+              subId: i.subId,
+              verify: verify);
+          if (!isValid) return null;
+          validAddress = address;
+        }
+        return validAddress;
+      }
+      return null;
+    }
+
+    final totalAccount =
+        backup.networks.fold(0, (p, c) => p + c.chain.addresses.length);
+    progress?.init(totalAccount);
     for (final c in backup.networks) {
       final List<ChainAccount> addresses = [];
-
       for (final address in c.chain.addresses) {
         try {
-          final network = c.chain.network;
-          if (address.multiSigAccount) {
-            final multiSigAccount =
-                address.toAccountParams().toAccount(network, null);
-            final isValid = address.identifier == multiSigAccount.identifier;
-            if (isValid) {
-              addresses.add(multiSigAccount);
-            } else {
-              invalidAddresses.add(address);
-            }
-            continue;
-          }
-          final addr = await crypto.walletArgs(
-              memoryKey: memoryKey,
-              message: WalletRequestDeriveAddress(
-                  addressParams: address.toAccountParams()),
-              masterKey: resotreKey.encryptedKey.masterKey);
-          final account = addr.accountParams.toAccount(network, addr.publicKey);
-          final isValid = address.identifier == account.identifier;
-          if (isValid) {
-            addresses.add(account);
+          final validAddress = await reGenerateAddress(
+              chain: c.chain, address: address, verify: verify);
+          if (validAddress != null) {
+            addresses.add(validAddress);
           } else {
             invalidAddresses.add(address);
           }
-        } catch (e) {
+        } catch (_) {
           invalidAddresses.add(address);
+        } finally {
+          progress?.counter();
         }
       }
       final chain = WalletNetworkBackup(

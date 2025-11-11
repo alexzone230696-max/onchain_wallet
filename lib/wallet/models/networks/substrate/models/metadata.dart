@@ -1,107 +1,30 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/utils/substrate/substrate.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
-import 'package:on_chain/on_chain.dart';
 import 'package:polkadot_dart/polkadot_dart.dart';
 
 class _SubstrateChainConst {
+  static const List<BaseSubstrateNetwork> allowedLocalTransfer = [
+    PolkadotNetwork.moonbeam,
+    KusamaNetwork.moonriver
+  ];
   static const List<int> supportedExtrinsicVersions = [4, 5];
-  static MetadataTypeInfo? getLookupTypeInfo(
-      {required MetadataApi metadata, int? lockupId, String? name}) {
-    if (lockupId == null) return null;
-    final info = metadata.metadata
-        .getLookup(lockupId)
-        .typeInfo(metadata.registry, lockupId);
-    if (name == null) return info;
-    return info.copyWith(name: name);
-  }
-
-  static SubstrateKeyAlgorithm? isEthereum(
-      {required MetadataApi metadata,
-      required TransactionExtrinsicInfo extrinsic}) {
-    try {
-      metadata.getCallLookupId('ethereum');
-      metadata.getCallLookupId('evm');
-      metadata.metadata.encodeLookup(
-          id: extrinsic.addressType!,
-          value: List<int>.filled(ETHAddress.lengthInBytes, 0),
-          fromTemplate: false);
-      metadata.metadata.encodeLookup(
-          id: extrinsic.signatureType!,
-          value: List<int>.filled(SubstrateConstant.ecdsaSignatureLength, 0),
-          fromTemplate: false);
-      return SubstrateKeyAlgorithm.ethereum;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  static List<SubstrateKeyAlgorithm> isSubstrate(
-      {required MetadataApi metadata,
-      required TransactionExtrinsicInfo extrinsic}) {
-    try {
-      metadata.metadata.encodeLookup(
-          id: extrinsic.addressType!,
-          value: {
-            "Id": List<int>.filled(SubstrateConstant.accountIdLengthInBytes, 0)
-          },
-          fromTemplate: false);
-      final sigType = getLookupTypeInfo(
-          metadata: metadata, lockupId: extrinsic.signatureType!);
-      if (sigType == null || sigType is! MetadataTypeInfoVariant) return [];
-      List<SubstrateKeyAlgorithm> keyAlgorithms = [];
-      for (final i in sigType.variants) {
-        final SubstrateKeyAlgorithm? keyAlgorithm = SubstrateKeyAlgorithm.values
-            .firstWhereOrNull((e) => e.name == i.name);
-        if (keyAlgorithm == null ||
-            keyAlgorithm == SubstrateKeyAlgorithm.ethereum) {
-          continue;
-        }
-        metadata.metadata.encodeLookup(
-            id: extrinsic.signatureType!,
-            value: {
-              keyAlgorithm.name:
-                  List<int>.filled(keyAlgorithm.signatureLength, 0)
-            },
-            fromTemplate: false);
-        keyAlgorithms.add(keyAlgorithm);
-      }
-      return keyAlgorithms;
-    } catch (_) {
-      return [];
-    }
-  }
-
-  static (SubstrateChainType, List<SubstrateKeyAlgorithm>) getAlgorithms(
-      {required MetadataApi metadata,
-      required TransactionExtrinsicInfo extrinsic}) {
-    final eth = isEthereum(metadata: metadata, extrinsic: extrinsic);
-    if (eth != null) return (SubstrateChainType.ethereum, [eth]);
-    final substrate = isSubstrate(metadata: metadata, extrinsic: extrinsic);
-    if (substrate.isEmpty) {
-      throw WalletException.error('unsuported_network_metadata');
-    }
-    return (SubstrateChainType.substrate, substrate);
-  }
-
   static int ss58Prefix({required MetadataApi metadata}) {
-    try {
-      return metadata.networkSS58Prefix();
-    } catch (_) {
-      throw WalletException.error('unsuported_network_metadata');
-    }
+    final prefix = metadata.getConstant<int?>("System", "SS58Prefix");
+    return prefix ?? 0;
   }
 
   static bool supportAccountTemplate({required MetadataApi metadata}) {
     try {
-      final f = metadata.metadata.getStorageOutputId('System', 'account');
-      final decode = metadata.decodeLookup(f, List.filled(80, 0));
+      final StorageEntryMetadataV14 storage =
+          metadata.metadata.getStorageMethod("System", "account");
+      final decode =
+          metadata.decodeLookup(storage.type.outputTypeId, storage.fallback);
       SubstrateDefaultAccount.deserializeJson(decode);
       return true;
-    } catch (_) {
-      return false;
-    }
+    } catch (_) {}
+
+    return false;
   }
 
   static bool supportRemark({required MetadataApi metadata}) {
@@ -118,29 +41,9 @@ class _SubstrateChainConst {
     }
   }
 
-  static bool supportBatch(
-      {required MetadataApi metadata,
-      required List<SubstrateTransferType> transferTypes,
-      required SubstrateChainType chainType}) {
-    if (transferTypes.isEmpty) return false;
-    try {
-      final transfer = createFakeTx(chainType);
-      metadata.encodeCall(
-          palletNameOrIndex: APPSubstrateConst.utilityPalletName,
-          value: {
-            APPSubstrateConst.utilityBatchVariantName: [
-              transfer.toJson(method: transferTypes.first, usePallet: true)
-            ]
-          },
-          fromTemplate: false);
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  static SubstrateDefaultTransfer createFakeTx(SubstrateChainType chainType) {
-    if (chainType.isEthereum) {
+  static SubstrateDefaultTransfer createFakeTx(
+      SubstrateNetworkCryptoInfo cryptoInfo) {
+    if (cryptoInfo.addressPalletType.isEthereum) {
       return SubstrateDefaultTransfer(
           address: SubstrateEthereumAddress(
               '0x0000000000000000000000000000000000000000'),
@@ -152,131 +55,143 @@ class _SubstrateChainConst {
         value: BigInt.zero);
   }
 
-  static List<SubstrateTransferType> transferTypes(
-      {required MetadataApi metadata, required SubstrateChainType chainType}) {
-    SubstrateDefaultTransfer transfer = createFakeTx(chainType);
-    return SubstrateTransferType.values
+  static List<BalancesCallPalletMethod> transferTypes(
+      {required MetadataApi metadata,
+      required SubstrateNetworkCryptoInfo cryptoInfo}) {
+    SubstrateDefaultTransfer transfer = createFakeTx(cryptoInfo);
+    return [
+      BalancesCallPalletMethod.transferKeepAlive,
+      BalancesCallPalletMethod.transferKeepAlive
+    ]
         .map((e) {
           try {
-            transfer.encode(metadata: metadata, method: e);
+            transfer.encode(
+                metadata: metadata,
+                method: e,
+                addressType: cryptoInfo.addressPalletType);
             return e;
           } catch (_) {
             return null;
           }
         })
-        .whereType<SubstrateTransferType>()
+        .whereType<BalancesCallPalletMethod>()
         .toList();
-  }
-
-  static ExtrinsicLookupField buildExtrinsicFields({
-    required MetadataApi metadata,
-    required TransactionExtrinsicInfo extrinsic,
-  }) {
-    List<MetadataTypeInfo> payloadTypes = [];
-    List<MetadataTypeInfo> extrinsicTypes = [];
-    MetadataTypeInfo address = getLookupTypeInfo(
-        metadata: metadata, lockupId: extrinsic.addressType!, name: "Address")!;
-
-    MetadataTypeInfo signature = getLookupTypeInfo(
-        metadata: metadata, lockupId: extrinsic.addressType!, name: "Address")!;
-
-    MetadataTypeInfo call;
-    if (extrinsic.callType == null) {
-      final pallets =
-          metadata.metadata.pallets.values.where((e) => e.calls != null);
-      final variants = pallets.map((e) => Si1Variant(
-          name: e.name,
-          fields: [
-            Si1Field(name: null, type: e.calls!.type, typeName: null, docs: [])
-          ],
-          index: e.index,
-          docs: e.docs ?? []));
-      call = MetadataTypeInfoVariant(
-          variants: variants.toList(), typeId: -1, name: "Call");
-    } else {
-      call = getLookupTypeInfo(
-          metadata: metadata, lockupId: extrinsic.callType!, name: "Call")!;
-    }
-
-    for (final i in extrinsic.payloadExtrinsic) {
-      MetadataTypeInfo loockup =
-          getLookupTypeInfo(metadata: metadata, lockupId: i.id, name: i.name)!;
-      payloadTypes.add(loockup);
-    }
-    for (final i in extrinsic.extrinsic) {
-      MetadataTypeInfo loockup =
-          getLookupTypeInfo(metadata: metadata, lockupId: i.id, name: i.name)!;
-      extrinsicTypes.add(loockup);
-    }
-    return ExtrinsicLookupField(
-        call: call,
-        extrinsicValidators: extrinsicTypes,
-        extrinsicPayloadValidators: payloadTypes,
-        extrinsicInfo: extrinsic,
-        address: address,
-        signature: signature);
-  }
-}
-
-enum SubstrateChainType {
-  substrate(value: 0, name: "Substrate"),
-  ethereum(value: 1, name: "Ethereum");
-
-  bool get isEthereum => this == ethereum;
-
-  const SubstrateChainType({required this.value, required this.name});
-  final int value;
-  final String name;
-
-  static SubstrateChainType fromValue(int? value) {
-    return values.firstWhere((e) => e.value == value,
-        orElse: () =>
-            throw AppSerializationException(objectName: "SubstrateChainType"));
   }
 }
 
 class SubstrateChainMetadata {
+  final int batchedCallsLimit;
   final MetadataApi metadata;
   final ExtrinsicLookupField extrinsic;
   final String genesis;
   final MetadataInfo metadataInfos;
   final RuntimeVersion runtimeVersion;
-  final List<SubstrateTransferType> transferTypes;
-  final List<SubstrateKeyAlgorithm> supportedAlgorithms;
+  final List<SubstrateCallPalletTransferMethod> nativeTransferMethods;
   final bool supportAccountTemplate;
   final int ss58Prefix;
-  final SubstrateChainType type;
   final bool supportRemarks;
   final bool supportBatch;
   final BigInt? existentialDeposit;
-  bool get supportNativeTransfer => transferTypes.isNotEmpty;
+  final BigInt? baseDeposit;
+  final int? maxSignatories;
+  final BigInt? depositFactor;
+  final bool supportMultisig;
+  final bool supportPokeDeposit;
+  final bool supportTransferLocalToken;
+  final XCMVersion xcmVersion;
+  final BaseSubstrateNetworkController? controller;
+  bool get supportXcmTransfer => controller != null;
+  bool get supportTokenTransfer => controller != null;
+  final BaseSubstrateNetwork? internalNetwork;
+  final bool hasCurrencyConvertionApi;
+  final bool hasXcmPaymentApi;
+  final bool hasDryRunApi;
+  final List<String> rpcMethods;
+  XCMVersionedLocation? chargeAssetTxPaymentNativeLocation() {
+    if (controller != null &&
+        extrinsic.chargeAssetTxPayment &&
+        hasCurrencyConvertionApi) {
+      return controller?.defaultNativeAsset.tryGetlocalizedLocation(
+          reserveNetwork: controller!.network,
+          version: controller!.network.defaultXcmVersion);
+    }
+    return null;
+  }
+
+  MetadataWithExtrinsic metadataWithExtrinsic() {
+    return MetadataWithExtrinsic(api: metadata, extrinsic: extrinsic);
+  }
+
+  List<MultisigCallPalletMethod> multisigMethods() {
+    if (!supportMultisig) return [];
+    if (supportPokeDeposit) return MultisigCallPalletMethod.values;
+    return MultisigCallPalletMethod.values
+        .where((e) => e != MultisigCallPalletMethod.pokeDeposit)
+        .toList();
+  }
+
+  // final
+  bool get supportNativeTransfer => nativeTransferMethods.isNotEmpty;
   int get transactionVersion => runtimeVersion.transactionVersion;
   int get specVersion => runtimeVersion.specVersion;
   bool get supportRuntimeApi => metadata.metadata.supportRuntimeApi;
+
   List<int> genesisBytes() {
     return BytesUtils.fromHexString(genesis);
   }
 
   SubstrateChainMetadata._(
       {required this.metadataInfos,
+      required this.batchedCallsLimit,
       required this.genesis,
       required this.metadata,
       required this.runtimeVersion,
       required this.extrinsic,
-      required this.supportedAlgorithms,
-      required this.transferTypes,
+      required this.baseDeposit,
+      required this.depositFactor,
+      required this.maxSignatories,
+      required this.nativeTransferMethods,
       required this.supportAccountTemplate,
       required this.ss58Prefix,
-      required this.type,
+      required this.supportMultisig,
       required this.supportBatch,
       required this.supportRemarks,
-      this.existentialDeposit});
+      required this.controller,
+      required this.internalNetwork,
+      required this.hasCurrencyConvertionApi,
+      required this.hasXcmPaymentApi,
+      required this.hasDryRunApi,
+      required this.supportPokeDeposit,
+      required this.xcmVersion,
+      required this.supportTransferLocalToken,
+      required List<String> rpcMethods,
+      this.existentialDeposit})
+      : rpcMethods = rpcMethods.immutable;
   factory SubstrateChainMetadata(
-      {required String genesis, required MetadataApi metadata}) {
+      {required String genesis,
+      required MetadataApi metadata,
+      required SubstrateNetworkControllerParams apiParams,
+      required List<String> rpcMethods}) {
+    final substrateNetwork = BaseSubstrateNetwork.fromGenesis(genesis);
+    BaseSubstrateNetworkController? controller;
+    if (substrateNetwork != null) {
+      controller = MethodUtils.nullOnException(() =>
+          SubstrateNetworkControllerFinder.buildApi(
+              network: substrateNetwork, params: apiParams));
+    }
     final existentialDeposit = BigintUtils.tryParse(metadata.tryGetConstant(
-        APPSubstrateConst.balancePalletName,
+        SubtrateMetadataPallet.balances.name,
         APPSubstrateConst.existentialDepositStorageName));
-
+    final depositBase = BigintUtils.tryParse(metadata.tryGetConstant(
+        SubtrateMetadataPallet.multisig.name, APPSubstrateConst.depositBase));
+    final depositFactor = BigintUtils.tryParse(metadata.tryGetConstant(
+        SubtrateMetadataPallet.multisig.name, APPSubstrateConst.depositFactor));
+    final maxSignatories = IntUtils.tryParse(metadata.tryGetConstant(
+        SubtrateMetadataPallet.multisig.name,
+        APPSubstrateConst.maxSignatories));
+    final int? batchedCallsLimit = IntUtils.tryParse(metadata.tryGetConstant(
+        SubtrateMetadataPallet.utility.name,
+        APPSubstrateConst.batchedCallsLimit));
     final metadataInfos = metadata.metadata.palletsInfos();
     final metadataExtrinsic = metadataInfos.extrinsic.firstWhere(
         (e) =>
@@ -286,40 +201,87 @@ class SubstrateChainMetadata {
             e.signatureType != null,
         orElse: () =>
             throw WalletException.error('unsuported_network_metadata'));
+    final extrinsic = MethodUtils.nullOnException(() =>
+        ExtrinsicBuilderUtils.buildExtrinsicFields(
+            metadata, metadataExtrinsic));
+    if (extrinsic == null) {
+      throw WalletException.error('unsuported_network_metadata');
+    }
+    List<SubstrateCallPalletTransferMethod> transferMethods = [];
+    if (controller != null) {
+      transferMethods =
+          SubstrateNetworkControllerLocalAssetTransferBuilder.transferMethods(
+              metadata:
+                  MetadataWithExtrinsic(api: metadata, extrinsic: extrinsic),
+              asset: controller.defaultNativeAsset);
+    } else {
+      transferMethods = _SubstrateChainConst.transferTypes(
+          metadata: metadata, cryptoInfo: extrinsic.crypto);
+    }
 
-    final keyAlgorithms = _SubstrateChainConst.getAlgorithms(
-        metadata: metadata, extrinsic: metadataExtrinsic);
-    final transferTypes = _SubstrateChainConst.transferTypes(
-        metadata: metadata, chainType: keyAlgorithms.$1);
-    final extrinsic = _SubstrateChainConst.buildExtrinsicFields(
-        metadata: metadata, extrinsic: metadataExtrinsic);
-    final fakeExtrinsic = SubstrateDefaultExtrinsic.fake;
-    fakeExtrinsic.encode(
-        fields: extrinsic.extrinsicPayloadValidators, metadata: metadata);
-    fakeExtrinsic.encode(
-        fields: extrinsic.extrinsicValidators, metadata: metadata);
-    final chainMetadata = SubstrateChainMetadata._(
+    bool pokeDeposit = false;
+    bool supportMultisig = extrinsic.crypto.type != SubstrateChainType.ethereum;
+    if (supportMultisig && maxSignatories != null) {
+      try {
+        final musigMethods = metadata.metadata
+            .getCallMethodNames(SubtrateMetadataPallet.multisig.name);
+        supportMultisig &= MultisigCallPalletMethod.values.every((e) {
+          if (e == MultisigCallPalletMethod.pokeDeposit) return true;
+          return musigMethods.contains(e.method);
+        });
+        pokeDeposit =
+            musigMethods.contains(MultisigCallPalletMethod.pokeDeposit.method);
+      } catch (_) {
+        supportMultisig = false;
+      }
+    }
+
+    final bool hasDryRunApi = SubstrateRuntimeApiDryRunMethods.values.every(
+        (e) => SubstrateQuickRuntimeApi.dryRun
+            .methodExists(api: metadata, method: e));
+    final bool hasXcmPaymentApi = SubstrateRuntimeApiXCMPaymentMethods.values
+        .every((e) => SubstrateQuickRuntimeApi.xcmPayment
+            .methodExists(api: metadata, method: e));
+    final bool hasCurrencyConvertionApi =
+        SubstrateRuntimeApiAssetConversionMethods.values.every((e) =>
+            SubstrateQuickRuntimeApi.assetConversion
+                .methodExists(api: metadata, method: e));
+    final supportBatch = batchedCallsLimit != null &&
+        metadata.callMethodExists(SubtrateMetadataPallet.utility.name,
+            UtilityCallPalletMethod.batchAll.method);
+    return SubstrateChainMetadata._(
+        batchedCallsLimit: batchedCallsLimit ?? 0,
+        hasCurrencyConvertionApi: hasCurrencyConvertionApi,
+        internalNetwork: substrateNetwork,
+        controller: controller,
+        hasXcmPaymentApi: hasXcmPaymentApi,
+        hasDryRunApi: hasDryRunApi,
         metadataInfos: metadataInfos,
+        supportTransferLocalToken: controller != null &&
+            (controller.network.allowLocalTransfer ||
+                _SubstrateChainConst.allowedLocalTransfer
+                    .contains(controller.network)),
         genesis: genesis,
         metadata: metadata,
         runtimeVersion: metadata.runtimeVersion(),
         extrinsic: extrinsic,
-        supportedAlgorithms: keyAlgorithms.$2,
-        type: keyAlgorithms.$1,
-        transferTypes: transferTypes,
+        baseDeposit: depositBase,
+        depositFactor: depositFactor,
+        maxSignatories: maxSignatories,
+        nativeTransferMethods: transferMethods,
+        supportPokeDeposit: pokeDeposit,
+        xcmVersion: substrateNetwork?.defaultXcmVersion ?? XCMVersion.v4,
         supportAccountTemplate:
             _SubstrateChainConst.supportAccountTemplate(metadata: metadata),
         ss58Prefix: _SubstrateChainConst.ss58Prefix(metadata: metadata),
-        supportBatch: _SubstrateChainConst.supportBatch(
-            metadata: metadata,
-            transferTypes: transferTypes,
-            chainType: keyAlgorithms.$1),
+        supportBatch: supportBatch,
         supportRemarks: _SubstrateChainConst.supportRemark(metadata: metadata),
+        supportMultisig: supportMultisig && maxSignatories != null,
+        rpcMethods: rpcMethods,
         existentialDeposit:
             existentialDeposit != null && existentialDeposit > BigInt.zero
                 ? existentialDeposit
                 : null);
-    return chainMetadata;
   }
 
   List<PalletInfo> constantPallets() {
@@ -356,42 +318,6 @@ class SubstrateChainMetadata {
     return info.copyWith(name: name);
   }
 
-  List<int> encodeSigner(BaseSubstrateAddress address) {
-    switch (type) {
-      case SubstrateChainType.ethereum:
-        return metadata.metadata.encodeLookup(
-            id: extrinsic.extrinsicInfo.addressType!,
-            value: address.toBytes(),
-            fromTemplate: false);
-      default:
-        final encode = metadata.metadata.encodeLookup(
-            id: extrinsic.extrinsicInfo.addressType!,
-            value: {"Id": address.toBytes()},
-            fromTemplate: false);
-        return encode;
-    }
-  }
-
-  List<int> encodeSignature({
-    required EllipticCurveTypes algorithm,
-    required List<int> signature,
-  }) {
-    switch (type) {
-      case SubstrateChainType.ethereum:
-        return metadata.metadata.encodeLookup(
-            id: extrinsic.extrinsicInfo.signatureType!,
-            value: signature,
-            fromTemplate: false);
-      default:
-        final encode = metadata.metadata.encodeLookup(
-            id: extrinsic.extrinsicInfo.signatureType!,
-            value: SubstrateUtils.buildMultiSignatureTemplate(
-                algorithm: algorithm, signature: signature),
-            fromTemplate: false);
-        return encode;
-    }
-  }
-
   ExtrinsicInfo createExtrinsic(
       {required List<int>? signature,
       required BaseSubstrateAddress address,
@@ -400,15 +326,15 @@ class SubstrateChainMetadata {
     final buffer = DynamicByteTracker();
     List<int>? encodeSignature;
     if (signature != null) {
-      final encodedAddress = encodeSigner(address);
-      encodeSignature =
-          this.encodeSignature(algorithm: algorithm, signature: signature);
+      final encodedAddress =
+          extrinsic.encodeSigner(address: address, metadata: metadata);
+      encodeSignature = extrinsic.encodeSignature(
+          algorithm: algorithm, signature: signature, metadata: metadata);
       buffer.add(encodedAddress);
       buffer.add(encodeSignature);
     }
     if (payload.extrinsic != null) {
-      buffer.add(payload.extrinsic!
-          .encode(fields: extrinsic.extrinsicValidators, metadata: metadata));
+      buffer.add(payload.extrinsic!.encodeExtrinsic(metadata));
     }
     final encodeBytes = buffer.toBytes().asImmutableBytes;
     final encodeData = BytesUtils.toHexString(encodeBytes);

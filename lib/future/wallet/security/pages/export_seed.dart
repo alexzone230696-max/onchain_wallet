@@ -22,7 +22,7 @@ class ExportSeedView extends StatelessWidget {
         },
         title: "export_mnemonic".tr,
         subtitle: PageTitleSubtitle(
-            title: "export_mnemonic_desc".tr,
+            title: "export_mnemonic".tr,
             body: Text("export_mnemonic_desc2".tr)));
   }
 }
@@ -67,10 +67,25 @@ class _ExportSeedViewState extends State<_ExportSeedView>
   Map<_ViewMnemonicData, Widget> _buildItems() {
     return {
       for (final i in mnemonics)
-        i: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(i.name, style: context.textTheme.bodyMedium),
-          Text(i.createdAt, style: context.textTheme.bodySmall)
-        ])
+        i: Row(
+          children: [
+            ConditionalWidget(
+              enable: i.subwalletId == null,
+              onActive: (context) => Icon(Icons.account_balance_wallet),
+              onDeactive: (context) =>
+                  Icon(Icons.account_balance_wallet_outlined),
+            ),
+            WidgetConstant.width8,
+            Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(i.name, style: context.textTheme.bodyMedium),
+                    Text(i.createdAt, style: context.textTheme.bodySmall)
+                  ]),
+            )
+          ],
+        )
     };
   }
 
@@ -103,7 +118,7 @@ class _ExportSeedViewState extends State<_ExportSeedView>
                 children: [
                   WidgetConstant.height20,
                   PageTitleSubtitle(
-                      title: "export_mnemonic_desc".tr,
+                      title: "export_mnemonic".tr,
                       body: LargeTextView([
                         "export_mnemonic_desc2".tr,
                         "mnemonic_security_des1".tr,

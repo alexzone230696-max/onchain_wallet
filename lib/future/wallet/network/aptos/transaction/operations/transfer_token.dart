@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:on_chain/aptos/src/address/address/address.dart';
 import 'package:on_chain_wallet/app/core.dart';
@@ -7,8 +8,8 @@ import 'package:on_chain_wallet/future/wallet/network/aptos/transaction/controll
 import 'package:on_chain_wallet/future/wallet/network/aptos/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/aptos/transaction/widgets/transfer_token.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/wallet/models/networks/aptos/models/types.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class AptosTransactionTransferTokenOperation
     extends AptosTransactionStateController<
@@ -118,8 +119,14 @@ class AptosTransactionTransferTokenOperation
   }
 
   @override
-  Future<void> initForm(AptosClient client, {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: false);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required AptosClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super
+        .initForm(context: context, client: client, updateAccount: false);
     if (!address.tokens.contains(token)) {
       await account.updateTokenBalance(address: address, tokens: [token]);
     } else {
@@ -127,6 +134,7 @@ class AptosTransactionTransferTokenOperation
     }
     _tokenBalanceListener =
         token.streamBalance.stream.listen((_) => onStateUpdated());
+    return this;
   }
 
   @override

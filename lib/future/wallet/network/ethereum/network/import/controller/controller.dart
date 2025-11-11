@@ -69,7 +69,7 @@ class EthereumAddNewChainFrom with DisposableMixin, StreamStateController {
   // String? chainError;
   void onChangeChainId(BigInt chainId) {
     if (!editableChainId) return;
-    chainId = this.chainId;
+    this.chainId = chainId;
   }
 
   void onChangeCoinType(int v) {
@@ -166,7 +166,7 @@ class EthereumAddNewChainFrom with DisposableMixin, StreamStateController {
     _existsChainIds = existsChainIds.immutable;
   }
 
-  Future<EthereumNetworkParams?> buildNetwork() async {
+  Future<(EthereumNetworkParams, EthereumAPIProvider)?> buildNetwork() async {
     if (!isReady()) return null;
     final rpcUrl = rpcKey.currentState?.getEndpoint();
     if (rpcUrl == null) return null;
@@ -182,13 +182,13 @@ class EthereumAddNewChainFrom with DisposableMixin, StreamStateController {
         addressExplorer: explorerAddressLink.nullOnEmpty,
         token: Token(
             name: networkName, symbol: symbol, decimal: EthereumUtils.decimal),
-        providers: [provider],
+        // providers: [],
         chainId: chain,
         supportEIP1559: info.$2,
         defaultNetwork: false,
         chainType: chainType,
         bip32CoinType: coinType);
-    return params;
+    return (params, provider);
   }
 
   @override

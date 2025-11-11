@@ -1,13 +1,13 @@
+import 'package:blockchain_utils/bip/bip.dart';
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:monero_dart/monero_dart.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
 import 'package:on_chain_wallet/wallet/api/provider/provider.dart';
-import 'package:blockchain_utils/bip/bip.dart';
+import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/params/params.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
-import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 
-class MoneroNetworkParams extends NetworkCoinParams<MoneroAPIProvider> {
+class MoneroNetworkParams extends NetworkCoinParams {
   final MoneroNetwork network;
   final int rctHeight;
 
@@ -18,10 +18,10 @@ class MoneroNetworkParams extends NetworkCoinParams<MoneroAPIProvider> {
 
     return MoneroNetworkParams(
         token: Token.deserialize(obj: values.elementAsCborTag(2)),
-        providers: values
-            .elementAsListOf<CborObject>(3)
-            .map((e) => MoneroAPIProvider.fromCborBytesOrObject(obj: e))
-            .toList(),
+        // providers: values
+        //     .elementAsListOf<CborObject>(3)
+        //     .map((e) => MoneroAPIProvider.fromCborBytesOrObject(obj: e))
+        //     .toList(),
         chainType: ChainType.fromValue(values.elementAs(4)),
         network: MoneroNetwork.fromName(values.elementAs(5)),
         rctHeight: values.elementAs(7),
@@ -30,7 +30,6 @@ class MoneroNetworkParams extends NetworkCoinParams<MoneroAPIProvider> {
   }
   MoneroNetworkParams(
       {required super.token,
-      required super.providers,
       required super.chainType,
       required this.network,
       required this.rctHeight,
@@ -44,8 +43,7 @@ class MoneroNetworkParams extends NetworkCoinParams<MoneroAPIProvider> {
           const CborNullValue(),
           const CborNullValue(),
           token.toCbor(),
-          CborSerializable.fromDynamic(
-              providers.map((e) => e.toCbor()).toList()),
+          CborNullValue(),
           chainType.name,
           network.name,
           const CborNullValue(),
@@ -57,7 +55,7 @@ class MoneroNetworkParams extends NetworkCoinParams<MoneroAPIProvider> {
   }
 
   @override
-  NetworkCoinParams<MoneroAPIProvider> updateParams(
+  NetworkCoinParams updateParams(
       {List<APIProvider>? updateProviders,
       Token? token,
       String? transactionExplorer,
@@ -66,7 +64,6 @@ class MoneroNetworkParams extends NetworkCoinParams<MoneroAPIProvider> {
     return MoneroNetworkParams(
         token: NetworkCoinParams.validateUpdateParams(
             token: this.token, updateToken: token),
-        providers: updateProviders?.cast<MoneroAPIProvider>() ?? providers,
         chainType: chainType,
         network: network,
         rctHeight: rctHeight,

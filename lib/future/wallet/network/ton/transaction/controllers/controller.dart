@@ -1,12 +1,15 @@
 import 'dart:async';
+
+import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 import 'package:on_chain_wallet/future/wallet/network/ton/transaction/controllers/provider.dart';
 import 'package:on_chain_wallet/future/wallet/network/ton/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'package:ton_dart/ton_dart.dart';
-import 'fee.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
+import 'package:ton_dart/ton_dart.dart';
+
+import 'fee.dart';
 import 'signer.dart';
 
 abstract class TonTransactionStateController2
@@ -62,7 +65,9 @@ abstract class TonTransactionStateController2
     final signedTransaction =
         await signTransaction(transaction, fakeSignature: true);
     return TonSimulateTransaction(
-        message: signedTransaction.finalTransactionData, address: address);
+        message: signedTransaction.finalTransactionData,
+        address: address,
+        messages: signedTransaction.transaction.transactionData.messages);
   }
 
   @override
@@ -104,11 +109,18 @@ abstract class TonTransactionStateController2
   }
 
   @override
-  Future<void> initForm(TonClient client, {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: updateAccount);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required TonClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super.initForm(
+        context: context, client: client, updateAccount: updateAccount);
     final state = await getAccountState(walletContract);
     if (state.state.isFrozen) {
       throw AppException("ton_address_is_freez_desc");
     }
+    return this;
   }
 }

@@ -1,12 +1,12 @@
 import 'package:blockchain_utils/helper/helper.dart';
+import 'package:blockchain_utils/utils/equatable/equatable.dart';
 import 'package:blockchain_utils/utils/numbers/rational/big_rational.dart';
-import 'package:on_chain_wallet/app/euqatable/equatable.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
 
 class RippleTransactionOperations
-    with Equatable
+    with Equality
     implements TransactionOperations {
   factory RippleTransactionOperations.fromTransactionType(
       SubmittableTransactionType txType) {
@@ -60,6 +60,7 @@ class RippleTransactionFeeData
 
 abstract class BaseRippleTransactionController<T extends IXRPTransactionData>
     extends TransactionStateController<
+        RippleIssueToken,
         IXRPAddress,
         XRPClient,
         WalletXRPNetwork,
@@ -68,7 +69,8 @@ abstract class BaseRippleTransactionController<T extends IXRPTransactionData>
         IXRPTransaction<T>,
         IXRPSignedTransaction<T>,
         XRPWalletTransaction,
-        SubmitTransactionSuccess<IXRPSignedTransaction<T>>> {
+        SubmitTransactionSuccess<IXRPSignedTransaction<T>>,
+        RippleTransactionFeeData> {
   SubmittableTransactionType get transactionType;
 
   BaseRippleTransactionController(

@@ -26,8 +26,7 @@ class SubstrateFeeInfos {
         calculated: false);
   }
   factory SubstrateFeeInfos.fromFeeDetails(
-      {required QueryFeeInfoFrame fee,
-      required WalletSubstrateNetwork network}) {
+      {required QueryFeeDetails fee, required WalletSubstrateNetwork network}) {
     if (fee.inclusionFee == null) return SubstrateFeeInfos.zero(network);
     final inclusionFee = fee.inclusionFee!;
     final BigRational totalFee = BigRational(inclusionFee.adjustedWeightFee +

@@ -5,7 +5,7 @@ class WalletConnectStorage
   @override
   String get tableId => walletKey;
   final String walletKey;
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   bool _isReady = false;
   Map<String, SessionData> _activeSessions = {};
   Map<int, PublishRequest> _pendingMessage = {};
@@ -42,7 +42,7 @@ class WalletConnectStorage
   }
 
   Future<void> setPendingMessage(WcInternalPublishMessageEvent event) async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       final id = event.request.correlationId;
       final status = event.status;
       if (!status.isPending) {
@@ -136,7 +136,7 @@ class WalletConnectStorage
   }
 
   Future<void> init() async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       if (_isReady) return;
       _activeSessions = await _initSessions();
       _pendingMessage = await _getPendingMessage();
@@ -146,7 +146,7 @@ class WalletConnectStorage
   }
 
   Future<void> close() async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       _activeSessions.clear();
       _pendingMessage.clear();
       _isReady = false;

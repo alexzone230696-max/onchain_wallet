@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/receipt_address_view.dart';
+import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/widgets/payload.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/web3/operations/sign_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/pages/fee.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/web3_request_page_builder.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/widgets/widgets/json/json/widgets.dart';
 
 class Web3SubstrateSignTransactionStateView extends StatelessWidget {
@@ -32,7 +32,8 @@ class Web3SubstrateSignTransactionStateView extends StatelessWidget {
       }),
       WidgetConstant.height20,
       SubstrateShowPayloadInfoWidget(
-          payload: transactionData.extrinsicPayloadInfo),
+        payload: transactionData.extrinsicPayloadInfo,
+      ),
       TransactionFeeWidget(
           fee: controller.txFee, getMaxFeeInput: () => BigInt.zero),
       Web3StateAcceptRequestView(
@@ -153,6 +154,10 @@ class _UnknownMethodView extends StatelessWidget {
               WidgetConstant.height8,
               ContainerWithBorder(
                 backgroundColor: context.onPrimaryContainer,
+                onRemoveIcon: Icon(
+                  Icons.open_in_full,
+                  color: context.primaryContainer,
+                ),
                 onRemove: () {
                   context.openDialogPage(
                     '',
@@ -160,7 +165,10 @@ class _UnknownMethodView extends StatelessWidget {
                         text: method.content, title: 'transaction_content'.tr),
                   );
                 },
-                child: Text("content".tr),
+                child: Text(
+                  "content".tr,
+                  style: context.primaryTextTheme.bodyMedium,
+                ),
               ),
             ],
           ),

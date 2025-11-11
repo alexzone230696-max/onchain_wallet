@@ -1,6 +1,6 @@
 import 'package:blockchain_utils/helper/helper.dart';
+import 'package:blockchain_utils/utils/equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 
@@ -150,7 +150,7 @@ class _WebViewSearchBarViewState extends State<WebViewSearchBarView>
   }
 }
 
-class _SearchSuggest with Equatable {
+class _SearchSuggest with Equality {
   final String url;
   final String? title;
   final _SearchSuggestType type;

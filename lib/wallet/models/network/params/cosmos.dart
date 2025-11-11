@@ -1,20 +1,18 @@
+import 'package:blockchain_utils/bip/bip.dart';
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:cosmos_sdk/cosmos_sdk.dart';
 import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
 import 'package:on_chain_wallet/app/utils/list/extension.dart';
 import 'package:on_chain_wallet/wallet/api/provider/core/provider.dart';
-import 'package:on_chain_wallet/wallet/constant/networks/cosmos.dart';
 import 'package:on_chain_wallet/wallet/chain/account.dart';
-
-import 'package:on_chain_wallet/wallet/models/networks/networks.dart';
-import 'package:on_chain_wallet/wallet/models/network/core/params/params.dart';
-import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
-import 'package:on_chain_wallet/wallet/api/provider/networks/cosmos.dart';
+import 'package:on_chain_wallet/wallet/constant/networks/cosmos.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
-import 'package:blockchain_utils/bip/bip.dart';
+import 'package:on_chain_wallet/wallet/models/network/core/params/params.dart';
+import 'package:on_chain_wallet/wallet/models/networks/networks.dart';
+import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 
-class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
+class CosmosNetworkParams extends NetworkCoinParams {
   final String hrp;
   final String denom;
   final CosmosNetworkTypes networkType;
@@ -48,7 +46,6 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
     super.transactionExplorer,
     super.addressExplorer,
     required super.token,
-    required super.providers,
     required super.chainType,
     required this.hrp,
     required this.denom,
@@ -65,7 +62,6 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
       {String? transactionExplorer,
       String? addressExplorer,
       required Token token,
-      required List<CosmosAPIProvider> providers,
       required ChainType chainType,
       required String hrp,
       required String denom,
@@ -85,7 +81,6 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
     }
     return CosmosNetworkParams._(
         token: token,
-        providers: providers,
         chainType: chainType,
         hrp: hrp,
         denom: denom,
@@ -108,10 +103,10 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
 
     return CosmosNetworkParams(
         token: Token.deserialize(obj: values.elementAsCborTag(2)),
-        providers: values
-            .elementAsListOf<CborTagValue>(3)
-            .map((e) => CosmosAPIProvider.fromCborBytesOrObject(obj: e))
-            .toList(),
+        // providers: values
+        //     .elementAsListOf<CborTagValue>(3)
+        //     .map((e) => CosmosAPIProvider.fromCborBytesOrObject(obj: e))
+        //     .toList(),
         chainType: ChainType.fromValue(values.elementAs(4)),
         hrp: values.elementAs(5),
         denom: values.elementAs(6),
@@ -140,8 +135,7 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
           const CborNullValue(),
           const CborNullValue(),
           token.toCbor(),
-          CborSerializable.fromDynamic(
-              providers.map((e) => e.toCbor()).toList()),
+          CborNullValue(),
           chainType.name,
           hrp,
           denom,
@@ -162,8 +156,7 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
   }
 
   CosmosNetworkParams copyWith(
-      {List<CosmosAPIProvider>? providers,
-      String? transactionExplorer,
+      {String? transactionExplorer,
       String? addressExplorer,
       Token? token,
       ChainType? chainType,
@@ -181,7 +174,6 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
         transactionExplorer: transactionExplorer ?? this.transactionExplorer,
         addressExplorer: addressExplorer ?? this.addressExplorer,
         token: token ?? this.token,
-        providers: providers ?? this.providers,
         chainType: chainType ?? this.chainType,
         hrp: hrp ?? this.hrp,
         denom: denom ?? this.denom,
@@ -198,7 +190,7 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
   String get identifier => chainId;
 
   @override
-  NetworkCoinParams<CosmosAPIProvider> updateParams(
+  NetworkCoinParams updateParams(
       {List<APIProvider>? updateProviders,
       Token? token,
       String? transactionExplorer,
@@ -209,7 +201,6 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
         addressExplorer: addressExplorer,
         token: NetworkCoinParams.validateUpdateParams(
             token: this.token, updateToken: token),
-        providers: updateProviders?.cast<CosmosAPIProvider>() ?? providers,
         chainType: chainType,
         hrp: hrp,
         feeTokens: feeTokens,

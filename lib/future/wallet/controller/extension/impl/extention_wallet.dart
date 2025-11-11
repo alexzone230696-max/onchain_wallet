@@ -1,16 +1,17 @@
 import 'dart:async';
 import 'dart:js_interop';
+
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_bridge/models/models.dart';
 import 'package:on_chain_bridge/web/web.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/crypto/requets/messages/crypto/requests/chacha.dart';
 import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 import 'package:on_chain_wallet/future/wallet/controller/extension/models/models.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
 import 'package:on_chain_wallet/future/wallet/web3/controller/web3_request_controller.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
-import 'package:on_chain_wallet/crypto/requets/messages/crypto/requests/chacha.dart';
 
 mixin ExtentionWalletHandler on Web3RequestControllerImpl {
   ExtensionWalletContext _context = ExtensionWalletContext.init;
@@ -22,7 +23,7 @@ mixin ExtentionWalletHandler on Web3RequestControllerImpl {
   StreamSubscription<int>? _onWalletExpireTime;
   List<ExtensionWalletContextType> _supportedActions = [];
   List<ExtensionWalletContextType> get supportedActions => _supportedActions;
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   final Map<String, String> _clientsIds = {};
 
   Future<ChromeTab?> _getInitializeTab() async {
@@ -209,7 +210,7 @@ mixin ExtentionWalletHandler on Web3RequestControllerImpl {
         peerKey: event.clientId,
         identifier: tab.id.toString(),
         info: client.client?.client);
-    _lock.synchronized(() {
+    _lock.run(() {
       if (client.identifier == latestClient.value.identifier) {
         _updateLatestClient(tab);
       }
@@ -370,7 +371,7 @@ mixin ExtentionWalletHandler on Web3RequestControllerImpl {
 
   Future<void> _updateLatestClient(ChromeTab? tab) async {
     _cancelable.cancel();
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       latestClient.value = LastWeb3ActiveClient();
       final result = await MethodUtils.call(() => _getTabInfo(tab),
           cancelable: _cancelable);
@@ -501,7 +502,7 @@ mixin ExtentionWalletHandler on Web3RequestControllerImpl {
 
   Future<void> openPopup(ExtensionWalletContextType context) async {
     if (context == ExtensionWalletContextType.action) return;
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       switch (context) {
         case ExtensionWalletContextType.sidePanel:
           await extension.sidePanel.open_(windowId: this.context.windowId);

@@ -1,9 +1,6 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:on_chain_wallet/app/constant/constant.dart';
-import 'package:on_chain_wallet/app/models/models/typedef.dart';
-import 'package:on_chain_wallet/app/utils/method/utiils.dart';
-import 'package:on_chain_wallet/app/utils/string/utils.dart';
+import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
@@ -25,15 +22,21 @@ class SubstrateImportChainView extends StatelessWidget {
   }
 }
 
+enum _Page { rpc, fields, review }
+
 mixin AddSubstrateChainState<T extends StatefulWidget> on SafeState<T> {
   final StreamPageProgressController pageProgressKey =
       StreamPageProgressController();
-  final GlobalKey<FormState> formKey = GlobalKey(debugLabel: "form key!");
-  final GlobalKey<HTTPServiceProviderFieldsState> rpcKey = GlobalKey();
-  SubstrateNetworkParams? network;
+  final GlobalKey<FormState> formKey =
+      GlobalKey(debugLabel: "AddSubstrateChainState_formKey");
+  final GlobalKey<HTTPServiceProviderFieldsState> rpcKey =
+      GlobalKey(debugLabel: "AddSubstrateChainState_rpcKey");
+  (SubstrateNetworkParams, SubstrateAPIProvider)? network;
   SubstrateChainMetadata? metadata;
   RPCURL? uri;
+  bool get canPop => pageProgressKey.isSuccess || _page == _Page.rpc;
 
+  _Page _page = _Page.rpc;
   bool isWalletNetwork = false;
   bool isDefaultNetwork = false;
   int decimal = 10;
@@ -41,6 +44,20 @@ mixin AddSubstrateChainState<T extends StatefulWidget> on SafeState<T> {
   String networkName = '';
   String explorerAddressLink = "";
   String explorerTransaction = "";
+
+  void clearState() {
+    uri = null;
+    decimal = 10;
+    symbol = '';
+    networkName = '';
+    explorerAddressLink = "";
+    explorerTransaction = "";
+    network = null;
+    metadata = null;
+    _page = _Page.rpc;
+    updateState();
+  }
+
   void onChangeSymbol(String v) {
     symbol = v;
   }
@@ -116,12 +133,8 @@ mixin AddSubstrateChainState<T extends StatefulWidget> on SafeState<T> {
     return null;
   }
 
-  // late WalletProvider wallet;
   bool get showRemoveIcon => isWalletNetwork && !isDefaultNetwork;
-
-  void removeChain(bool? remove) async {}
-
-  Future<void> checkNetwork() async {
+  Future<void> getNetworkInfromation() async {
     if (!formKey.ready()) return;
     uri = rpcKey.currentState?.getEndpoint();
     if (uri == null) return;
@@ -131,28 +144,117 @@ mixin AddSubstrateChainState<T extends StatefulWidget> on SafeState<T> {
         identifier: APIUtils.getProviderIdentifier(),
         auth: uri!.auth);
     final client = APIUtils.buildsubstrateClient(provider: provider);
-    final init = await MethodUtils.call(() async => client.loadApi());
+    final init = await MethodUtils.call(() async {
+      final api = await client.loadApi();
+      if (api == null) return null;
+      // final substrateNetwork = BaseSubstrateNetwork.fromGenesis(api.genesis);
+      final systemProperties = await client.systemProperties();
+      final systemChain = await client.systemChain();
+      return (api, systemProperties, systemChain);
+    });
     if (init.hasError) {
       pageProgressKey.errorText(init.localizationError,
           backToIdle: false, showBackButton: true);
     } else if (init.result == null) {
       pageProgressKey.errorText("unsuported_network_metadata".tr);
     } else {
-      final chainInfo = init.result!;
+      final chainInfo = init.result!.$1;
+      final internalController = chainInfo.controller;
+      // systemProperties = init.result?.$2;
+      // substrateNetwork = init.result?.$3;
       metadata = chainInfo;
-      network = SubstrateNetworkParams(
-          token: Token(name: networkName, symbol: symbol, decimal: decimal),
-          providers: [provider],
-          chainType: ChainType.mainnet,
-          ss58Format: chainInfo.ss58Prefix,
-          substrateChainType: chainInfo.type,
-          addressExplorer: explorerAddressLink.nullOnEmpty,
-          transactionExplorer: explorerTransaction.nullOnEmpty,
-          gnesisBlock: chainInfo.genesis,
-          keyAlgorithms: chainInfo.supportedAlgorithms,
-          specVersion: chainInfo.specVersion);
+      networkName =
+          internalController?.network.networkName ?? init.result?.$3 ?? '';
+      // final token = systemProperties?.tokens.firstOrNull;
+      if (internalController != null) {
+        symbol = internalController.defaultNativeAsset.symbol ?? '';
+        decimal = internalController.defaultNativeAsset.decimals ?? decimal;
+      } else {
+        final token = init.result?.$2?.tokens.firstOrNull;
+        if (token != null) {
+          symbol = token.tokenSymbol;
+          decimal = token.decimals;
+        }
+      }
+      _page = _Page.fields;
       pageProgressKey.backToIdle();
     }
+  }
+
+  // Future<void> checkNetwork() async {
+  //   if (!formKey.ready()) return;
+  //   uri = rpcKey.currentState?.getEndpoint();
+  //   if (uri == null) return;
+  //   // PolkadotNetwork.values.firstWhere((e)=>e.paraId)
+  //   pageProgressKey.progressText("checking_rpc_network_info".tr);
+  //   final provider = SubstrateAPIProvider(
+  //       uri: uri!.url,
+  //       identifier: APIUtils.getProviderIdentifier(),
+  //       auth: uri!.auth);
+  //   final client = APIUtils.buildsubstrateClient(provider: provider);
+  //   final init = await MethodUtils.call(() async => client.loadApi());
+  //   if (init.hasError) {
+  //     pageProgressKey.errorText(init.localizationError,
+  //         backToIdle: false, showBackButton: true);
+  //   } else if (init.result == null) {
+  //     pageProgressKey.errorText("unsuported_network_metadata".tr);
+  //   } else {
+  //     final chainInfo = init.result!;
+  //     metadata = chainInfo;
+  //     network = SubstrateNetworkParams(
+  //         token: Token(name: networkName, symbol: symbol, decimal: decimal),
+  //         providers: [provider],
+  //         chainType: ChainType.mainnet,
+  //         ss58Format: chainInfo.ss58Prefix,
+  //         substrateChainType: chainInfo.extrinsic.crypto.type,
+  //         addressExplorer: explorerAddressLink.nullOnEmpty,
+  //         transactionExplorer: explorerTransaction.nullOnEmpty,
+  //         gnesisBlock: chainInfo.genesis,
+  //         keyAlgorithms: chainInfo.extrinsic.crypto.cryptoAlgoritms,
+  //         specVersion: chainInfo.specVersion,
+  //         paraId: null,
+  //         relaySystem: null);
+  //     pageProgressKey.backToIdle();
+  //   }
+  // }
+
+  Future<void> checkNetwork() async {
+    if (!formKey.ready()) return;
+    final uri = this.uri;
+    final chainInfo = metadata;
+
+    if (uri == null || chainInfo == null) return;
+    pageProgressKey.progressText("create_network_please_wait".tr);
+    final network = await MethodUtils.call(() async {
+      final provider = SubstrateAPIProvider(
+          uri: uri.url,
+          identifier: APIUtils.getProviderIdentifier(),
+          auth: uri.auth);
+      metadata = chainInfo;
+      final network = SubstrateNetworkParams(
+        token: Token(name: networkName, symbol: symbol, decimal: decimal),
+        chainType: ChainType.mainnet,
+        ss58Format: chainInfo.ss58Prefix,
+        substrateChainType: chainInfo.extrinsic.crypto.type,
+        addressExplorer: explorerAddressLink.nullOnEmpty,
+        transactionExplorer: explorerTransaction.nullOnEmpty,
+        gnesisBlock: chainInfo.genesis,
+        keyAlgorithms: chainInfo.extrinsic.crypto.cryptoAlgoritms,
+        specVersion: chainInfo.specVersion,
+        consensusRole: chainInfo.internalNetwork?.role,
+        relaySystem: chainInfo.internalNetwork?.relaySystem,
+      );
+      return (network, provider);
+    }, delay: APPConst.oneSecoundDuration);
+    if (network.hasError) {
+      pageProgressKey.errorText(network.localizationError,
+          backToIdle: false, showBackButton: true);
+      return;
+    }
+    this.network = network.result;
+    _page = _Page.review;
+    pageProgressKey.backToIdle();
+    updateState();
   }
 
   Future<void> addOrUpdateChain() async {
@@ -160,9 +262,9 @@ mixin AddSubstrateChainState<T extends StatefulWidget> on SafeState<T> {
     if (params == null) return;
     pageProgressKey.progressText("add_or_updating_wallet_network".tr);
     final wallet = context.watch<WalletProvider>(StateConst.main);
-    final network = WalletSubstrateNetwork(-1, params);
-    final import = await MethodUtils.call(
-        () async => wallet.wallet.updateImportNetwork(network));
+    final network = WalletSubstrateNetwork(-1, params.$1);
+    final import = await MethodUtils.call(() async => wallet.wallet
+        .importNewNetwork(network: network, providers: [params.$2]));
     if (import.hasError) {
       pageProgressKey.errorText(import.localizationError,
           backToIdle: false, showBackButton: true);
@@ -172,13 +274,9 @@ mixin AddSubstrateChainState<T extends StatefulWidget> on SafeState<T> {
     }
   }
 
-  bool get canPop => network == null;
-
   void onBackButton(bool _, Object? __) {
     if (!canPop) {
-      network = null;
-      metadata = null;
-      updateState();
+      clearState();
     }
   }
 
@@ -214,19 +312,64 @@ class __ImportSubstrateNetworkState extends State<_ImportSubstrateNetwork>
             slivers: [
               SliverConstraintsBoxView(
                   padding: WidgetConstant.padding20,
-                  sliver: APPSliverAnimatedSwitcher(
-                      enable: network != null,
-                      widgets: {
-                        false: (context) =>
-                            SubstrateAddChainFieldsView(state: this),
-                        true: (context) => SubstrateAddChainInfoView(
-                            onAddChain: addOrUpdateChain,
-                            network: network!,
-                            metadata: metadata!)
-                      }))
+                  sliver:
+                      APPSliverAnimatedSwitcher<_Page>(enable: _page, widgets: {
+                    _Page.rpc: (context) =>
+                        SubstrateAddChainRPCFieldsView(state: this),
+                    _Page.fields: (context) =>
+                        SubstrateAddChainFieldsView(state: this),
+                    _Page.review: (context) {
+                      return SubstrateAddChainInfoView(
+                          onAddChain: addOrUpdateChain,
+                          network: network!.$1,
+                          metadata: metadata!);
+                    }
+                  }))
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class SubstrateAddChainRPCFieldsView extends StatelessWidget {
+  const SubstrateAddChainRPCFieldsView({required this.state, super.key});
+  final AddSubstrateChainState state;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          PageTitleSubtitle(
+              title: "import_new_network".tr,
+              body: LargeTextView([
+                "import_new_network_desc1".tr,
+                "import_new_network_desc2".tr
+              ])),
+          WidgetConstant.height20,
+          Text("providers".tr, style: context.textTheme.titleMedium),
+          LargeTextView(
+            ["network_title_http_wss_url".tr],
+            maxLine: 2,
+          ),
+          WidgetConstant.height8,
+          HTTPServiceProviderFields(
+              key: state.rpcKey,
+              protocols: [ServiceProtocol.http, ServiceProtocol.websocket],
+              initialUrl: state.uri),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              FixedElevatedButton(
+                  padding: WidgetConstant.paddingVertical40,
+                  onPressed: state.getNetworkInfromation,
+                  child: Text("continue".tr))
+            ],
+          )
+        ],
       ),
     );
   }
@@ -306,17 +449,6 @@ class SubstrateAddChainFieldsView extends StatelessWidget {
             label: "network_explorer_transaction_link".tr,
             pasteIcon: true,
           ),
-          WidgetConstant.height20,
-          Text("providers".tr, style: context.textTheme.titleMedium),
-          LargeTextView(
-            ["network_title_http_wss_url".tr],
-            maxLine: 2,
-          ),
-          WidgetConstant.height8,
-          HTTPServiceProviderFields(
-              key: state.rpcKey,
-              protocols: [ServiceProtocol.http, ServiceProtocol.websocket],
-              initialUrl: state.uri),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

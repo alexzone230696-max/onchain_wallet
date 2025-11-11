@@ -122,7 +122,8 @@ class CborTagsConst {
 
   /// substrate
   static const List<int> substrateAccount = [200, 200];
-
+  static const List<int> substrateMultisigAccount = [200, 200, 0];
+  static const List<int> substrateMultisigCall = [200, 200, 1];
   // stellar
   static const List<int> stellarAccount = [200, 201];
   static const List<int> stellarMultisigAccount = [200, 201, 1];
@@ -210,6 +211,7 @@ class CborTagsConst {
   static const List<int> cw20 = [110, 35];
   static const List<int> fats = [110, 36];
   static const List<int> suiToken = [110, 37];
+  static const List<int> substrateToken = [110, 38];
 
   /// network nfts
   static const List<int> nft = [120];
@@ -326,6 +328,7 @@ class CborTagsConst {
   static const List<int> ethereumNewAddressParamss = [12, 7];
   static const List<int> solanaNewAddressParams = [12, 8];
   static const List<int> substrateNewAddressParams = [12, 9];
+  static const List<int> substrateMultisigNewAddressParams = [12, 9, 1];
   static const List<int> tronNewAddressParams = [12, 10];
   static const List<int> tronMultisigNewAddressParams = [12, 11];
   static const List<int> tonNewAddressParams = [12, 12];
@@ -338,7 +341,7 @@ class CborTagsConst {
   static const List<int> suiNewAddressParams = [12, 19];
   static const List<int> suiMultisigNewAddressParams = [12, 19, 1];
 
-  static const List<int> defaultChainConfig = [201, 0];
+  static const List<int> defaultNetworkConfig = [201, 0];
   static const List<int> moneroChainConfig = [201, 1];
   static const List<int> cosmosChainConfig = [201, 2];
   static const List<int> bitcoinChainConfig = [201, 3];
@@ -352,6 +355,7 @@ class CborTagsConst {
   static const List<int> xrpChainConfig = [201, 11];
   static const List<int> tronChainConfig = [201, 12];
   static const List<int> substrateChainConfig = [201, 13];
+  static const List<int> defaultChainConfig = [202, 0];
   // static const List<int> bitcoinChainConfig = [201, 14];
   //// transactions
   static const List<int> transactionOutputTransfer = [0, 0];

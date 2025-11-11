@@ -1,4 +1,5 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/extension/app_extensions/string.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/transaction/controllers/provider.dart';
@@ -9,7 +10,7 @@ import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart'
 mixin BitcoinTransactionFeeController on BtocinTransactionApiController {
   @override
   WalletBitcoinNetwork get network;
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   final _cancelabe = Cancelable();
   bool get supportRbf => network.coinParam.rbfSupport;
 
@@ -70,7 +71,7 @@ mixin BitcoinTransactionFeeController on BtocinTransactionApiController {
 
   Future<void> estimateFee() async {
     _cancelabe.cancel();
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       txFee.setPending();
       final size = await MethodUtils.call(() async {
         return await simulateFee();

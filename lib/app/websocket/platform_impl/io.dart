@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:io';
+
+import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/error/exception/exception.dart';
 import 'package:on_chain_wallet/app/websocket/core/core.dart';
 
@@ -22,7 +24,15 @@ class WebsocketIO implements PlatformWebScoket {
   WebsocketIO._(this._socket) {
     _socket.listen(
       (dynamic data) {
-        _streamController?.add(data);
+        final String? result = switch (data) {
+          final String r => r,
+          final List<int> r => StringUtils.tryDecode(r),
+          _ => null
+        };
+        assert(result != null,
+            "unexpected web socket response ${data.runtimeType}");
+        if (result == null) return;
+        _streamController?.add(result);
       },
       onDone: () {
         close();

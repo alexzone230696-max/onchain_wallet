@@ -470,8 +470,8 @@ class SolanaClient extends NetworkClient<
   }
 
   @override
-  void dispose() {
-    super.dispose();
+  void close() {
+    super.close();
     _tokenLists = null;
   }
 

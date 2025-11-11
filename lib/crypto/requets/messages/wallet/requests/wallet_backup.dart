@@ -102,12 +102,23 @@ final class WalletRequestBackupKey
   @override
   Future<MessageArgsOneBytes> getResult(WalletInMemory wallet) async {
     final encrypt = await result(wallet);
-    return MessageArgsOneBytes(keyOne: BytesUtils.fromHexString(encrypt));
+    return MessageArgsOneBytes(
+        keyOne: switch (encoding) {
+      SecretWalletEncoding.cbor => BytesUtils.fromHexString(encrypt),
+      SecretWalletEncoding.base64 =>
+        StringUtils.encode(encrypt, type: StringEncoding.base64),
+      SecretWalletEncoding.json => StringUtils.encode(encrypt),
+    });
   }
 
   @override
   Future<String> parsResult(MessageArgsOneBytes result) async {
-    return BytesUtils.toHexString(result.keyOne);
+    return switch (encoding) {
+      SecretWalletEncoding.cbor => BytesUtils.toHexString(result.keyOne),
+      SecretWalletEncoding.base64 =>
+        StringUtils.decode(result.keyOne, type: StringEncoding.base64),
+      SecretWalletEncoding.json => StringUtils.decode(result.keyOne)
+    };
   }
 
   @override

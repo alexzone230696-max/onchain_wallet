@@ -11,7 +11,7 @@ import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class SolanaTransactionCreateAccountOperation
     extends SolanaTransactionStateController {
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   final Cancelable _cancelable = Cancelable();
   SolanaTransactionCreateAccountOperation(
       {required super.walletProvider,
@@ -65,7 +65,7 @@ class SolanaTransactionCreateAccountOperation
     final size = accountSize.value;
     if (size == null) return;
     _cancelable.cancel();
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       final value = this.rent.value;
       if (value.status.isManual) return;
       this.rent.setValue(TransactionResourceRequirementSolanaRentData(

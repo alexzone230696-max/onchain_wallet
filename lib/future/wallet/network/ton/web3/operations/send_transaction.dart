@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/wallet/network/ton/transaction/controllers/fee.dart';
@@ -9,8 +10,8 @@ import 'package:on_chain_wallet/future/wallet/network/ton/web3/controllers/contr
 import 'package:on_chain_wallet/future/wallet/network/ton/web3/controllers/provider.dart';
 import 'package:on_chain_wallet/future/wallet/network/ton/web3/pages/send_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/ton/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ton/params/models/transaction.dart';
 import 'package:ton_dart/ton_dart.dart';
@@ -138,6 +139,9 @@ class WebTonSendTransactionStateController
         await signTransaction(transaction, fakeSignature: true);
     return TonSimulateTransaction(
         message: signedTransaction.finalTransactionData,
+        messages: transactionData.messages
+            .map((e) => OutActionSendMsg(outMessage: e.toMessage()))
+            .toList(),
         address: transaction.account);
   }
 

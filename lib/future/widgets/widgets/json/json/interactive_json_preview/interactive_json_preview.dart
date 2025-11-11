@@ -16,6 +16,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 
@@ -167,11 +168,8 @@ class InteractiveJsonPreviewState extends State<InteractiveJsonPreview> {
         if (isMap) {
           jsonView
             ..addAll(
-              _buildJsonMapView(
-                value.map((k, v) => MapEntry(k.toString(), v)),
-                nodeKey,
-                depth + 1,
-              ),
+              _buildJsonMapView(value.map((k, v) => MapEntry(k.toString(), v)),
+                  nodeKey, depth + 1),
             )
             ..add(
               Padding(
@@ -226,11 +224,9 @@ class InteractiveJsonPreviewState extends State<InteractiveJsonPreview> {
 
     for (final (index, value) in jsonData.indexed) {
       final stateKey = '$parentKey.$index';
-
-      final isExpanded = _expandedState[stateKey] ?? true;
-
       final isMap = value is Map;
       final isList = value is List;
+      final isExpanded = _expandedState[stateKey] ?? true;
 
       final valueLegth = _getLegthofValue(value);
 
@@ -247,11 +243,8 @@ class InteractiveJsonPreviewState extends State<InteractiveJsonPreview> {
             child: Row(
               children: [
                 if (isMap || isList)
-                  Icon(
-                    isExpanded ? Icons.expand_less : Icons.expand_more,
-                    size: 16,
-                    color: Colors.grey,
-                  ),
+                  Icon(isExpanded ? Icons.expand_less : Icons.expand_more,
+                      size: 16, color: Colors.grey),
                 if (!isExpanded && (isMap || isList))
                   Text.rich(
                     TextSpan(
@@ -259,10 +252,9 @@ class InteractiveJsonPreviewState extends State<InteractiveJsonPreview> {
                       style: bodySmall,
                       children: [
                         TextSpan(
-                          text: ' // $valueLegth items',
-                          style:
-                              TextStyle(color: Colors.grey[400], fontSize: 12),
-                        ),
+                            text: ' // $valueLegth items',
+                            style: TextStyle(
+                                color: Colors.grey[400], fontSize: 12)),
                       ],
                     ),
                   ),
@@ -273,10 +265,7 @@ class InteractiveJsonPreviewState extends State<InteractiveJsonPreview> {
                         text: _formatValue(value),
                         style: _getValueTextStyle(value),
                         children: [
-                          TextSpan(
-                            text: ',',
-                            style: bodySmall,
-                          ),
+                          TextSpan(text: ',', style: bodySmall),
                         ],
                       ),
                       maxLines: 1,
@@ -294,11 +283,8 @@ class InteractiveJsonPreviewState extends State<InteractiveJsonPreview> {
         if (isMap) {
           jsonObjectView
             ..addAll(
-              _buildJsonMapView(
-                value.map((k, v) => MapEntry(k.toString(), v)),
-                stateKey,
-                depth + 1,
-              ),
+              _buildJsonMapView(value.map((k, v) => MapEntry(k.toString(), v)),
+                  stateKey, depth + 1),
             )
             ..add(
               Padding(
@@ -312,19 +298,13 @@ class InteractiveJsonPreviewState extends State<InteractiveJsonPreview> {
             final item = value[i];
             if (item is Map) {
               jsonObjectView.addAll(
-                _buildJsonMapView(
-                  item.map((k, v) => MapEntry(k.toString(), v)),
-                  '$stateKey.$i',
-                  depth + 1,
-                ),
+                _buildJsonMapView(item.map((k, v) => MapEntry(k.toString(), v)),
+                    '$stateKey.$i', depth + 1),
               );
             } else {
               jsonObjectView.addAll(
                 _buildJsonObjectListView(
-                  item as List,
-                  '$stateKey.$i',
-                  depth + 1,
-                ),
+                    item is List ? item : [item], '$stateKey.$i', depth + 1),
               );
             }
           }

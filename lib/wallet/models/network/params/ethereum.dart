@@ -3,13 +3,11 @@ import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
 import 'package:on_chain_wallet/crypto/utils/ethereum/utils.dart';
 import 'package:on_chain_wallet/wallet/api/provider/core/provider.dart';
-
+import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/params/params.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
-import 'package:on_chain_wallet/wallet/api/provider/networks/ethereum.dart';
-import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 
-class EthereumNetworkParams extends NetworkCoinParams<EthereumAPIProvider> {
+class EthereumNetworkParams extends NetworkCoinParams {
   final BigInt chainId;
   final bool supportEIP1559;
   final bool defaultNetwork;
@@ -20,7 +18,6 @@ class EthereumNetworkParams extends NetworkCoinParams<EthereumAPIProvider> {
       {required super.transactionExplorer,
       required super.addressExplorer,
       required super.token,
-      required super.providers,
       required this.chainId,
       required this.supportEIP1559,
       required super.chainType,
@@ -30,7 +27,6 @@ class EthereumNetworkParams extends NetworkCoinParams<EthereumAPIProvider> {
       {String? transactionExplorer,
       String? addressExplorer,
       required Token token,
-      required List<EthereumAPIProvider> providers,
       required BigInt chainId,
       required bool supportEIP1559,
       required ChainType chainType,
@@ -43,7 +39,6 @@ class EthereumNetworkParams extends NetworkCoinParams<EthereumAPIProvider> {
         transactionExplorer: transactionExplorer,
         addressExplorer: addressExplorer,
         token: token,
-        providers: providers,
         chainId: chainId,
         supportEIP1559: supportEIP1559,
         chainType: chainType,
@@ -54,7 +49,6 @@ class EthereumNetworkParams extends NetworkCoinParams<EthereumAPIProvider> {
       {String? transactionExplorer,
       String? addressExplorer,
       Token? token,
-      List<EthereumAPIProvider>? providers,
       BigInt? chainId,
       bool? supportEIP1559,
       ChainType? chainType,
@@ -64,7 +58,6 @@ class EthereumNetworkParams extends NetworkCoinParams<EthereumAPIProvider> {
         transactionExplorer: transactionExplorer ?? this.transactionExplorer,
         addressExplorer: addressExplorer ?? this.addressExplorer,
         token: token ?? this.token,
-        providers: providers ?? List.from(this.providers),
         chainId: chainId ?? this.chainId,
         supportEIP1559: supportEIP1559 ?? this.supportEIP1559,
         chainType: chainType ?? this.chainType,
@@ -82,10 +75,6 @@ class EthereumNetworkParams extends NetworkCoinParams<EthereumAPIProvider> {
       supportEIP1559: cbor.elementAs(1),
       chainType: ChainType.fromValue(cbor.elementAs(2)),
       token: Token.deserialize(obj: cbor.elementAsCborTag(5)),
-      providers: cbor
-          .elementAsListOf<CborObject>(6)
-          .map((e) => EthereumAPIProvider.fromCborBytesOrObject(obj: e))
-          .toList(),
       defaultNetwork: defaultNetwork ?? true,
       bip32CoinType: cbor.elementAs(8),
       transactionExplorer: cbor.elementAs(9),
@@ -102,8 +91,7 @@ class EthereumNetworkParams extends NetworkCoinParams<EthereumAPIProvider> {
           const CborNullValue(),
           const CborNullValue(),
           token.toCbor(),
-          CborSerializable.fromDynamic(
-              providers.map((e) => e.toCbor()).toList()),
+          CborNullValue(),
           defaultNetwork,
           bip32CoinType,
           transactionExplorer,
@@ -126,7 +114,6 @@ class EthereumNetworkParams extends NetworkCoinParams<EthereumAPIProvider> {
       addressExplorer: addressExplorer,
       token: NetworkCoinParams.validateUpdateParams(
           token: this.token, updateToken: token),
-      providers: updateProviders?.cast<EthereumAPIProvider>() ?? providers,
       chainId: chainId,
       supportEIP1559: supportEIP1559,
       chainType: chainType,

@@ -1,7 +1,11 @@
 part of 'package:on_chain_wallet/wallet/chain/chain/chain.dart';
 
-class StellarNetworkController extends NetworkController<IStellarAddress,
-    StellarChain, Web3StellarChainAccount, Web3InternalDefaultChain> {
+class StellarNetworkController extends NetworkController<
+    IStellarAddress,
+    StellarChain,
+    Web3StellarChainAccount,
+    Web3InternalDefaultChain,
+    ChainConfig> {
   StellarNetworkController({
     super.networks,
     required super.id,
@@ -11,7 +15,7 @@ class StellarNetworkController extends NetworkController<IStellarAddress,
   Future<Web3StellarChainAuthenticated> createWeb3ChainAuthenticated(
     Web3ApplicationAuthentication app,
   ) async {
-    final internalNetwork = await getWeb3InternalChainAuthenticated(app);
+    final internalNetwork = await _getWeb3InternalChainAuthenticated(app);
     final web3Networks = _networks.values
         .map((e) => Web3ChainDefaultIdnetifier(
               id: e.network.value,

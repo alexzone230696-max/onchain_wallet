@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
 typedef PageChainBuilder<CL extends NetworkClient?,
@@ -28,18 +27,22 @@ class NetworkAccountControllerView<
     this.account,
     this.title,
     required this.addressRequired,
+    this.address,
     this.clientRequired = true,
     this.initAccount = false,
+    this.multisigAccount = false,
   });
   final PageChainBuilder<CL, CHAINACCOUNT, T> childBulder;
   final String? title;
   final bool addressRequired;
   final bool clientRequired;
   final T? account;
+  final CHAINACCOUNT? address;
   final bool initAccount;
+  final bool multisigAccount;
 
   @override
-  State<NetworkAccountControllerView> createState() =>
+  State<NetworkAccountControllerView<CL, CHAINACCOUNT, T>> createState() =>
       _NetworkAccountControllerViewState<CL, CHAINACCOUNT, T>();
 }
 
@@ -48,13 +51,13 @@ class _NetworkAccountControllerViewState<CL extends NetworkClient?,
     extends State<NetworkAccountControllerView<CL, CHAINACCOUNT, T>>
     with SafeState<NetworkAccountControllerView<CL, CHAINACCOUNT, T>> {
   late WalletProvider wallet;
-  Chain? account;
-  ChainAccount? address;
-  NetworkClient? client;
+  T? account;
+  CHAINACCOUNT? address;
+  CL? client;
 
   final StreamPageProgressController progressKey =
       StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
-  void switchAccount(ChainAccount? updateAddress) async {
+  void switchAccount(CHAINACCOUNT? updateAddress) async {
     final account = this.account;
     if (updateAddress == null ||
         account == null ||
@@ -80,9 +83,17 @@ class _NetworkAccountControllerViewState<CL extends NetworkClient?,
       this.address = null;
 
       final accout = widget.account ?? wallet.wallet.currentChain;
-      final address = accout.haveAddress ? accout.address : null;
+      final address =
+          widget.address ?? (accout.haveAddress ? accout.address : null);
       if (widget.addressRequired && address == null) {
         progressKey.errorText("page_required_address".tr, backToIdle: false);
+        return;
+      }
+      if (address != null &&
+          widget.multisigAccount &&
+          !address.multiSigAccount) {
+        progressKey.errorText("page_required_multisig_address".tr,
+            backToIdle: false);
         return;
       }
       NetworkClient? client;
@@ -104,8 +115,8 @@ class _NetworkAccountControllerViewState<CL extends NetworkClient?,
         await accout.init();
       }
       account = accout;
-      this.client = client;
-      this.address = address;
+      this.client = client as CL;
+      this.address = address as CHAINACCOUNT;
       progressKey.backToIdle();
     } finally {
       updateState();
@@ -120,7 +131,16 @@ class _NetworkAccountControllerViewState<CL extends NetworkClient?,
       return null;
     }
 
-    return AppBar(title: Text(widget.title ?? ''));
+    return AppBar(
+      title: Text(widget.title ?? ''),
+      actions: [
+        CircleTokenImageView(
+            account?.network.token ??
+                context.wallet.wallet.currentChain.network.token,
+            radius: APPConst.circleRadius12),
+        WidgetConstant.width8,
+      ],
+    );
   }
 
   @override

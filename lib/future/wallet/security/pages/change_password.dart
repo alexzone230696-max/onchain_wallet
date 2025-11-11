@@ -18,10 +18,10 @@ class ChangeWalletPasswordView extends StatelessWidget {
         },
         title: "change_password".tr,
         subtitle: PageTitleSubtitle(
-            title: "wallet_password_desc".tr,
+            title: "change_password".tr,
             body: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [Text("enter_wallet_password_to_continue".tr)],
+              children: [Text("wallet_password_desc".tr)],
             )));
   }
 }
@@ -113,8 +113,7 @@ class _ChangePasswordViewState extends State<_ChangePasswordView>
                                 "p_note1".tr,
                                 "p_note2".tr,
                                 "p_note3".tr,
-                                "p_note4".tr,
-                                "change_password_desc".tr
+                                "p_note4".tr
                               ],
                             )),
                         AppTextField(

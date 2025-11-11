@@ -16,7 +16,7 @@ base mixin BaseChainController<
     on
         BaseChain<PROVIDER, NETWORKPARAMS, NETWORKADDRESS, TOKEN, NFT, ADDRESS,
             NETWORK, CLIENT, CONFIG, TRANSACTION, CONTACT, ADDRESSPARAM>,
-        ChainRepository<ADDRESS, NETWORK, CLIENT, CONFIG, TOKEN, NFT,
+        ChainRepository<PROVIDER, ADDRESS, NETWORK, CLIENT, CONFIG, TOKEN, NFT,
             TRANSACTION, CONTACT, ADDRESSPARAM> {
   StreamSubscription<void>? txSub;
   bool _isOnline = true;
@@ -87,17 +87,18 @@ base mixin BaseChainController<
     }
   }
 
-  Future<T> _callSynchronized<T>({
+  Future<T> _callSynchronized<T extends Object?>({
     required Future<T> Function() t,
     DefaultChainNotify? type,
     _WalletChainStatus? allowStatus = _WalletChainStatus.ready,
-    bool saveAccount = false,
+    // bool saveAccount = false,
+    bool Function(T result)? saveAccount,
     bool notifyProgress = false,
     bool notifyComplete = true,
     bool wait = false,
     LockId lockId = LockId.two,
   }) async {
-    return await _lock.synchronized(() async {
+    return await _lock.run(() async {
       if (allowStatus != null && allowStatus != _status) {
         if (allowStatus == _WalletChainStatus.ready) {
           await _initInternal(client: false);
@@ -112,7 +113,7 @@ base mixin BaseChainController<
       }
       try {
         final r = await t();
-        if (saveAccount) await _saveAccountInternal();
+        if (saveAccount != null && saveAccount(r)) await _saveAccountInternal();
         return r;
       } finally {
         if (notifyComplete && type != null) {
@@ -132,7 +133,7 @@ base mixin BaseChainController<
           _config = status;
         },
         type: DefaultChainNotify.config,
-        saveAccount: true);
+        saveAccount: (_) => true);
   }
 
   AddressDerivationIndex nextDerive(
@@ -164,7 +165,7 @@ base mixin BaseChainController<
           _addresses = List.unmodifiable([..._addresses, newAddress]);
           updateAddressBalance(newAddress);
           newAddress._setStorage(_storage);
-          await newAddress._init();
+          await newAddress.init();
           await newAddress._saveAddress();
           return newAddress;
         },
@@ -175,6 +176,11 @@ base mixin BaseChainController<
   ADDRESS? getAddress(String address) {
     return _addresses
         .firstWhereOrNull((element) => element.viewAddress == address);
+  }
+
+  ADDRESS? fromNetworkAddress(NETWORKADDRESS address) {
+    return _addresses
+        .firstWhereOrNull((element) => element.networkAddress == address);
   }
 
   CONTACT? getContact(String address) {
@@ -225,31 +231,75 @@ base mixin BaseChainController<
   }
 
   Future<CLIENT> client() async {
-    final cl = _client;
-    if (cl == null) {
-      throw ApiProviderException.message("no_acitve_provider");
+    final cl = _service;
+    if (_clientStatus.isConnect && cl != null && config.enableProvider) {
+      return cl;
     }
-    if (_clientStatus.isConnect) return cl;
-    final init = await _callSynchronized(
+    final serviceIdentifier = _serviceIdentifier;
+    final CLIENT? client = await _callSynchronized<CLIENT?>(
         allowStatus: null,
         notifyProgress: true,
         t: () async {
-          if (_clientStatus.isConnect) return true;
-          _clientStatus = NodeClientStatus.pending;
-          final init = await cl.init();
-          if (init) {
-            _clientStatus = NodeClientStatus.connect;
-          } else {
-            _clientStatus = NodeClientStatus.disconnect;
+          final cl = _service;
+          if (_clientStatus.isConnect && cl != null && config.enableProvider) {
+            return cl;
           }
-          return init;
+          _clientStatus = NodeClientStatus.pending;
+          final service = await () async {
+            if (!config.enableProvider) {
+              return null;
+            }
+            ProviderIdentifier? identifier = _serviceIdentifier;
+            final client = _service;
+            if (client != null && client.serviceIdentifier == identifier) {
+              final init = await client.init();
+              return (client, init);
+            }
+            client?.dispose();
+            final providers = await _getProviders();
+            if (identifier != null) {
+              final client = APIUtils.findClient<CLIENT>(
+                  network: network,
+                  providers: providers,
+                  identifier: identifier);
+              final init = await client?.init();
+              return (client, init);
+            } else {
+              final clients = APIUtils.getClients<CLIENT>(
+                      network: network, providers: providers) ??
+                  [];
+              for (final i in clients) {
+                final init = await i.init();
+                if (init) {
+                  return (i, true);
+                }
+              }
+            }
+            return null;
+          }();
+          final client = service?.$1;
+          final connect = service?.$2 ?? false;
+          _serviceIdentifier = client?.serviceIdentifier;
+          _service = client;
+          if (!connect) {
+            if (!config.enableProvider) {
+              _clientStatus = NodeClientStatus.disabled;
+            } else {
+              _clientStatus = NodeClientStatus.disconnect;
+            }
+            return null;
+          }
+          _clientStatus = NodeClientStatus.connect;
+          return _service;
         },
         type: DefaultChainNotify.client,
-        lockId: LockId.one);
-    if (!init) {
+        lockId: LockId.one,
+        saveAccount: (result) => serviceIdentifier != _serviceIdentifier);
+
+    if (client == null) {
       throw ApiProviderException.message("node_connection_error");
     }
-    return cl;
+    return client;
   }
 
   @override
@@ -271,7 +321,11 @@ base mixin BaseChainController<
     } catch (e, s) {
       appLogger.error(
           runtime: runtimeType, functionName: "onClient", msg: e, trace: s);
-      return onError?.call(e) as T;
+      if (onError != null) {
+        return onError(e);
+      }
+      if (null is T) return null as T;
+      rethrow;
     }
   }
 
@@ -298,7 +352,7 @@ base mixin BaseChainController<
           await _initAddress(address);
           updateAddressBalance(address);
         },
-        saveAccount: true,
+        saveAccount: (_) => true,
         notifyProgress: true,
         wait: true,
         type: DefaultChainNotify.address);
@@ -324,35 +378,43 @@ base mixin BaseChainController<
           return true;
         },
         type: DefaultChainNotify.address,
-        saveAccount: true);
+        saveAccount: (_) => true);
   }
+
+  // CLIENT? _getProviderInternal(ProviderIdentifier service) {
+  //   if (!service.status.isEnable) {
+  //     return null;
+  //   }
+  //   return APIUtils.createApiClient<CLIENT>(
+  //       network: network,
+  //       providers: providers,
+  //       identifier: service,
+  //       requestTimeut: requestTimeout);
+  // }
 
   Future<void> setProvider(ProviderIdentifier service,
       {Duration? requestTimeout}) async {
+    assert(service.network == network.type, "invalid service identifier");
     if (service.network != network.type) return;
     await _callSynchronized(
+        lockId: LockId.one,
         notifyProgress: true,
         t: () async {
-          final currentProvider = _client;
-          _client = APIUtils.createApiClient<CLIENT>(network,
-              identifier: service, requestTimeut: requestTimeout);
-          currentProvider?.service.disposeService();
+          final currentProvider = _service;
+          _serviceIdentifier = service;
+          _service = null;
+          if (config.enableProvider) {
+            _service = APIUtils.findClient(
+                network: network,
+                providers: await _getProviders(),
+                identifier: service);
+          }
+          currentProvider?.dispose();
           _clientStatus = NodeClientStatus.disconnect;
           clientOrNull();
         },
         type: DefaultChainNotify.client,
-        saveAccount: true);
-  }
-
-  CLIENT? getWeb3Provider(
-      {ProviderIdentifier? service, Duration? requestTimeout}) {
-    final cl = _client;
-    if (cl?.service.provider.allowInWeb3 ?? false) return cl;
-    return APIUtils.createApiClient<CLIENT>(network,
-        identifier: service,
-        requestTimeut: requestTimeout,
-        allowInWeb3: true,
-        isolate: APPIsolate.current);
+        saveAccount: (_) => true);
   }
 
   Future<void> _saveAccountInternal() async {
@@ -363,9 +425,15 @@ base mixin BaseChainController<
     await _storage.removeAccount(this as Chain);
   }
 
+  Future<void> toggleServiceProvider(bool enable) async {
+    if (enable == _config.enableProvider) return;
+    await updateConfig(_config.copyWith(enableProvider: enable) as CONFIG);
+    clientOrNull();
+  }
+
   Future<void> removeNFT({required NFT nft, required ADDRESS address}) async {
     _isAccountAddress(address);
-    return _callSynchronized(
+    await _callSynchronized(
         t: () async {
           await address._removeNFT(nft);
         },
@@ -374,7 +442,7 @@ base mixin BaseChainController<
 
   Future<void> addNewNFT({required NFT nft, required ADDRESS address}) async {
     _isAccountAddress(address);
-    return _callSynchronized(
+    await _callSynchronized(
         t: () async {
           await address._addNFT(nft);
         },
@@ -387,7 +455,7 @@ base mixin BaseChainController<
   Future<void> setupAccountName(
       {String? name, required ADDRESS address}) async {
     _isAccountAddress(address);
-    return _callSynchronized(
+    await _callSynchronized(
         t: () async {
           if (name == null || !APPConst.accountNameRegExp.hasMatch(name)) {
             return;
@@ -398,7 +466,7 @@ base mixin BaseChainController<
   }
 
   Future<void> addNewContact(CONTACT newContact) async {
-    return _callSynchronized(
+    await _callSynchronized(
         wait: true,
         t: () async {
           if (contacts.contains(newContact) ||
@@ -419,7 +487,7 @@ base mixin BaseChainController<
   Future<void> addNewToken(
       {required TOKEN token, required ADDRESS address}) async {
     _isAccountAddress(address);
-    return _callSynchronized(
+    await _callSynchronized(
         t: () async {
           final newToken = await address._addToken(token);
           updateTokenBalance(address: address, tokens: [newToken as TOKEN]);
@@ -435,7 +503,7 @@ base mixin BaseChainController<
     _isAccountAddress(address);
 
     /// before remove the asset must be exsits in asset list
-    return _callSynchronized(
+    await _callSynchronized(
         t: () async {
           await address._removeToken(token);
         },
@@ -451,7 +519,7 @@ base mixin BaseChainController<
       required ADDRESS address,
       required Token updatedToken}) async {
     _isAccountAddress(address);
-    return _callSynchronized(
+    await _callSynchronized(
         wait: true,
         t: () async {
           await address._updateToken(updatedToken, token);
@@ -554,7 +622,7 @@ base mixin BaseChainController<
   Future<void> _initAddress(ADDRESS? address) async {
     if (address == null || !address._status.isInit) return;
     _isAccountAddress(address);
-    await address._init();
+    await address.init();
   }
 
   Future<void> _initInternal({bool client = true}) async {
@@ -595,15 +663,56 @@ base mixin BaseChainController<
           _status = _WalletChainStatus.dispose;
           _storage.dispose();
           _controller.close();
-          _client?.service.disposeService();
+          _service?.dispose();
           txSub?.cancel();
           txSub = null;
         },
         allowStatus: null);
   }
 
-  Future<void> disposeClient() async {
-    _client?.service.disposeService();
+  Future<List<PROVIDER>> getProviders({ProviderIdentifier? identifier}) async {
+    return _callSynchronized(
+      t: () async {
+        final providers = await _getProviders();
+        return APIUtils.getAllProviders(network: network, providers: providers);
+      },
+    );
+  }
+
+  Future<List<PROVIDER>?> getProvider(
+      {ProviderIdentifier? identifier, bool allowInWeb3 = false}) async {
+    final providers = await _getProviders();
+    return APIUtils.findProvider(
+        network: network,
+        providers: providers,
+        identifier: _serviceIdentifier,
+        allowInWeb3: allowInWeb3);
+  }
+
+  Future<void> updateProvider(PROVIDER provider) async {
+    await _callSynchronized(
+        lockId: LockId.one,
+        t: () async {
+          await _addNewProvider(provider);
+        },
+        type: DefaultChainNotify.updateProvider);
+  }
+
+  Future<void> removeProvider(PROVIDER provider) async {
+    await _callSynchronized(
+        lockId: LockId.one,
+        t: () async {
+          await _removeProvider(provider);
+          _service?.dispose();
+          _service = null;
+          _serviceIdentifier = null;
+          clientOrNull();
+        },
+        type: DefaultChainNotify.updateProvider);
+  }
+
+  Future<void> closeClient() async {
+    _service?.close();
   }
 
   @override
@@ -616,7 +725,7 @@ base mixin BaseChainController<
           CborSerializable.fromDynamic([]),
           _addressIndex,
           config.toCbor(),
-          _client?.serviceIdentifier.toCbor(),
+          _serviceIdentifier?.toCbor(),
           CborBigIntValue(totalBalance.value.balance),
         ]),
         CborTagsConst.iAccount);
@@ -633,7 +742,7 @@ base mixin BaseChainController<
               _addresses.map((e) => e.toCbor()).toList()),
           _addressIndex,
           config.toCbor(),
-          _client?.serviceIdentifier.toCbor(),
+          _serviceIdentifier?.toCbor(),
           CborBigIntValue(totalBalance.value.balance)
         ]),
         CborTagsConst.iAccount);

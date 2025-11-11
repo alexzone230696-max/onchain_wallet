@@ -2,13 +2,13 @@ import 'package:blockchain_utils/helper/extensions/extensions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
+import 'package:on_chain_wallet/crypto/utils/address/utils.dart';
+import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
-import 'package:on_chain_wallet/crypto/types/networks.dart';
-import 'package:on_chain_wallet/crypto/utils/address/utils.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 
 typedef RecipientFilter<NETWORKADDRESS> = String? Function(
     NETWORKADDRESS address);
@@ -136,8 +136,11 @@ class _SelectRecipientAccountViewState<NETWORKADDRESS>
   (ContactCore<NETWORKADDRESS>?, String? error) _validateRipple(
       String? address, int? tag) {
     if (address == null) return (null, null);
-    final addr = MethodUtils.nullOnException(() =>
-        BlockchainAddressUtils.toRippleAddress(address, network.toNetwork()));
+    final addr = MethodUtils.nullOnException(() {
+      if (address.trim().isEmpty) return null;
+      return BlockchainAddressUtils.toRippleAddress(
+          address, network.toNetwork());
+    });
     if (addr == null) return (null, null);
     if (tag != null) {
       if (addr.tag == tag) return (_toNewContact(addr), null);
@@ -298,10 +301,8 @@ class _SelectRecipientAccountViewState<NETWORKADDRESS>
       appBar: AppBar(
         title: Text(widget.title?.tr ?? "recipient".tr),
         actions: [
-          CircleTokenImageView(
-            widget.account.network.token,
-            radius: APPConst.circleRadius12,
-          ),
+          CircleTokenImageView(widget.account.network.token,
+              radius: APPConst.circleRadius12),
           WidgetConstant.width8,
         ],
       ),

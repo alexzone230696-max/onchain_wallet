@@ -1,4 +1,6 @@
 import 'dart:async';
+
+import 'package:on_chain_wallet/app/error/exception.dart';
 import 'package:on_chain_wallet/app/utils/method/utiils.dart';
 import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/api/provider/core/provider.dart';
@@ -10,11 +12,13 @@ import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart'
 enum NodeClientStatus {
   connect,
   disconnect,
+  disabled,
   pending;
 
   bool get isConnect => this == NodeClientStatus.connect;
   bool get isPending => this == NodeClientStatus.pending;
   bool get isDisconnect => this == NodeClientStatus.disconnect;
+  bool get isDisabled => this == NodeClientStatus.disconnect;
 }
 
 typedef ONCLIENTSTATUS = void Function(NodeClientStatus status);
@@ -33,16 +37,18 @@ abstract class NetworkClient<TRANSACTION extends ChainTransaction,
       try {
         return await onInit();
       } catch (_) {
-        return null;
+        return false;
       }
     }();
-    return init == true;
+    if (!init) close();
+    return init;
   }
 
   Future<WalletTransactionStatus> transactionStatus({required String txId});
 
   Stream<T> trackMempoolTransaction<T extends TRANSACTION>(
       List<T> transactions) {
+    StreamController<T>? controller = StreamController();
     Future<WalletTransactionStatus> getTxStatus(TRANSACTION transaction) async {
       try {
         return await transactionStatus(txId: transaction.txId);
@@ -57,7 +63,7 @@ abstract class NetworkClient<TRANSACTION extends ChainTransaction,
     final totalSec = maxBlockIntervalSec * maxTxConfirmationBlock;
 
     Timer? timer;
-    StreamController<T>? controller = StreamController();
+
     Future<void> run(List<T> unconfirmedTx) async {
       final future = unconfirmedTx.map((e) => getTxStatus(e));
       final result = await future.wait;
@@ -113,12 +119,23 @@ abstract class NetworkClient<TRANSACTION extends ChainTransaction,
     throw UnimplementedError();
   }
 
+  void close() {
+    service.close();
+  }
+
   void dispose() {
-    service.disposeService();
+    service.dispose();
   }
 
   @override
   String toString() {
     return "Client: ${network?.token.name ?? runtimeType}";
+  }
+
+  T cast<T extends NetworkClient>() {
+    if (this is! T) {
+      throw AppExceptionConst.internalError("NetworkClient.cast");
+    }
+    return this as T;
   }
 }

@@ -2,7 +2,6 @@ import 'package:blockchain_utils/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
-import 'package:polkadot_dart/polkadot_dart.dart';
 
 import 'bytes_tools.dart';
 
@@ -51,10 +50,10 @@ class APPSelectableText extends StatelessWidget {
             context.showAlert("copied_to_clipboard".tr);
           }
 
-          final n7 = SubstrateHelper.numberToDecimals(isNumber, 7);
-          final n10 = SubstrateHelper.numberToDecimals(isNumber, 10);
-          final n12 = SubstrateHelper.numberToDecimals(isNumber, 12);
-          final n18 = SubstrateHelper.numberToDecimals(isNumber, 18);
+          final n7 = AmountConverter(decimals: 7).toAmount(isNumber);
+          final n10 = AmountConverter.polkadot.toAmount(isNumber);
+          final n12 = AmountConverter.kusama.toAmount(isNumber);
+          final n18 = AmountConverter.eth.toAmount(isNumber);
           buttonItems = [
             ...buttonItems,
             ContextMenuButtonItem(

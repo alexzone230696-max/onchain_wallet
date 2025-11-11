@@ -1,14 +1,11 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
-import 'package:on_chain_wallet/wallet/api/provider/core/provider.dart';
-
+import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/params/params.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
-import 'package:on_chain_wallet/wallet/api/provider/networks/ton.dart';
-import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 import 'package:ton_dart/ton_dart.dart' as ton;
 
-class TonNetworkParams extends NetworkCoinParams<TonAPIProvider> {
+class TonNetworkParams extends NetworkCoinParams {
   final int workchain;
   ton.TonChainId get chain => ton.TonChainId.fromWorkchain(workchain);
   String get tonChainIdentifier {
@@ -24,7 +21,6 @@ class TonNetworkParams extends NetworkCoinParams<TonAPIProvider> {
 
   TonNetworkParams(
       {required super.token,
-      required super.providers,
       required this.workchain,
       required super.chainType,
       super.addressExplorer,
@@ -38,10 +34,6 @@ class TonNetworkParams extends NetworkCoinParams<TonAPIProvider> {
         workchain: values.elementAs(0),
         chainType: ChainType.fromValue(values.elementAs(1)),
         token: Token.deserialize(obj: values.elementAsCborTag(4)),
-        providers: values
-            .elementAsListOf<CborTagValue>(5)
-            .map((e) => TonAPIProvider.fromCborBytesOrObject(obj: e))
-            .toList(),
         addressExplorer: values.elementAs(6),
         transactionExplorer: values.elementAs(7));
   }
@@ -54,8 +46,7 @@ class TonNetworkParams extends NetworkCoinParams<TonAPIProvider> {
           const CborNullValue(),
           const CborNullValue(),
           token.toCbor(),
-          CborSerializable.fromDynamic(
-              providers.map((e) => e.toCbor()).toList()),
+          CborNullValue(),
           addressExplorer,
           transactionExplorer
         ]),
@@ -65,16 +56,14 @@ class TonNetworkParams extends NetworkCoinParams<TonAPIProvider> {
   int get identifier => workchain;
 
   @override
-  NetworkCoinParams<TonAPIProvider> updateParams(
-      {List<APIProvider>? updateProviders,
-      Token? token,
+  NetworkCoinParams updateParams(
+      {Token? token,
       String? transactionExplorer,
       String? addressExplorer,
       int? bip32CoinType}) {
     return TonNetworkParams(
         token: NetworkCoinParams.validateUpdateParams(
             token: this.token, updateToken: token),
-        providers: updateProviders?.cast<TonAPIProvider>() ?? providers,
         workchain: workchain,
         chainType: chainType,
         addressExplorer: addressExplorer,

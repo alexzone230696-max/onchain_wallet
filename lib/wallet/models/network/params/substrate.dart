@@ -1,23 +1,24 @@
+import 'package:blockchain_utils/bip/bip.dart';
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
-import 'package:on_chain_wallet/wallet/api/provider/core/provider.dart';
-import 'package:on_chain_wallet/wallet/api/provider/networks/substrate.dart';
-import 'package:on_chain_wallet/wallet/models/network/core/params/params.dart';
-import 'package:on_chain_wallet/wallet/models/networks/substrate/substrate.dart';
-import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
-import 'package:blockchain_utils/bip/bip.dart';
+import 'package:on_chain_wallet/wallet/models/network/core/params/params.dart';
+import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 import 'package:polkadot_dart/polkadot_dart.dart';
 
-class SubstrateNetworkParams extends NetworkCoinParams<SubstrateAPIProvider> {
+class SubstrateNetworkParams extends NetworkCoinParams {
   final int ss58Format;
   final int specVersion;
   final String? gnesisBlock;
   final SubstrateChainType substrateChainType;
-
   final List<SubstrateKeyAlgorithm> keyAlgorithms;
-
+  final SubstrateRelaySystem? relaySystem;
+  final SubstrateConsensusRole? consensusRole;
+  final BigInt? evmChainId;
+  bool get assetTransferEnabled => true;
+  bool get xcmTransferEnabled => relaySystem != null && consensusRole != null;
+  bool get allowMultisig => true;
   factory SubstrateNetworkParams.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
     final CborListValue values = CborSerializable.cborTagValue(
@@ -27,29 +28,33 @@ class SubstrateNetworkParams extends NetworkCoinParams<SubstrateAPIProvider> {
 
     return SubstrateNetworkParams(
         token: Token.deserialize(obj: values.elementAsCborTag(2)),
-        providers: values
-            .elementAsListOf<CborTagValue>(3)
-            .map((e) => SubstrateAPIProvider.fromCborBytesOrObject(obj: e))
-            .toList(),
-        chainType: ChainType.fromValue(values.elementAs(4)),
-        ss58Format: values.elementAs(5),
-        substrateChainType: SubstrateChainType.fromValue(values.elementAs(8)),
-        gnesisBlock: values.elementAs(9),
-        bip32CoinType: values.elementAs(10),
-        addressExplorer: values.elementAs(11),
-        transactionExplorer: values.elementAs(12),
+        chainType: ChainType.fromValue(values.valueAs(4)),
+        ss58Format: values.valueAs(5),
+        substrateChainType: SubstrateChainType.fromValue(values.valueAs(8)),
+        gnesisBlock: values.valueAs(9),
+        bip32CoinType: values.valueAs(10),
+        addressExplorer: values.valueAs(11),
+        transactionExplorer: values.valueAs(12),
         keyAlgorithms: values
             .elementAsListOf<CborIntValue>(13)
             .map((e) => SubstrateKeyAlgorithm.fromValue(e.value))
             .toList(),
-        specVersion: values.elementAs(14));
+        specVersion: values.valueAs(14),
+        relaySystem: values.elemetMybeAs<SubstrateRelaySystem, CborIntValue>(
+            15, (value) => SubstrateRelaySystem.fromValue(value.value)),
+        consensusRole:
+            values.elemetMybeAs<SubstrateConsensusRole, CborIntValue>(
+                16, (value) => SubstrateConsensusRole.fromValue(value.value)),
+        evmChainId: values.valueAs(17));
   }
   SubstrateNetworkParams(
       {required super.token,
-      required super.providers,
       required super.chainType,
       required this.ss58Format,
       required this.specVersion,
+      required this.relaySystem,
+      required this.consensusRole,
+      this.evmChainId,
       this.gnesisBlock,
       required this.substrateChainType,
       super.bip32CoinType,
@@ -68,8 +73,7 @@ class SubstrateNetworkParams extends NetworkCoinParams<SubstrateAPIProvider> {
           const CborNullValue(),
           const CborNullValue(),
           token.toCbor(),
-          CborSerializable.fromDynamic(
-              providers.map((e) => e.toCbor()).toList()),
+          CborNullValue(),
           chainType.name,
           ss58Format,
           const CborNullValue(),
@@ -81,15 +85,17 @@ class SubstrateNetworkParams extends NetworkCoinParams<SubstrateAPIProvider> {
           transactionExplorer,
           CborSerializable.fromDynamic(
               keyAlgorithms.map((e) => e.value).toList()),
-          specVersion
+          specVersion,
+          relaySystem?.value,
+          consensusRole?.value,
+          evmChainId
         ]),
         CborTagsConst.substrateNetworkParams);
   }
 
   @override
-  NetworkCoinParams<SubstrateAPIProvider> updateParams(
-      {List<APIProvider>? updateProviders,
-      Token? token,
+  NetworkCoinParams updateParams(
+      {Token? token,
       String? transactionExplorer,
       String? addressExplorer,
       int? bip32CoinType}) {
@@ -98,14 +104,16 @@ class SubstrateNetworkParams extends NetworkCoinParams<SubstrateAPIProvider> {
             token: this.token, updateToken: token),
         addressExplorer: addressExplorer,
         transactionExplorer: transactionExplorer,
-        providers: updateProviders?.cast<SubstrateAPIProvider>() ?? providers,
         chainType: chainType,
         ss58Format: ss58Format,
         gnesisBlock: gnesisBlock,
         substrateChainType: substrateChainType,
         bip32CoinType: bip32CoinType,
         keyAlgorithms: keyAlgorithms,
-        specVersion: specVersion);
+        specVersion: specVersion,
+        consensusRole: consensusRole,
+        relaySystem: relaySystem,
+        evmChainId: evmChainId);
   }
 
   SubstrateNetworkParams updateSpecVersion(int specVersion) {
@@ -114,7 +122,6 @@ class SubstrateNetworkParams extends NetworkCoinParams<SubstrateAPIProvider> {
     }
     return SubstrateNetworkParams(
         token: token,
-        providers: providers,
         chainType: chainType,
         ss58Format: ss58Format,
         specVersion: specVersion,
@@ -123,6 +130,8 @@ class SubstrateNetworkParams extends NetworkCoinParams<SubstrateAPIProvider> {
         bip32CoinType: bip32CoinType,
         gnesisBlock: gnesisBlock,
         keyAlgorithms: keyAlgorithms,
-        transactionExplorer: transactionExplorer);
+        transactionExplorer: transactionExplorer,
+        relaySystem: relaySystem,
+        consensusRole: consensusRole);
   }
 }

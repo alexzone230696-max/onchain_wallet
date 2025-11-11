@@ -1,9 +1,12 @@
 import 'dart:async';
+
 import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:on_chain_wallet/app/dev/logging.dart';
 import 'package:on_chain_wallet/crypto/isolate/cross/exception.dart';
 import 'package:on_chain_wallet/crypto/isolate/types/types.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/crypto/requets/messages.dart';
+
 import '../cross/cross.dart'
     if (dart.library.js_interop) '../cross/web/web.dart'
     if (dart.library.io) '../cross/io.dart';
@@ -35,6 +38,7 @@ abstract class IsolateCryptoWoker {
       return result;
     } on TimeoutException {
       if (mode != WorkerMode.main) rethrow;
+      Logg.log("on main!");
       final result = onMain();
       // assert(false, "failed to run isolate");
       return result;

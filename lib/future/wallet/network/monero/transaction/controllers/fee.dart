@@ -1,3 +1,4 @@
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:monero_dart/monero_dart.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/non_encrypted/requests/monero_build_fake_tx.dart';
@@ -8,7 +9,7 @@ import 'package:on_chain_wallet/wallet/wallet.dart';
 
 mixin MoneroTransactionFeeController on MoneroTransactionApiController {
   final Cancelable _cancelable = Cancelable();
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
 
   late final MoneroTransactionFeeData txFee = MoneroTransactionFeeData(
       select: MoneroTransactionFee(
@@ -76,7 +77,7 @@ mixin MoneroTransactionFeeController on MoneroTransactionApiController {
 
   Future<void> estimateFee() async {
     _cancelable.cancel();
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       txFee.setPending();
       final weight = await MethodUtils.call(() async => await simulateFee());
       if (weight.isCancel) return;

@@ -1,6 +1,6 @@
 part of 'package:on_chain_wallet/wallet/chain/chain/chain.dart';
 
-class TronMultiSigSignerDetais with Equatable, CborSerializable {
+class TronMultiSigSignerDetais with Equality, CborSerializable {
   TronMultiSigSignerDetais._(
       {required this.publicKey, required this.weight, required this.keyIndex});
 
@@ -49,7 +49,7 @@ class TronMultiSigSignerDetais with Equatable, CborSerializable {
   List get variabels => [publicKey, weight, keyIndex];
 }
 
-class TronMultiSignatureAddress with Equatable, CborSerializable {
+class TronMultiSignatureAddress with Equality, CborSerializable {
   final List<TronMultiSigSignerDetais> signers;
   final BigInt threshold;
   final int? permissionID;

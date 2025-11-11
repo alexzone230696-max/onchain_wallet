@@ -18,7 +18,7 @@ final class MoneroChain extends Chain<
       required super.addressIndex,
       required super.id,
       required super.config,
-      required super.client,
+      required super.service,
       required super.addresses,
       super.totalBalance})
       : super._();
@@ -27,7 +27,7 @@ final class MoneroChain extends Chain<
     WalletMoneroNetwork? network,
     List<ChainAccount>? addresses,
     int? addressIndex,
-    MoneroClient? client,
+    ProviderIdentifier? service,
     String? id,
     MoneroNetworkConfig? config,
     BigInt? totalBalance,
@@ -36,30 +36,27 @@ final class MoneroChain extends Chain<
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
         addresses: addresses?.cast<IMoneroAddress>() ?? _addresses,
-        client: client ?? _client,
+        service: service ?? _serviceIdentifier,
         id: id ?? this.id,
         config: config ?? this.config,
         totalBalance: totalBalance ?? this.totalBalance._value.balance);
   }
 
-  factory MoneroChain.setup({
-    required WalletMoneroNetwork network,
-    required String id,
-    MoneroClient? client,
-  }) {
+  factory MoneroChain.setup(
+      {required WalletMoneroNetwork network,
+      required String id,
+      ProviderIdentifier? service}) {
     return MoneroChain._(
         network: network,
         addressIndex: 0,
         id: id,
-        client: client,
+        service: service,
         config: MoneroNetworkConfig(),
         addresses: []);
   }
 
   factory MoneroChain.deserialize(
-      {required WalletMoneroNetwork network,
-      required CborListValue cbor,
-      MoneroClient? client}) {
+      {required WalletMoneroNetwork network, required CborListValue cbor}) {
     final int networkId = cbor.elementAs(0);
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
@@ -72,12 +69,17 @@ final class MoneroChain extends Chain<
     final int addressIndex = cbor.elementAs(4);
     final config = MoneroNetworkConfig.deserialize(
         object: cbor.elementAs<CborTagValue>(5));
+    final ProviderIdentifier? service = MethodUtils.nullOnException(() {
+      final CborTagValue? identifier = cbor.elementAs(6);
+      if (identifier == null) return null;
+      return ProviderIdentifier.deserialize(cbor: identifier);
+    });
     final BigInt? totalBalance = cbor.elementAs<BigInt?>(7);
     return MoneroChain._(
         network: network,
         addresses: accounts,
         addressIndex: addressIndex,
-        client: client,
+        service: service,
         id: id,
         config: config,
         totalBalance: totalBalance);

@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:blockchain_utils/utils/string/string.dart';
+import 'package:flutter/material.dart';
 import 'package:on_chain/tron/src/models/contract/base_contract/base_contract.dart';
 import 'package:on_chain/tron/src/models/contract/transaction/any.dart';
 import 'package:on_chain/tron/src/models/contract/transaction/transaction_contract.dart';
@@ -10,9 +12,9 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/controllers/memo.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'fee.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
+import 'fee.dart';
 import 'provider.dart';
 import 'signer.dart';
 
@@ -170,9 +172,16 @@ abstract class TronTransactionStateController2<
   }
 
   @override
-  Future<void> initForm(TronClient client, {bool updateAccount = true}) async {
-    await super
-        .initForm(client, updateAccount: address.accountResource != null);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required TronClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super.initForm(
+        context: context,
+        client: client,
+        updateAccount: address.accountResource != null);
     if (address.accountResource == null) {
       await account.updateAddressBalance(address, tokens: false);
     }
@@ -188,5 +197,6 @@ abstract class TronTransactionStateController2<
         throw AppException("tron_account_permission_not_access_desc");
       }
     }
+    return this;
   }
 }

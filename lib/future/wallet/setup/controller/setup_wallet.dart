@@ -14,6 +14,7 @@ class SetupWalletStateController with DisposableMixin, StreamStateController {
   SetupWalletStateController({required this.walletProvider, required this.type})
       : mainWallet = type.isMainWallet ? null : walletProvider.wallet.wallet;
   bool isSetup = true;
+
   WalletStupPage page = WalletStupPage.main;
   SetupWalletMode mode = SetupWalletMode.generate;
   final APPWalletType type;

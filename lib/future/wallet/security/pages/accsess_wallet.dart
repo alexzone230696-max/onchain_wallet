@@ -3,16 +3,15 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
-import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 
 import 'login.dart';
 
 typedef ONACCESSCREDENTIALWIDGET<RESPONSE extends WalletCredentialResponse>
     = Widget Function(RESPONSE credential);
-// typedef ONACCESSCREDENTIAL = FutureOr<Object?> Function(String password);
 
 class AccessWalletView<RESPONSE extends WalletCredentialResponse,
     REQUEST extends WalletCredential<RESPONSE>> extends StatefulWidget {

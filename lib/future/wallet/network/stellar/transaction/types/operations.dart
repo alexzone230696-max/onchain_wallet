@@ -5,9 +5,10 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/stellar/transaction/controllers/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/stellar/transaction/widgets/stellar_operations/operations.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:stellar_dart/stellar_dart.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
+
 import 'types.dart';
 
 abstract class StellarTransactionOperation {
@@ -1232,7 +1233,7 @@ class StellarManageBuyOfferOperationForm
 
 class TransactionResourceRequirementStellarAccountActivity
     with DisposableMixin, StreamStateController {
-  final lock = SynchronizedLock();
+  final lock = SafeAtomicLock();
   final ReceiptAddress<StellarAddress> address;
   TransactionResourceRequirementStellarAccountActivity(this.address);
   AccountReceivementStatus _status = AccountReceivementStatus.idle;

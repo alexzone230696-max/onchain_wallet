@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:on_chain/on_chain.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/worker.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
@@ -13,7 +15,6 @@ import 'package:on_chain_wallet/wallet/models/networks/networks.dart';
 import 'package:on_chain_wallet/wallet/models/token/token.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/networks/tron.dart';
-import 'package:on_chain/on_chain.dart';
 
 class TronClient extends NetworkClient<TronWalletTransaction, TronAPIProvider,
     TronNetworkToken, TronAddress> with CryptoWokerImpl, HttpImpl {
@@ -153,6 +154,7 @@ class TronClient extends NetworkClient<TronWalletTransaction, TronAPIProvider,
         ownerAddress: address,
         type: ResourceCode.energy.value,
         network: network));
+
     return (energy, bandwidth);
   }
 
@@ -240,70 +242,75 @@ class TronClient extends NetworkClient<TronWalletTransaction, TronAPIProvider,
     }
 
     Future<void> fetchTokens() async {
-      final result =
-          await MethodUtils.call(() async => await getAccount(address));
+      try {
+        final result =
+            await MethodUtils.call(() async => await getAccount(address));
 
-      if (result.hasError) {
-        error(result.exception!);
-        close();
-        return;
-      }
-
-      final account = result.result;
-      List<TronNetworkToken> trc10Tokens = [];
-      if (account != null && account.assetV2.isNotEmpty) {
-        trc10Tokens = account.assetV2
-            .map((e) => TronTRC10Token.create(
-                balance: e.value,
-                token: Token(name: e.key, symbol: e.key, decimal: 0),
-                tokenID: e.key))
-            .map((e) => TronNetworkToken(token: e))
-            .toList();
-        add(trc10Tokens);
-        _fetchTrc10TokenMetadatas(trc10Tokens);
-      }
-
-      int max = TronClientUtils.tronScanMaxTokenLimit;
-      int offset = 0;
-      while (max == TronClientUtils.tronScanMaxTokenLimit) {
-        final tronscanAssets = await MethodUtils.call(() async {
-          return await getTronScanAccountTokens(address,
-              start: offset * TronClientUtils.tronScanMaxTokenLimit);
-        });
-        if (tronscanAssets.hasError) {
-          error(tronscanAssets.exception!);
+        if (result.hasError) {
+          error(result.exception!);
           close();
           return;
         }
-        final trc10Metadatas = tronscanAssets.result.tokens
-            .where((e) => e.tokenType == TronTokenTypes.trc10.name)
-            .toList();
-        for (final i in trc10Tokens) {
-          final metadata = trc10Metadatas
-              .firstWhereNullable((e) => e.tokenId == i.token.identifier);
-          if (metadata != null) {
-            i.updaetTokenMetadata(i.token.token
-                .copyWith(assetLogo: APPImage.network(metadata.tokenLogo)));
-          }
+
+        final account = result.result;
+        List<TronNetworkToken> trc10Tokens = [];
+        if (account != null && account.assetV2.isNotEmpty) {
+          trc10Tokens = account.assetV2
+              .map((e) => TronTRC10Token.create(
+                  balance: e.value,
+                  token: Token(name: e.key, symbol: e.key, decimal: 0),
+                  tokenID: e.key))
+              .map((e) => TronNetworkToken(token: e))
+              .toList();
+          add(trc10Tokens);
+          _fetchTrc10TokenMetadatas(trc10Tokens);
         }
-        final tc20Assets = tronscanAssets.result.tokens
-            .where((e) => e.tokenType == TronTokenTypes.trc20.name)
-            .map((e) => TronNetworkToken(
-                status: NetworkTokenFetchingStatus.success,
-                token: TronTRC20Token.create(
-                    balance: e.balance,
-                    token: Token(
-                        name: e.tokenAbbr,
-                        symbol: e.tokenName,
-                        decimal: e.tokenDecimal,
-                        assetLogo: APPImage.network(e.tokenLogo)),
-                    contractAddress: TronAddress(e.tokenId))))
-            .toList();
-        max = tronscanAssets.result.tokens.length;
-        offset++;
-        add(tc20Assets);
+
+        int max = TronClientUtils.tronScanMaxTokenLimit;
+        int offset = 0;
+        while (max == TronClientUtils.tronScanMaxTokenLimit) {
+          final tronscanAssets = await MethodUtils.call(() async {
+            return await getTronScanAccountTokens(address,
+                start: offset * TronClientUtils.tronScanMaxTokenLimit);
+          });
+          if (tronscanAssets.hasError) {
+            error(tronscanAssets.exception!);
+            close();
+            return;
+          }
+          final trc10Metadatas = tronscanAssets.result.tokens
+              .where((e) => e.tokenType == TronTokenTypes.trc10.name)
+              .toList();
+          for (final i in trc10Tokens) {
+            final metadata = trc10Metadatas
+                .firstWhereNullable((e) => e.tokenId == i.token.identifier);
+            if (metadata != null) {
+              i.updaetTokenMetadata(i.token.token
+                  .copyWith(assetLogo: APPImage.network(metadata.tokenLogo)));
+            }
+          }
+          final tc20Assets = tronscanAssets.result.tokens
+              .where((e) => e.tokenType == TronTokenTypes.trc20.name)
+              .map((e) => TronNetworkToken(
+                  status: NetworkTokenFetchingStatus.success,
+                  token: TronTRC20Token.create(
+                      balance: e.balance,
+                      token: Token(
+                          name: e.tokenAbbr,
+                          symbol: e.tokenName,
+                          decimal: e.tokenDecimal,
+                          assetLogo: APPImage.network(e.tokenLogo)),
+                      contractAddress: TronAddress(e.tokenId))))
+              .toList();
+          max = tronscanAssets.result.tokens.length;
+          offset++;
+          add(tc20Assets);
+        }
+      } catch (e) {
+        error(e);
+      } finally {
+        close();
       }
-      close();
     }
 
     controller.onListen = fetchTokens;

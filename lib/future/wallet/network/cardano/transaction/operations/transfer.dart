@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:on_chain/on_chain.dart';
 import 'package:on_chain_wallet/app/core.dart';
@@ -375,9 +376,16 @@ class ADATransactionTransferOperation extends ADATransactionStateController {
   TransactionOperations get operation => ADATransactionOperations.transfer;
 
   @override
-  Future<void> initForm(ADAClient client, {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: updateAccount);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required ADAClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super.initForm(
+        context: context, client: client, updateAccount: updateAccount);
     remainingAmount.value.onUpdateProtocolParams(latestEpochParams);
+    return this;
   }
 
   @override

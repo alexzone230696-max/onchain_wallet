@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/types/networks.dart';
+import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
 import 'package:on_chain_wallet/future/wallet/network/network.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
-import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 
 enum AccountPageAppbarStatus {
   provider(true),
@@ -55,10 +55,7 @@ class NetworkClientConnectionSliverHeaderDelegate extends StatelessWidget {
                     enable: appbarStatus,
                     widgets: {
                       AccountPageAppbarStatus.provider: (context) =>
-                          _AppbarProviderStatus(
-                            wallet: wallet,
-                            chain: chain,
-                          ),
+                          _AppbarProviderStatus(wallet: wallet, chain: chain),
                       AccountPageAppbarStatus.action: (context) =>
                           _AppbarPageAction(chain: chain)
                     }),
@@ -94,8 +91,10 @@ class _AppbarProviderStatus extends StatelessWidget {
               },
             ),
         NodeClientStatus.disconnect: (c) => _DisconnectStatus(
-            onTry: () => chain.clientOrNull(),
+            onTry: () => onSwitchNetwork(context),
             onEdit: () => onSwitchNetwork(context)),
+        NodeClientStatus.disabled: (c) => _DisconnectStatus(
+            onTry: () {}, onEdit: () => onSwitchNetwork(context)),
         NodeClientStatus.pending: (c) => const _PendingStatus(),
         NodeClientStatus.connect: (c) => WidgetConstant.sizedBox
       }),
@@ -138,7 +137,7 @@ class _NoProvider extends StatelessWidget {
         ),
         IconButton(
             onPressed: onTry,
-            icon: Icon(Icons.add, color: context.colors.onErrorContainer))
+            icon: Icon(Icons.add_box, color: context.colors.onErrorContainer))
       ],
     );
   }

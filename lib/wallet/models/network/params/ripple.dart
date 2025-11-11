@@ -1,12 +1,11 @@
+import 'package:blockchain_utils/bip/bip.dart';
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
 import 'package:on_chain_wallet/wallet/api/provider/core/provider.dart';
-import 'package:on_chain_wallet/wallet/api/provider/networks/ripple.dart';
-import 'package:blockchain_utils/bip/bip.dart';
+import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/params/params.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
-import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 
 enum RippleKeyScheme {
   ed25519(value: 0, name: "ED25519"),
@@ -30,7 +29,7 @@ enum RippleKeyScheme {
   }
 }
 
-class RippleNetworkParams extends NetworkCoinParams<RippleAPIProvider> {
+class RippleNetworkParams extends NetworkCoinParams {
   final int networkId;
 
   factory RippleNetworkParams.fromCborBytesOrObject(
@@ -39,10 +38,6 @@ class RippleNetworkParams extends NetworkCoinParams<RippleAPIProvider> {
         cborBytes: bytes, object: obj, tags: CborTagsConst.xrpNetworkParam);
     return RippleNetworkParams(
         token: Token.deserialize(obj: values.elementAsCborTag(2)),
-        providers: values
-            .elementAsListOf<CborTagValue>(3)
-            .map((e) => RippleAPIProvider.fromCborBytesOrObject(obj: e))
-            .toList(),
         chainType: ChainType.fromValue(values.elementAs(4)),
         networkId: values.elementAs(5),
         addressExplorer: values.elementAs(6),
@@ -50,7 +45,6 @@ class RippleNetworkParams extends NetworkCoinParams<RippleAPIProvider> {
   }
   RippleNetworkParams(
       {required super.token,
-      required super.providers,
       required super.chainType,
       required this.networkId,
       super.addressExplorer,
@@ -63,8 +57,7 @@ class RippleNetworkParams extends NetworkCoinParams<RippleAPIProvider> {
           const CborNullValue(),
           const CborNullValue(),
           token.toCbor(),
-          CborSerializable.fromDynamic(
-              providers.map((e) => e.toCbor()).toList()),
+          CborNullValue(),
           chainType.name,
           networkId,
           addressExplorer,
@@ -76,7 +69,7 @@ class RippleNetworkParams extends NetworkCoinParams<RippleAPIProvider> {
   int get identifier => networkId;
 
   @override
-  NetworkCoinParams<RippleAPIProvider> updateParams(
+  NetworkCoinParams updateParams(
       {List<APIProvider>? updateProviders,
       Token? token,
       String? transactionExplorer,
@@ -85,7 +78,6 @@ class RippleNetworkParams extends NetworkCoinParams<RippleAPIProvider> {
     return RippleNetworkParams(
         token: NetworkCoinParams.validateUpdateParams(
             token: this.token, updateToken: token),
-        providers: updateProviders?.cast<RippleAPIProvider>() ?? providers,
         chainType: chainType,
         networkId: networkId,
         addressExplorer: addressExplorer,

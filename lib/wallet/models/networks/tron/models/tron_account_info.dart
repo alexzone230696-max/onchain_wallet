@@ -15,7 +15,7 @@ class _TronAccountCborConst {
   static const List<int> accountPermission = [200, 195, 100, 8];
 }
 
-class TronAccountInfo with CborSerializable, Equatable {
+class TronAccountInfo with CborSerializable, Equality {
   final String? accountName;
   final String address;
   final BigInt balance;
@@ -244,7 +244,7 @@ class TronAccountInfo with CborSerializable, Equatable {
       ];
 }
 
-class AccountPermission with CborSerializable, Equatable {
+class AccountPermission with CborSerializable, Equality {
   final PermissionType type;
   final int? id;
   final String? permissionName;
@@ -357,7 +357,7 @@ class AccountPermission with CborSerializable, Equatable {
   List get variabels => [type, id, permissionName, threshold, operations, keys];
 }
 
-class PermissionKeys with CborSerializable, Equatable {
+class PermissionKeys with CborSerializable, Equality {
   PermissionKeys({required this.address, required this.weight});
   factory PermissionKeys.fromJson(Map<String, dynamic> json) {
     return PermissionKeys(
@@ -391,7 +391,7 @@ class PermissionKeys with CborSerializable, Equatable {
   List get variabels => [address, weight];
 }
 
-class FrozenSupply with CborSerializable, Equatable {
+class FrozenSupply with CborSerializable, Equality {
   final BigInt frozenBalance;
   final BigInt expireTime;
 
@@ -428,7 +428,7 @@ class FrozenSupply with CborSerializable, Equatable {
   List get variabels => [frozenBalance, expireTime];
 }
 
-class FrozenV2 with CborSerializable, Equatable {
+class FrozenV2 with CborSerializable, Equality {
   final BigInt amount;
   final ResourceCode type;
   @override
@@ -464,7 +464,7 @@ class FrozenV2 with CborSerializable, Equatable {
   List get variabels => [amount, type];
 }
 
-class UnfrozenV2 with CborSerializable, Equatable {
+class UnfrozenV2 with CborSerializable, Equality {
   final String? type;
   final BigInt unfreezeAmount;
   final BigInt unfreezeExpireTime;
@@ -510,7 +510,7 @@ class UnfrozenV2 with CborSerializable, Equatable {
   List get variabels => [type, unfreezeAmount, unfreezeExpireTime];
 }
 
-class AssetV2 with CborSerializable, Equatable {
+class AssetV2 with CborSerializable, Equality {
   final String key;
   final BigInt value;
 
@@ -541,7 +541,7 @@ class AssetV2 with CborSerializable, Equatable {
   List get variabels => [key, value];
 }
 
-class FreeAssetNetUsageV2 with CborSerializable, Equatable {
+class FreeAssetNetUsageV2 with CborSerializable, Equality {
   final String key;
   final BigInt value;
 
@@ -577,7 +577,7 @@ class FreeAssetNetUsageV2 with CborSerializable, Equatable {
   List get variabels => [key, value];
 }
 
-class TronAccountResource with CborSerializable, Equatable {
+class TronAccountResource with CborSerializable, Equality {
   final int energyWindowSize;
   final BigInt? delegatedFrozenV2BalanceForEnergy;
   final bool energyWindowOptimized;

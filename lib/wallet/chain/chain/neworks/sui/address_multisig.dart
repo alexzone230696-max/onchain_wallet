@@ -1,6 +1,6 @@
 part of 'package:on_chain_wallet/wallet/chain/chain/chain.dart';
 
-class SuiMultisigAccountPublicKeyInfo with CborSerializable, Equatable {
+class SuiMultisigAccountPublicKeyInfo with CborSerializable, Equality {
   final List<int> publicKey;
   final int weight;
   final SuiSupportKeyScheme keyScheme;

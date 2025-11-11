@@ -21,7 +21,8 @@ enum ServiceProtocol {
           AppPlatform.android,
           AppPlatform.windows,
           AppPlatform.ios,
-          AppPlatform.macos
+          AppPlatform.macos,
+          AppPlatform.linux
         ];
     }
   }

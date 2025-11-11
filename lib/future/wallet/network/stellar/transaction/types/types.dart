@@ -191,7 +191,7 @@ class TransactionTimeBound {
 }
 
 class StellarTransactionOperations
-    with Equatable
+    with Equality
     implements TransactionOperations {
   static const StellarTransactionOperations transfer =
       StellarTransactionOperations._("transfer");
@@ -226,6 +226,7 @@ class StellarTransactionFeeData
 
 abstract class BaseStellarTransactionController
     extends TransactionStateController<
+        StellarIssueToken,
         IStellarAddress,
         StellarClient,
         WalletStellarNetwork,
@@ -234,7 +235,8 @@ abstract class BaseStellarTransactionController
         IStellarTransaction,
         IStellarSignedTransaction,
         StellarWalletTransaction,
-        SubmitTransactionSuccess<IStellarSignedTransaction>> {
+        SubmitTransactionSuccess<IStellarSignedTransaction>,
+        StellarTransactionFeeData> {
   BaseStellarTransactionController(
       {required super.walletProvider,
       required super.account,

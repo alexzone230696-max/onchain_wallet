@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:isolate';
+
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/crypto/isolate/controller/message_controller.dart';
 import 'package:on_chain_wallet/crypto/isolate/controller/stream_message_controller.dart';
 import 'package:on_chain_wallet/crypto/isolate/core/worker.dart';
-import 'package:on_chain_wallet/crypto/isolate/controller/message_controller.dart';
 import 'package:on_chain_wallet/crypto/isolate/types/types.dart';
 import 'package:on_chain_wallet/crypto/requets/argruments/argruments.dart';
 import 'package:on_chain_wallet/crypto/requets/completer/completer.dart';
@@ -85,11 +86,11 @@ typedef _OnIsolateError = Function(WorkerMode mode);
 class _WorkerConnector {
   final StreamController<MessageArgsStreamResponse> onStreamRespone =
       StreamController.broadcast();
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   final Map<WorkerMode, _WorkerConnection> _syncWorkers = {};
 
   void _onDoneIsolate(WorkerMode mode) {
-    _lock.synchronized(() {
+    _lock.run(() {
       final isolate = _syncWorkers.remove(mode);
       isolate?.close();
     });
@@ -100,7 +101,7 @@ class _WorkerConnector {
   }
 
   Future<_WorkerConnection> getConnector(WorkerMode mode) async {
-    final connector = await _lock.synchronized(() async {
+    final connector = await _lock.run(() async {
       _syncWorkers[mode] ??= await _WorkerConnection._init(
           onDone: _onDoneIsolate, onStreamRespone: onStreamRespone, mode: mode);
       return _syncWorkers[mode]!;
@@ -110,7 +111,7 @@ class _WorkerConnector {
 }
 
 class _WorkerConnection {
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   int _requestId = 0;
   final ReceivePort receivePort;
   final SendPort sendPort;
@@ -129,7 +130,7 @@ class _WorkerConnection {
       required this.onStreamRespone});
 
   Future<int> _getRequestId() {
-    return _lock.synchronized(() {
+    return _lock.run(() {
       _requestId++;
       final id = WorkerMessageCompleter(_requestId);
       _requests[id.id] = id;

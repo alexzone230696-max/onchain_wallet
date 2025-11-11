@@ -137,8 +137,8 @@ final class ITronAddress
   }
 
   @override
-  Future<void> _init() async {
-    await super._init();
+  Future<void> init() async {
+    await super.init();
     final resource = await _getTronAccountResource();
     _accountResource = resource;
     // _setAccountResource(resource);

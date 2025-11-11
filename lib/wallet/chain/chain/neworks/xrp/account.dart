@@ -1,8 +1,41 @@
 part of 'package:on_chain_wallet/wallet/chain/chain/chain.dart';
 
 class XRPChainConfig extends DefaultNetworkConfig {
-  XRPChainConfig()
-      : super(supportToken: true, supportNft: true, supportWeb3: true);
+  XRPChainConfig(
+      {super.supportToken = true,
+      super.supportNft = true,
+      super.supportWeb3 = true,
+      super.enableProvider = true});
+  factory XRPChainConfig.deserialize(
+      {List<int>? cborBytes, String? cborHex, CborObject? cborObject}) {
+    final values = CborSerializable.cborTagValue(
+        cborBytes: cborBytes,
+        hex: cborHex,
+        object: cborObject,
+        tags: CborTagsConst.defaultNetworkConfig);
+    return XRPChainConfig(
+      supportToken:
+          values.indexMaybeAs<bool, CborBoleanValue>(0, (e) => e.value) ?? true,
+      supportNft:
+          values.indexMaybeAs<bool, CborBoleanValue>(1, (e) => e.value) ?? true,
+      supportWeb3:
+          values.indexMaybeAs<bool, CborBoleanValue>(2, (e) => e.value) ?? true,
+      enableProvider:
+          values.indexMaybeAs<bool, CborBoleanValue>(3, (e) => e.value) ?? true,
+    );
+  }
+  @override
+  XRPChainConfig copyWith(
+      {bool? supportToken,
+      bool? supportNft,
+      bool? supportWeb3,
+      bool? enableProvider}) {
+    return XRPChainConfig(
+        supportToken: supportToken ?? this.supportToken,
+        supportNft: supportNft ?? this.supportNft,
+        supportWeb3: supportWeb3 ?? this.supportWeb3,
+        enableProvider: enableProvider ?? this.enableProvider);
+  }
 }
 
 final class XRPChain extends Chain<
@@ -22,18 +55,18 @@ final class XRPChain extends Chain<
     required super.network,
     required super.addressIndex,
     required super.id,
-    XRPChainConfig? config,
-    required super.client,
+    required super.config,
+    required super.service,
     required super.addresses,
     super.totalBalance,
-  }) : super._(config: config ?? XRPChainConfig());
+  }) : super._();
   @override
   XRPChain copyWith({
     WalletXRPNetwork? network,
     List<ChainAccount>? addresses,
     List<ContactCore<XRPAddress>>? contacts,
     int? addressIndex,
-    XRPClient? client,
+    ProviderIdentifier? service,
     String? id,
     XRPChainConfig? config,
     BigInt? totalBalance,
@@ -42,7 +75,7 @@ final class XRPChain extends Chain<
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
         addresses: addresses?.cast<IXRPAddress>() ?? _addresses,
-        client: client ?? _client,
+        service: service ?? _serviceIdentifier,
         id: id ?? this.id,
         config: config ?? this.config,
         totalBalance: totalBalance ?? this.totalBalance.value.balance);
@@ -51,19 +84,18 @@ final class XRPChain extends Chain<
   factory XRPChain.setup(
       {required WalletXRPNetwork network,
       required String id,
-      XRPClient? client}) {
+      ProviderIdentifier? service}) {
     return XRPChain._(
         network: network,
         id: id,
         addressIndex: 0,
-        client: client,
-        addresses: []);
+        service: service,
+        addresses: [],
+        config: XRPChainConfig());
   }
 
   factory XRPChain.deserialize(
-      {required WalletXRPNetwork network,
-      required CborListValue cbor,
-      XRPClient? client}) {
+      {required WalletXRPNetwork network, required CborListValue cbor}) {
     final int networkId = cbor.elementAs(0);
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
@@ -74,12 +106,22 @@ final class XRPChain extends Chain<
         .map((e) => IXRPAddress.deserialize(network, obj: e))
         .toList();
     final int addressIndex = cbor.elementAs(4);
+    XRPChainConfig config =
+        XRPChainConfig.deserialize(cborObject: cbor.indexAs(5));
+    final ProviderIdentifier? service = MethodUtils.nullOnException(() {
+      final CborTagValue? identifier = cbor.elementAs(6);
+
+      if (identifier == null) return null;
+      return ProviderIdentifier.deserialize(cbor: identifier);
+    });
+
     final BigInt? totalBalance = cbor.elementAs<BigInt?>(7);
     return XRPChain._(
         network: network,
         addresses: accounts,
+        config: config,
         addressIndex: addressIndex < 0 ? 0 : addressIndex,
-        client: client,
+        service: service,
         id: id,
         totalBalance: totalBalance);
   }

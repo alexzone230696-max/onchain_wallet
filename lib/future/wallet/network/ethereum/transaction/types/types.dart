@@ -1,10 +1,11 @@
+import 'dart:async';
+
 import 'package:blockchain_utils/helper/extensions/extensions.dart';
+import 'package:on_chain/ethereum/ethereum.dart';
+import 'package:on_chain/on_chain.dart';
+import 'package:on_chain_wallet/crypto/utils/ethereum/utils.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
-import 'package:on_chain/on_chain.dart';
-import 'dart:async';
-import 'package:on_chain/ethereum/ethereum.dart';
-import 'package:on_chain_wallet/crypto/utils/ethereum/utils.dart';
 
 enum EthereumFeeMode {
   eip1559,
@@ -121,6 +122,7 @@ typedef ONUPDATEETHEREUMTXMEMO = Future<String?> Function(String?);
 abstract class BaseEthereumTransactionController<
         TXDATA extends IEthereumTransactionData>
     extends TransactionStateController<
+        ETHERC20Token,
         IEthAddress,
         EthereumClient,
         WalletEthereumNetwork,
@@ -129,7 +131,8 @@ abstract class BaseEthereumTransactionController<
         IEthereumTransaction<TXDATA>,
         IEthereumSignedTransaction<TXDATA>,
         EthWalletTransaction,
-        SubmitTransactionSuccess<IEthereumSignedTransaction<TXDATA>>> {
+        SubmitTransactionSuccess<IEthereumSignedTransaction<TXDATA>>,
+        EthereumTransactionFeeData> {
   BaseEthereumTransactionController(
       {required super.walletProvider,
       required super.account,

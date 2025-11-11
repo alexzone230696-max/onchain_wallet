@@ -1,11 +1,12 @@
+import 'package:blockchain_utils/helper/extensions/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
-import 'package:on_chain_wallet/crypto/types/networks.dart';
 
 class SwitchNetworkView extends StatefulWidget {
   const SwitchNetworkView({required this.selectedNetwork, super.key});
@@ -19,11 +20,16 @@ class _SwitchNetworkViewState extends State<SwitchNetworkView>
     with SafeState<SwitchNetworkView> {
   final StreamPageProgressController progressKey =
       StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
+  final GlobalKey<AppTextFieldState> searchKey = GlobalKey();
+  Map<NetworkType, List<Chain>> allNetworks = {};
+  NetworkType currentNetwork = NetworkType.bitcoinAndForked;
+  String searched = '';
   static const double imageRadius = 15;
 
   List<Chain> allChains = [];
-  late List<Chain> networks;
+  late List<Chain> buildedNetwork;
   late WalletProvider wallet;
+  List<Chain> filteredNetworks = [];
 
   int initialIndex = 0;
   bool showTestnet = false;
@@ -42,62 +48,73 @@ class _SwitchNetworkViewState extends State<SwitchNetworkView>
     wallet = context.watch<WalletProvider>(StateConst.main);
     showTestnet = wallet.appSetting.walletSetting.showTestnetNetworks;
     allChains = wallet.wallet.getChains();
-    initialIndex = findIndex(widget.selectedNetwork.type);
+    for (final i in NetworkType.values) {
+      if (i == NetworkType.bitcoinCash) continue;
+      if (i == NetworkType.bitcoinAndForked) {
+        allNetworks[i] =
+            allChains.where((e) => e.network.type.isBitcoin).toList();
+      } else {
+        allNetworks[i] = allChains.where((e) => e.network.type == i).toList();
+      }
+    }
+    currentNetwork = widget.selectedNetwork.type;
+    if (currentNetwork.isBitcoin) {
+      currentNetwork = NetworkType.bitcoinAndForked;
+    }
+    initialIndex = findIndex(currentNetwork);
     buildChains();
     progressKey.backToIdle();
   }
 
   void onDestinationSelected(int index) {
     if (index == initialIndex) return;
+    currentNetwork = findNetworkType(index);
     initialIndex = index;
     buildChains();
     updateState();
   }
 
-  Iterable<Chain> findChains(int index) {
+  void onChangeSearch(String v) {
+    searched = v;
+    if (v.isEmpty) {
+      filteredNetworks = buildedNetwork.clone();
+    } else {
+      filteredNetworks = buildedNetwork
+          .where((e) =>
+              e.network.networkName.toLowerCase().contains(v.toLowerCase()))
+          .toList();
+    }
+    updateState();
+  }
+
+  NetworkType findNetworkType(int index) {
     switch (index) {
-      case 0:
-        return allChains.where((element) =>
-            (element.network.type == NetworkType.bitcoinAndForked ||
-                element.network.type == NetworkType.bitcoinCash));
       case 1:
-        return allChains
-            .where((element) => (element.network.type == NetworkType.xrpl));
+        return NetworkType.xrpl;
       case 2:
-        return allChains
-            .where((element) => (element.network.type == NetworkType.ethereum));
+        return NetworkType.ethereum;
       case 3:
-        return allChains
-            .where((element) => (element.network.type == NetworkType.tron));
+        return NetworkType.tron;
       case 4:
-        return allChains
-            .where((element) => (element.network.type == NetworkType.solana));
+        return NetworkType.solana;
       case 5:
-        return allChains
-            .where((element) => (element.network.type == NetworkType.cardano));
+        return NetworkType.cardano;
       case 6:
-        return allChains
-            .where((element) => (element.network.type == NetworkType.cosmos));
+        return NetworkType.cosmos;
       case 7:
-        return allChains
-            .where((element) => (element.network.type == NetworkType.ton));
+        return NetworkType.ton;
       case 8:
-        return allChains.where(
-            (element) => (element.network.type == NetworkType.substrate));
+        return NetworkType.substrate;
       case 9:
-        return allChains
-            .where((element) => (element.network.type == NetworkType.stellar));
+        return NetworkType.stellar;
       case 10:
-        return allChains
-            .where((element) => (element.network.type == NetworkType.monero));
+        return NetworkType.monero;
       case 11:
-        return allChains
-            .where((element) => (element.network.type == NetworkType.sui));
+        return NetworkType.sui;
       case 12:
-        return allChains
-            .where((element) => (element.network.type == NetworkType.aptos));
+        return NetworkType.aptos;
       default:
-        throw UnimplementedError();
+        return NetworkType.bitcoinAndForked;
     }
   }
 
@@ -133,38 +150,31 @@ class _SwitchNetworkViewState extends State<SwitchNetworkView>
   }
 
   void buildChains() {
-    networks = findChains(initialIndex).toList()
-      ..sort((a, b) => a.network.value.compareTo(b.network.value));
+    buildedNetwork = allNetworks[currentNetwork]!;
     if (!showTestnet) {
-      networks = networks
+      buildedNetwork = buildedNetwork
           .where((e) =>
               e.network.coinParam.chainType.isMainnet ||
               e.network == widget.selectedNetwork)
           .toList();
     }
-    NetworkType? importNetwork;
-    switch (initialIndex) {
-      case 2:
-        importNetwork = NetworkType.ethereum;
-        break;
-      case 6:
-        importNetwork = NetworkType.cosmos;
-        break;
-      case 8:
-        importNetwork = NetworkType.substrate;
+    switch (currentNetwork) {
+      case NetworkType.ethereum:
+      case NetworkType.cosmos:
+      case NetworkType.substrate:
+        showImport = currentNetwork;
         break;
       default:
+        showImport = null;
         break;
     }
-    showImport = importNetwork;
-    updateState();
+    onChangeSearch(searched);
   }
 
   @override
   void onInitOnce() {
     super.onInitOnce();
-    MethodUtils.after(() async => initNetwork(),
-        duration: APPConst.milliseconds100);
+    initNetwork();
   }
 
   @override
@@ -185,7 +195,11 @@ class _SwitchNetworkViewState extends State<SwitchNetworkView>
         borderRadius: WidgetConstant.border25,
         child: Scaffold(
           appBar: AppBar(
-            title: Text("switch_network".tr),
+            title: AppTextField(
+                prefixIcon: Icon(Icons.search),
+                hint: "switch_network".tr,
+                autofocus: false,
+                onChanged: onChangeSearch),
             leading: const SizedBox(),
             leadingWidth: 0,
             actions: [
@@ -285,11 +299,16 @@ class _SwitchNetworkViewState extends State<SwitchNetworkView>
                 ),
                 const VerticalDivider(),
                 Expanded(
-                    child: AnimatedSwitcher(
-                  duration: APPConst.animationDuraion,
-                  child: _NetworksView(
-                      widget.selectedNetwork, networks, showImport,
-                      key: ValueKey(initialIndex)),
+                    child: EmptyItemWidgetView(
+                  isEmpty: filteredNetworks.isEmpty,
+                  itemBuilder: () {
+                    return AnimatedSwitcher(
+                      duration: APPConst.animationDuraion,
+                      child: _NetworksView(
+                          widget.selectedNetwork, filteredNetworks, showImport,
+                          key: ValueKey(initialIndex)),
+                    );
+                  },
                 ))
               ],
             ),

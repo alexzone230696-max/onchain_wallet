@@ -26,6 +26,8 @@ class ApiProviderExceptionConst {
       ApiProviderException._(message: 'unexpected_request_data');
   static const ApiProviderException invalidRequestUrl =
       ApiProviderException._(message: 'invalid_request_url');
+  static const ApiProviderException clientIsNotInitialized =
+      ApiProviderException._(message: 'client_is_not_initialized');
 }
 
 class ApiProviderException implements Exception {
@@ -56,8 +58,9 @@ class ApiProviderException implements Exception {
     return ApiProviderException._(
         message: defaultError, statusCode: statusCode);
   }
-  factory ApiProviderException.message(String message) {
-    return ApiProviderException._(message: message);
+  factory ApiProviderException.message(String message,
+      {Map<String, dynamic>? responseData}) {
+    return ApiProviderException._(message: message, responseData: responseData);
   }
   factory ApiProviderException.fromException(
       {Object? message, int? statusCode, int? code}) {

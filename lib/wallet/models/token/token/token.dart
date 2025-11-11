@@ -1,13 +1,16 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
-import 'package:on_chain_wallet/app/euqatable/equatable.dart';
 import 'package:on_chain_wallet/app/models/models/image.dart';
 import 'package:on_chain_wallet/app/serialization/cbor/cbor.dart';
 import 'package:on_chain_wallet/app/utils/string/utils.dart';
-import 'package:on_chain_wallet/wallet/models/token/coingecko/coin.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
+import 'package:on_chain_wallet/wallet/models/token/coingecko/coin.dart';
 
-abstract class APPToken with CborSerializable, Equatable {
+class _TokenConst {
+  static const String unknowTokenName = "Unknown";
+}
+
+abstract class APPToken with CborSerializable, Equality {
   final String name;
   final String symbol;
   final String nameView;
@@ -56,14 +59,16 @@ class Token extends APPToken {
       required this.decimal,
       super.market});
   factory Token(
-      {required String name,
-      required String symbol,
+      {required String? name,
+      required String? symbol,
       APPImage? assetLogo,
       required int decimal,
       CoingeckoCoin? market}) {
     if (decimal < 0 || decimal > 255) {
       throw WalletExceptionConst.invalidTokenInformation;
     }
+    name ??= symbol ?? _TokenConst.unknowTokenName;
+    symbol ??= name;
     final String nameView = StrUtils.substring(name, length: 20);
     final String symbolView = StrUtils.substring(symbol, length: 5);
     return Token._(

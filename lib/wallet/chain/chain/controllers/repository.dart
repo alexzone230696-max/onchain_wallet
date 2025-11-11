@@ -1,6 +1,7 @@
 part of 'package:on_chain_wallet/wallet/chain/chain/chain.dart';
 
 mixin ChainRepository<
+    PROVIDER extends APIProvider,
     ADDRESS extends ChainAccount,
     NETWORK extends WalletNetwork,
     CLIENT extends NetworkClient,
@@ -14,6 +15,10 @@ mixin ChainRepository<
   NetworkStorageManager get _storage;
   NETWORK get network;
   ADDRESS _deserializeAddress(List<int> adressBytes);
+  List<PROVIDER> _providers = [];
+
+  final OnceRunner<List<PROVIDER>> _providersRunnter =
+      OnceRunner<List<PROVIDER>>();
 
   Future<List<CONTACT>> _getContacts() async {
     final storagekey = DefaultNetworkStorageId.contacts;
@@ -33,6 +38,47 @@ mixin ChainRepository<
     return contacts;
   }
 
+  Future<List<PROVIDER>> _getProviders() async {
+    final providers = await _providersRunnter.get(
+      onFetch: () async {
+        final storagekey = DefaultNetworkStorageId.providers;
+        final data = await _storage.queriesNetworkStorage(storage: storagekey);
+        _providers = data
+            .map((e) => APIProvider.deserialize(network, bytes: e))
+            .toList()
+            .whereType<PROVIDER>()
+            .toImutableList;
+        appLogger.error(
+            when: () => data.length != _providers.length,
+            runtime: runtimeType,
+            functionName: "_getProviders ${network.networkName}",
+            msg: "failed to deserialize providers.");
+        return _providers;
+      },
+      onFetched: () => _providers,
+    );
+
+    return providers;
+  }
+
+  Future<void> _addNewProvider(PROVIDER provider) async {
+    assert(!provider.isDefaultProvider);
+    if (provider.isDefaultProvider) return;
+    final storageKey = DefaultNetworkStorageId.providers;
+    await _storage.insertNetworkStorage(
+        storage: storageKey, value: provider, keyA: provider.identifier);
+    _providers = [..._providers, provider].toImutableList;
+  }
+
+  Future<void> _removeProvider(PROVIDER provider) async {
+    assert(!provider.isDefaultProvider);
+    if (provider.isDefaultProvider) return;
+    final storageKey = DefaultNetworkStorageId.providers;
+    await _storage.removeNetworkStorage(
+        storage: storageKey, keyA: provider.identifier);
+    _providers = _providers.where((e) => e != provider).toImutableList;
+  }
+
   Future<void> _saveContact(CONTACT contact) async {
     final storageKey = DefaultNetworkStorageId.contacts;
     await _storage.insertNetworkStorage(
@@ -49,17 +95,16 @@ mixin ChainRepository<
     final storagekey = DefaultNetworkStorageId.address;
     final data = await _storage.queriesNetworkStorage(storage: storagekey);
     final addresses = data
-        .map((e) => _deserializeAddress(e))
+        .map((e) => MethodUtils.nullOnException(() => _deserializeAddress(e)))
         .toList()
         .whereType<ADDRESS>()
         .toList();
-    appLogger.debug(
-        when: () => addresses.isNotEmpty,
+    appLogger.error(
+        when: () => addresses.length != data.length,
         runtime: runtimeType,
         functionName: "_getAddresses ${network.networkName}",
-        msg: "${addresses.length} addresses founds.");
-    assert(addresses.length == data.length,
-        "some contact deserialization failed.");
+        msg: "failed to deserialize some addresses.");
+
     return addresses.toImutableList;
   }
 

@@ -1,5 +1,6 @@
 import 'package:on_chain/ada/src/provider/blockfrost/models/models/epoch_parameters.dart';
 import 'package:on_chain_wallet/app/live_listener/live.dart';
+import 'package:on_chain_wallet/app/utils/sync/cached_object.dart';
 import 'package:on_chain_wallet/future/wallet/network/cardano/transaction/types/types.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 

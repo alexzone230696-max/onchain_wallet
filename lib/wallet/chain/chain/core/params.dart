@@ -14,6 +14,8 @@ enum NewAccountParamsType {
   ethereumNewAddressParamss(CborTagsConst.ethereumNewAddressParamss),
   solanaNewAddressParams(CborTagsConst.solanaNewAddressParams),
   substrateNewAddressParams(CborTagsConst.substrateNewAddressParams),
+  substrateMultisigNewAddressParams(
+      CborTagsConst.substrateMultisigNewAddressParams),
   tronNewAddressParams(CborTagsConst.tronNewAddressParams),
   tronMultisigNewAddressParams(CborTagsConst.tronMultisigNewAddressParams),
   tonNewAddressParams(CborTagsConst.tonNewAddressParams),
@@ -89,6 +91,9 @@ abstract final class NewAccountParams<ACCOUNT extends ChainAccount>
         break;
       case NewAccountParamsType.substrateNewAddressParams:
         params = SubstrateNewAddressParams.deserialize(object: decode);
+        break;
+      case NewAccountParamsType.substrateMultisigNewAddressParams:
+        params = SubstrateMultiSigNewAddressParams.deserialize(object: decode);
         break;
       case NewAccountParamsType.tronNewAddressParams:
         params = TronNewAddressParams.deserialize(object: decode);

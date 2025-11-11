@@ -1,23 +1,38 @@
 import 'dart:async';
-import 'package:on_chain_wallet/app/error/exception/exception.dart';
-import 'package:on_chain_wallet/app/isolate/types.dart';
+
+import 'package:blockchain_utils/utils/utils.dart';
+import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/app/live_listener/timout.dart';
 import 'package:on_chain_wallet/wallet/api/provider/core/provider.dart';
 import 'package:on_chain_wallet/wallet/api/services/core/base_service.dart';
 import 'package:on_chain_wallet/wallet/api/services/models/models.dart';
 
 abstract class BaseSocketService<T extends APIProvider>
-    extends NetworkServiceProtocol<T> {
+    extends NetworkServiceProtocol<T> with TimerEvent {
   Future<void> connect(Duration timeout);
   bool get isConnected;
+  Duration? get requestTimeout => null;
+  final _lock = SafeAtomicLock();
+  @override
+  Duration get timeoutDuration => const Duration(minutes: 3);
   @override
   APPIsolate get isolate => APPIsolate.current;
+
   Future<Map<String, dynamic>> providerCaller(
       {required Future<Map<String, dynamic>> Function() t,
       required SocketRequestCompleter param,
       required Duration timeout}) async {
     Map<String, dynamic>? response;
     try {
-      response = await _onException(t: t, timeout: timeout);
+      response = await () async {
+        if (requestTimeout == null) {
+          return await _onException(t: t, timeout: timeout);
+        }
+        await _lock.run(() async {
+          await Future.delayed(requestTimeout!);
+        });
+        return await _onException(t: t, timeout: timeout);
+      }();
       return response;
     } on ApiProviderException catch (e) {
       tracker.addRequest(ApiRequest(
@@ -31,6 +46,23 @@ abstract class BaseSocketService<T extends APIProvider>
     }
   }
 
+  Future<Map<String, dynamic>> post(
+      SocketRequestCompleter message, Duration timeout) async {
+    try {
+      return providerCaller(
+          t: () async {
+            _requests[message.id] = message;
+            addMessage(message);
+            final result = await message.completer.future.timeout(timeout);
+            return result;
+          },
+          param: message,
+          timeout: timeout);
+    } finally {
+      _requests.remove(message.id);
+    }
+  }
+
   Future<Map<String, dynamic>> _onException(
       {required Future<Map<String, dynamic>> Function() t,
       required Duration timeout}) async {
@@ -39,10 +71,25 @@ abstract class BaseSocketService<T extends APIProvider>
       if (!isConnected) {
         throw ApiProviderExceptionConst.socketConnectingFailed;
       }
+      startTimer();
       final response = await t();
       return response;
     } catch (e) {
       throw ApiProviderException.fromException(message: e);
     }
+  }
+
+  final Map<int, SocketRequestCompleter> _requests = {};
+
+  SocketRequestCompleter? getRequest(int id) {
+    return _requests.remove(id);
+  }
+
+  void addMessage(SocketRequestCompleter message);
+
+  @override
+  void onTimerEvent() {
+    super.onTimerEvent();
+    close();
   }
 }

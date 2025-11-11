@@ -49,8 +49,8 @@ class PasswordStrengthIndicator extends StatelessWidget {
           PasswordStrength.fair: (context) => buildItem(
               PasswordStrength.fair.tr.tr,
               "fair_passowrd_desc".tr,
-              strength.index >= PasswordStrength.weak.index,
-              context.colors.errorContainer,
+              strength.index >= PasswordStrength.fair.index,
+              context.colors.error,
               reachedIcon: Icons.warning),
           PasswordStrength.normal: (context) => buildItem(
               PasswordStrength.normal.tr.tr,

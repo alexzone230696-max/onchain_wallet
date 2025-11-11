@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:blockchain_utils/utils/string/string.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
@@ -8,9 +9,10 @@ import 'package:on_chain_wallet/future/wallet/network/stellar/transaction/types/
 import 'package:on_chain_wallet/future/wallet/network/stellar/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/stellar/transaction/widgets/operations/operations.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'package:stellar_dart/stellar_dart.dart';
-import 'fee.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
+import 'package:stellar_dart/stellar_dart.dart';
+
+import 'fee.dart';
 import 'memo.dart';
 import 'provider.dart';
 import 'signer.dart';
@@ -253,9 +255,14 @@ class StellarTransactionStateController extends BaseStellarTransactionController
   }
 
   @override
-  Future<void> initForm(StellarClient client,
-      {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: updateAccount);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required StellarClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super.initForm(
+        context: context, client: client, updateAccount: updateAccount);
 
     _accountData = await getAccount(address.networkAddress);
     if (_accountData == null) {
@@ -266,6 +273,7 @@ class StellarTransactionStateController extends BaseStellarTransactionController
     _noneActiveAccountRequiredAmount = IntegerBalance.token(
         BigInt.from(baseReserve), network.token,
         allowNegative: false, immutable: true);
+    return this;
   }
 
   @override

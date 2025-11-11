@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/models/models/typedef.dart';
-import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/metadata/fields/fields.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/metadata/forms/metadata.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/operations/extrinsic.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/widgets/payload.dart';
+import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/widgets/send_transaction.dart';
+import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/widgets/substrate_transaction_fee.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
+import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 
 class SubstrateTransactionExtrinsicWidget extends StatelessWidget {
   final SubstrateTransactionExtrinsicOperation form;
+  final BuildContext mainContext;
   List<MetadataFormValidator> get payloadFields =>
       form.extrinsicPayloadValidators;
   List<MetadataFormValidator> get extrinsicFields => form.extrinsicValidators;
-  const SubstrateTransactionExtrinsicWidget({required this.form, super.key});
+  const SubstrateTransactionExtrinsicWidget(
+      {required this.form, required this.mainContext, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +28,8 @@ class SubstrateTransactionExtrinsicWidget extends StatelessWidget {
           BuildExtrinsicPage.payload: (context) => _CreatePayload(field: form),
           BuildExtrinsicPage.extrinsic: (context) =>
               _CreateExtrinsic(field: form),
-          BuildExtrinsicPage.review: (context) => _Review(field: form)
+          BuildExtrinsicPage.review: (context) =>
+              _Review(field: form, mainContext: mainContext)
         });
       },
     );
@@ -47,7 +52,7 @@ class _CreatePayload extends StatelessWidget {
             account: field.account,
             metadata: field.metadata,
           )),
-      SubstrateTransactionStateSendTransaction(
+      _SubstrateTransactionStateSendTransaction(
           controller: field,
           name: 'create_payload'.tr,
           onTap: field.onCreatePayload)
@@ -72,7 +77,7 @@ class _CreateExtrinsic extends StatelessWidget {
             account: field.account,
             metadata: field.metadata,
           )),
-      SubstrateTransactionStateSendTransaction(
+      _SubstrateTransactionStateSendTransaction(
           controller: field,
           name: 'create_extrinsic'.tr,
           onTap: field.onCreateExtrinsic)
@@ -83,7 +88,8 @@ class _CreateExtrinsic extends StatelessWidget {
 class _Review extends StatelessWidget {
   List<MetadataFormValidator> get extrinsicFields => field.extrinsicValidators;
   final SubstrateTransactionExtrinsicOperation field;
-  const _Review({required this.field});
+  final BuildContext mainContext;
+  const _Review({required this.field, required this.mainContext});
   @override
   Widget build(BuildContext context) {
     return MultiSliver(children: [
@@ -93,26 +99,31 @@ class _Review extends StatelessWidget {
       Text("extrinsic".tr, style: context.textTheme.titleMedium),
       WidgetConstant.height8,
       ContainerWithBorder(
-          child: CopyableTextWidget(
+          child: LargeTextContainer(
               text: field.payload.serializedExtrinsic,
               color: context.onPrimaryContainer,
               maxLines: 3)),
       WidgetConstant.height20,
-      TransactionFeeView(controller: field),
-      TransactionStateSendTransaction(controller: field)
+      // TransactionFeeView(
+      //   controller: field,
+      //   onRetryFeeEstimate: () => field.estimateFee(),
+      // ),
+      SubstrateTransactionFeeWidget(
+        fee: field.txFee,
+        onRetryFeeEstimate: field.estimateFee,
+      ),
+      SubstrateTransactionStateSendTransaction(
+          controller: field, mainContext: mainContext)
     ]);
   }
 }
 
-class SubstrateTransactionStateSendTransaction extends StatelessWidget {
+class _SubstrateTransactionStateSendTransaction extends StatelessWidget {
   final TransactionStateController controller;
   final String name;
   final DynamicVoid onTap;
-  const SubstrateTransactionStateSendTransaction(
-      {super.key,
-      required this.controller,
-      required this.name,
-      required this.onTap});
+  const _SubstrateTransactionStateSendTransaction(
+      {required this.controller, required this.name, required this.onTap});
 
   @override
   Widget build(BuildContext context) {

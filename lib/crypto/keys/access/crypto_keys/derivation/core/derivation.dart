@@ -16,7 +16,7 @@ enum AddressDerivationType {
   }
 }
 
-abstract final class AddressDerivationIndex with CborSerializable, Equatable {
+abstract final class AddressDerivationIndex with CborSerializable, Equality {
   const AddressDerivationIndex._();
   String? get hdPath;
   CryptoCoins get currencyCoin;

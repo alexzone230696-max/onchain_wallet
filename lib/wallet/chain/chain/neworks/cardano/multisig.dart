@@ -4,7 +4,7 @@ mixin CardanoMultiSigBase {
   abstract final CardanoMultiSignatureAddressDetails multiSignatureAddress;
 }
 
-class CardanoMultiSigSignerDetails with Equatable, CborSerializable {
+class CardanoMultiSigSignerDetails with Equality, CborSerializable {
   CardanoMultiSigSignerDetails._(
       {required List<int> publicKey, required this.keyIndex})
       : publicKey = publicKey.asImmutableBytes;

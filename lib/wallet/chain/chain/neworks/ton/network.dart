@@ -1,7 +1,7 @@
 part of 'package:on_chain_wallet/wallet/chain/chain/chain.dart';
 
 class TonNetworkController extends NetworkController<ITonAddress, TonChain,
-    Web3TonChainAccount, Web3InternalDefaultChain> {
+    Web3TonChainAccount, Web3InternalDefaultChain, ChainConfig> {
   TonNetworkController({
     super.networks,
     required super.id,
@@ -11,7 +11,7 @@ class TonNetworkController extends NetworkController<ITonAddress, TonChain,
   Future<Web3TonChainAuthenticated> createWeb3ChainAuthenticated(
     Web3ApplicationAuthentication app,
   ) async {
-    final internalNetwork = await getWeb3InternalChainAuthenticated(app);
+    final internalNetwork = await _getWeb3InternalChainAuthenticated(app);
     final web3Networks = _networks.values
         .map((e) => Web3ChainDefaultIdnetifier(
               id: e.network.value,

@@ -1,17 +1,18 @@
 import 'dart:async';
-import 'package:bitcoin_base/bitcoin_base.dart';
-import 'package:blockchain_utils/utils/binary/utils.dart';
-import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
-import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 
-import 'package:on_chain_wallet/wallet/wallet.dart';
-import 'package:on_chain_wallet/wallet/web3/networks/networks.dart';
+import 'package:bitcoin_base/bitcoin_base.dart';
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
+import 'package:blockchain_utils/utils/binary/utils.dart';
 import 'package:on_chain/ethereum/src/address/evm_address.dart';
 import 'package:on_chain/solana/src/address/sol_address.dart';
 import 'package:on_chain/solana/src/transaction/transaction/transaction.dart';
 import 'package:on_chain_swap/on_chain_swap.dart';
+import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
+import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
+import 'package:on_chain_wallet/wallet/web3/networks/networks.dart';
 import 'package:polkadot_dart/polkadot_dart.dart';
 
 class SwapTransactionStateController extends StateController {
@@ -20,7 +21,7 @@ class SwapTransactionStateController extends StateController {
   final APPSwapRoute route;
   List<ChainAccount> get sources => route.sources;
   ReceiptAddress get destAddress => route.destAddress;
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   final StreamPageProgressController progressKey =
       StreamPageProgressController();
   TransactionOperationStep? _step;
@@ -251,14 +252,14 @@ class SwapTransactionStateController extends StateController {
                     });
                   });
         } finally {
-          bitcoinClient.dispose();
+          bitcoinClient.close();
         }
       default:
     }
   }
 
   Future<void> signTransaction() async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       StreamController<(TransactionOperationStep, String?)> onstatus =
           StreamController();
       _latestError = null;

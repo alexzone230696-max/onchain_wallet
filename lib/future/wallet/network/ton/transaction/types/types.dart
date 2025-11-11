@@ -101,6 +101,7 @@ class TonTransactionFeeData
 }
 
 abstract class BaseTonTransactionController extends TransactionStateController<
+    TonJettonToken,
     ITonAddress,
     TonClient,
     WalletTonNetwork,
@@ -109,7 +110,8 @@ abstract class BaseTonTransactionController extends TransactionStateController<
     ITonTransaction,
     ITonSignedTransaction,
     TonWalletTransaction,
-    SubmitTransactionSuccess<ITonSignedTransaction>> {
+    SubmitTransactionSuccess<ITonSignedTransaction>,
+    TonTransactionFeeData> {
   BaseTonTransactionController(
       {required super.walletProvider,
       required super.account,
@@ -164,7 +166,9 @@ class ITonSignedTransaction
 class TonSimulateTransaction {
   final Message message;
   final ITonAddress address;
-  const TonSimulateTransaction({required this.message, required this.address});
+  final List<OutActionSendMsg> messages;
+  const TonSimulateTransaction(
+      {required this.message, required this.address, required this.messages});
 }
 
 class TonSignedTransaction {

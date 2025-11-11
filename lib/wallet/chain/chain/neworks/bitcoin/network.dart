@@ -1,7 +1,11 @@
 part of 'package:on_chain_wallet/wallet/chain/chain/chain.dart';
 
-class BitcoinNetworkController extends NetworkController<IBitcoinAddress,
-    BitcoinChain, Web3BitcoinChainAccount, Web3InternalDefaultChain> {
+class BitcoinNetworkController extends NetworkController<
+    IBitcoinAddress,
+    BitcoinChain,
+    Web3BitcoinChainAccount,
+    Web3InternalDefaultChain,
+    ChainConfig> {
   BitcoinNetworkController({super.networks, required super.id})
       : super(type: NetworkType.bitcoinAndForked);
 
@@ -9,7 +13,7 @@ class BitcoinNetworkController extends NetworkController<IBitcoinAddress,
   Future<Web3BitcoinChainAuthenticated> createWeb3ChainAuthenticated(
     Web3ApplicationAuthentication app,
   ) async {
-    final internalNetwork = await getWeb3InternalChainAuthenticated(app);
+    final internalNetwork = await _getWeb3InternalChainAuthenticated(app);
     final web3Networks = _networks.values
         .map((e) => Web3BitcoinChainIdnetifier(
             id: e.network.value,
@@ -51,7 +55,8 @@ class BitcoinCashNetworkController extends NetworkController<
     IBitcoinCashAddress,
     BitcoinChain,
     Web3BitcoinCashChainAccount,
-    Web3InternalDefaultChain> {
+    Web3InternalDefaultChain,
+    ChainConfig> {
   BitcoinCashNetworkController({super.networks, required super.id})
       : super(type: NetworkType.bitcoinCash);
 
@@ -59,7 +64,7 @@ class BitcoinCashNetworkController extends NetworkController<
   Future<Web3BitcoinCashChainAuthenticated> createWeb3ChainAuthenticated(
     Web3ApplicationAuthentication app,
   ) async {
-    final internalNetwork = await getWeb3InternalChainAuthenticated(app);
+    final internalNetwork = await _getWeb3InternalChainAuthenticated(app);
     final web3Networks = _networks.values
         .map((e) => Web3BitcoinCashChainIdnetifier(
             id: e.network.value,

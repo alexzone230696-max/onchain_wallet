@@ -3,22 +3,24 @@ import 'package:on_chain_wallet/app/models/models/typedef.dart';
 import 'package:on_chain_wallet/app/utils/list/extension.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 
-class TransactionFeeView extends StatelessWidget {
+class TransactionFeeView<FEE extends TransactionFeeData>
+    extends StatelessWidget {
   const TransactionFeeView(
       {super.key,
       this.onTapManual,
       required this.controller,
-      this.onRetryFeeEstimate});
-  final TransactionStateController controller;
+      this.onRetryFeeEstimate,
+      this.errorBuilder});
+  final TRANSACTIONSTATECONTROLLERFEE<FEE> controller;
   final DynamicVoid? onTapManual;
   final DynamicVoid? onRetryFeeEstimate;
-  TransactionFeeData get fee => controller.txFee;
+  final TRANSACTIONFEEERRORBUILDER<FEE>? errorBuilder;
+  FEE get fee => controller.txFee;
   @override
   Widget build(BuildContext context) {
-    return TransactionFeeWidget(
+    return TransactionFeeWidget<FEE>(
         fee: fee,
         onTapManual: onTapManual,
         getMaxFeeInput: controller.getMaxFeeInput,
@@ -26,17 +28,23 @@ class TransactionFeeView extends StatelessWidget {
   }
 }
 
-class TransactionFeeWidget extends StatelessWidget {
+typedef TRANSACTIONFEEERRORBUILDER<FEE extends TransactionFeeData> = Widget
+    Function(BuildContext contet, FEE fee);
+
+class TransactionFeeWidget<FEE extends TransactionFeeData>
+    extends StatelessWidget {
   const TransactionFeeWidget(
       {super.key,
       required this.fee,
       required this.getMaxFeeInput,
       this.onTapManual,
-      this.onRetryFeeEstimate});
-  final TransactionFeeData fee;
+      this.onRetryFeeEstimate,
+      this.errorBuilder});
+  final FEE fee;
   final DynamicVoid? onTapManual;
   final GETMAXFEEINPUT getMaxFeeInput;
   final DynamicVoid? onRetryFeeEstimate;
+  final TRANSACTIONFEEERRORBUILDER<FEE>? errorBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -69,13 +77,17 @@ class TransactionFeeWidget extends StatelessWidget {
                                     fee.fee.description ?? '',
                                     style:
                                         context.onPrimaryTextTheme.bodySmall)),
-                            ErrorTextContainer(
-                                error: fee.fee.error,
-                                errorIcon: onRetryFeeEstimate == null
-                                    ? Icons.error
-                                    : Icons.refresh,
-                                enableTap: false,
-                                oTapError: onRetryFeeEstimate)
+                            ConditionalWidget(
+                                enable: errorBuilder != null,
+                                onDeactive: (context) => ErrorTextContainer(
+                                    error: fee.fee.error,
+                                    errorIcon: onRetryFeeEstimate == null
+                                        ? Icons.error
+                                        : Icons.refresh,
+                                    enableTap: false,
+                                    oTapError: onRetryFeeEstimate),
+                                onActive: (context) =>
+                                    errorBuilder!(context, fee)),
                           ],
                         ),
                       ),
@@ -122,14 +134,28 @@ class TransactionFeeWidget extends StatelessWidget {
                                                       style: context
                                                           .primaryTextTheme
                                                           .bodySmall)),
-                                              ErrorTextContainer(
-                                                  error: fee.fee.error,
-                                                  enableTap: false,
-                                                  errorIcon:
-                                                      onRetryFeeEstimate == null
-                                                          ? Icons.error
-                                                          : Icons.refresh,
-                                                  oTapError: onRetryFeeEstimate)
+                                              ConditionalWidget(
+                                                  enable: fee.fee.hasError,
+                                                  onActive: (context) => ConditionalWidget(
+                                                      enable: errorBuilder !=
+                                                          null,
+                                                      onDeactive: (context) =>
+                                                          ErrorTextContainer(
+                                                              error: fee
+                                                                  .fee.error,
+                                                              enableTap: false,
+                                                              errorIcon:
+                                                                  onRetryFeeEstimate ==
+                                                                          null
+                                                                      ? Icons
+                                                                          .error
+                                                                      : Icons
+                                                                          .refresh,
+                                                              oTapError:
+                                                                  onRetryFeeEstimate),
+                                                      onActive: (context) =>
+                                                          errorBuilder!(
+                                                              context, fee))),
                                             ]),
                                       )
                                     ],

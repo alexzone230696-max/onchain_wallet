@@ -10,7 +10,7 @@ mixin StellarTransactionApiController on DisposableMixin {
 
   Future<void> trackAccountActivity(
       TransactionResourceRequirementStellarAccountActivity receiver) async {
-    await receiver.lock.synchronized(() async {
+    await receiver.lock.run(() async {
       if (!receiver.status.canTry) return;
       receiver.setPendig();
       final result = await MethodUtils.call(() async {

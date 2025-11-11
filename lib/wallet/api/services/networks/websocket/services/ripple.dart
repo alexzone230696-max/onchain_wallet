@@ -15,7 +15,7 @@ class RippleWebsocketService extends WebSocketService<RippleAPIProvider>
       {Duration? timeout}) async {
     final SocketRequestCompleter message =
         SocketRequestCompleter(params.body(websoket: true)!, params.requestID);
-    final r = await addMessage(message, timeout ?? defaultTimeOut);
+    final r = await post(message, timeout ?? defaultTimeOut);
     return params.toResponse(r);
   }
 }

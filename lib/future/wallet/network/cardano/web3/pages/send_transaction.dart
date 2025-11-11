@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/address_details.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/receipt_address_view.dart';
 import 'package:on_chain_wallet/future/wallet/network/cardano/web3/operations/send_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/cardano/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/web3_request_page_builder.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/widgets/widgets/json/json/widgets.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/cardano/methods/methods.dart';
 
@@ -398,6 +398,7 @@ class _OutputView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomizedContainer(
+      enableTap: false,
       iconAlginment: CrossAxisAlignment.start,
       onTapStackIcon: output.isChange ? () {} : null,
       reverseColor: context.primaryContainer,

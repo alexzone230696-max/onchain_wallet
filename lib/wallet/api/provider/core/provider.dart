@@ -1,7 +1,8 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
-import 'package:on_chain_wallet/app/euqatable/equatable.dart';
+import 'package:on_chain_wallet/app/http/models/auth.dart';
 import 'package:on_chain_wallet/app/serialization/cbor/cbor.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/api/constant/constant.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/aptos.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/bitcoin/providers/provider.dart';
@@ -18,10 +19,8 @@ import 'package:on_chain_wallet/wallet/api/provider/networks/ton.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/tron.dart';
 import 'package:on_chain_wallet/wallet/api/services/models/models.dart';
 import 'package:on_chain_wallet/wallet/models/network/network.dart';
-import 'package:on_chain_wallet/crypto/types/networks.dart';
-import 'package:on_chain_wallet/app/http/models/auth.dart';
 
-abstract class APIProvider with Equatable, CborSerializable {
+abstract class APIProvider with Equality, CborSerializable {
   const APIProvider(
       {required this.protocol,
       this.auth,
@@ -34,7 +33,7 @@ abstract class APIProvider with Equatable, CborSerializable {
   bool get isDefaultProvider =>
       identifier.startsWith(ProvidersConst.defaultidentifierName);
 
-  T toProvider<T extends APIProvider>() {
+  T cast<T extends APIProvider>() {
     if (this is! T) {
       throw AppExceptionConst.internalError("APIProvider.toProvider");
     }
@@ -46,7 +45,7 @@ abstract class APIProvider with Equatable, CborSerializable {
 
   String get callUrl;
 
-  factory APIProvider.fromCborBytesOrObject(WalletNetwork network,
+  factory APIProvider.deserialize(WalletNetwork network,
       {List<int>? bytes, CborObject? obj}) {
     switch (network.type) {
       case NetworkType.ethereum:
@@ -86,10 +85,9 @@ abstract class APIProvider with Equatable, CborSerializable {
   }
 }
 
-abstract class ProviderIdentifier with Equatable, CborSerializable {
+abstract class ProviderIdentifier with Equality, CborSerializable {
   final NetworkType network;
   const ProviderIdentifier({required this.network});
-
   factory ProviderIdentifier.deserialize(
       {List<int>? bytes, String? hex, CborObject? cbor}) {
     final CborTagValue tag =
@@ -110,10 +108,14 @@ abstract class ProviderIdentifier with Equatable, CborSerializable {
 
 class DefaultProviderIdentifier extends ProviderIdentifier {
   final String identifier;
-  const DefaultProviderIdentifier._(
-      {required this.identifier, required super.network});
-  factory DefaultProviderIdentifier(
-      {required String identifier, required NetworkType network}) {
+  const DefaultProviderIdentifier._({
+    required this.identifier,
+    required super.network,
+  });
+  factory DefaultProviderIdentifier({
+    required String identifier,
+    required NetworkType network,
+  }) {
     assert(
         network != NetworkType.aptos, "Invalid provider identifier network.");
     return DefaultProviderIdentifier._(

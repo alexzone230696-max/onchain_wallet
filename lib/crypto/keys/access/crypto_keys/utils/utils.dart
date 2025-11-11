@@ -347,18 +347,27 @@ class CryptoKeyUtils {
 
   static String normalizePublicKeyHex(
       String keyBytes, EllipticCurveTypes type) {
-    final key = StringUtils.normalizeHex(keyBytes);
+    final key = BytesUtils.fromHexString(keyBytes);
+    return BytesUtils.toHexString(normalizePublicKeyBytes(key, type));
+  }
+
+  static List<int> normalizePublicKeyBytes(
+      List<int> keyBytes, EllipticCurveTypes type) {
+    // final key = StringUtils.normalizeHex(keyBytes);
     switch (type) {
       case EllipticCurveTypes.ed25519:
       case EllipticCurveTypes.ed25519Kholaw:
-        assert(key.length >= Ed25519KeysConst.pubKeyByteLen * 2,
-            "invalid public key");
-        if (key.length <= Ed25519KeysConst.pubKeyByteLen * 2) {
-          return key;
+        if (keyBytes.length == Ed25519KeysConst.pubKeyByteLen) {
+          return keyBytes;
         }
-        return key.substring(key.length - Ed25519KeysConst.pubKeyByteLen * 2);
+        if (keyBytes.length !=
+            Ed25519KeysConst.pubKeyByteLen +
+                Ed25519KeysConst.pubKeyPrefix.length) {
+          throw AppCryptoExceptionConst.invalidPublicKey;
+        }
+        return keyBytes.sublist(Ed25519KeysConst.pubKeyPrefix.length);
       default:
-        return key;
+        return keyBytes;
     }
   }
 
@@ -477,10 +486,8 @@ class CryptoKeyUtils {
       required List<int> clientDataJSON,
       required List<int> signature,
       required List<int> pubKeyBytes}) {
-    final digest = QuickCrypto.sha256Hash([
-      ...authenticatorData,
-      ...QuickCrypto.sha256DoubleHash(clientDataJSON)
-    ]);
+    final digest = QuickCrypto.sha256Hash(
+        [...authenticatorData, ...QuickCrypto.sha256Hash(clientDataJSON)]);
     final derSignature = Secp256k1EcdsaSignature.fromDer(signature);
     final pk = Nist256p1PublicKey.fromBytes(pubKeyBytes);
     return pk.publicKey.verifies(

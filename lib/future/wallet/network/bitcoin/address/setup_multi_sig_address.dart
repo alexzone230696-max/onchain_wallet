@@ -4,12 +4,12 @@ import 'package:blockchain_utils/utils/numbers/rational/big_rational.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
+import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/wallet/constant/networks/bitcoin.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
-import 'package:on_chain_wallet/crypto/types/networks.dart';
 
 class SetupBitcoinMultiSigAddressView extends StatefulWidget {
   const SetupBitcoinMultiSigAddressView({super.key});
@@ -298,13 +298,6 @@ class _BitcoinMultisigAddressSetup extends StatelessWidget {
                   enableTap: false,
                   onTapStackIcon: () => state.onRemovePublicKey(signer),
                   onStackIcon: Icons.remove_circle,
-                  // onRemoveIcon: IconButton(
-                  //     onPressed: () {
-                  //       state.onRemovePublicKey(signer);
-                  //     },
-                  //     icon: Icon(Icons.remove_circle,
-                  //         color: context.onPrimaryContainer)),
-                  // onRemove: () {},
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -363,7 +356,7 @@ class _BitcoinMultisigAddressSetup extends StatelessWidget {
                                     coins: state.chainAccount.network.coins))
                             .then(state.onAddPublicKey);
                       },
-                      icon: Icon(Icons.add)),
+                      icon: Icon(Icons.add_box)),
                 ],
               ),
               child: Text("tap_to_chose_or_create_public_key".tr)),

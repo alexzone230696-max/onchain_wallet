@@ -1,12 +1,10 @@
+import 'package:blockchain_utils/bip/bip.dart';
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
-import 'package:on_chain_wallet/wallet/api/provider/provider.dart';
-
+import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/params/params.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
-import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
-import 'package:blockchain_utils/bip/bip.dart';
 
 enum AptosChainType {
   devnet(null),
@@ -27,7 +25,7 @@ enum AptosChainType {
   }
 }
 
-class AptosNetworkParams extends NetworkCoinParams<AptosAPIProvider> {
+class AptosNetworkParams extends NetworkCoinParams {
   final AptosChainType aptosChainType;
 
   factory AptosNetworkParams.fromCborBytesOrObject(
@@ -37,10 +35,6 @@ class AptosNetworkParams extends NetworkCoinParams<AptosAPIProvider> {
 
     return AptosNetworkParams(
         token: Token.deserialize(obj: values.elementAsCborTag(0)),
-        providers: values
-            .elementAsListOf<CborTagValue>(1)
-            .map((e) => AptosAPIProvider.fromCborBytesOrObject(obj: e))
-            .toList(),
         aptosChainType: AptosChainType.fromValue(values.elementAs(2)),
         chainType: ChainType.fromValue(values.elementAs(3)),
         addressExplorer: values.elementAs(4),
@@ -49,7 +43,6 @@ class AptosNetworkParams extends NetworkCoinParams<AptosAPIProvider> {
   }
   AptosNetworkParams(
       {required super.token,
-      required super.providers,
       required super.chainType,
       required this.aptosChainType,
       super.addressExplorer,
@@ -61,8 +54,7 @@ class AptosNetworkParams extends NetworkCoinParams<AptosAPIProvider> {
     return CborTagValue(
         CborSerializable.fromDynamic([
           token.toCbor(),
-          CborSerializable.fromDynamic(
-              providers.map((e) => e.toCbor()).toList()),
+          CborNullValue(),
           aptosChainType.id,
           chainType.name,
           addressExplorer,
@@ -73,16 +65,14 @@ class AptosNetworkParams extends NetworkCoinParams<AptosAPIProvider> {
   }
 
   @override
-  NetworkCoinParams<AptosAPIProvider> updateParams(
-      {List<APIProvider>? updateProviders,
-      Token? token,
+  NetworkCoinParams updateParams(
+      {Token? token,
       String? transactionExplorer,
       String? addressExplorer,
       int? bip32CoinType}) {
     return AptosNetworkParams(
         token: NetworkCoinParams.validateUpdateParams(
             token: this.token, updateToken: token),
-        providers: updateProviders?.cast<AptosAPIProvider>() ?? providers,
         chainType: chainType,
         aptosChainType: aptosChainType,
         addressExplorer: addressExplorer,

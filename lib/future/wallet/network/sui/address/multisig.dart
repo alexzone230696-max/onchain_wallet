@@ -1,5 +1,6 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:on_chain/sui/sui.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
@@ -10,7 +11,6 @@ import 'package:on_chain_wallet/future/wallet/network/sui/account/state.dart';
 import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
-import 'package:on_chain/sui/sui.dart';
 
 enum _Pages { threshold, pickAddresses, review }
 
@@ -419,7 +419,7 @@ class _PickAddress extends StatelessWidget {
                       IconButton(
                           tooltip: 'generate_public_key'.tr,
                           onPressed: state.addPublicKey,
-                          icon: Icon(Icons.add)),
+                          icon: Icon(Icons.add_box)),
                     ],
                   ),
                   child: Text("tap_to_chose_or_create_public_key".tr),
@@ -495,6 +495,7 @@ class _ShowAddressView extends StatelessWidget {
     return CustomizedContainer(
       onTapStackIcon: onRemove == null ? null : () => onRemove!(signer),
       onStackIcon: Icons.remove_circle,
+      enableTap: false,
       iconAlginment: CrossAxisAlignment.start,
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text("public_key".tr, style: context.onPrimaryTextTheme.labelLarge),
@@ -557,7 +558,7 @@ class _ShowAddressView extends StatelessWidget {
   }
 }
 
-class _SuiSigner with Equatable {
+class _SuiSigner with Equality {
   final Bip32AddressIndex keyIndex;
   final List<int> publicKey;
   final ISuiAddress? account;

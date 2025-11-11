@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:on_chain_wallet/app/constant/global/app.dart';
-import 'package:on_chain_wallet/app/utils/method/utiils.dart';
+import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 import 'package:on_chain_wallet/future/wallet/account/account.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/account/state.dart';
@@ -85,8 +84,14 @@ class _SubstrateMetadataRuntimeApiWidgetState
     updateState();
   }
 
-  Future<void> init() async {
-    apis = metadata.metadataInfos.apis!;
+  void init() {
+    final apis = metadata.metadataInfos.apis;
+    if (!metadata.supportRuntimeApi || apis == null) {
+      progressKey.errorText("unsupported_current_network_feature".tr,
+          backToIdle: false);
+      return;
+    }
+    this.apis = metadata.metadataInfos.apis!;
     items = {for (final i in apis) i: Text(i.name)};
     api = apis.first;
     progressKey.backToIdle();
@@ -140,7 +145,7 @@ class _SubstrateMetadataRuntimeApiWidgetState
   @override
   void onInitOnce() {
     super.onInitOnce();
-    MethodUtils.after(() => init(), duration: APPConst.animationDuraion);
+    init();
   }
 
   @override

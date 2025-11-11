@@ -3,10 +3,9 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/app/isolate/types.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/ethereum.dart';
 import 'package:on_chain_wallet/wallet/api/services/impl/http/http.dart';
-import 'package:on_chain/on_chain.dart';
 
 class EthereumHTTPService extends HTTPService<EthereumAPIProvider>
-    implements EthereumServiceProvider {
+    implements MultichainServiceProvider {
   EthereumHTTPService({
     required this.provider,
     this.isolate = APPIsolate.current,
@@ -21,7 +20,7 @@ class EthereumHTTPService extends HTTPService<EthereumAPIProvider>
   @override
   final Duration? requestTimeout;
   @override
-  Future<BaseServiceResponse<T>> doRequest<T>(EthereumRequestDetails params,
+  Future<BaseServiceResponse<T>> doRequest<T>(BaseServiceRequestParams params,
       {Duration? timeout}) async {
     final r = await serviceRequest<T>(params,
         uri: params.toUri(provider.callUrl),

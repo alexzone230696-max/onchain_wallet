@@ -38,8 +38,9 @@ class _ImportEthereumNetworkState extends State<ImportEthereumNetwork>
     }
     pageKey.progressText("updating_network".tr);
     final import = await MethodUtils.call(() async {
-      final newNetwork = WalletEthereumNetwork(-1, params);
-      await context.wallet.wallet.updateImportNetwork(newNetwork);
+      final newNetwork = WalletEthereumNetwork(-1, params.$1);
+      await context.wallet.wallet
+          .importNewNetwork(network: newNetwork, providers: [params.$2]);
     });
     if (import.hasError) {
       pageKey.errorText(import.localizationError,

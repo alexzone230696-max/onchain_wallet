@@ -1,14 +1,41 @@
 import 'package:on_chain_bridge/platform_interface.dart';
 import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/http/models/auth.dart';
 import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/api/api.dart';
 import 'package:on_chain_wallet/wallet/models/network/network.dart';
+import 'package:on_chain_wallet/wallet/models/networks/tron/models/chain_type.dart'
+    show TronChainType;
 import 'package:ton_dart/ton_dart.dart';
-import 'package:on_chain_wallet/app/http/models/auth.dart';
 
 class ProvidersConst {
   static const String tonApiName = "Ton API";
   static const String aptosGraphQlName = "Aptos GraphQL";
+  static TronAPIProvider getTronDefaultProvider(TronChainType chain) {
+    return switch (chain) {
+      TronChainType.mainnet => TronAPIProvider(
+          identifier: "${defaultidentifierName}60",
+          httpNodeUri: "https://api.trongrid.io",
+          solidityProvider: EthereumAPIProvider(
+            identifier: "${defaultidentifierName}61",
+            uri: "https://api.trongrid.io/jsonrpc",
+          )),
+      TronChainType.nile => TronAPIProvider(
+          identifier: "${defaultidentifierName}64",
+          httpNodeUri: "https://nile.trongrid.io",
+          solidityProvider: EthereumAPIProvider(
+              identifier: "${defaultidentifierName}65",
+              uri: "https://nile.trongrid.io/jsonrpc")),
+      TronChainType.shasta => TronAPIProvider(
+          identifier: "${defaultidentifierName}62",
+          httpNodeUri: "https://api.shasta.trongrid.io",
+          solidityProvider: EthereumAPIProvider(
+            identifier: "${defaultidentifierName}63",
+            uri: "https://api.shasta.trongrid.io/jsonrpc",
+          )),
+    };
+  }
+
   static List<APIProviderServiceInfo> networkSupportServices(
       WalletNetwork network) {
     return switch (network.type) {
@@ -542,6 +569,21 @@ class ProvidersConst {
           identifier: "${defaultidentifierName}466",
           uri: "wss://rpc-pdot.chainflip.io:443"),
     ],
+    467: <APIProvider>[
+      SubstrateAPIProvider(
+          identifier: "${defaultidentifierName}1",
+          uri: "wss://assethub.perseverance.chainflip.io"),
+    ],
+    468: <APIProvider>[
+      SubstrateAPIProvider(
+          identifier: "${defaultidentifierName}1",
+          uri: "wss://hydration.ibp.network"),
+    ],
+    469: <APIProvider>[
+      SubstrateAPIProvider(
+          identifier: "${defaultidentifierName}1",
+          uri: "wss://bifrost-polkadot.dotters.network"),
+    ],
 
     /// wss%3A%2F%2Ffullnode.centrifuge.io
     600: <APIProvider>[
@@ -654,6 +696,26 @@ class ProvidersConst {
       EthereumAPIProvider(
         identifier: "${defaultidentifierName}2",
         uri: "https://arbitrum-sepolia-rpc.publicnode.com",
+      ),
+    ],
+    111: <APIProvider>[
+      EthereumAPIProvider(
+        identifier: "${defaultidentifierName}1",
+        uri: "wss://wss.api.moonbeam.network",
+      ),
+      EthereumAPIProvider(
+        identifier: "${defaultidentifierName}2",
+        uri: "https://moonbeam-rpc.publicnode.com",
+      ),
+    ],
+    112: <APIProvider>[
+      EthereumAPIProvider(
+        identifier: "${defaultidentifierName}1",
+        uri: "wss://moonriver-rpc.publicnode.com",
+      ),
+      EthereumAPIProvider(
+        identifier: "${defaultidentifierName}2",
+        uri: "https://rpc.api.moonriver.moonbeam.network",
       ),
     ],
     800: <APIProvider>[

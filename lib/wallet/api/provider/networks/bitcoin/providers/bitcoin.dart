@@ -3,16 +3,17 @@ import 'package:bitcoin_base/bitcoin_base.dart'
 import 'package:blockchain_utils/cbor/core/cbor.dart';
 import 'package:blockchain_utils/cbor/types/cbor_tag.dart';
 import 'package:blockchain_utils/cbor/types/list.dart';
+import 'package:on_chain_wallet/app/http/models/auth.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
 import 'package:on_chain_wallet/app/utils/string/utils.dart';
 import 'package:on_chain_wallet/wallet/api/provider/models/bitcoin_explorer_provider_type.dart';
 import 'package:on_chain_wallet/wallet/api/services/service.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
-import 'package:on_chain_wallet/app/http/models/auth.dart';
+
 import 'provider.dart';
 
 class _BitcoinExplorerAPIProviderUtils {
-  static APIConfig getDefaultConfing(BasedUtxoNetwork network, APIType type) {
+  static APIConfig getDefaultConfig(BasedUtxoNetwork network, APIType type) {
     if (type == APIType.mempool) return APIConfig.mempool(network);
     return APIConfig.fromBlockCypher(network);
   }
@@ -20,7 +21,7 @@ class _BitcoinExplorerAPIProviderUtils {
   static APIConfig createConfig(
       {required BasedUtxoNetwork network, required APIType type, String? url}) {
     if (url == null) {
-      return getDefaultConfing(network, type);
+      return getDefaultConfig(network, type);
     }
     final String baseUrl = StrUtils.removeLastSlash(url);
     if (type == APIType.mempool) {
@@ -53,10 +54,11 @@ class _BitcoinExplorerAPIProviderUtils {
 
 class BitcoinExplorerAPIProviderConst {
   static const mempool = BitcoinExplorerAPIProvider._(
-      explorerType: BitcoinExplorerProviderType.mempool, identifier: "mempool");
+      explorerType: BitcoinExplorerProviderType.mempool,
+      identifier: "default-mempool");
   static const blockCypher = BitcoinExplorerAPIProvider._(
       explorerType: BitcoinExplorerProviderType.blockcypher,
-      identifier: "blockCypher");
+      identifier: "default-blockCyper");
 }
 
 class BitcoinExplorerAPIProvider extends BaseBitcoinAPIProvider {

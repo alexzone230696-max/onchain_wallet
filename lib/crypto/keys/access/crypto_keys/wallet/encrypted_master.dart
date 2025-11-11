@@ -11,6 +11,14 @@ final class EncryptedMasterKey with CborSerializable {
   ///  StringUtils.decode(result.keyTwo, type: StringEncoding.base64)
   final List<EncryptedCustomKey> customKeys;
   final List<EncryptedSubWallet> subWallets;
+  bool hasSubwallet(int id) {
+    return subWallets.any((e) => e.id == id);
+  }
+
+  bool hasImportedKey(String id) {
+    return customKeys.any((e) => e.id == id);
+  }
+
   EncryptedMasterKey.__({
     required this.masterKey,
     required List<EncryptedCustomKey> customKeys,

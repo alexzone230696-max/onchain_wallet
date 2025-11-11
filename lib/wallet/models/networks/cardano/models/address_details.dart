@@ -7,7 +7,7 @@ import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 import 'package:on_chain_wallet/crypto/keys/keys.dart';
 import 'package:on_chain/ada/src/address/address.dart';
 
-abstract class BaseCardanoAddressDetails with Equatable, CborSerializable {
+abstract class BaseCardanoAddressDetails with Equality, CborSerializable {
   final ADAAddressType addressType;
   abstract final List<int>? publicKey;
   abstract final List<int>? stakePubkey;

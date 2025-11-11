@@ -8,8 +8,8 @@ import 'package:on_chain_wallet/future/wallet/network/substrate/web3/pages/impor
 import 'package:on_chain_wallet/future/wallet/network/substrate/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
 import 'package:on_chain_wallet/wallet/api/api.dart';
-import 'package:on_chain_wallet/wallet/constant/networks/substrate.dart';
 import 'package:on_chain_wallet/wallet/chain/account.dart';
+import 'package:on_chain_wallet/wallet/constant/networks/substrate.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/network/params/substrate.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
@@ -134,7 +134,7 @@ class Web3SubstrateImportOrUpdateNetworkStateController
       updateParams =
           updateParams.updateSpecVersion(client.metadata.specVersion);
       final updateNetwork = chain.network.copyWith(coinParam: updateParams);
-      await walletProvider.wallet.updateImportNetwork(updateNetwork);
+      await walletProvider.wallet.updateNetwork(updateNetwork);
       return Web3RequestResponseData(response: true);
     }
     final rpcUrl = rpcKey.currentState?.getEndpoint();
@@ -155,17 +155,20 @@ class Web3SubstrateImportOrUpdateNetworkStateController
       final chainInfo = init.result!;
       final coinParam = SubstrateNetworkParams(
           token: Token(name: networkName, symbol: symbol, decimal: decimal),
-          providers: [provider],
+          // providers: [provider],
           chainType: ChainType.mainnet,
           ss58Format: chainInfo.ss58Prefix,
-          substrateChainType: chainInfo.type,
+          substrateChainType: chainInfo.extrinsic.crypto.type,
           addressExplorer: explorerAddressLink,
           transactionExplorer: explorerTransaction,
           gnesisBlock: chainInfo.genesis,
-          keyAlgorithms: chainInfo.supportedAlgorithms,
+          relaySystem: chainInfo.internalNetwork?.relaySystem,
+          consensusRole: chainInfo.internalNetwork?.role,
+          keyAlgorithms: chainInfo.extrinsic.crypto.cryptoAlgoritms,
           specVersion: chainInfo.specVersion);
       final network = WalletSubstrateNetwork(-1, coinParam);
-      await walletProvider.wallet.updateImportNetwork(network);
+      await walletProvider.wallet
+          .importNewNetwork(network: network, providers: [provider]);
       return Web3RequestResponseData(response: true);
     }
   }

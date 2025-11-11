@@ -1,7 +1,50 @@
 part of 'package:on_chain_wallet/wallet/chain/chain/chain.dart';
 
-class SubstrateNetworkController extends NetworkController<ISubstrateAddress,
-    SubstrateChain, Web3SubstrateChainAccount, Web3InternalDefaultChain> {
+class SubstrateChainConfig extends ChainConfig {
+  final bool acceptMultisigTerm;
+  final bool acceptXcmTransferTerm;
+  const SubstrateChainConfig(
+      {this.acceptMultisigTerm = false, this.acceptXcmTransferTerm = false});
+  factory SubstrateChainConfig.deserialize(
+      {List<int>? cborBytes, String? cborHex, CborObject? cborObject}) {
+    final values = CborSerializable.cborTagValue(
+        cborBytes: cborBytes,
+        hex: cborHex,
+        object: cborObject,
+        tags: NetworkType.substrate.tag);
+    return SubstrateChainConfig(
+      acceptMultisigTerm: values.valueAs(0),
+      acceptXcmTransferTerm: values.valueAs(1),
+    );
+  }
+  SubstrateChainConfig copyWith(
+      {bool? acceptMultisigTerm, bool? acceptXcmTransferTerm}) {
+    return SubstrateChainConfig(
+        acceptMultisigTerm: acceptMultisigTerm ?? this.acceptMultisigTerm,
+        acceptXcmTransferTerm:
+            acceptXcmTransferTerm ?? this.acceptXcmTransferTerm);
+  }
+
+  @override
+  CborTagValue toCbor() {
+    return CborTagValue(
+        CborListValue.definite([
+          CborBoleanValue(acceptMultisigTerm),
+          CborBoleanValue(acceptXcmTransferTerm),
+        ]),
+        network.tag);
+  }
+
+  @override
+  NetworkType get network => NetworkType.substrate;
+}
+
+class SubstrateNetworkController extends NetworkController<
+    ISubstrateAddress,
+    SubstrateChain,
+    Web3SubstrateChainAccount,
+    Web3InternalDefaultChain,
+    SubstrateChainConfig> {
   SubstrateNetworkController({
     super.networks,
     required super.id,
@@ -11,7 +54,7 @@ class SubstrateNetworkController extends NetworkController<ISubstrateAddress,
   Future<Web3SubstrateChainAuthenticated> createWeb3ChainAuthenticated(
     Web3ApplicationAuthentication app,
   ) async {
-    final internalNetwork = await getWeb3InternalChainAuthenticated(app);
+    final internalNetwork = await _getWeb3InternalChainAuthenticated(app);
     final web3Networks = _networks.values
         .map((e) => Web3SubstrateChainIdnetifier(
             genesisHash: e.network.genesisBlock,

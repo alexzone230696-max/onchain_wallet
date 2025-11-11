@@ -1,16 +1,16 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
-import 'package:on_chain_wallet/crypto/types/networks.dart';
-import 'package:on_chain_wallet/wallet/models/network/core/network.dart';
-import 'package:on_chain_wallet/wallet/models/network/params/solana.dart';
+import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:cosmos_sdk/cosmos_sdk.dart';
 import 'package:on_chain_swap/on_chain_swap.dart';
+import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
+import 'package:on_chain_wallet/wallet/api/api.dart';
+import 'package:on_chain_wallet/wallet/models/network/core/network.dart';
+import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
+import 'package:on_chain_wallet/wallet/models/network/params/solana.dart';
 
 import 'constants.dart';
 import 'models.dart';
-import 'package:blockchain_utils/blockchain_utils.dart';
-import 'package:cosmos_sdk/cosmos_sdk.dart';
-import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/wallet/api/api.dart';
-import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 
 class AppSwapServiceApi extends SwapServiceApi {
   AppSwapServiceApi(this.networks, super.services);
@@ -91,14 +91,10 @@ class AppSwapServiceApi extends SwapServiceApi {
             return e.coinParam.type == SolanaNetworkType.devnet;
           });
         case NetworkType.substrate:
+          final genesis = network.cast<SwapSubstrateNetwork>().genesis;
           final substrateChains = networks.whereType<WalletSubstrateNetwork>();
-          if (network.chainType.isMainnet) {
-            return substrateChains.firstWhereNullable((e) {
-              return e.value == APPSwapConstants.polkadotMainnetId;
-            });
-          }
           return substrateChains.firstWhereNullable((e) {
-            return e.value == APPSwapConstants.cfTestnetNetworkId;
+            return StringUtils.hexEqual(genesis, e.genesisBlock);
           });
         default:
           return null;

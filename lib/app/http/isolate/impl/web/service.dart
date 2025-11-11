@@ -3,15 +3,16 @@
 import 'dart:async';
 import 'dart:js_interop';
 import 'dart:typed_data';
+
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:on_chain_bridge/web/api/api.dart';
+import 'package:on_chain_bridge/web/web.dart' as web;
 import 'package:on_chain_wallet/app/error/exception/exception.dart';
+import 'package:on_chain_wallet/app/http/isolate/core/service.dart';
 import 'package:on_chain_wallet/app/http/isolate/exception/exception.dart';
+import 'package:on_chain_wallet/app/http/isolate/models/message.dart';
 import 'package:on_chain_wallet/app/http/isolate/models/mode.dart';
 import 'package:on_chain_wallet/app/http/models/models.dart';
-import 'package:on_chain_wallet/app/http/isolate/core/service.dart';
-import 'package:on_chain_wallet/app/http/isolate/models/message.dart';
-import 'package:on_chain_bridge/web/web.dart' as web;
-import 'package:on_chain_wallet/app/synchronized/basic_lock.dart';
 import 'package:on_chain_wallet/app/utils/utils.dart';
 
 @JS("serviceWorkerListener_")
@@ -39,18 +40,18 @@ class WebHTTPServiceWorker extends HTTPServiceWorker {
 typedef _OnIsolateError = Function(MessageEvent error, HttpWorkerMode id);
 
 class _WorkerConnector {
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   int connectorId = 0;
   final Map<int, _WorkerConnection> _workers = {};
   void _onError(MessageEvent? error, HttpWorkerMode id) {
-    _lock.synchronized(() {
+    _lock.run(() {
       _workers.remove(id.id);
     });
   }
 
   Future<_WorkerConnection> getConnector(
       {HttpWorkerMode mode = HttpWorkerMode.main}) async {
-    return await _lock.synchronized(() async {
+    return await _lock.run(() async {
       _workers[mode.id] ??= await _WorkerConnection._init(onDone: _onError);
       return _workers[mode.id]!;
     });
@@ -60,7 +61,7 @@ class _WorkerConnector {
 class _WorkerConnection {
   final Map<String, HTTPWorkerMessageCompleter> _requests = {};
   final web.Worker worker;
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   int _requestId = 0;
   void close() {
     worker.terminate();
@@ -157,7 +158,7 @@ class _WorkerConnection {
   }
 
   Future<String> _getRequestId() {
-    return _lock.synchronized(() {
+    return _lock.run(() {
       _requestId++;
       final id = HTTPWorkerMessageCompleter(_requestId.toString());
       _requests[id.id] = id;

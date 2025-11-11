@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
+import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
@@ -13,7 +13,7 @@ mixin UpdateNetworkProviderState<
     CL extends NetworkClient,
     T extends TokenCore,
     N extends NFTCore,
-    CHAIN extends Chain> on SafeState<W> {
+    CHAIN extends APPCHAINPROVIDER<PROVIDER>> on SafeState<W> {
   final StreamPageProgressController progressKey =
       StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
   bool useAuthenticated = false;
@@ -23,18 +23,16 @@ mixin UpdateNetworkProviderState<
   late APIProviderServiceInfo service;
   String? get serviceDescription => null;
 
-  bool inAddProvider = false;
+  // bool inAddProvider = false;
   CHAIN get chain;
   WalletNetwork get network => chain.network;
-  late final List<PROVIDER> providers;
-  late final List<PROVIDER> defaultProviders;
+  late final List<ShimmerAction<PROVIDER>> providers;
+  // late final List<PROVIDER> defaultProviders;
   List<ServiceProtocol> get supportedProtocol;
   late ServiceProtocol protocol;
   bool hasAnyChange = false;
   String rpcUrl = "";
   bool enableAuthMode = false;
-  bool get enableUpdateButton =>
-      !hasAnyChange || (providers.isEmpty && defaultProviders.isEmpty);
   final GlobalKey<FormState> formKey = GlobalKey();
   final GlobalKey<AppTextFieldState> uriFieldKey = GlobalKey();
   String authKey = "";
@@ -108,8 +106,8 @@ mixin UpdateNetworkProviderState<
   }
 
   void addProvider(PROVIDER provider) {
-    providers.add(provider);
-    inAddProvider = false;
+    providers.add(ShimmerAction(object: provider));
+    // inAddProvider = false;
     rpcUrl = '';
     hasAnyChange = true;
     updateState();
@@ -177,10 +175,10 @@ mixin UpdateNetworkProviderState<
     }
   }
 
-  void createNewProvider() {
-    inAddProvider = true;
-    updateState();
-  }
+  // void createNewProvider() {
+  //   inAddProvider = true;
+  //   updateState();
+  // }
 
   String get protocolTitle {
     switch (protocol) {
@@ -206,15 +204,24 @@ mixin UpdateNetworkProviderState<
     }
   }
 
-  void deleteProvider(PROVIDER? provider) {
-    if (provider == null) return;
-    providers
-        .removeWhere((element) => element.identifier == provider.identifier);
+  Future<void> deleteProvider(ShimmerAction<PROVIDER>? provider) async {
+    if (provider == null || provider.object.isDefaultProvider) return;
+    provider.setAction(true);
+    updateState();
+    final result = await MethodUtils.call(
+        () async => await chain.removeProvider(provider.object),
+        delay: APPConst.animationDuraion);
+    if (result.hasError) {
+      context.showAlert(result.localizationError);
+      return;
+    }
+    providers.remove(provider);
+    provider.setAction(false);
     hasAnyChange = true;
     updateState();
   }
 
-  void importProvider() async {
+  Future<void> updateNetworkProviders() async {
     if (!formKey.ready()) return;
     progressKey.progressText("network_waiting_for_response".tr);
     final result = await MethodUtils.call(() async {
@@ -228,44 +235,30 @@ mixin UpdateNetworkProviderState<
           showBackButton: true, backToIdle: false);
       return;
     }
-    addProvider(result.result);
-    progressKey.success();
-  }
-
-  void updateNetworkProviders() async {
     progressKey.progressText("updating_network".tr);
-    final result = await MethodUtils.call(() async {
-      final wallet = context.watch<WalletProvider>(StateConst.main);
-      final services = providers.map((e) => e).toList();
-      final param = network.coinParam;
-      final updatedNetwork = network.copyWith(
-          coinParam: param.updateParams(
-              updateProviders: services,
-              addressExplorer: param.addressExplorer,
-              transactionExplorer: param.transactionExplorer));
-      return await wallet.wallet.updateImportNetwork(updatedNetwork);
+    final import = await MethodUtils.call(() async {
+      await chain.updateProvider(result.result);
     });
-    if (result.hasError) {
-      progressKey.errorText(result.localizationError);
+    if (import.hasError) {
+      progressKey.errorText(import.localizationError,
+          backToIdle: false, showBackButton: true);
     } else {
-      progressKey.successText(
-        "network_updated_successfully".tr,
-      );
+      addProvider(result.result);
+      progressKey.successText("network_updated_successfully".tr);
     }
   }
 
-  void onBackButton() {
-    inAddProvider = false;
-    updateState();
-  }
+  // void onBackButton() {
+  //   inAddProvider = false;
+  //   updateState();
+  // }
 
   @override
   void onInitOnce() {
     super.onInitOnce();
     MethodUtils.after(() async {
-      providers = List.from(chain.network.coinParam.providers);
-      defaultProviders =
-          ProvidersConst.getDefaultProvider<PROVIDER>(chain.network);
+      final providers = await chain.getProviders();
+      this.providers = providers.map((e) => ShimmerAction(object: e)).toList();
       services = ProvidersConst.networkSupportServices(chain.network);
       service = services.first;
       setProtocol(supportedProtocol.first);
@@ -283,314 +276,204 @@ mixin UpdateNetworkProviderState<
   Widget build(BuildContext context) {
     return ScaffoldPageView(
       appBar: AppBar(title: Text("network_update_node_provider".tr)),
-      child: PopScope(
-        onPopInvokedWithResult: (didPop, result) {
-          onBackButton();
-        },
-        canPop: !inAddProvider,
-        child: StreamPageProgress(
-          controller: progressKey,
-          // initialStatus: StreamWidgetStatus.progress,
-          // backToIdle: APPConst.twoSecoundDuration,
-          builder: (c) => UnfocusableChild(
-            child: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: ConstraintsBoxView(
-                      padding: WidgetConstant.padding20,
-                      child: Form(
-                        key: formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            PageTitleSubtitle(
-                                title: "network_security_title".tr,
-                                body: LargeTextView([
-                                  "network_security_desc".tr,
-                                  "network_change_detect_desc".tr
-                                ])),
-                            Text("network".tr,
-                                style: context.textTheme.titleMedium),
-                            WidgetConstant.height8,
-                            ContainerWithBorder(
-                                child: Text(
-                              network.coinParam.token.name,
-                              style: context.colors.onPrimaryContainer
-                                  .bodyMedium(context),
-                            )),
-                            WidgetConstant.height20,
-                            AnimatedSize(
-                                duration: APPConst.animationDuraion,
-                                child: ConditionalWidgets(
-                                    enable: !inAddProvider,
-                                    widgets: {
-                                      true: (context) => Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text("default_providers".tr,
-                                                  style: context
-                                                      .textTheme.titleMedium),
-                                              WidgetConstant.height8,
-                                              APPExpansionListTile(
-                                                title: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      "default_providers".tr,
-                                                      style: context.colors
-                                                          .onPrimaryContainer
-                                                          .bodyMedium(context),
-                                                    ),
-                                                    Text(
-                                                      "network_unbale_change_providers"
-                                                          .tr,
-                                                      style: context.colors
-                                                          .onPrimaryContainer
-                                                          .bodySmall(context),
-                                                    )
-                                                  ],
-                                                ),
-                                                children: List.generate(
-                                                    defaultProviders.length,
-                                                    (index) {
-                                                  final provider =
-                                                      defaultProviders[index];
-                                                  return ContainerWithBorder(
-                                                      backgroundColor: context
-                                                          .colors
-                                                          .onPrimaryContainer,
-                                                      child: CopyableTextWidget(
-                                                          text:
-                                                              provider.callUrl,
-                                                          color: context.colors
-                                                              .primaryContainer));
-                                                }),
-                                              ),
-                                              if (providers.isNotEmpty) ...[
-                                                WidgetConstant.height20,
-                                                Text("providers".tr,
-                                                    style: context
-                                                        .textTheme.titleMedium),
-                                                Text(
-                                                    "tap_to_add_new_service_provider"
-                                                        .tr),
-                                                WidgetConstant.height8,
-                                                ...List.generate(
-                                                    providers.length, (index) {
-                                                  final provider =
-                                                      providers[index];
-                                                  return ContainerWithBorder(
-                                                      onRemove: () {},
-                                                      enableTap: false,
-                                                      onRemoveWidget:
-                                                          IconButton(
-                                                              onPressed: () {
-                                                                deleteProvider(
-                                                                    provider);
-                                                              },
-                                                              icon: Icon(
-                                                                  Icons
-                                                                      .remove_circle,
-                                                                  color: context
-                                                                      .colors
-                                                                      .onPrimaryContainer)),
-                                                      child: CopyableTextWidget(
-                                                          text:
-                                                              provider.callUrl,
-                                                          widget: Column(
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .start,
-                                                            children: [
-                                                              Text(
-                                                                  provider
-                                                                      .protocol
-                                                                      .value,
-                                                                  style: context
-                                                                      .onPrimaryTextTheme
-                                                                      .labelLarge),
-                                                              Text(
-                                                                  provider
-                                                                      .callUrl,
-                                                                  style: context
-                                                                      .onPrimaryTextTheme
-                                                                      .bodyMedium),
-                                                            ],
-                                                          ),
-                                                          color: context.colors
-                                                              .onPrimaryContainer));
-                                                }),
-                                              ],
-                                              WidgetConstant.height20,
-                                              Text("service_provider".tr,
-                                                  style: context
-                                                      .textTheme.titleMedium),
-                                              if (serviceDescription != null)
-                                                Text(serviceDescription!),
-                                              WidgetConstant.height8,
+      child: StreamPageProgress(
+        controller: progressKey,
+        builder: (c) => UnfocusableChild(
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: ConstraintsBoxView(
+                    padding: WidgetConstant.padding20,
+                    child: Form(
+                      key: formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          PageTitleSubtitle(
+                              title: "securely_add_providers".tr,
+                              body: LargeTextView([
+                                "network_security_desc".tr,
+                                "network_change_detect_desc".tr
+                              ])),
+                          Text("network".tr,
+                              style: context.textTheme.titleMedium),
+                          WidgetConstant.height8,
+                          ContainerWithBorder(
+                              child: Text(
+                            network.coinParam.token.name,
+                            style: context.colors.onPrimaryContainer
+                                .bodyMedium(context),
+                          )),
+                          AnimatedSize(
+                              duration: APPConst.animationDuraion,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (providers.isNotEmpty) ...[
+                                    WidgetConstant.height20,
+                                    Text("providers".tr,
+                                        style: context.textTheme.titleMedium),
+                                    Text("available_network_providers".tr),
+                                    WidgetConstant.height8,
+                                    ...List.generate(providers.length, (index) {
+                                      final action = providers[index];
+                                      final provider = action.object;
+                                      final bool isDefault =
+                                          provider.isDefaultProvider;
+                                      return Shimmer(
+                                          onActive: (e, context) =>
                                               ContainerWithBorder(
-                                                enableTap: false,
-                                                onRemove: service.url == null
-                                                    ? null
-                                                    : () {
-                                                        UriUtils.lunch(
-                                                            service.url);
+                                                  onRemove:
+                                                      isDefault ? null : () {},
+                                                  enableTap: false,
+                                                  onRemoveWidget: IconButton(
+                                                      onPressed: () {
+                                                        deleteProvider(action);
                                                       },
-                                                onRemoveIcon: ToolTipView(
-                                                  key: ValueKey(service),
-                                                  message: service.url,
-                                                  child: Icon(
-                                                      Icons.open_in_new_rounded,
-                                                      color: context
-                                                          .onPrimaryContainer),
-                                                ),
-                                                child: AppDropDownBottom(
-                                                    key: ValueKey(service),
-                                                    border: InputBorder.none,
-                                                    isExpanded: true,
-                                                    fillColor: context
-                                                        .colors.transparent,
-                                                    items: {
-                                                      for (final i in services)
-                                                        i: Text(i.name,
-                                                            style: context
-                                                                .onPrimaryTextTheme
-                                                                .bodyMedium)
-                                                    },
-                                                    selectedItemBuilder: {
-                                                      for (final i in services)
-                                                        i: Text(i.name)
-                                                    },
-                                                    labelStyle: context
-                                                        .onPrimaryTextTheme
-                                                        .labelLarge,
-                                                    value: service,
-                                                    onChanged: onChangeService),
-                                              ),
-                                              WidgetConstant.height20,
-                                              Text("protocol".tr,
-                                                  style: context
-                                                      .textTheme.titleMedium),
-                                              WidgetConstant.height8,
-                                              ContainerWithBorder(
-                                                onRemove: createNewProvider,
-                                                enableTap: false,
-                                                onRemoveIcon: Icon(
-                                                    Icons.add_box,
-                                                    color: context
-                                                        .onPrimaryContainer),
-                                                child: AppDropDownBottom(
-                                                  key: ValueKey(protocol),
-                                                  border: InputBorder.none,
-                                                  fillColor: context
-                                                      .colors.transparent,
-                                                  items: {
-                                                    for (final i
-                                                        in supportedProtocol)
-                                                      i: Text(
-                                                        i.value,
-                                                        style: context.colors
-                                                            .onPrimaryContainer
-                                                            .bodyMedium(
-                                                                context),
-                                                      )
-                                                  },
-                                                  selectedItemBuilder: {
-                                                    for (final i
-                                                        in supportedProtocol)
-                                                      i: Text(i.value)
-                                                  },
-                                                  labelStyle: context
-                                                      .onPrimaryTextTheme
-                                                      .labelLarge,
-                                                  value: protocol,
-                                                  onChanged: onChangeProtocol,
-                                                ),
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  FixedElevatedButton(
-                                                    padding: WidgetConstant
-                                                        .paddingVertical20,
-                                                    onPressed: enableUpdateButton
-                                                        ? null
-                                                        : updateNetworkProviders,
-                                                    child: Text(
-                                                        "network_update_network_providers"
-                                                            .tr),
-                                                  )
-                                                ],
-                                              )
-                                            ],
-                                          ),
-                                      false: (cotext) => Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text("api_url".tr,
-                                                  style: context
-                                                      .textTheme.titleMedium),
-                                              Text(protocolTitle),
-                                              WidgetConstant.height8,
-                                              AppTextField(
-                                                key: uriFieldKey,
-                                                initialValue: rpcUrl,
-                                                onChanged: onChageUrl,
-                                                validator: validateRpcUrl,
-                                                suffixIcon: PasteTextIcon(
-                                                  onPaste: onPasteUri,
-                                                  isSensitive: false,
-                                                ),
-                                                label: "api_url".tr,
-                                                hint: protocolHint,
-                                              ),
-                                              ProviderAuthView(
-                                                  enableAuthMode:
-                                                      enableAuthMode,
-                                                  useAuthenticated:
-                                                      useAuthenticated,
-                                                  onChangeAuthenticated:
-                                                      onChangeAuthenticated,
-                                                  onChangeAuthMode:
-                                                      onChangeAuthMode,
-                                                  auth: auth,
-                                                  authKey: authKey,
-                                                  authValue: authValue,
-                                                  onChangeKey: onChangeKey,
-                                                  validateKey: validateKey,
-                                                  onChangeValue: onChangeValue,
-                                                  validateValue: validateValue,
-                                                  supportedAuths:
-                                                      supportedAuth),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  FixedElevatedButton.icon(
-                                                    padding: WidgetConstant
-                                                        .paddingVertical40,
-                                                    label: Text(
-                                                        "network_verify_server_status"
-                                                            .tr),
-                                                    onPressed: importProvider,
-                                                    icon: const Icon(
-                                                        Icons.update),
-                                                  ),
-                                                ],
-                                              )
-                                            ],
+                                                      icon: Icon(
+                                                          Icons.remove_circle,
+                                                          color: context.colors
+                                                              .onPrimaryContainer)),
+                                                  child: CopyableTextWidget(
+                                                      text: provider.callUrl,
+                                                      widget: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Text(
+                                                              provider.protocol
+                                                                  .value,
+                                                              style: context
+                                                                  .onPrimaryTextTheme
+                                                                  .labelLarge),
+                                                          Text(provider.callUrl,
+                                                              style: context
+                                                                  .onPrimaryTextTheme
+                                                                  .bodyMedium),
+                                                        ],
+                                                      ),
+                                                      color: context.colors
+                                                          .onPrimaryContainer)),
+                                          enable: !action.action);
+                                    }),
+                                  ],
+                                  WidgetConstant.height20,
+                                  Text("service_provider".tr,
+                                      style: context.textTheme.titleMedium),
+                                  if (serviceDescription != null)
+                                    Text(serviceDescription!),
+                                  WidgetConstant.height8,
+                                  ContainerWithBorder(
+                                    enableTap: false,
+                                    onRemove: service.url == null
+                                        ? null
+                                        : () {
+                                            UriUtils.lunch(service.url);
+                                          },
+                                    onRemoveIcon: ToolTipView(
+                                      key: ValueKey(service),
+                                      message: service.url,
+                                      child: Icon(Icons.open_in_new_rounded,
+                                          color: context.onPrimaryContainer),
+                                    ),
+                                    child: AppDropDownBottom(
+                                        key: ValueKey(service),
+                                        isExpanded: true,
+                                        fillColor: context.colors.transparent,
+                                        items: {
+                                          for (final i in services)
+                                            i: Text(i.name,
+                                                style: context
+                                                    .onPrimaryTextTheme
+                                                    .bodyMedium)
+                                        },
+                                        selectedItemBuilder: {
+                                          for (final i in services)
+                                            i: Text(i.name)
+                                        },
+                                        labelStyle: context
+                                            .onPrimaryTextTheme.labelLarge,
+                                        value: service,
+                                        onChanged: onChangeService),
+                                  ),
+                                  WidgetConstant.height20,
+                                  Text("protocol".tr,
+                                      style: context.textTheme.titleMedium),
+                                  Text("toggle_between_available_protocols".tr),
+                                  WidgetConstant.height8,
+                                  ContainerWithBorder(
+                                    enableTap: false,
+                                    child: AppDropDownBottom(
+                                      key: ValueKey(protocol),
+                                      fillColor: context.colors.transparent,
+                                      items: {
+                                        for (final i in supportedProtocol)
+                                          i: Text(
+                                            i.value,
+                                            style: context
+                                                .colors.onPrimaryContainer
+                                                .bodyMedium(context),
                                           )
-                                    }))
-                          ],
-                        ),
-                      )),
-                ),
-              ],
-            ),
+                                      },
+                                      selectedItemBuilder: {
+                                        for (final i in supportedProtocol)
+                                          i: Text(i.value)
+                                      },
+                                      labelStyle:
+                                          context.onPrimaryTextTheme.labelLarge,
+                                      value: protocol,
+                                      onChanged: onChangeProtocol,
+                                    ),
+                                  ),
+                                  WidgetConstant.height20,
+                                  Text("api_url".tr,
+                                      style: context.textTheme.titleMedium),
+                                  Text(protocolTitle),
+                                  WidgetConstant.height8,
+                                  AppTextField(
+                                      key: uriFieldKey,
+                                      initialValue: rpcUrl,
+                                      onChanged: onChageUrl,
+                                      validator: validateRpcUrl,
+                                      suffixIcon: PasteTextIcon(
+                                        onPaste: onPasteUri,
+                                        isSensitive: false,
+                                      ),
+                                      label: "api_url".tr,
+                                      hint: protocolHint),
+                                  ProviderAuthView(
+                                      enableAuthMode: enableAuthMode,
+                                      useAuthenticated: useAuthenticated,
+                                      onChangeAuthenticated:
+                                          onChangeAuthenticated,
+                                      onChangeAuthMode: onChangeAuthMode,
+                                      auth: auth,
+                                      authKey: authKey,
+                                      authValue: authValue,
+                                      onChangeKey: onChangeKey,
+                                      validateKey: validateKey,
+                                      onChangeValue: onChangeValue,
+                                      validateValue: validateValue,
+                                      supportedAuths: supportedAuth),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      FixedElevatedButton(
+                                        padding:
+                                            WidgetConstant.paddingVertical40,
+                                        onPressed: updateNetworkProviders,
+                                        child: Text("import_provider".tr),
+                                      ),
+                                    ],
+                                  )
+                                ],
+                              ))
+                        ],
+                      ),
+                    )),
+              ),
+            ],
           ),
         ),
       ),

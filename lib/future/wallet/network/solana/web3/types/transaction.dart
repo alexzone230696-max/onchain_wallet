@@ -53,10 +53,10 @@ class SolanaWeb3TransactionInfo with DisposableMixin, StreamStateController {
 
   final IntegerBalance fee;
 
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
 
   Future<void> getFee() async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       if (!feeStatus.canRetry) return;
       _feeStatus = SolanaWeb3FeeStatus.pending;
       notify();
@@ -78,7 +78,7 @@ class SolanaWeb3TransactionInfo with DisposableMixin, StreamStateController {
   }
 
   Future<void> simulate() async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       if (!status.canRetry) return;
       _status = SolanaWeb3SimulationStatus.pending;
       notify();

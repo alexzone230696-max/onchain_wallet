@@ -7,4 +7,14 @@ class ListUtils {
     }
     return result;
   }
+
+  static List<List<T>> combineLists<T>(List<T> mainList, List<T> otherList) {
+    List<List<T>> result = [];
+    for (var mainValue in mainList) {
+      for (var otherValue in otherList) {
+        result.add([mainValue, otherValue]);
+      }
+    }
+    return result;
+  }
 }

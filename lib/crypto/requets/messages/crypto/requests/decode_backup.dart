@@ -39,9 +39,13 @@ class CryptoRequestDecodeBackup
 
   @override
   MessageArgsOneBytes getResult() {
-    final decode = Web3SecretStorageDefinationV3.decode(backup, password,
-        encoding: encoding);
-    return MessageArgsOneBytes(keyOne: decode.data);
+    try {
+      final decode = Web3SecretStorageDefinationV3.decode(backup, password,
+          encoding: encoding);
+      return MessageArgsOneBytes(keyOne: decode.data);
+    } catch (e) {
+      throw WalletExceptionConst.failedToRestoreBackup;
+    }
   }
 
   @override

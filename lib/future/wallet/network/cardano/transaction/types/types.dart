@@ -18,7 +18,7 @@ class CardanoUtxo {
   }
 }
 
-class ADAAssetToken with Equatable {
+class ADAAssetToken with Equality {
   final PolicyID id;
   final AssetName name;
   final Token token;
@@ -142,6 +142,7 @@ class CardanoAccountUtxo with Equality {
 }
 
 abstract class BaseADATransactionController extends TransactionStateController<
+    TokenCore,
     ICardanoAddress,
     ADAClient,
     WalletCardanoNetwork,
@@ -150,7 +151,8 @@ abstract class BaseADATransactionController extends TransactionStateController<
     IADATransaction,
     IADASignedTransaction,
     ADAWalletTransaction,
-    SubmitTransactionSuccess<IADASignedTransaction>> {
+    SubmitTransactionSuccess<IADASignedTransaction>,
+    ADATransactionFeeData> {
   BaseADATransactionController(
       {required super.walletProvider,
       required super.account,
@@ -160,8 +162,8 @@ abstract class BaseADATransactionController extends TransactionStateController<
 enum ADAAccountUtxosStatus { failed, success, pending }
 
 class ADAAccountFetchedUtxos
-    with DisposableMixin, Equatable, StreamStateController {
-  final lock = SynchronizedLock();
+    with DisposableMixin, Equality, StreamStateController {
+  final lock = SafeAtomicLock();
   final ICardanoAddress address;
   ADAAccountFetchedUtxos({required this.address});
   ADAAccountUtxosStatus status = ADAAccountUtxosStatus.pending;
@@ -276,8 +278,7 @@ class ADATransferAssetDetails {
   }
 }
 
-class ADATransferDetails
-    with DisposableMixin, StreamStateController, Equatable {
+class ADATransferDetails with DisposableMixin, StreamStateController, Equality {
   final ReceiptAddress<ADAAddress> recipient;
   final IntegerBalance minNative;
   final ADAEpochParametersResponse protocolParams;
@@ -396,7 +397,7 @@ class ADATransferDetails
 }
 
 class ADARemainTransferDetails
-    with DisposableMixin, StreamStateController, Equatable {
+    with DisposableMixin, StreamStateController, Equality {
   final IntegerBalance minNative;
   ADAEpochParametersResponse? _protocolParams;
   ReceiptAddress<ADAAddress> _recipient;

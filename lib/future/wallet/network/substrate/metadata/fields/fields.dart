@@ -1,9 +1,10 @@
+import 'package:flutter/material.dart';
+import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
+import 'package:on_chain_wallet/future/wallet/network/substrate/metadata/forms/metadata.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/metadata/metadata.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/metadata/pages/quick_access.dart';
-import 'package:on_chain_wallet/future/wallet/network/substrate/metadata/forms/metadata.dart';
-import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
@@ -82,9 +83,7 @@ class _SliverFieldValidatorView extends StatelessWidget {
         _VariantFieldValidatorView(validator: validator.cast()),
       const (MetadataFormValidatorBytes) =>
         _BytesFieldValidatorView(validator: validator.cast()),
-      _ => SliverToBoxAdapter(
-          child: ContainerWithBorder(
-              child: Text("unknow! ${validator.toString()}")))
+      _ => SliverToBoxAdapter()
     };
   }
 }
@@ -185,21 +184,21 @@ class _NumericFieldValidatorView extends StatelessWidget {
               _SliverFieldNameView(validator.info),
               _Wrap(
                 field: validator,
-                child: ContainerWithBorder(
+                child: CustomizedContainer(
                   validate: validator.isValid,
-                  onRemove: () {},
+                  onTapStackIcon: () {},
                   enableTap: false,
-                  onRemoveWidget: _QuickAccessPopupMenuButton(
+                  onStackWidget: _QuickAccessPopupMenuButton(
                       checked:
                           _QuickAccessOptions.fromScale(validator.maxScale),
                       icon: ConditionalWidget(
                         onActive: (context) => Text("${validator.maxScale}^10",
-                            style: context.onPrimaryTextTheme.labelLarge),
+                            style: context.primaryTextTheme.labelLarge),
                         enable: validator.maxScale != null,
                         onDeactive: (context) =>
-                            Icon(Icons.menu, color: context.onPrimaryContainer),
+                            Icon(Icons.menu, color: context.primaryContainer),
                       ),
-                      onselectoption: (value) {
+                      onselectOption: (value) {
                         final metadata = SubstrateMetadataAccess.of(context);
                         switch (value) {
                           case _QuickAccessOptions.transactionVersion:
@@ -227,18 +226,15 @@ class _NumericFieldValidatorView extends StatelessWidget {
                       option: validator.enableDecimal
                           ? _QuickAccessType.numbers
                           : null),
-                  child: KeyWrapper(
-                    key: ValueKey("${validator.max}/${validator.min}"),
-                    child: BigRationalTextField(
-                        key: validator.textFieldKey,
-                        label: validator.info.viewName ?? '',
-                        onChange: validator.onChangeValue,
-                        defaultValue: value,
-                        validator: validator.validate,
-                        maxScale: validator.maxScale,
-                        max: validator.max,
-                        min: validator.min),
-                  ),
+                  child: BigRationalTextField(
+                      key: validator.textFieldKey,
+                      label: validator.info.viewName ?? '',
+                      onChange: validator.onChangeValue,
+                      defaultValue: value,
+                      validator: validator.validate,
+                      maxScale: validator.maxScale,
+                      max: validator.max,
+                      min: validator.min),
                 ),
               ),
             ],
@@ -270,9 +266,9 @@ class _StringFieldValidatorView extends StatelessWidget {
               _SliverFieldNameView(validator.info),
               _Wrap(
                 field: validator,
-                child: ContainerWithBorder(
+                child: CustomizedContainer(
                   validate: validator.isValid,
-                  onRemove: () {
+                  onTapStackIcon: () {
                     context
                         .openSliverBottomSheet<String>(
                           validator.info.viewName ?? 'input_string'.tr,
@@ -284,8 +280,9 @@ class _StringFieldValidatorView extends StatelessWidget {
                         )
                         .then(validator.setValue);
                   },
-                  onRemoveIcon:
-                      Icon(Icons.add_box, color: context.onPrimaryContainer),
+                  onStackIcon: Icons.add_box,
+                  // onRemoveIcon:
+                  //     Icon(Icons.add_box, color: context.onPrimaryContainer),
                   child: _ValueOrTapInputValue(value: value),
                 ),
               ),
@@ -309,14 +306,14 @@ class _BytesFieldValidatorView extends StatelessWidget {
               _SliverFieldNameView(validator.info),
               _Wrap(
                 field: validator,
-                child: ContainerWithBorder(
+                child: CustomizedContainer(
                   validate: validator.isValid,
-                  onRemove: () {},
+                  onTapStackIcon: () {},
                   enableTap: false,
-                  onRemoveWidget: ConditionalWidget(
+                  onStackWidget: ConditionalWidget(
                     onActive: (context) => _QuickAccessPopupMenuButton(
                         bytesLength: validator.length,
-                        onselectoption: (value) async {
+                        onselectOption: (value) async {
                           final metadata = SubstrateMetadataAccess.of(context);
                           switch (value) {
                             case _QuickAccessOptions.accounts:
@@ -356,7 +353,7 @@ class _BytesFieldValidatorView extends StatelessWidget {
                       return IconButton(
                           onPressed: validator.removeAddress,
                           icon: Icon(Icons.remove_circle,
-                              color: context.colors.onPrimaryContainer));
+                              color: context.colors.primaryContainer));
                     },
                   ),
                   child: ConditionalWidget(
@@ -516,11 +513,12 @@ class _Wrap extends StatelessWidget {
   Widget build(BuildContext context) {
     if (field.onRemove == null) return _WrapSliver(child: child);
     return _WrapSliver(
-      child: ContainerWithBorder(
-          onRemoveWidget:
-              Icon(Icons.remove_circle, color: context.colors.onSurface),
-          onRemove: field.onRemove,
-          backgroundColor: context.colors.surface,
+      child: CustomizedContainer(
+          onStackIcon: Icons.remove_circle,
+          // onRemoveWidget:
+          //     Icon(Icons.remove_circle, color: context.colors.onSurface),
+          onTapStackIcon: field.onRemove,
+          // backgroundColor: context.colors.surface,
           child: child),
     );
   }
@@ -565,14 +563,14 @@ enum _QuickAccessType {
 
 class _QuickAccessPopupMenuButton extends StatelessWidget {
   const _QuickAccessPopupMenuButton(
-      {required this.onselectoption,
+      {required this.onselectOption,
       required this.option,
       this.bytesLength,
       this.checked,
       this.icon});
   final int? bytesLength;
   final _QuickAccessType? option;
-  final _ONSELECTOPTION onselectoption;
+  final _ONSELECTOPTION onselectOption;
   final Widget? icon;
   final _QuickAccessOptions? checked;
 
@@ -580,7 +578,7 @@ class _QuickAccessPopupMenuButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final metadata = SubstrateMetadataAccess.of(context);
     return PopupMenuButton<_QuickAccessOptions>(
-      icon: icon ?? Icon(Icons.menu, color: context.onPrimaryContainer),
+      icon: icon ?? Icon(Icons.menu, color: context.primaryContainer),
       itemBuilder: (context) {
         List<PopupMenuEntry<_QuickAccessOptions>> customOptions() {
           final op = option;
@@ -651,7 +649,7 @@ class _QuickAccessPopupMenuButton extends StatelessWidget {
                     account: metadata.account));
             break;
           default:
-            onselectoption(value);
+            onselectOption(value);
         }
       },
     );

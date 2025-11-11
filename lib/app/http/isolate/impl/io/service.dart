@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:isolate';
+
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:on_chain_wallet/app/http/http.dart';
-import 'package:on_chain_wallet/app/synchronized/basic_lock.dart';
 import 'package:on_chain_wallet/app/http/isolate/core/service.dart';
 import 'package:on_chain_wallet/app/http/isolate/exception/exception.dart';
 import 'package:on_chain_wallet/app/http/isolate/impl/caller/caller.dart';
@@ -23,18 +24,18 @@ class IoHTTPServiceWorker extends HTTPServiceWorker {
 typedef _OnIsolateError = Function(Object? error, int id);
 
 class _WorkerConnector {
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   int connectorId = 0;
   final Map<int, _WorkerConnection> _workers = {};
   void _onError(Object? error, int id) {
-    _lock.synchronized(() {
+    _lock.run(() {
       _workers.remove(id);
     });
   }
 
   Future<_WorkerConnection> getConnector(
       {HttpWorkerMode mode = HttpWorkerMode.main}) async {
-    return await _lock.synchronized(() async {
+    return await _lock.run(() async {
       _workers[mode.id] ??= await _WorkerConnection._init(
           connectorId: mode.id, onError: _onError, onDone: _onError);
       return _workers[mode.id]!;
@@ -43,7 +44,7 @@ class _WorkerConnector {
 }
 
 class _WorkerConnection {
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   int _requestId = 0;
   final ReceivePort receivePort;
   final SendPort sendPort;
@@ -51,7 +52,7 @@ class _WorkerConnection {
   _WorkerConnection({required this.receivePort, required this.sendPort});
 
   Future<String> _getRequestId() {
-    return _lock.synchronized(() {
+    return _lock.run(() {
       _requestId++;
       final id = HTTPWorkerMessageCompleter(_requestId.toString());
       _requests[id.id] = id;

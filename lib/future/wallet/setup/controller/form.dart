@@ -1,6 +1,7 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/app/live_listener/progress_bar.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/crypto/requests/generate_mnemonic.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/crypto/requests/generate_monero_mnemonic.dart';
@@ -10,6 +11,7 @@ import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/setup/types/types.dart';
 import 'package:on_chain_wallet/future/widgets/widgets/progress_bar/widgets/stream_page_progress.dart';
 import 'package:on_chain_wallet/future/widgets/widgets/text_field.dart';
+import 'package:on_chain_wallet/future/widgets/widgets/text_or_file_picker.dart';
 import 'package:on_chain_wallet/wallet/constant/networks/ton.dart';
 import 'package:on_chain_wallet/wallet/models/wallet/models/backup.dart';
 
@@ -32,6 +34,7 @@ class MnemonicStateController with DisposableMixin, StreamStateController {
       StreamPageProgressController();
   final GlobalKey<FormState> formKey =
       GlobalKey(debugLabel: "MnemonicStateController_formKey");
+
   bool _usePassphrase = false;
   bool get usePassphrase => _usePassphrase;
   MnemonicWordCountView? _wordCount;
@@ -471,7 +474,8 @@ class WalletBackupStateController with DisposableMixin, StreamStateController {
       StreamPageProgressController();
   final GlobalKey<FormState> formKey =
       GlobalKey(debugLabel: "MnemonicStateController_formKey");
-  final GlobalKey<AppTextFieldState> backupTextFieldKey = GlobalKey();
+  final GlobalKey<BackupDataPickerViewState> backupKey =
+      GlobalKey(debugLabel: "MnemonicStateController_backupKey");
   WalletBackupPage page = WalletBackupPage.backup;
   WalletRestoreV2? backupData;
   bool _usePassphrase = false;
@@ -483,9 +487,14 @@ class WalletBackupStateController with DisposableMixin, StreamStateController {
   String get confirmPassphrase => _confirmPassphrase;
   String _backupPassword = "";
   String get backupPassword => _backupPassword;
-  String backup = "";
+  bool verifyBackupContent = false;
   void onStateUpdated() {
     notify();
+  }
+
+  void onChangeVerifyBackup(bool? _) {
+    verifyBackupContent = !verifyBackupContent;
+    onStateUpdated();
   }
 
   void onChangeUsePassphrase(bool? v) {
@@ -513,30 +522,6 @@ class WalletBackupStateController with DisposableMixin, StreamStateController {
     _confirmPassphrase = v;
   }
 
-  void onChangeBackup(String v) {
-    backup = v;
-  }
-
-  bool hasValidBackup = true;
-
-  void onPasteBackup(String v) {
-    backup = v.trim();
-    hasValidBackup = onValidateBackup(backup) == null;
-    onStateUpdated();
-  }
-
-  String? onValidateBackup(String? v) {
-    if (v == null || v.isEmpty || !StringUtils.isHexBytes(backup.trim())) {
-      return "bcakup_validator".tr;
-    }
-    return null;
-  }
-
-  void onPasteMnemonic(String? v) {
-    if (v == null) return;
-    backupTextFieldKey.currentState?.updateText(v);
-  }
-
   String? onValidatePassphrase(String? v) {
     if (v?.isEmpty ?? true) {
       return "password_should_not_be_empty".tr;
@@ -550,23 +535,27 @@ class WalletBackupStateController with DisposableMixin, StreamStateController {
   }
 
   Future<void> validateBackup() async {
-    if (!formKey.ready() || !hasValidBackup) return;
+    if (!formKey.ready()) return;
+    final backup = backupKey.currentState?.getData();
+    if (backup == null) return;
     pageController.progressText("validate_backup_content".tr);
     final result = await MethodUtils.call(() async {
       WalletBackup walletBackup;
       try {
-        final b = WalletBackupCore.deserialize(hex: backup);
+        final b = WalletBackupCore.deserialize(bytes: backup);
         if (b.type != WalletBackupTypes.walletV3) {
-          throw WalletExceptionConst.invalidBackup;
+          throw WalletExceptionConst.invalidBackupData;
         }
         walletBackup = b as WalletBackup;
       } catch (e) {
-        throw WalletExceptionConst.invalidBackup;
+        throw WalletExceptionConst.invalidBackupData;
       }
+
       final decodeBytes = await walletProvider.wallet.restoreKeysBackup(
-          backup: walletBackup.key,
-          password: backupPassword,
-          encoding: walletBackup.type.encoding);
+        backup: walletBackup.key,
+        password: backupPassword,
+        encoding: walletBackup.type.encoding,
+      );
       return walletBackup.decrypt(decodeBytes.result);
     });
     if (result.hasError) {
@@ -574,11 +563,18 @@ class WalletBackupStateController with DisposableMixin, StreamStateController {
           backToIdle: false, showBackButton: true);
       return;
     }
-    pageController.progressText("verifying_backup_please_wait".tr);
+
+    final progressBar = LivePercentProgressBar();
+    pageController.progressText("verifying_backup_please_wait".tr,
+        progressBar: progressBar);
     final backupData = await MethodUtils.call(() async {
       final String? passPhrase = usePassphrase ? _passphrase : null;
       return await walletProvider.wallet.restoreWalletBackupV3(
-          backup: result.result, passhphrase: passPhrase, password: password);
+          backup: result.result,
+          passhphrase: passPhrase,
+          password: password,
+          progress: progressBar,
+          verify: verifyBackupContent);
     });
     if (backupData.hasError) {
       pageController.errorText(backupData.localizationError,
@@ -589,6 +585,7 @@ class WalletBackupStateController with DisposableMixin, StreamStateController {
     page = WalletBackupPage.review;
     pageController.backToIdle();
     onStateUpdated();
+    progressBar.dispose();
   }
 
   @override
@@ -598,7 +595,6 @@ class WalletBackupStateController with DisposableMixin, StreamStateController {
     nextFocus.dispose();
     _passphrase = '';
     _backupPassword = '';
-    backup = '';
     backupData = null;
   }
 }

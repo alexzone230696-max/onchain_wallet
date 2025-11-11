@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/service/models/params.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/bitcoin/providers/electrum.dart';
@@ -16,7 +17,7 @@ class ElectrumWebsocketService extends WebSocketService<ElectrumAPIProvider>
       {Duration? timeout}) async {
     final SocketRequestCompleter message =
         SocketRequestCompleter(params.body()!, params.requestID);
-    final r = await addMessage(message, timeout ?? defaultRequestTimeOut);
+    final r = await post(message, timeout ?? defaultRequestTimeOut);
     return params.toResponse(r);
   }
 }

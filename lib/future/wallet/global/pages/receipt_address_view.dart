@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/models/others/models/receipt_address.dart';
-import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 
 class ReceiptAddressView extends StatelessWidget {
   const ReceiptAddressView(
@@ -42,7 +42,7 @@ class ReceiptAddressView extends StatelessWidget {
           enableTap: enableTap,
           onRemoveWidget: onEditWidget,
           onRemoveIcon: address == null
-              ? Icon(Icons.add, color: context.onPrimaryContainer)
+              ? Icon(Icons.add_box, color: context.onPrimaryContainer)
               : onEditIcon ??
                   Icon(Icons.edit, color: context.onPrimaryContainer),
           child: APPAnimated(

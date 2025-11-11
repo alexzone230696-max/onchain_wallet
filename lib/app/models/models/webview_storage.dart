@@ -26,11 +26,12 @@ abstract class WebViewStorage {
     _tabs = tabs.imutable;
   }
 
-  void addNewTab(WebViewTab newTab) {
+  bool addNewTab(WebViewTab newTab) {
     final tabs = List<WebViewTab>.from(_tabs);
     tabs.add(newTab);
     tabs.sort((a, b) => b.lastVisit.compareTo(a.lastVisit));
     _tabs = tabs.imutable;
+    return _tabs.firstOrNull?.url != newTab.url;
   }
 
   WebViewTab? getLastObject() {

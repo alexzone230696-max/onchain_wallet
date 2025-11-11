@@ -1,12 +1,14 @@
 import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/monero/transaction/controllers/utxos.dart';
 import 'package:on_chain_wallet/future/wallet/network/monero/transaction/types/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
+
 import 'fee.dart';
 import 'provider.dart';
 import 'signer.dart';
@@ -76,34 +78,41 @@ abstract class MoneroTransactionStateController
 
   @override
   Widget onTxCompleteWidget(
-      {required IMoneroSignedTransaction signedTx,
-      required MoneroWalletTransaction transaction,
+      {required MoneroWalletTransaction? transaction,
       required SubmitTransactionSuccess<IMoneroSignedTransaction> txId,
       required MoneroChain account}) {
     return SuccessTransactionTextView(
       txId: txId.txId,
       account: account,
       transaction: transaction,
-      additionalWidget: (context) {
-        return FixedElevatedButton(
-            onPressed: () {
-              context.openSliverDialog(
-                  widget: (p0) => TransactionModalView(
-                        account: account,
-                        transaction: transaction,
-                        address: address,
-                      ),
-                  label: "transaction".tr);
+      additionalWidget: transaction == null
+          ? null
+          : (context) {
+              return FixedElevatedButton(
+                  onPressed: () {
+                    context.openSliverDialog(
+                        widget: (p0) => TransactionModalView(
+                              account: account,
+                              transaction: transaction,
+                              address: address,
+                            ),
+                        label: "transaction".tr);
+                  },
+                  child: Text("show_proofs".tr));
             },
-            child: Text("show_proofs".tr));
-      },
     );
   }
 
   @override
-  Future<void> initForm(MoneroClient client,
-      {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: updateAccount);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required MoneroClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super.initForm(
+        context: context, client: client, updateAccount: updateAccount);
     await initAccountUtxos(account: account, address: address);
+    return this;
   }
 }

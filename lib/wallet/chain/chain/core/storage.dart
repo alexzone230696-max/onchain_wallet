@@ -130,7 +130,7 @@ class ChainStorageManager with BaseRepository {
     List<ITableInsertOrUpdateStructA> params = [];
     for (final i in repositories) {
       if (i.chainID != networkType.id) {
-        throw WalletExceptionConst.invalidBackup;
+        throw WalletExceptionConst.invalidBackupData;
       }
       final storageKey =
           chainStorageIds.firstWhereOrNull((e) => e.storageId == i.storageID);
@@ -226,6 +226,35 @@ class NetworkStorageManager extends ChainStorageManager {
     return data;
   }
 
+  Future<bool> insertNetworkStorages(
+      {required List<CborSerializable> values,
+      required StorageId storage,
+      BaseChainAccount? address,
+      List<String>? keys,
+      List<DateTime>? createdAt}) async {
+    if (values.isEmpty) return true;
+    final totalItems = values.length;
+    if ((keys != null && keys.length != totalItems) ||
+        (createdAt != null && createdAt.length != totalItems)) {
+      throw WalletExceptionConst.internalError("Bad storage items");
+    }
+    final items = List.generate(
+      values.length,
+      (index) {
+        return ITableInsertOrUpdateStructA(
+            storage: networkId,
+            storageId: storage.storageId,
+            key: address?.identifier,
+            keyA: keys?.elementAt(index),
+            data: values.elementAt(index).toCbor().encode(),
+            tableName: tableId,
+            createdAt: createdAt?.elementAt(index));
+      },
+    );
+    final data = await insertStorages(items);
+    return data;
+  }
+
   Future<bool> removeNetworkStorage(
       {StorageId? storage, BaseChainAccount? address, String? keyA}) async {
     return await removeStorage(
@@ -261,7 +290,7 @@ class NetworkStorageManager extends ChainStorageManager {
     List<ITableInsertOrUpdateStructA> params = [];
     for (final i in repositories) {
       if (i.networkID != networkId) {
-        throw WalletExceptionConst.invalidBackup;
+        throw WalletExceptionConst.invalidBackupData;
       }
       final storageKey = config.storageKeys
           .firstWhereOrNull((e) => e.storageId == i.storageID);

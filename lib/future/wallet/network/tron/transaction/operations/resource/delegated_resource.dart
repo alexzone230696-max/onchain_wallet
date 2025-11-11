@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:blockchain_utils/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain/on_chain.dart';
@@ -7,8 +8,8 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/controllers/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/widgets/widgets/delegate_resource.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class TronTransactionDelegateResourceContractOperation
@@ -30,7 +31,11 @@ class TronTransactionDelegateResourceContractOperation
           title: "amount".tr,
           subtitle: "resource_delegated_amount".tr,
           value: IntegerBalance.zero(network.token, allowNegative: false),
-          optional: false);
+          optional: false,
+          onValidateError: (field, value) {
+            if (value.largerThanZero) return null;
+            return "";
+          });
 
   final LiveFormField<ResourceCode, ResourceCode> resource = LiveFormField(
       title: "resource".tr,
@@ -142,13 +147,20 @@ class TronTransactionDelegateResourceContractOperation
       TransactionContractType.delegateResourceContract;
 
   @override
-  Future<void> initForm(TronClient client, {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: updateAccount);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required TronClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super.initForm(
+        context: context, client: client, updateAccount: updateAccount);
     final delegated = await getMaxDelegatedEnergyAndBandwidth(address);
     _energy = delegated.$1;
     _bandWidthResource = delegated.$2;
     _maxResourceBalance =
         resource.value == ResourceCode.bandWidth ? bandWidthResource : energy;
+    return this;
   }
 
   @override

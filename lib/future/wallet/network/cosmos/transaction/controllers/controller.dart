@@ -1,12 +1,15 @@
 import 'dart:async';
+
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:cosmos_sdk/cosmos_sdk.dart';
+import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/controllers/provider.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/controllers/signer.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'fee.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
+
+import 'fee.dart';
 import 'memo.dart';
 
 abstract class CosmosTransactionStateController2
@@ -144,9 +147,14 @@ abstract class CosmosTransactionStateController2
   }
 
   @override
-  Future<void> initForm(CosmosClient client,
-      {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: updateAccount);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required CosmosClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super.initForm(
+        context: context, client: client, updateAccount: updateAccount);
     _transactionRequirment = await getTransactionRequirment(owner: address);
     await initFee();
     _nativeToken = CW20Token.create(
@@ -157,6 +165,7 @@ abstract class CosmosTransactionStateController2
       _nativeToken,
       ...address.tokens,
     ].toImutableList;
+    return this;
   }
 
   @override

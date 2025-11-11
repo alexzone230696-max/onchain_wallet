@@ -89,6 +89,7 @@ class SuiTransactionFeeData
 
 abstract class BaseSuiTransactionController<T extends ISuiTransactionData>
     extends TransactionStateController<
+        SuiToken,
         ISuiAddress,
         SuiClient,
         WalletSuiNetwork,
@@ -97,7 +98,8 @@ abstract class BaseSuiTransactionController<T extends ISuiTransactionData>
         ISuiTransaction<T>,
         ISuiSignedTransaction<T>,
         SuiWalletTransaction,
-        SubmitTransactionSuccess<ISuiSignedTransaction<T>>> {
+        SubmitTransactionSuccess<ISuiSignedTransaction<T>>,
+        SuiTransactionFeeData> {
   BaseSuiTransactionController(
       {required super.walletProvider,
       required super.account,

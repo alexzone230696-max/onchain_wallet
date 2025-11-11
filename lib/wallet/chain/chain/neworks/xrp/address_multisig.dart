@@ -1,6 +1,6 @@
 part of 'package:on_chain_wallet/wallet/chain/chain/chain.dart';
 
-class RippleMultiSigSignerDetails with Equatable, CborSerializable {
+class RippleMultiSigSignerDetails with Equality, CborSerializable {
   const RippleMultiSigSignerDetails._(
       {required this.publicKey, required this.weight, required this.keyIndex});
 
@@ -49,7 +49,7 @@ class RippleMultiSigSignerDetails with Equatable, CborSerializable {
   List get variabels => [publicKey, weight, keyIndex];
 }
 
-class RippleMultiSignatureAddress with Equatable, CborSerializable {
+class RippleMultiSignatureAddress with Equality, CborSerializable {
   final List<RippleMultiSigSignerDetails> signers;
 
   final int threshold;

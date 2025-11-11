@@ -197,8 +197,8 @@ final class IBitcoinAddress extends ChainAccount<BitcoinBaseAddress, TokenCore,
   }
 
   @override
-  Future<void> _init() async {
-    await super._init();
+  Future<void> init() async {
+    await super.init();
     final utxos = await _getUtxos();
     _utxos.updateUtxos(utxos.utxos);
     _updateAddressBalance(_utxos.totalBalance);

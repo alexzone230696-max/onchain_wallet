@@ -11,7 +11,7 @@ external set _onBackgroundListener(JSFunction? f);
 external JSFunction get _onBackgroundListener;
 
 class JSExtentionWallet extends Web3JSWalletHandler {
-  final _portLock = SynchronizedLock();
+  final _portLock = SafeAtomicLock();
   @override
   final String clientId;
   final String tabId;
@@ -82,7 +82,7 @@ class JSExtentionWallet extends Web3JSWalletHandler {
   }
 
   void _onExtentionPortDiscounect(RuntimePort port) {
-    _portLock.synchronized(() {
+    _portLock.run(() {
       _port = null;
     });
   }
@@ -115,7 +115,7 @@ class JSExtentionWallet extends Web3JSWalletHandler {
   }
 
   Future<RuntimePort?> _getPort() async {
-    return _portLock.synchronized(() async {
+    return _portLock.run(() async {
       final RuntimePort? port = await _pingPort(_port);
       if (port != null) return port;
       return null;
@@ -123,7 +123,7 @@ class JSExtentionWallet extends Web3JSWalletHandler {
   }
 
   Future<RuntimePort> _openPort() async {
-    return _portLock.synchronized(() async {
+    return _portLock.run(() async {
       final RuntimePort? port = await _pingPort(_port);
       if (port != null) return port;
       _port?.disconnect();

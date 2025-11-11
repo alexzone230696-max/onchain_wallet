@@ -1,6 +1,5 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:monero_dart/monero_dart.dart';
-import 'package:on_chain_wallet/app/euqatable/equatable.dart';
 import 'package:on_chain_wallet/app/live_listener/live.dart';
 import 'package:on_chain_wallet/app/models/models/typedef.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
@@ -32,6 +31,7 @@ class MoneroTransactionFeeData
 
 abstract class BaseMoneroTransactionController
     extends TransactionStateController<
+        TokenCore,
         IMoneroAddress,
         MoneroClient,
         WalletMoneroNetwork,
@@ -40,7 +40,8 @@ abstract class BaseMoneroTransactionController
         IMoneroTransaction,
         IMoneroSignedTransaction,
         MoneroWalletTransaction,
-        SubmitTransactionSuccess<IMoneroSignedTransaction>> {
+        SubmitTransactionSuccess<IMoneroSignedTransaction>,
+        MoneroTransactionFeeData> {
   BaseMoneroTransactionController(
       {required super.walletProvider,
       required super.account,
@@ -48,7 +49,7 @@ abstract class BaseMoneroTransactionController
 }
 
 class MoneroAccountFetchedUtxos
-    with DisposableMixin, Equatable, StreamStateController {
+    with DisposableMixin, Equality, StreamStateController {
   final IMoneroAddress address;
   MoneroAccountFetchedUtxos({required this.address, required this.utxos});
   final MoneroAccountWithUtxo utxos;

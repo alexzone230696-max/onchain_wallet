@@ -2,7 +2,6 @@ import 'package:blockchain_utils/helper/helper.dart';
 import 'package:blockchain_utils/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
-
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/models/networks/substrate/models/metadata.dart';
@@ -163,6 +162,7 @@ class MetadataFormValidatorString
   final StreamValue<String?> value = StreamValue<String?>(null);
 
   void setValue(String? v) {
+    if (v == null) return;
     value.value = v;
   }
 
@@ -212,7 +212,7 @@ abstract class MetadataFormValidatorNumeric<T extends MetadataTypeInfoNumeric>
 
   BigInt? _getResult() {
     final value = this.value.value;
-    if (value == null || maxScale == null) return value?.toBigInt();
+    if (maxScale == null) return value.toBigInt();
     final decimals = BigRational(BigInt.from(10).pow(maxScale!));
     final r = (value * decimals).toBigInt();
     return r;
@@ -254,12 +254,12 @@ abstract class MetadataFormValidatorNumeric<T extends MetadataTypeInfoNumeric>
     PrimitiveTypes.i256:
         BigInt.parse("-57846076282404875318142949672953578752"),
   };
-  final StreamValue<BigRational?> value = StreamValue(null);
+  final StreamValue<BigRational> value = StreamValue(BigRational.zero);
 
   @override
-  bool get isValid => value.value != null;
+  bool get isValid => true;
   void onChangeValue(BigRational value) {
-    this.value.value = value;
+    this.value.silent = value;
   }
 
   void setValue(BigRational value) {
@@ -269,6 +269,10 @@ abstract class MetadataFormValidatorNumeric<T extends MetadataTypeInfoNumeric>
 
   void setIntValue(int value) {
     setValue(BigRational.from(value));
+  }
+
+  void setBigIntIntValue(BigInt value) {
+    setValue(BigRational(value));
   }
 
   void setPow(int? pow) {
@@ -286,7 +290,8 @@ abstract class MetadataFormValidatorNumeric<T extends MetadataTypeInfoNumeric>
       min = BigRational(minValues[info.primitiveType]!) / pow;
       max = BigRational(values[info.primitiveType]!) / pow;
     }
-    value.value = min;
+    value.silent = min;
+    value.notify();
     textFieldKey.currentState?.setValue(min);
   }
 
@@ -314,7 +319,7 @@ abstract class MetadataFormValidatorNumeric<T extends MetadataTypeInfoNumeric>
 
   @override
   void clear() {
-    value.value = null;
+    value.value = BigRational.zero;
   }
 
   @override
@@ -553,6 +558,7 @@ class MetadataFormValidatorSequence<T extends MetadataTypeInfo>
     final validators = streamValidators.value.clone();
     validators.remove(validator);
     streamValidators.value = validators;
+    validator.dispose();
   }
 
   MetadataFormValidatorSequence._({
@@ -608,7 +614,11 @@ class MetadataFormValidatorSequence<T extends MetadataTypeInfo>
         i.clear();
       }
     } else {
+      final validators = streamValidators.value;
       streamValidators.value = [];
+      for (final i in validators) {
+        i.dispose();
+      }
     }
   }
 
@@ -778,8 +788,10 @@ class MetadataFormValidatorVariant
   void setVariant(
       {required Si1Variant variant, required MetadataTypeInfo type}) {
     _variant = variant;
+    final currentVariant = validator.value;
     validator.updateValue =
         MetadataFormValidator.fromType(type.copyWith(name: _variant!.name));
+    currentVariant?.dispose();
   }
 
   @override

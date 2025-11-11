@@ -10,6 +10,7 @@ import 'package:on_chain_wallet/future/wallet/network/cardano/transaction/widget
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/chain/account.dart';
+
 import 'select_utxos.dart';
 
 class ADATransactionTransferWidget extends StatelessWidget {
@@ -103,6 +104,7 @@ class ADATransactionTransferWidget extends StatelessWidget {
                       itemBuilder: (context, index) {
                         final transfer = value.transfers[index];
                         return CustomizedContainer(
+                          enableTap: false,
                           backgroundColor: context.colors.onPrimaryContainer,
                           reverseColor: context.colors.primaryContainer,
                           validate: transfer.hasAmount,

@@ -7,8 +7,6 @@ import 'package:on_chain_wallet/wallet/wallet.dart';
 class CosmosTransactionPickTokenView extends StatefulWidget {
   const CosmosTransactionPickTokenView(
       {required this.tokens, required this.controller, super.key});
-  // final ICosmosAddress? address;
-  // final WalletCosmosNetwork network;
   final List<CW20Token> tokens;
   final ScrollController controller;
 
@@ -21,14 +19,6 @@ class _CosmosTransactionPickTokenViewState
     extends State<CosmosTransactionPickTokenView>
     with SafeState<CosmosTransactionPickTokenView> {
   List<CW20Token> tokens = [];
-  // CW20Token? networkToken;
-  // CW20Token buildNetworkToken() {
-  //   return CW20Token.create(
-  //       balance: widget.address!.address.currencyBalance,
-  //       token: widget.network.token,
-  //       denom: widget.network.coinParam.denom);
-  // }
-
   void buildTokens() {
     tokens = widget.tokens;
   }

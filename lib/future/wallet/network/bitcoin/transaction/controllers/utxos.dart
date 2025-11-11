@@ -40,7 +40,7 @@ mixin BitcoinTransactionUtxosController on DisposableMixin {
     accountUtxos ??= this.accountUtxos.value;
     final result = await MethodUtils.call(() async {
       await Future.wait(accountUtxos!.map((e) {
-        return e.lock.synchronized(() async {
+        return e.lock.run(() async {
           try {
             if (e.isSuccess) return;
             e.setPending();

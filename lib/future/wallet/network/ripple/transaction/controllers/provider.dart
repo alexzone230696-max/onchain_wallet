@@ -2,7 +2,6 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/utils/ripple/ripple.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/ripple/client/ripple.dart';
 import 'package:on_chain_wallet/wallet/chain/account.dart';
-import 'package:on_chain_wallet/wallet/models/others/models/cached_object.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
 
 mixin XRPTransactionApiController on DisposableMixin {

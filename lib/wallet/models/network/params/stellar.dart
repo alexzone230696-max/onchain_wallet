@@ -1,11 +1,11 @@
+import 'package:blockchain_utils/bip/bip.dart';
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
 import 'package:on_chain_wallet/wallet/api/provider/provider.dart';
-import 'package:blockchain_utils/bip/bip.dart';
+import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/params/params.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
-import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 import 'package:stellar_dart/stellar_dart.dart';
 
 enum StellarChainType {
@@ -38,7 +38,7 @@ enum StellarChainType {
   }
 }
 
-class StellarNetworkParams extends NetworkCoinParams<StellarAPIProvider> {
+class StellarNetworkParams extends NetworkCoinParams {
   final StellarChainType stellarChainType;
 
   factory StellarNetworkParams.fromCborBytesOrObject(
@@ -48,10 +48,6 @@ class StellarNetworkParams extends NetworkCoinParams<StellarAPIProvider> {
 
     return StellarNetworkParams(
         token: Token.deserialize(obj: values.elementAsCborTag(2)),
-        providers: values
-            .elementAsListOf<CborTagValue>(3)
-            .map((e) => StellarAPIProvider.fromCborBytesOrObject(obj: e))
-            .toList(),
         chainType: ChainType.fromValue(values.elementAs(4)),
         stellarChainType: StellarChainType.fromValue(values.elementAs(8)),
         addressExplorer: values.elementAs(6),
@@ -59,7 +55,6 @@ class StellarNetworkParams extends NetworkCoinParams<StellarAPIProvider> {
   }
   StellarNetworkParams(
       {required super.token,
-      required super.providers,
       required super.chainType,
       required this.stellarChainType,
       super.addressExplorer,
@@ -70,12 +65,10 @@ class StellarNetworkParams extends NetworkCoinParams<StellarAPIProvider> {
       String? transactionExplorer,
       String? addressExplorer,
       Token? token,
-      List<StellarAPIProvider>? providers,
       StellarChainType? stellarChainType}) {
     return StellarNetworkParams(
         chainType: chainType ?? this.chainType,
         token: token ?? this.token,
-        providers: providers ?? this.providers,
         stellarChainType: stellarChainType ?? this.stellarChainType);
   }
 
@@ -86,8 +79,7 @@ class StellarNetworkParams extends NetworkCoinParams<StellarAPIProvider> {
           const CborNullValue(),
           const CborNullValue(),
           token.toCbor(),
-          CborSerializable.fromDynamic(
-              providers.map((e) => e.toCbor()).toList()),
+          CborNullValue(),
           chainType.name,
           const CborNullValue(),
           addressExplorer,
@@ -100,7 +92,7 @@ class StellarNetworkParams extends NetworkCoinParams<StellarAPIProvider> {
   StellarChainType get identifier => stellarChainType;
 
   @override
-  NetworkCoinParams<StellarAPIProvider> updateParams(
+  NetworkCoinParams updateParams(
       {List<APIProvider>? updateProviders,
       Token? token,
       String? transactionExplorer,
@@ -109,7 +101,6 @@ class StellarNetworkParams extends NetworkCoinParams<StellarAPIProvider> {
     return StellarNetworkParams(
         token: NetworkCoinParams.validateUpdateParams(
             token: this.token, updateToken: token),
-        providers: updateProviders?.cast<StellarAPIProvider>() ?? providers,
         chainType: chainType,
         stellarChainType: stellarChainType,
         addressExplorer: addressExplorer,

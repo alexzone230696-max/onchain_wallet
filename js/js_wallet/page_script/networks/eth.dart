@@ -136,10 +136,12 @@ class EthereumPageController extends WalletStandardPageController {
     super.onWalletEvent(message);
     final data = message.data as JSWalletNetworkEvent;
     final events = data.eventTypes;
+    Logg.log("on event change called!");
     for (final event in events) {
       switch (event) {
         case JSNetworkEventType.defaultAccountChanged:
           _ethereum?.selectedAddress = data.account?.address;
+          Logg.log("eth account changed!");
           break;
         case JSNetworkEventType.message:
           _eventEIPListeners(JSEventType.message, jsObject: data.message);
@@ -153,6 +155,8 @@ class EthereumPageController extends WalletStandardPageController {
           final chainChanged = data.chainChanged as JSEthereumEIPChainChanged?;
           _ethereum?.chainId = chainChanged?.chainId;
           _ethereum?.networkVersion = chainChanged?.netVersion;
+          Logg.log(
+              "eth account changed! ${_ethereum?.chainId} ${_ethereum?.networkVersion}");
           if (data.disconnect != null) {
             _eventEIPListeners(JSEventType.disconnect,
                 jsObject: data.disconnect);
@@ -163,6 +167,13 @@ class EthereumPageController extends WalletStandardPageController {
             }
             _eventEIPListeners(JSEventType.chainChanged,
                 jsObject: chainChanged.chainId.toJS);
+          }
+          final auto = _ethereum?.autoRefreshOnNetworkChange;
+          if (auto != null && chainChanged != null) {
+            if (auto.isA<JSFunction>()) {
+              final func = auto as JSFunction;
+              func.callAsFunction(func, chainChanged.chainId.toJS);
+            }
           }
 
           break;
@@ -181,7 +192,13 @@ class EthereumPageController extends WalletStandardPageController {
 
   void _addEIPListener(String type, JSFunction listener) {
     final event = JSEventType.fromName(type);
-    if (event == null) return;
+    final events = _eipListeners[event];
+    if (event == null || events == null) return;
+    if (events.any((e) => identical(e, listener)) ||
+        events.contains(listener)) {
+      Logg.log("yes exists?");
+      return;
+    }
     _eipListeners[event]?.add(listener);
     _emitEvent(PageMessageEvent.build(event: event));
   }

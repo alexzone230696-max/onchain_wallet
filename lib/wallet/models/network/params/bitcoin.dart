@@ -1,14 +1,12 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
+import 'package:blockchain_utils/bip/bip.dart';
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
-import 'package:on_chain_wallet/wallet/api/provider/networks/bitcoin/bitcoin.dart';
-import 'package:on_chain_wallet/wallet/models/network/core/params/params.dart';
-import 'package:blockchain_utils/bip/bip.dart';
-import 'package:on_chain_wallet/wallet/api/provider/core/provider.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
+import 'package:on_chain_wallet/wallet/models/network/core/params/params.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 
-class BitcoinParams extends NetworkCoinParams<BaseBitcoinAPIProvider> {
+class BitcoinParams extends NetworkCoinParams {
   final BasedUtxoNetwork transacationNetwork;
   bool get isBCH => transacationNetwork is BitcoinCashNetwork;
   bool get isForked => isBCH || transacationNetwork is BitcoinSVNetwork;
@@ -21,15 +19,10 @@ class BitcoinParams extends NetworkCoinParams<BaseBitcoinAPIProvider> {
     return BitcoinParams(
         token: Token.deserialize(obj: values.elementAs<CborTagValue>(2)),
         transacationNetwork: BasedUtxoNetwork.fromName(values.elementAs(3)),
-        providers: values
-            .elementAsListOf<CborTagValue>(4)
-            .map((e) => BaseBitcoinAPIProvider.fromCborBytesOrObject(obj: e))
-            .toList(),
         addressExplorer: values.elementAs(6),
         transactionExplorer: values.elementAs(7));
   }
   BitcoinParams({
-    required super.providers,
     required super.token,
     required this.transacationNetwork,
     super.addressExplorer,
@@ -47,8 +40,7 @@ class BitcoinParams extends NetworkCoinParams<BaseBitcoinAPIProvider> {
           const CborNullValue(),
           token.toCbor(),
           transacationNetwork.value,
-          CborSerializable.fromDynamic(
-              providers.map((e) => e.toCbor()).toList()),
+          CborNullValue(),
           const CborNullValue(),
           addressExplorer,
           transactionExplorer,
@@ -57,14 +49,12 @@ class BitcoinParams extends NetworkCoinParams<BaseBitcoinAPIProvider> {
   }
 
   @override
-  NetworkCoinParams<BaseBitcoinAPIProvider> updateParams(
-      {List<APIProvider>? updateProviders,
-      Token? token,
+  NetworkCoinParams updateParams(
+      {Token? token,
       String? transactionExplorer,
       String? addressExplorer,
       int? bip32CoinType}) {
     return BitcoinParams(
-        providers: updateProviders?.cast<BaseBitcoinAPIProvider>() ?? providers,
         token: NetworkCoinParams.validateUpdateParams(
             token: this.token, updateToken: token),
         addressExplorer: addressExplorer,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+
 import 'conditional_widget.dart';
 import 'copy_icon_widget.dart';
 import 'text_view.dart';
@@ -41,12 +42,11 @@ class LargeTextContainer extends StatelessWidget {
           return Row(
             children: [
               Expanded(
-                  child: Text(
-                text,
-                style: context.textTheme.bodyMedium?.copyWith(color: color),
-                maxLines: maxLines,
-                overflow: TextOverflow.ellipsis,
-              )),
+                  child: Text(text,
+                      style:
+                          context.textTheme.bodyMedium?.copyWith(color: color),
+                      maxLines: maxLines,
+                      overflow: TextOverflow.ellipsis)),
               IconButton(
                   onPressed: () {
                     context.openDialogPage('',
@@ -58,16 +58,11 @@ class LargeTextContainer extends StatelessWidget {
         }
         return ConditionalWidget(
           enable: copyable,
-          onActive: (context) => CopyableTextWidget(
-            text: text,
-            maxLines: maxLines,
-            color: color,
-          ),
-          onDeactive: (context) => Text(
-            text,
-            style: context.textTheme.bodyMedium?.copyWith(color: color),
-            maxLines: maxLines,
-          ),
+          onActive: (context) =>
+              CopyableTextWidget(text: text, maxLines: maxLines, color: color),
+          onDeactive: (context) => Text(text,
+              style: context.textTheme.bodyMedium?.copyWith(color: color),
+              maxLines: maxLines),
         );
       },
     );

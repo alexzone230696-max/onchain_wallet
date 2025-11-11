@@ -1,7 +1,11 @@
 part of 'package:on_chain_wallet/wallet/chain/chain/chain.dart';
 
-class MoneroNetworkController extends NetworkController<IMoneroAddress,
-    MoneroChain, Web3MoneroChainAccount, Web3InternalDefaultChain> {
+class MoneroNetworkController extends NetworkController<
+    IMoneroAddress,
+    MoneroChain,
+    Web3MoneroChainAccount,
+    Web3InternalDefaultChain,
+    ChainConfig> {
   MoneroNetworkController({
     super.networks,
     required super.id,
@@ -11,7 +15,7 @@ class MoneroNetworkController extends NetworkController<IMoneroAddress,
   Future<Web3MoneroChainAuthenticated> createWeb3ChainAuthenticated(
     Web3ApplicationAuthentication app,
   ) async {
-    final internalNetwork = await getWeb3InternalChainAuthenticated(app);
+    final internalNetwork = await _getWeb3InternalChainAuthenticated(app);
     final web3Networks = _networks.values
         .map((e) => Web3MoneroChainIdnetifier(
             id: e.network.value,

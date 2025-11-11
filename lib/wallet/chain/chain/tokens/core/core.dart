@@ -10,7 +10,8 @@ enum TokenCoreType {
   stellar(CborTagsConst.stellarIssueToken),
   sui(CborTagsConst.suiToken),
   trc10(CborTagsConst.trc10Token),
-  trc20(CborTagsConst.trc20Token);
+  trc20(CborTagsConst.trc20Token),
+  substrate(CborTagsConst.substrateToken);
 
   final List<int> tag;
   const TokenCoreType(this.tag);
@@ -22,7 +23,12 @@ enum TokenCoreType {
 }
 
 abstract class TokenCore<T extends BalanceCore, TOKEN extends APPToken>
-    with CborSerializable, Equatable {
+    with CborSerializable, Equality {
+  static String toIdentifier(String data) {
+    final hash = QuickCrypto.sha256Hash(StringUtils.encode(data));
+    return StringUtils.decode(hash, type: StringEncoding.base64UrlSafe);
+  }
+
   final TOKEN token;
   final InternalStreamValue<T> streamBalance;
   DateTime _updated;
@@ -59,6 +65,8 @@ abstract class TokenCore<T extends BalanceCore, TOKEN extends APPToken>
       TokenCoreType.sui => SuiToken.deserialize(bytes: bytes, obj: obj),
       TokenCoreType.trc10 => TronTRC10Token.deserialize(bytes: bytes, obj: obj),
       TokenCoreType.trc20 => TronTRC20Token.deserialize(bytes: bytes, obj: obj),
+      TokenCoreType.substrate =>
+        SubstrateToken.deserialize(bytes: bytes, obj: obj),
     };
     if (tokenCore is! T) {
       throw WalletExceptionConst.internalError("TokenCore");

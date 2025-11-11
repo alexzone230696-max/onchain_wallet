@@ -1,11 +1,14 @@
 import 'dart:async';
+
 import 'package:bitcoin_base/bitcoin_base.dart';
+import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/transaction/controllers/utxos.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'fee.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
+
+import 'fee.dart';
 import 'memo.dart';
 import 'provider.dart';
 import 'signer.dart';
@@ -96,10 +99,16 @@ abstract class BitcoinTransactionStateController
   }
 
   @override
-  Future<void> initForm(BitcoinClient<IBitcoinAddress> client,
-      {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: false);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required BitcoinClient<IBitcoinAddress> client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super
+        .initForm(context: context, client: client, updateAccount: false);
     await initAccountUtxos(addresses: account.addresses);
+    return this;
   }
 
   @override

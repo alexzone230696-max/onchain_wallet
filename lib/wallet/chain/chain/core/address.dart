@@ -66,7 +66,7 @@ class ChainAccountBalance {
 }
 
 abstract final class BaseChainAccount<X, T extends TokenCore, N extends NFTCore,
-    TRANSACTION extends ChainTransaction> with CborSerializable, Equatable {
+    TRANSACTION extends ChainTransaction> with CborSerializable, Equality {
   _WalletAddressStatus _status = _WalletAddressStatus.init;
 
   BaseChainAccount({
@@ -166,7 +166,7 @@ abstract final class ChainAccount<X, T extends TokenCore, N extends NFTCore,
         onFetched: () => _transaction);
   }
 
-  Future<void> _init() async {
+  Future<void> init() async {
     if (_status.isReady) return;
     _status = _WalletAddressStatus.ready;
     await _getTokens();
@@ -309,16 +309,16 @@ base mixin ChainAccountRepository<X, T extends TokenCore, N extends NFTCore,
         offset: offset,
         ordering: ordering);
     final tokens = data
-        .map((e) => TokenCore.deserialize<T>(bytes: e))
+        .map((e) => MethodUtils.nullOnException(
+            () => TokenCore.deserialize<T>(bytes: e)))
         .toList()
         .whereType<T>()
         .toList();
-    appLogger.debug(
-        when: () => tokens.isNotEmpty,
+    appLogger.error(
+        when: () => tokens.length != data.length,
         runtime: runtimeType,
         functionName: "_getTokens",
-        msg: "$viewAddress ${tokens.length} tokens founds.");
-    assert(tokens.length == data.length, "some token deserialization failed.");
+        msg: "$viewAddress token deserialization fail.");
     return tokens;
   }
 

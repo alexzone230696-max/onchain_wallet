@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/solana/transaction/controllers/controller.dart';
@@ -135,9 +136,14 @@ class SolanaTransactionTransferTokenOperation
       SolanaTransactionOperations.tokenTransfer;
 
   @override
-  Future<void> initForm(SolanaClient client,
-      {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: false);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required SolanaClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super
+        .initForm(context: context, client: client, updateAccount: false);
     if (!address.tokens.contains(token)) {
       await account.updateTokenBalance(address: address, tokens: [token]);
     } else {
@@ -145,6 +151,7 @@ class SolanaTransactionTransferTokenOperation
     }
     _tokenBalanceListener =
         token.streamBalance.stream.listen((_) => onStateUpdated());
+    return this;
   }
 
   @override

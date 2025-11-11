@@ -2,22 +2,22 @@ import 'dart:async';
 
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:cosmos_sdk/cosmos_sdk.dart';
+import 'package:on_chain_swap/on_chain_swap.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/cosmos.dart';
 import 'package:on_chain_wallet/wallet/api/services/networks/networks.dart';
-import 'package:on_chain_wallet/wallet/constant/networks/cosmos.dart';
 import 'package:on_chain_wallet/wallet/chain/account.dart';
+import 'package:on_chain_wallet/wallet/constant/networks/cosmos.dart';
 import 'package:on_chain_wallet/wallet/models/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/networks/cosmos/cosmos.dart';
 import 'package:on_chain_wallet/wallet/models/token/token.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/networks/cosmos.dart';
-import 'package:on_chain_swap/on_chain_swap.dart';
 
 mixin CosmosCustomRequest on HttpImpl {
-  static final _lock = SynchronizedLock();
+  static final _lock = SafeAtomicLock();
 
   static final Map<ChainType, List<CCRChainData>> _chains = {
     ChainType.mainnet: [],
@@ -75,7 +75,7 @@ mixin CosmosCustomRequest on HttpImpl {
   Future<List<PingPubChain>> getCosmosChains(
       {ChainType chain = ChainType.mainnet}) async {
     final baseUrl = _getChainUrl(chain);
-    return _lock.synchronized(() async {
+    return _lock.run(() async {
       switch (chain) {
         case ChainType.mainnet:
           return _mainnetChains ??= await _getChains(baseUrl);
@@ -96,7 +96,7 @@ mixin CosmosCustomRequest on HttpImpl {
     String chainName, {
     ChainType chainType = ChainType.mainnet,
   }) async {
-    return _lock.synchronized(() async {
+    return _lock.run(() async {
       final localChain = _getLocalChain(chainType: chainType, name: chainName);
       if (localChain != null) {
         final cosmosDirectoryChain =
@@ -229,6 +229,8 @@ class CosmosClient extends NetworkClient<CosmosWalletTransaction,
   @override
   Future<bool> isEthermint() async {
     try {
+      await provider.request(TendermintRequestAbciQuery(
+          request: EvmosEthermintEVMV1QueryParamsRequest()));
       await provider.request(TendermintRequestAbciQuery(
           request: EvmosEthermintEVMV1QueryParamsRequest()));
       return true;
@@ -496,24 +498,29 @@ class CosmosClient extends NetworkClient<CosmosWalletTransaction,
     }
 
     Future<void> fetchTokens() async {
-      final result = await MethodUtils.call(() async {
-        return getAddressCoins(address);
-      });
+      try {
+        final result = await MethodUtils.call(() async {
+          return getAddressCoins(address);
+        });
 
-      if (result.hasError) {
-        error(result.exception!);
+        if (result.hasError) {
+          error(result.exception!);
+          close();
+          return;
+        }
+        final balances = result.result
+            .where((e) => e.denom != network.coinParam.denom)
+            .map((e) => CW20Token.create(
+                balance: e.amount,
+                token: Token(name: e.denom, symbol: e.denom, decimal: 6),
+                denom: e.denom))
+            .toList();
+        add(balances);
+      } catch (e) {
+        error(e);
+      } finally {
         close();
-        return;
       }
-      final balances = result.result
-          .where((e) => e.denom != network.coinParam.denom)
-          .map((e) => CW20Token.create(
-              balance: e.amount,
-              token: Token(name: e.denom, symbol: e.denom, decimal: 6),
-              denom: e.denom))
-          .toList();
-      add(balances);
-      close();
     }
 
     controller.onListen = fetchTokens;

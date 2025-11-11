@@ -1,13 +1,16 @@
 import 'dart:async';
+
 import 'package:blockchain_utils/helper/extensions/extensions.dart';
+import 'package:flutter/material.dart';
 import 'package:on_chain/on_chain.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/models/models/signing.dart';
 import 'package:on_chain_wallet/future/wallet/network/cardano/transaction/controllers/memo.dart';
 import 'package:on_chain_wallet/future/wallet/network/cardano/transaction/types/types.dart';
-import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
+
 import 'certificate.dart';
 import 'fee.dart';
 import 'provider.dart';
@@ -168,9 +171,16 @@ abstract class ADATransactionStateController
   }
 
   @override
-  Future<void> initForm(ADAClient client, {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: updateAccount);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required ADAClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super.initForm(
+        context: context, client: client, updateAccount: updateAccount);
     _latestEpochParams = await latestEpochProtocolParameters();
     await initUtxos();
+    return this;
   }
 }

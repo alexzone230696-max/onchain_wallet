@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:blockchain_utils/utils/numbers/rational/big_rational.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
@@ -270,10 +271,17 @@ class RippleTransactionPaymentOperation
       [token, recipient, amount, invoiceId, flag];
 
   @override
-  Future<void> initForm(XRPClient client, {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: updateAccount);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required XRPClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super.initForm(
+        context: context, client: client, updateAccount: updateAccount);
     tokens
         .get(onFetch: () async => client.accountTokens(address))
         .catchError((_) => <RippleIssueToken>[]);
+    return this;
   }
 }

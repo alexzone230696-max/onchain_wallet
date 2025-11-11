@@ -60,7 +60,7 @@ class WalletController extends _WalletController
                   functionName: "_setup",
                   msg: e,
                   trace: s);
-              rethrow;
+              // rethrow;
             }
           }
           return ChainsHandler.setup(chains: chains, wallet: wallet);

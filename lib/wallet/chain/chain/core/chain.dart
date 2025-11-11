@@ -27,8 +27,8 @@ abstract final class Chain<
         CONTACT,
         ADDRESSPARAM>
     with
-        ChainRepository<ADDRESS, NETWORK, CLIENT, CONFIG, CHAINTOKEN, CHAINNFT,
-            TRANSACTION, CONTACT, ADDRESSPARAM>,
+        ChainRepository<PROVIDER, ADDRESS, NETWORK, CLIENT, CONFIG, CHAINTOKEN,
+            CHAINNFT, TRANSACTION, CONTACT, ADDRESSPARAM>,
         BaseChainController<
             PROVIDER,
             NETWORKPARAMS,
@@ -63,9 +63,11 @@ abstract final class Chain<
   NETWORK _network;
   @override
   NETWORK get network => _network;
-
   @override
-  CLIENT? _client;
+  ProviderIdentifier? _serviceIdentifier;
+  @override
+  CLIENT? _service;
+
   @override
   List<ADDRESS> _addresses;
   @override
@@ -97,7 +99,7 @@ abstract final class Chain<
   bool get transferEnabled => true;
 
   @override
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
 
   factory Chain.deserialize({String? hex, CborObject? obj, List<int>? bytes}) {
     final CborListValue values = CborSerializable.cborTagValue(
@@ -108,174 +110,99 @@ abstract final class Chain<
           obj: values.elementAsCborTag(1));
     });
     network = ChainConst.updateNetwork(networkId: networkId, network: network);
-    final ProviderIdentifier? providerId = MethodUtils.nullOnException(() {
-      final CborTagValue? identifier = values.elementAs(6);
-      if (identifier == null) return null;
-      return ProviderIdentifier.deserialize(cbor: identifier);
-    });
-    return Chain._fromNetwork(
-        network: network, values: values, provider: providerId);
+    return Chain._fromNetwork(network: network, values: values);
   }
   static Chain setup({required WalletNetwork network, required String id}) {
     switch (network.type) {
       case NetworkType.ethereum:
-        return EthereumChain.setup(
-            network: network.toNetwork(),
-            client: APIUtils.createApiClient(network),
-            id: id);
+        return EthereumChain.setup(network: network.toNetwork(), id: id);
       case NetworkType.tron:
-        return TronChain.setup(
-            network: network.toNetwork(),
-            client: APIUtils.createApiClient(network),
-            id: id);
+        return TronChain.setup(network: network.toNetwork(), id: id);
       case NetworkType.xrpl:
-        return XRPChain.setup(
-            network: network.toNetwork(),
-            client: APIUtils.createApiClient(network),
-            id: id);
+        return XRPChain.setup(network: network.toNetwork(), id: id);
       case NetworkType.solana:
-        return SolanaChain.setup(
-            network: network.toNetwork(),
-            client: APIUtils.createApiClient(network),
-            id: id);
+        return SolanaChain.setup(network: network.toNetwork(), id: id);
       case NetworkType.stellar:
-        return StellarChain.setup(
-            network: network.toNetwork(),
-            client: APIUtils.createApiClient(network),
-            id: id);
-
+        return StellarChain.setup(network: network.toNetwork(), id: id);
       case NetworkType.cardano:
-        return ADAChain.setup(
-            network: network.toNetwork(),
-            client: APIUtils.createApiClient(network),
-            id: id);
+        return ADAChain.setup(network: network.toNetwork(), id: id);
       case NetworkType.cosmos:
-        return CosmosChain.setup(
-            network: network.toNetwork(),
-            client: APIUtils.createApiClient(network),
-            id: id);
+        return CosmosChain.setup(network: network.toNetwork(), id: id);
       case NetworkType.ton:
-        return TonChain.setup(
-            network: network.toNetwork(),
-            client: APIUtils.createApiClient(network),
-            id: id);
+        return TonChain.setup(network: network.toNetwork(), id: id);
       case NetworkType.monero:
-        return MoneroChain.setup(
-            network: network.toNetwork(),
-            client: APIUtils.createApiClient(network),
-            id: id);
+        return MoneroChain.setup(network: network.toNetwork(), id: id);
       case NetworkType.substrate:
-        return SubstrateChain.setup(
-            network: network.toNetwork(),
-            client: APIUtils.createApiClient(network),
-            id: id);
-
+        return SubstrateChain.setup(network: network.toNetwork(), id: id);
       case NetworkType.bitcoinAndForked:
       case NetworkType.bitcoinCash:
-        return BitcoinChain.setup(
-            network: network.toNetwork(),
-            client: APIUtils.createApiClient(network),
-            id: id);
+        return BitcoinChain.setup(network: network.toNetwork(), id: id);
       case NetworkType.sui:
-        return SuiChain.setup(
-            network: network.toNetwork(),
-            client: APIUtils.createApiClient(network),
-            id: id);
+        return SuiChain.setup(network: network.toNetwork(), id: id);
       case NetworkType.aptos:
-        return AptosChain.setup(
-            network: network.toNetwork(),
-            client: APIUtils.createApiClient(network),
-            id: id);
+        return AptosChain.setup(network: network.toNetwork(), id: id);
       default:
         throw WalletExceptionConst.networkDoesNotExist;
     }
   }
 
   factory Chain._fromNetwork(
-      {required WalletNetwork network,
-      required CborListValue values,
-      ProviderIdentifier? provider}) {
+      {required WalletNetwork network, required CborListValue values}) {
     final Chain chain;
     switch (network.type) {
       case NetworkType.bitcoinCash:
       case NetworkType.bitcoinAndForked:
         chain = BitcoinChain.deserialize(
-            network: network.toNetwork(),
-            cbor: values,
-            client: APIUtils.createApiClient(network, identifier: provider));
+            network: network.toNetwork(), cbor: values);
         break;
       case NetworkType.substrate:
         chain = SubstrateChain.deserialize(
-            network: network.toNetwork(),
-            cbor: values,
-            client: APIUtils.createApiClient(network, identifier: provider));
+            network: network.toNetwork(), cbor: values);
         break;
       case NetworkType.ethereum:
         chain = EthereumChain.deserialize(
-            network: network.toNetwork(),
-            cbor: values,
-            client: APIUtils.createApiClient(network, identifier: provider));
+            network: network.toNetwork(), cbor: values);
         break;
       case NetworkType.cosmos:
-        chain = CosmosChain.deserialize(
-            network: network.toNetwork(),
-            cbor: values,
-            client: APIUtils.createApiClient(network, identifier: provider));
+        chain =
+            CosmosChain.deserialize(network: network.toNetwork(), cbor: values);
         break;
       case NetworkType.ton:
-        chain = TonChain.deserialize(
-            network: network.toNetwork(),
-            cbor: values,
-            client: APIUtils.createApiClient(network, identifier: provider));
+        chain =
+            TonChain.deserialize(network: network.toNetwork(), cbor: values);
         break;
       case NetworkType.tron:
-        chain = TronChain.deserialize(
-            network: network.toNetwork(),
-            cbor: values,
-            client: APIUtils.createApiClient(network, identifier: provider));
+        chain =
+            TronChain.deserialize(network: network.toNetwork(), cbor: values);
         break;
       case NetworkType.xrpl:
-        chain = XRPChain.deserialize(
-            network: network.toNetwork(),
-            cbor: values,
-            client: APIUtils.createApiClient(network, identifier: provider));
+        chain =
+            XRPChain.deserialize(network: network.toNetwork(), cbor: values);
         break;
       case NetworkType.solana:
-        chain = SolanaChain.deserialize(
-            network: network.toNetwork(),
-            cbor: values,
-            client: APIUtils.createApiClient(network, identifier: provider));
+        chain =
+            SolanaChain.deserialize(network: network.toNetwork(), cbor: values);
         break;
       case NetworkType.stellar:
         chain = StellarChain.deserialize(
-            network: network.toNetwork(),
-            cbor: values,
-            client: APIUtils.createApiClient(network, identifier: provider));
+            network: network.toNetwork(), cbor: values);
         break;
       case NetworkType.monero:
-        chain = MoneroChain.deserialize(
-            network: network.toNetwork(),
-            cbor: values,
-            client: APIUtils.createApiClient(network, identifier: provider));
+        chain =
+            MoneroChain.deserialize(network: network.toNetwork(), cbor: values);
         break;
 
       case NetworkType.cardano:
-        chain = ADAChain.deserialize(
-            network: network.toNetwork(),
-            cbor: values,
-            client: APIUtils.createApiClient(network, identifier: provider));
+        chain =
+            ADAChain.deserialize(network: network.toNetwork(), cbor: values);
         break;
       case NetworkType.sui:
-        chain = SuiChain.deserialize(
-            network: network.toNetwork(),
-            cbor: values,
-            client: APIUtils.createApiClient(network, identifier: provider));
+        chain =
+            SuiChain.deserialize(network: network.toNetwork(), cbor: values);
         break;
       case NetworkType.aptos:
-        chain = AptosChain.deserialize(
-            network: network.toNetwork(),
-            cbor: values,
-            client: APIUtils.createApiClient(network, identifier: provider));
+        chain =
+            AptosChain.deserialize(network: network.toNetwork(), cbor: values);
         break;
       default:
         throw WalletExceptionConst.networkDoesNotExist;
@@ -289,13 +216,13 @@ abstract final class Chain<
       required CONFIG config,
       List<ADDRESS> addresses = const [],
       required int addressIndex,
-      required CLIENT? client,
+      required ProviderIdentifier? service,
       required BigInt? totalBalance})
       : _addresses = addresses.imutable,
         _network = network,
         _addressIndex = addressIndex < 0 ? 0 : addressIndex,
         _contacts = [],
-        _client = client,
+        _serviceIdentifier = service,
         _config = config,
         totalBalance = InternalStreamValue.immutable(IntegerBalance.token(
             totalBalance ?? BigInt.zero, network.token,
@@ -309,7 +236,7 @@ abstract final class Chain<
       int? addressIndex,
       String? id,
       CONFIG? config,
-      CLIENT? client});
+      ProviderIdentifier? service});
 
   @override
   String toString() {

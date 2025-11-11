@@ -9,7 +9,6 @@ import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/networks/tron/models/account_delegated_resource_info.dart';
 import 'package:on_chain_wallet/wallet/models/networks/tron/models/delegated_resouce_balance.dart';
 import 'package:on_chain_wallet/wallet/models/networks/tron/models/tron_account_info.dart';
-import 'package:on_chain_wallet/wallet/models/others/models/cached_object.dart';
 
 mixin TronTransactionApiController on DisposableMixin {
   final Map<TronAddress, bool> _accountActivities = {};

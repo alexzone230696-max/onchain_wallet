@@ -1,5 +1,6 @@
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:blockchain_utils/helper/extensions/extensions.dart';
+import 'package:blockchain_utils/utils/equatable/equatable.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/crypto/types/networks.dart';
@@ -21,7 +22,7 @@ import 'package:on_chain_wallet/wallet/web3/networks/ton/permission/models/accou
 import 'package:on_chain_wallet/wallet/web3/networks/tron/permission/models/account.dart';
 
 abstract class Web3ChainAccount<NETWORKADDRESS>
-    with CborSerializable, Equatable {
+    with CborSerializable, Equality {
   int get id;
   final AddressDerivationIndex keyIndex;
   final NETWORKADDRESS address;
@@ -42,7 +43,7 @@ abstract class Web3ChainAccount<NETWORKADDRESS>
   List get variabels => [keyIndex, addressStr, id, defaultAddress];
 }
 
-abstract class Web3ChainIdnetifier with CborSerializable, Equatable {
+abstract class Web3ChainIdnetifier with CborSerializable, Equality {
   final int id;
   final String wsIdentifier;
   final String caip2;

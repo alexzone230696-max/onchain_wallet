@@ -8,126 +8,132 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/constant/constant.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
-import 'package:polkadot_dart/polkadot_dart.dart';
+import 'package:polkadot_dart/polkadot_dart.dart'
+    show
+        SS58Const,
+        SubstrateConsensusRole,
+        SubstrateChainType,
+        SubstrateRelaySystem,
+        SubstrateKeyAlgorithm;
 
 class _DefaultAppCoins {
   static final BitcoinParams bitcoinCashMainnet = BitcoinParams(
-      transacationNetwork: BitcoinCashNetwork.mainnet,
-      token: Token(
-        name: "BitcoinCash",
-        market: const CoingeckoCoin(
-            apiId: "bitcoin-cash", coinName: "bitcoin-cash"),
-        symbol: "BCH",
-        decimal: 8,
-        assetLogo: APPConst.bch,
-      ),
-      providers: []);
+    transacationNetwork: BitcoinCashNetwork.mainnet,
+    token: Token(
+      name: "BitcoinCash",
+      market:
+          const CoingeckoCoin(apiId: "bitcoin-cash", coinName: "bitcoin-cash"),
+      symbol: "BCH",
+      decimal: 8,
+      assetLogo: APPConst.bch,
+    ),
+  );
   static final BitcoinParams bitcoinCashChipnet = BitcoinParams(
-      transacationNetwork: BitcoinCashNetwork.testnet,
-      token: Token(
-        name: "BitcoinCash chipnet",
-        symbol: "tBCH",
-        market: const CoingeckoCoin(
-            apiId: "bitcoin-cash", coinName: "bitcoin-cash"),
-        decimal: 8,
-        assetLogo: APPConst.bch,
-      ),
-      providers: []);
+    transacationNetwork: BitcoinCashNetwork.testnet,
+    token: Token(
+      name: "BitcoinCash chipnet",
+      symbol: "tBCH",
+      market:
+          const CoingeckoCoin(apiId: "bitcoin-cash", coinName: "bitcoin-cash"),
+      decimal: 8,
+      assetLogo: APPConst.bch,
+    ),
+  );
   static final BitcoinParams bitcoinMainnet = BitcoinParams(
-      transacationNetwork: BitcoinNetwork.mainnet,
-      token: Token(
-          name: "Bitcoin",
-          symbol: "BTC",
-          market: const CoingeckoCoin(apiId: "bitcoin", coinName: "bitcoin"),
-          decimal: 8,
-          assetLogo: APPConst.btc),
-      providers: []);
+    transacationNetwork: BitcoinNetwork.mainnet,
+    token: Token(
+        name: "Bitcoin",
+        symbol: "BTC",
+        market: const CoingeckoCoin(apiId: "bitcoin", coinName: "bitcoin"),
+        decimal: 8,
+        assetLogo: APPConst.btc),
+  );
   static final BitcoinParams bitcoinTestnet = BitcoinParams(
-      transacationNetwork: BitcoinNetwork.testnet,
-      token: Token(
-          name: "Bitcoin testnet",
-          symbol: "tBTC",
-          market: const CoingeckoCoin(apiId: "bitcoin", coinName: "bitcoin"),
-          decimal: 8,
-          assetLogo: APPConst.btc),
-      providers: []);
+    transacationNetwork: BitcoinNetwork.testnet,
+    token: Token(
+        name: "Bitcoin testnet",
+        symbol: "tBTC",
+        market: const CoingeckoCoin(apiId: "bitcoin", coinName: "bitcoin"),
+        decimal: 8,
+        assetLogo: APPConst.btc),
+  );
   static final BitcoinParams bitcoinTestnet4 = BitcoinParams(
-      transacationNetwork: BitcoinNetwork.testnet4,
-      token: Token(
-          name: "Bitcoin testnet4",
-          symbol: "tBTC",
-          market: const CoingeckoCoin(apiId: "bitcoin", coinName: "bitcoin"),
-          decimal: 8,
-          assetLogo: APPConst.btc),
-      providers: []);
+    transacationNetwork: BitcoinNetwork.testnet4,
+    token: Token(
+        name: "Bitcoin testnet4",
+        symbol: "tBTC",
+        market: const CoingeckoCoin(apiId: "bitcoin", coinName: "bitcoin"),
+        decimal: 8,
+        assetLogo: APPConst.btc),
+  );
   static final BitcoinParams litecoinMainnet = BitcoinParams(
-      transacationNetwork: LitecoinNetwork.mainnet,
-      token: Token(
-          name: "Litecoin",
-          symbol: "LTC",
-          market: const CoingeckoCoin(apiId: "litecoin", coinName: "litecoin"),
-          decimal: 8,
-          assetLogo: APPConst.ltc),
-      providers: []);
+    transacationNetwork: LitecoinNetwork.mainnet,
+    token: Token(
+        name: "Litecoin",
+        symbol: "LTC",
+        market: const CoingeckoCoin(apiId: "litecoin", coinName: "litecoin"),
+        decimal: 8,
+        assetLogo: APPConst.ltc),
+  );
   static final BitcoinParams litecoinTestnet = BitcoinParams(
-      transacationNetwork: LitecoinNetwork.testnet,
-      token: Token(
-          name: "Litecoin testnet",
-          symbol: "tLTC",
-          market: const CoingeckoCoin(apiId: "litecoin", coinName: "litecoin"),
-          decimal: 8,
-          assetLogo: APPConst.ltc),
-      providers: []);
+    transacationNetwork: LitecoinNetwork.testnet,
+    token: Token(
+        name: "Litecoin testnet",
+        symbol: "tLTC",
+        market: const CoingeckoCoin(apiId: "litecoin", coinName: "litecoin"),
+        decimal: 8,
+        assetLogo: APPConst.ltc),
+  );
   static final BitcoinParams dogecoinMainnet = BitcoinParams(
-      transacationNetwork: DogecoinNetwork.mainnet,
-      token: Token(
-          name: "Dogecoin",
-          market: const CoingeckoCoin(apiId: "dogecoin", coinName: "dogecoin"),
-          symbol: "Ɖ",
-          decimal: 8,
-          assetLogo: APPConst.doge),
-      providers: []);
-  static final BitcoinParams pepecoinMainnet = BitcoinParams(
-      transacationNetwork: PepeNetwork.mainnet,
-      token: Token(
-          name: "Pepecoin",
-          symbol: "₱",
-          decimal: 8,
-          market: const CoingeckoCoin(
-              apiId: "pepecoin-network", coinName: "pepecoin-network"),
-          assetLogo: APPConst.pepecoin),
-      providers: []);
-  static final BitcoinParams dogeTestnet = BitcoinParams(
-      transacationNetwork: DogecoinNetwork.testnet,
-      token: Token(
-        name: "Dogecoin testnet",
-        symbol: "tƉ",
+    transacationNetwork: DogecoinNetwork.mainnet,
+    token: Token(
+        name: "Dogecoin",
         market: const CoingeckoCoin(apiId: "dogecoin", coinName: "dogecoin"),
+        symbol: "Ɖ",
         decimal: 8,
-        assetLogo: APPConst.doge,
-      ),
-      providers: []);
-  static final BitcoinParams bsvMainnet = BitcoinParams(
-      transacationNetwork: BitcoinSVNetwork.mainnet,
-      token: Token(
-        name: "BitcoinSV",
-        symbol: "BSV",
+        assetLogo: APPConst.doge),
+  );
+  static final BitcoinParams pepecoinMainnet = BitcoinParams(
+    transacationNetwork: PepeNetwork.mainnet,
+    token: Token(
+        name: "Pepecoin",
+        symbol: "₱",
+        decimal: 8,
         market: const CoingeckoCoin(
-            apiId: "bitcoin-cash-sv", coinName: "bitcoin-sv"),
-        decimal: 8,
-        assetLogo: APPConst.bsv,
-      ),
-      providers: []);
+            apiId: "pepecoin-network", coinName: "pepecoin-network"),
+        assetLogo: APPConst.pepecoin),
+  );
+  static final BitcoinParams dogeTestnet = BitcoinParams(
+    transacationNetwork: DogecoinNetwork.testnet,
+    token: Token(
+      name: "Dogecoin testnet",
+      symbol: "tƉ",
+      market: const CoingeckoCoin(apiId: "dogecoin", coinName: "dogecoin"),
+      decimal: 8,
+      assetLogo: APPConst.doge,
+    ),
+  );
+  static final BitcoinParams bsvMainnet = BitcoinParams(
+    transacationNetwork: BitcoinSVNetwork.mainnet,
+    token: Token(
+      name: "BitcoinSV",
+      symbol: "BSV",
+      market:
+          const CoingeckoCoin(apiId: "bitcoin-cash-sv", coinName: "bitcoin-sv"),
+      decimal: 8,
+      assetLogo: APPConst.bsv,
+    ),
+  );
   static final BitcoinParams dashMainnet = BitcoinParams(
-      token: Token(
-        name: "Dash",
-        symbol: "DASH",
-        market: const CoingeckoCoin(apiId: "dash", coinName: "dash"),
-        decimal: 8,
-        assetLogo: APPConst.dash,
-      ),
-      transacationNetwork: DashNetwork.mainnet,
-      providers: []);
+    token: Token(
+      name: "Dash",
+      symbol: "DASH",
+      market: const CoingeckoCoin(apiId: "dash", coinName: "dash"),
+      decimal: 8,
+      assetLogo: APPConst.dash,
+    ),
+    transacationNetwork: DashNetwork.mainnet,
+  );
   static final RippleNetworkParams xrpMainnet = RippleNetworkParams(
       token: Token(
         name: "Ripple",
@@ -136,7 +142,6 @@ class _DefaultAppCoins {
         market: const CoingeckoCoin(apiId: "ripple", coinName: "xrp"),
         assetLogo: APPConst.xrp,
       ),
-      providers: [],
       chainType: ChainType.mainnet,
       networkId: 0);
   static final RippleNetworkParams xrpTestnet = RippleNetworkParams(
@@ -147,7 +152,6 @@ class _DefaultAppCoins {
         market: const CoingeckoCoin(apiId: "ripple", coinName: "xrp"),
         assetLogo: APPConst.xrp,
       ),
-      providers: [],
       chainType: ChainType.testnet,
       networkId: 1);
   static final RippleNetworkParams xrpDevnet = RippleNetworkParams(
@@ -158,174 +162,197 @@ class _DefaultAppCoins {
         market: const CoingeckoCoin(apiId: "ripple", coinName: "xrp"),
         assetLogo: APPConst.xrp,
       ),
-      providers: [],
       chainType: ChainType.testnet,
       networkId: 2);
 
   static final EthereumNetworkParams ethreumMainnet = EthereumNetworkParams(
-      chainId: BigInt.one,
-      chainType: ChainType.mainnet,
-      supportEIP1559: true,
-      token: Token(
-        name: "Ethereum",
-        symbol: "ETH",
-        market: const CoingeckoCoin(apiId: "ethereum", coinName: "ethereum"),
-        decimal: 18,
-        assetLogo: APPConst.eth,
-      ),
-      providers: []);
+    chainId: BigInt.one,
+    chainType: ChainType.mainnet,
+    supportEIP1559: true,
+    token: Token(
+      name: "Ethereum",
+      symbol: "ETH",
+      market: const CoingeckoCoin(apiId: "ethereum", coinName: "ethereum"),
+      decimal: 18,
+      assetLogo: APPConst.eth,
+    ),
+  );
+
+  static final EthereumNetworkParams moonbeamEthereum = EthereumNetworkParams(
+    chainId: BigInt.from(1284),
+    chainType: ChainType.mainnet,
+    supportEIP1559: true,
+    token: Token(
+      name: "Moonbeam",
+      symbol: "GLMR",
+      market: const CoingeckoCoin(
+          apiId: "moonbeam", coinName: "moonbeam", symbol: "GLMR"),
+      decimal: 18,
+      assetLogo: APPConst.moonbeam,
+    ),
+  );
+  static final EthereumNetworkParams moonRiveEthereum = EthereumNetworkParams(
+    chainId: BigInt.from(1285),
+    chainType: ChainType.mainnet,
+    supportEIP1559: true,
+    token: Token(
+      name: "Moonriver",
+      symbol: "MOVR",
+      market: const CoingeckoCoin(
+          apiId: "moonriver", coinName: "moonriver", symbol: "MOVR"),
+      decimal: 18,
+      assetLogo: APPConst.moonriver,
+    ),
+  );
   static final EthereumNetworkParams avalanche = EthereumNetworkParams(
-      chainId: BigInt.from(43114),
-      chainType: ChainType.mainnet,
-      supportEIP1559: true,
-      token: Token(
-        name: "Avalanche",
-        symbol: "AVAX",
-        market:
-            const CoingeckoCoin(apiId: "avalanche-2", coinName: "avalanche"),
-        decimal: 18,
-        assetLogo: APPConst.avalance,
-      ),
-      providers: []);
+    chainId: BigInt.from(43114),
+    chainType: ChainType.mainnet,
+    supportEIP1559: true,
+    token: Token(
+      name: "Avalanche",
+      symbol: "AVAX",
+      market: const CoingeckoCoin(apiId: "avalanche-2", coinName: "avalanche"),
+      decimal: 18,
+      assetLogo: APPConst.avalance,
+    ),
+  );
   static final EthereumNetworkParams arbitrum = EthereumNetworkParams(
-      chainId: BigInt.from(42161),
-      chainType: ChainType.mainnet,
-      supportEIP1559: true,
-      token: Token(
-        name: "Arbitrum",
-        symbol: "ARB",
-        market: const CoingeckoCoin(apiId: "arbitrum", coinName: "arbitrum"),
-        decimal: 18,
-        assetLogo: APPConst.arbitrum,
-      ),
-      providers: []);
+    chainId: BigInt.from(42161),
+    chainType: ChainType.mainnet,
+    supportEIP1559: true,
+    token: Token(
+      name: "Arbitrum",
+      symbol: "ARB",
+      market: const CoingeckoCoin(apiId: "arbitrum", coinName: "arbitrum"),
+      decimal: 18,
+      assetLogo: APPConst.arbitrum,
+    ),
+  );
   static final EthereumNetworkParams arbitrumTestnet = EthereumNetworkParams(
-      chainId: BigInt.from(421614),
-      chainType: ChainType.testnet,
-      supportEIP1559: true,
-      token: Token(
-        name: "Arbitrum Sepolia",
-        symbol: "tARB",
-        market: const CoingeckoCoin(apiId: "arbitrum", coinName: "arbitrum"),
-        decimal: 18,
-        assetLogo: APPConst.arbitrum,
-      ),
-      providers: []);
+    chainId: BigInt.from(421614),
+    chainType: ChainType.testnet,
+    supportEIP1559: true,
+    token: Token(
+      name: "Arbitrum Sepolia",
+      symbol: "tARB",
+      market: const CoingeckoCoin(apiId: "arbitrum", coinName: "arbitrum"),
+      decimal: 18,
+      assetLogo: APPConst.arbitrum,
+    ),
+  );
 
   static final EthereumNetworkParams base = EthereumNetworkParams(
-      chainId: BigInt.from(8453),
-      chainType: ChainType.mainnet,
-      supportEIP1559: true,
-      token: Token(
-        name: "Base Mainnet",
-        symbol: "ETH",
-        decimal: 18,
-        assetLogo: APPConst.base,
-      ),
-      providers: []);
+    chainId: BigInt.from(8453),
+    chainType: ChainType.mainnet,
+    supportEIP1559: true,
+    token: Token(
+      name: "Base Mainnet",
+      symbol: "ETH",
+      decimal: 18,
+      assetLogo: APPConst.base,
+    ),
+  );
   static final EthereumNetworkParams optimism = EthereumNetworkParams(
-      chainId: BigInt.from(10),
-      chainType: ChainType.mainnet,
-      supportEIP1559: true,
-      token: Token(
-        name: "OP Mainnet",
-        symbol: "ETH",
-        decimal: 18,
-        assetLogo: APPConst.optimistic,
-      ),
-      providers: []);
+    chainId: BigInt.from(10),
+    chainType: ChainType.mainnet,
+    supportEIP1559: true,
+    token: Token(
+      name: "OP Mainnet",
+      symbol: "ETH",
+      decimal: 18,
+      assetLogo: APPConst.optimistic,
+    ),
+  );
   static final EthereumNetworkParams ethreumTestnet = EthereumNetworkParams(
-      chainId: BigInt.from(11155111),
-      chainType: ChainType.testnet,
-      supportEIP1559: true,
-      token: Token(
-        name: "Ethereum Sepolia testnet",
-        symbol: "tETH",
-        market: const CoingeckoCoin(apiId: "ethereum", coinName: "ethereum"),
-        decimal: 18,
-        assetLogo: APPConst.eth,
-      ),
-      providers: []);
+    chainId: BigInt.from(11155111),
+    chainType: ChainType.testnet,
+    supportEIP1559: true,
+    token: Token(
+      name: "Ethereum Sepolia testnet",
+      symbol: "tETH",
+      market: const CoingeckoCoin(apiId: "ethereum", coinName: "ethereum"),
+      decimal: 18,
+      assetLogo: APPConst.eth,
+    ),
+  );
   static final EthereumNetworkParams polygon = EthereumNetworkParams(
-      chainId: BigInt.from(137),
-      supportEIP1559: true,
-      chainType: ChainType.mainnet,
-      token: Token(
-        name: "Polygon",
-        symbol: "MATIC",
-        market:
-            const CoingeckoCoin(apiId: "matic-network", coinName: "polygon"),
-        decimal: 18,
-        assetLogo: APPConst.matic,
-      ),
-      providers: []);
+    chainId: BigInt.from(137),
+    supportEIP1559: true,
+    chainType: ChainType.mainnet,
+    token: Token(
+      name: "Polygon",
+      symbol: "MATIC",
+      market: const CoingeckoCoin(apiId: "matic-network", coinName: "polygon"),
+      decimal: 18,
+      assetLogo: APPConst.matic,
+    ),
+  );
   static final EthereumNetworkParams polygonTestnet = EthereumNetworkParams(
-      chainId: BigInt.from(80001),
-      supportEIP1559: true,
-      chainType: ChainType.testnet,
-      token: Token(
-        name: "Polygon mumbai testnet",
-        symbol: "tMATIC",
-        market:
-            const CoingeckoCoin(apiId: "matic-network", coinName: "polygon"),
-        decimal: 18,
-        assetLogo: APPConst.matic,
-      ),
-      providers: []);
+    chainId: BigInt.from(80001),
+    supportEIP1559: true,
+    chainType: ChainType.testnet,
+    token: Token(
+      name: "Polygon mumbai testnet",
+      symbol: "tMATIC",
+      market: const CoingeckoCoin(apiId: "matic-network", coinName: "polygon"),
+      decimal: 18,
+      assetLogo: APPConst.matic,
+    ),
+  );
   static final EthereumNetworkParams bnb = EthereumNetworkParams(
-      chainId: BigInt.from(56),
-      supportEIP1559: false,
-      chainType: ChainType.mainnet,
-      token: Token(
-          name: "BNB Smart Chain",
-          symbol: "BNB",
-          market: const CoingeckoCoin(apiId: "binancecoin", coinName: "bnb"),
-          decimal: 18,
-          assetLogo: APPConst.bnb),
-      providers: []);
+    chainId: BigInt.from(56),
+    supportEIP1559: false,
+    chainType: ChainType.mainnet,
+    token: Token(
+        name: "BNB Smart Chain",
+        symbol: "BNB",
+        market: const CoingeckoCoin(apiId: "binancecoin", coinName: "bnb"),
+        decimal: 18,
+        assetLogo: APPConst.bnb),
+  );
   static final EthereumNetworkParams bnbTestnet = EthereumNetworkParams(
-      chainId: BigInt.from(97),
-      chainType: ChainType.testnet,
-      supportEIP1559: false,
-      token: Token(
-          name: "BNB Smart chain testnet",
-          symbol: "tBNB",
-          market: const CoingeckoCoin(apiId: "binancecoin", coinName: "bnb"),
-          decimal: 18,
-          assetLogo: APPConst.bnb),
-      providers: []);
+    chainId: BigInt.from(97),
+    chainType: ChainType.testnet,
+    supportEIP1559: false,
+    token: Token(
+        name: "BNB Smart chain testnet",
+        symbol: "tBNB",
+        market: const CoingeckoCoin(apiId: "binancecoin", coinName: "bnb"),
+        decimal: 18,
+        assetLogo: APPConst.bnb),
+  );
 
   /// tron networks
   static final TronNetworkParams tronShasta = TronNetworkParams(
-      chainType: ChainType.testnet,
-      token: Token(
-        name: "Tron shasta testnet",
-        symbol: "tTRX",
-        market: const CoingeckoCoin(apiId: "tron", coinName: "tron"),
-        decimal: 6,
-        assetLogo: APPConst.trx,
-      ),
-      providers: []);
+    chainType: ChainType.testnet,
+    token: Token(
+      name: "Tron shasta testnet",
+      symbol: "tTRX",
+      market: const CoingeckoCoin(apiId: "tron", coinName: "tron"),
+      decimal: 6,
+      assetLogo: APPConst.trx,
+    ),
+  );
   static final TronNetworkParams tronNile = TronNetworkParams(
-      chainType: ChainType.testnet,
-      token: Token(
-        name: "Tron nile testnet",
-        symbol: "tTRX",
-        market: const CoingeckoCoin(apiId: "tron", coinName: "tron"),
-        decimal: 6,
-        assetLogo: APPConst.trx,
-      ),
-      providers: []);
+    chainType: ChainType.testnet,
+    token: Token(
+      name: "Tron nile testnet",
+      symbol: "tTRX",
+      market: const CoingeckoCoin(apiId: "tron", coinName: "tron"),
+      decimal: 6,
+      assetLogo: APPConst.trx,
+    ),
+  );
   static final TronNetworkParams tron = TronNetworkParams(
-      chainType: ChainType.mainnet,
-      token: Token(
-        name: "Tron",
-        symbol: "TRX",
-        decimal: 6,
-        market: const CoingeckoCoin(apiId: "tron", coinName: "tron"),
-        assetLogo: APPConst.trx,
-      ),
-      providers: []);
+    chainType: ChainType.mainnet,
+    token: Token(
+      name: "Tron",
+      symbol: "TRX",
+      decimal: 6,
+      market: const CoingeckoCoin(apiId: "tron", coinName: "tron"),
+      assetLogo: APPConst.trx,
+    ),
+  );
 
   static final SolanaNetworkParams solana = SolanaNetworkParams(
       chainType: ChainType.mainnet,
@@ -336,7 +363,6 @@ class _DefaultAppCoins {
         decimal: SolanaConst.decimal,
         assetLogo: APPConst.sol,
       ),
-      providers: [],
       chainId: 101,
       type: SolanaNetworkType.mainnet);
   static final SolanaNetworkParams solanaTestnet = SolanaNetworkParams(
@@ -348,7 +374,6 @@ class _DefaultAppCoins {
         decimal: SolanaConst.decimal,
         assetLogo: APPConst.sol,
       ),
-      providers: [],
       chainId: 102,
       type: SolanaNetworkType.testnet);
   static final SolanaNetworkParams solanaDevnet = SolanaNetworkParams(
@@ -359,7 +384,6 @@ class _DefaultAppCoins {
           market: const CoingeckoCoin(apiId: "solana", coinName: "solana"),
           decimal: SolanaConst.decimal,
           assetLogo: APPConst.sol),
-      providers: [],
       chainId: 103,
       type: SolanaNetworkType.devnet);
 
@@ -372,7 +396,6 @@ class _DefaultAppCoins {
         decimal: 6,
         assetLogo: APPConst.ada,
       ),
-      providers: [],
       networkType: ADANetwork.testnetPreprod);
   static final CardanoNetworkParams cardano = CardanoNetworkParams(
       chainType: ChainType.mainnet,
@@ -383,7 +406,6 @@ class _DefaultAppCoins {
         decimal: 6,
         assetLogo: APPConst.ada,
       ),
-      providers: [],
       networkType: ADANetwork.mainnet);
   static final CosmosNetworkParams cosmosTestnet = CosmosNetworkParams(
       networkType: CosmosNetworkTypes.main,
@@ -412,7 +434,6 @@ class _DefaultAppCoins {
           market: const CoingeckoCoin(apiId: "cosmos", coinName: "cosmos-hub"),
           decimal: 6,
           assetLogo: APPConst.atom),
-      providers: [],
       keysAlgs: [
         CosmosKeysAlgs.secp256k1,
       ]);
@@ -445,7 +466,6 @@ class _DefaultAppCoins {
         decimal: 6,
         assetLogo: APPConst.atom,
       ),
-      providers: [],
       keysAlgs: [
         CosmosKeysAlgs.secp256k1,
       ]);
@@ -476,7 +496,6 @@ class _DefaultAppCoins {
         decimal: 10,
         assetLogo: APPConst.cacao,
       ),
-      providers: [],
       chainId: "mayachain-mainnet-v1",
       networkConstantUri: "https://mayanode.mayachain.info/mayachain/constants",
       keysAlgs: [
@@ -508,7 +527,6 @@ class _DefaultAppCoins {
               const CoingeckoCoin(apiId: "thorchain", coinName: "thorchain"),
           decimal: 8,
           assetLogo: APPConst.thor),
-      providers: [],
       chainId: "thorchain-1",
       networkConstantUri: "https://thornode.ninerealms.com/thorchain/constants",
       keysAlgs: [CosmosKeysAlgs.secp256k1]);
@@ -538,7 +556,6 @@ class _DefaultAppCoins {
           market: const CoingeckoCoin(apiId: "kujira", coinName: "kujira"),
           decimal: 6,
           assetLogo: APPConst.kujira),
-      providers: [],
       chainId: "harpoon-4",
       keysAlgs: [
         CosmosKeysAlgs.secp256k1,
@@ -569,7 +586,6 @@ class _DefaultAppCoins {
           market: const CoingeckoCoin(apiId: "kujira", coinName: "kujira"),
           decimal: 6,
           assetLogo: APPConst.kujira),
-      providers: [],
       chainId: "kaiyo-1",
       keysAlgs: [
         CosmosKeysAlgs.secp256k1,
@@ -582,7 +598,7 @@ class _DefaultAppCoins {
       chainRegisteryName: "osmosistestnet",
       feeTokens: [
         CosmosFeeToken(
-            averageGasPrice: BigRational.parseDecimal("0.025"),
+            averageGasPrice: BigRational.parseDecimal("0.04"),
             highGasPrice: BigRational.parseDecimal("0.04"),
             lowGasPrice: BigRational.parseDecimal("0.0025"),
             token: Token(
@@ -603,7 +619,6 @@ class _DefaultAppCoins {
         market: const CoingeckoCoin(apiId: "osmosis", coinName: "osmosis"),
         assetLogo: APPConst.osmo,
       ),
-      providers: [],
       chainId: "osmo-test-5",
       keysAlgs: [CosmosKeysAlgs.secp256k1]);
   static final CosmosNetworkParams osmosis = CosmosNetworkParams(
@@ -614,7 +629,7 @@ class _DefaultAppCoins {
       denom: "uosmo",
       feeTokens: [
         CosmosFeeToken(
-            averageGasPrice: BigRational.parseDecimal("0.025"),
+            averageGasPrice: BigRational.parseDecimal("0.04"),
             highGasPrice: BigRational.parseDecimal("0.04"),
             lowGasPrice: BigRational.parseDecimal("0.0025"),
             token: Token(
@@ -634,43 +649,43 @@ class _DefaultAppCoins {
         market: const CoingeckoCoin(apiId: "osmosis", coinName: "osmosis"),
         assetLogo: APPConst.osmo,
       ),
-      providers: [],
       chainId: "osmosis-1",
       keysAlgs: [
         CosmosKeysAlgs.secp256k1,
       ]);
   static final TonNetworkParams tonTestnet = TonNetworkParams(
-      chainType: ChainType.testnet,
-      workchain: -1,
-      token: Token(
-        name: "TonCoin testnet",
-        symbol: "tTon",
-        decimal: 9,
-        market:
-            const CoingeckoCoin(apiId: "the-open-network", coinName: "toncoin"),
-        assetLogo: APPConst.ton,
-      ),
-      providers: []);
+    chainType: ChainType.testnet,
+    workchain: -1,
+    token: Token(
+      name: "TonCoin testnet",
+      symbol: "tTon",
+      decimal: 9,
+      market:
+          const CoingeckoCoin(apiId: "the-open-network", coinName: "toncoin"),
+      assetLogo: APPConst.ton,
+    ),
+  );
 
   static final TonNetworkParams tonMainnet = TonNetworkParams(
-      chainType: ChainType.mainnet,
-      workchain: 0,
-      token: Token(
-          name: "TonCoin",
-          symbol: "Ton",
-          market: const CoingeckoCoin(
-              apiId: "the-open-network", coinName: "toncoin"),
-          decimal: 9,
-          assetLogo: APPConst.ton),
-      providers: []);
+    chainType: ChainType.mainnet,
+    workchain: 0,
+    token: Token(
+        name: "TonCoin",
+        symbol: "Ton",
+        market:
+            const CoingeckoCoin(apiId: "the-open-network", coinName: "toncoin"),
+        decimal: 9,
+        assetLogo: APPConst.ton),
+  );
   static final SubstrateNetworkParams westend = SubstrateNetworkParams(
       chainType: ChainType.testnet,
       ss58Format: SS58Const.genericSubstrate,
       token:
           Token(name: "Westend", symbol: "WND", decimal: 12, assetLogo: null),
-      providers: [],
       substrateChainType: SubstrateChainType.substrate,
-      specVersion: 1017001);
+      consensusRole: SubstrateConsensusRole.relay,
+      specVersion: 1017001,
+      relaySystem: SubstrateRelaySystem.westend);
 
   static final SubstrateNetworkParams cf = SubstrateNetworkParams(
       chainType: ChainType.testnet,
@@ -680,9 +695,22 @@ class _DefaultAppCoins {
           symbol: "tDOT",
           decimal: 10,
           assetLogo: APPConst.cf),
-      providers: [],
       substrateChainType: SubstrateChainType.substrate,
-      specVersion: 1017001);
+      specVersion: 1017001,
+      relaySystem: null,
+      consensusRole: null);
+  static final SubstrateNetworkParams cfAssetHub = SubstrateNetworkParams(
+      chainType: ChainType.testnet,
+      ss58Format: SS58Const.polkadot,
+      token: Token(
+          name: "AssetHub ChainFlip",
+          symbol: "tDOT",
+          decimal: 10,
+          assetLogo: APPConst.cf),
+      substrateChainType: SubstrateChainType.substrate,
+      specVersion: 1017001,
+      relaySystem: null,
+      consensusRole: null);
   static final SubstrateNetworkParams westendAssetHub = SubstrateNetworkParams(
       chainType: ChainType.testnet,
       ss58Format: SS58Const.genericSubstrate,
@@ -691,9 +719,10 @@ class _DefaultAppCoins {
           symbol: "WND",
           decimal: 12,
           assetLogo: null),
-      providers: [],
       substrateChainType: SubstrateChainType.substrate,
-      specVersion: 1017004);
+      specVersion: 1017004,
+      consensusRole: SubstrateConsensusRole.system,
+      relaySystem: SubstrateRelaySystem.westend);
   static final SubstrateNetworkParams westendBridgeHub = SubstrateNetworkParams(
       chainType: ChainType.testnet,
       ss58Format: SS58Const.genericSubstrate,
@@ -702,9 +731,10 @@ class _DefaultAppCoins {
           symbol: "WND",
           decimal: 12,
           assetLogo: null),
-      providers: [],
       substrateChainType: SubstrateChainType.substrate,
-      specVersion: 1017001);
+      specVersion: 1017001,
+      consensusRole: SubstrateConsensusRole.system,
+      relaySystem: SubstrateRelaySystem.westend);
   static final SubstrateNetworkParams polkadot = SubstrateNetworkParams(
       chainType: ChainType.mainnet,
       ss58Format: SS58Const.polkadot,
@@ -716,9 +746,10 @@ class _DefaultAppCoins {
         decimal: 10,
         assetLogo: APPConst.polkadot,
       ),
-      providers: [],
       substrateChainType: SubstrateChainType.substrate,
-      specVersion: 1003004);
+      specVersion: 1003004,
+      consensusRole: SubstrateConsensusRole.relay,
+      relaySystem: SubstrateRelaySystem.polkadot);
   static final SubstrateNetworkParams polkadotAssetHub = SubstrateNetworkParams(
       chainType: ChainType.mainnet,
       ss58Format: SS58Const.polkadot,
@@ -729,9 +760,10 @@ class _DefaultAppCoins {
           symbol: "DOT",
           decimal: 10,
           assetLogo: APPConst.polkadot),
-      providers: [],
       substrateChainType: SubstrateChainType.substrate,
-      specVersion: 1003004);
+      specVersion: 1003004,
+      consensusRole: SubstrateConsensusRole.system,
+      relaySystem: SubstrateRelaySystem.polkadot);
   static final SubstrateNetworkParams polkadotBridgeHub =
       SubstrateNetworkParams(
           chainType: ChainType.mainnet,
@@ -743,9 +775,10 @@ class _DefaultAppCoins {
               symbol: "DOT",
               decimal: 10,
               assetLogo: APPConst.polkadot),
-          providers: [],
           substrateChainType: SubstrateChainType.substrate,
-          specVersion: 1003003);
+          specVersion: 1003003,
+          relaySystem: SubstrateRelaySystem.polkadot,
+          consensusRole: SubstrateConsensusRole.system);
   static final SubstrateNetworkParams kusama = SubstrateNetworkParams(
       chainType: ChainType.mainnet,
       ss58Format: SS58Const.kusama,
@@ -756,9 +789,10 @@ class _DefaultAppCoins {
           market: const CoingeckoCoin(
               apiId: "kusama", coinName: "kusama", symbol: "KSM"),
           assetLogo: APPConst.kusama),
-      providers: [],
       substrateChainType: SubstrateChainType.substrate,
-      specVersion: 1003003);
+      specVersion: 1003003,
+      relaySystem: SubstrateRelaySystem.kusama,
+      consensusRole: SubstrateConsensusRole.relay);
   static final SubstrateNetworkParams kusamaAssetHub = SubstrateNetworkParams(
       chainType: ChainType.mainnet,
       ss58Format: SS58Const.kusama,
@@ -769,9 +803,10 @@ class _DefaultAppCoins {
           market: const CoingeckoCoin(
               apiId: "kusama", coinName: "kusama", symbol: "KSM"),
           assetLogo: APPConst.kusama),
-      providers: [],
       substrateChainType: SubstrateChainType.substrate,
-      specVersion: 1003004);
+      specVersion: 1003004,
+      relaySystem: SubstrateRelaySystem.kusama,
+      consensusRole: SubstrateConsensusRole.system);
   static final SubstrateNetworkParams kusamaBridgeHub = SubstrateNetworkParams(
       chainType: ChainType.mainnet,
       ss58Format: SS58Const.kusama,
@@ -782,27 +817,31 @@ class _DefaultAppCoins {
           market: const CoingeckoCoin(
               apiId: "kusama", coinName: "kusama", symbol: "KSM"),
           assetLogo: APPConst.kusama),
-      providers: [],
       substrateChainType: SubstrateChainType.substrate,
-      specVersion: 1003003);
+      specVersion: 1003003,
+      relaySystem: SubstrateRelaySystem.kusama,
+      consensusRole: SubstrateConsensusRole.system);
 
   static final SubstrateNetworkParams moonBase = SubstrateNetworkParams(
-      chainType: ChainType.testnet,
-      ss58Format: SS58Const.moonbeam,
-      token: Token(
-          name: "Moonbase Alpha",
-          market: const CoingeckoCoin(
-              apiId: "moonbeam", coinName: "moonbeam", symbol: "GLMR"),
-          symbol: "GLMR",
-          decimal: 18,
-          assetLogo: APPConst.moonbeam),
-      providers: [],
-      substrateChainType: SubstrateChainType.ethereum,
-      keyAlgorithms: [SubstrateKeyAlgorithm.ethereum],
-      specVersion: 3400);
+    chainType: ChainType.testnet,
+    ss58Format: SS58Const.moonbeam,
+    token: Token(
+        name: "Moonbase Alpha",
+        market: const CoingeckoCoin(
+            apiId: "moonbeam", coinName: "moonbeam", symbol: "GLMR"),
+        symbol: "GLMR",
+        decimal: 18,
+        assetLogo: APPConst.moonbeam),
+    substrateChainType: SubstrateChainType.ethereum,
+    keyAlgorithms: [SubstrateKeyAlgorithm.ethereum],
+    specVersion: 3400,
+    consensusRole: SubstrateConsensusRole.parachain,
+    relaySystem: null,
+  );
   static final SubstrateNetworkParams moonbeam = SubstrateNetworkParams(
       chainType: ChainType.mainnet,
       ss58Format: SS58Const.moonbeam,
+      evmChainId: BigInt.from(1284),
       token: Token(
           name: "Moonbeam",
           market: const CoingeckoCoin(
@@ -810,10 +849,11 @@ class _DefaultAppCoins {
           symbol: "GLMR",
           decimal: 18,
           assetLogo: APPConst.moonbeam),
-      providers: [],
       substrateChainType: SubstrateChainType.ethereum,
       keyAlgorithms: [SubstrateKeyAlgorithm.ethereum],
-      specVersion: 3300);
+      specVersion: 3300,
+      relaySystem: SubstrateRelaySystem.polkadot,
+      consensusRole: SubstrateConsensusRole.parachain);
   static final SubstrateNetworkParams moonriver = SubstrateNetworkParams(
       chainType: ChainType.mainnet,
       ss58Format: SS58Const.moonriver,
@@ -824,10 +864,11 @@ class _DefaultAppCoins {
           symbol: "MOVR",
           decimal: 18,
           assetLogo: APPConst.moonriver),
-      providers: [],
       substrateChainType: SubstrateChainType.ethereum,
       keyAlgorithms: [SubstrateKeyAlgorithm.ethereum],
-      specVersion: 3400);
+      specVersion: 3400,
+      consensusRole: SubstrateConsensusRole.parachain,
+      relaySystem: null);
   static final SubstrateNetworkParams astar = SubstrateNetworkParams(
       chainType: ChainType.mainnet,
       ss58Format: SS58Const.astar,
@@ -838,9 +879,42 @@ class _DefaultAppCoins {
           symbol: "ASTR",
           decimal: 18,
           assetLogo: APPConst.astar),
-      providers: [],
       substrateChainType: SubstrateChainType.substrate,
-      specVersion: 1200);
+      specVersion: 1200,
+      relaySystem: SubstrateRelaySystem.polkadot,
+      consensusRole: SubstrateConsensusRole.parachain);
+
+  static final SubstrateNetworkParams hydration = SubstrateNetworkParams(
+      chainType: ChainType.mainnet,
+      ss58Format: SS58Const.polkadot,
+      token: Token(
+          name: "Hydration",
+          market: const CoingeckoCoin(
+              apiId: "hydradx", coinName: "hydration", symbol: "HDX"),
+          symbol: "HDX",
+          decimal: 12,
+          assetLogo: APPConst.hydration),
+      substrateChainType: SubstrateChainType.substrate,
+      specVersion: 347,
+      relaySystem: SubstrateRelaySystem.polkadot,
+      consensusRole: SubstrateConsensusRole.parachain);
+
+  static final SubstrateNetworkParams bifrost = SubstrateNetworkParams(
+      chainType: ChainType.mainnet,
+      ss58Format: SS58Const.polkadot,
+      token: Token(
+          name: "Bifrost",
+          market: const CoingeckoCoin(
+              apiId: "bifrost-native-coin",
+              coinName: "bifrost-native-coin",
+              symbol: "BNC"),
+          symbol: "BNC",
+          decimal: 12,
+          assetLogo: APPConst.bifrost),
+      substrateChainType: SubstrateChainType.substrate,
+      specVersion: 22001,
+      relaySystem: SubstrateRelaySystem.polkadot,
+      consensusRole: SubstrateConsensusRole.parachain);
 
   static final SubstrateNetworkParams centrifuge = SubstrateNetworkParams(
       chainType: ChainType.mainnet,
@@ -852,9 +926,10 @@ class _DefaultAppCoins {
           symbol: "CFG",
           decimal: 18,
           assetLogo: APPConst.centrifuge),
-      providers: [],
       substrateChainType: SubstrateChainType.substrate,
-      specVersion: 1400);
+      specVersion: 1400,
+      consensusRole: SubstrateConsensusRole.parachain,
+      relaySystem: SubstrateRelaySystem.polkadot);
 
   static final SubstrateNetworkParams acala = SubstrateNetworkParams(
       chainType: ChainType.mainnet,
@@ -866,21 +941,22 @@ class _DefaultAppCoins {
           symbol: "ACA",
           decimal: 12,
           assetLogo: APPConst.acala),
-      providers: [],
       substrateChainType: SubstrateChainType.substrate,
-      specVersion: 2270);
+      specVersion: 2270,
+      consensusRole: SubstrateConsensusRole.parachain,
+      relaySystem: SubstrateRelaySystem.polkadot);
 
   static final StellarNetworkParams stellarMainnet = StellarNetworkParams(
-      token: Token(
-          name: "Stellar",
-          symbol: "XLM",
-          decimal: StellarConst.decimal,
-          market: const CoingeckoCoin(
-              apiId: "stellar", coinName: "stellar", symbol: "XLM"),
-          assetLogo: APPConst.stellar),
-      providers: const [],
-      chainType: ChainType.mainnet,
-      stellarChainType: StellarChainType.pubnet);
+    token: Token(
+        name: "Stellar",
+        symbol: "XLM",
+        decimal: StellarConst.decimal,
+        market: const CoingeckoCoin(
+            apiId: "stellar", coinName: "stellar", symbol: "XLM"),
+        assetLogo: APPConst.stellar),
+    chainType: ChainType.mainnet,
+    stellarChainType: StellarChainType.pubnet,
+  );
   static final StellarNetworkParams stellarTestnet = StellarNetworkParams(
       token: Token(
           name: "Stellar testnet",
@@ -889,7 +965,6 @@ class _DefaultAppCoins {
           market: const CoingeckoCoin(
               apiId: "stellar", coinName: "stellar", symbol: "XLM"),
           assetLogo: APPConst.stellar),
-      providers: const [],
       chainType: ChainType.testnet,
       stellarChainType: StellarChainType.testnet);
 
@@ -901,7 +976,6 @@ class _DefaultAppCoins {
           market: const CoingeckoCoin(
               apiId: "monero", coinName: "monero", symbol: "XMR"),
           assetLogo: APPConst.monero),
-      providers: const [],
       chainType: ChainType.testnet,
       network: MoneroNetwork.stagenet,
       rctHeight: 96211);
@@ -913,7 +987,6 @@ class _DefaultAppCoins {
           market: const CoingeckoCoin(
               apiId: "monero", coinName: "monero", symbol: "XMR"),
           assetLogo: APPConst.monero),
-      providers: const [],
       chainType: ChainType.mainnet,
       network: MoneroNetwork.mainnet,
       rctHeight: 1220517);
@@ -925,7 +998,6 @@ class _DefaultAppCoins {
           market: const CoingeckoCoin(
               apiId: "aptos", coinName: "aptos", symbol: "APT"),
           assetLogo: APPConst.aptos),
-      providers: const [],
       chainType: ChainType.mainnet,
       aptosChainType: AptosChainType.mainnet);
   static final AptosNetworkParams aptosTestnet = AptosNetworkParams(
@@ -936,7 +1008,6 @@ class _DefaultAppCoins {
           market: const CoingeckoCoin(
               apiId: "aptos", coinName: "aptos", symbol: "APT"),
           assetLogo: APPConst.aptos),
-      providers: const [],
       chainType: ChainType.testnet,
       aptosChainType: AptosChainType.testnet,
       bip32CoinType: 1);
@@ -948,7 +1019,6 @@ class _DefaultAppCoins {
           market: const CoingeckoCoin(
               apiId: "aptos", coinName: "aptos", symbol: "APT"),
           assetLogo: APPConst.aptos),
-      providers: const [],
       chainType: ChainType.testnet,
       aptosChainType: AptosChainType.devnet,
       bip32CoinType: 1);
@@ -961,7 +1031,6 @@ class _DefaultAppCoins {
           market:
               const CoingeckoCoin(apiId: "sui", coinName: "sui", symbol: "SUI"),
           assetLogo: APPConst.sui),
-      providers: const [],
       chainType: ChainType.mainnet,
       identifier: SUIConst.mainnetIdentifier,
       suiChain: SuiChainType.mainnet);
@@ -974,7 +1043,6 @@ class _DefaultAppCoins {
             const CoingeckoCoin(apiId: "sui", coinName: "sui", symbol: "SUI"),
         assetLogo: APPConst.sui,
       ),
-      providers: const [],
       chainType: ChainType.testnet,
       identifier: SUIConst.devnetIdentifier,
       bip32CoinType: 1,
@@ -988,7 +1056,6 @@ class _DefaultAppCoins {
           market:
               const CoingeckoCoin(apiId: "sui", coinName: "sui", symbol: "SUI"),
           assetLogo: APPConst.sui),
-      providers: const [],
       chainType: ChainType.testnet,
       identifier: SUIConst.testnetIdentifier,
       bip32CoinType: 1,
@@ -1022,6 +1089,9 @@ class _DefaultAppCoins {
     464: "b3db41421702df9a7fcac62b53ffeac85f7853cc4e689e0b93aeb3db18c09d82",
     465: "fc41b9bd8ef8fe53d58c7ea67c794c7ec9a73daf05e6d54b14ff6342c99ba64c",
     466: "e566d149729892a803c3c4b1e652f09445926234d956a0f166be4d4dea91f536",
+    467: "4fb7a1b11ba4a38827cf211b3effc87971413e4a9fd79c6bcc2c633383496832",
+    468: "afdc188f45c71dacbaa0b62e16a91f726c7b8699a9748cdf715459de6b7f366d",
+    469: "262e1b2ad728475fd6fe88e62d34c200abe6fd693931ddad144059b1eb884e5b",
     1001: "00000000000000001ebf88508a03865c71d452e25f4d51194196a1d22b6653dc",
     1002: "0000000000000000de1aa88295e1fcf982742f773e0419c5a9c134c994a9059e",
     1003: "0000000000000000d698d4192c56cb6be724a558448e2684802de4d6cd8690dc",
@@ -1063,6 +1133,8 @@ class _DefaultAppCoins {
     107: "https://arbitrum.blockscout.com/address/#address",
     108: "https://base.blockscout.com/address/#address",
     109: "https://optimistic.etherscan.io/address/#address",
+    111: "https://moonscan.io/address/#address",
+    112: "https://moonriver.moonscan.io/address/#address",
     200: "https://ping.pub/cosmos/account/#address",
     201: "https://explorer.polypore.xyz/provider/account/#address",
     202: "https://www.mayascan.org/address/#address",
@@ -1087,6 +1159,8 @@ class _DefaultAppCoins {
     463: "https://astar.subscan.io/account/#address",
     464: "https://centrifuge.subscan.io/account/#address",
     465: "https://acala.subscan.io/account/#address",
+    468: "https://hydration.subscan.io/account/#address",
+    469: "https://bifrost.subscan.io/account/#address",
     460: "https://moonbeam.subscan.io/account/#address",
     600: "https://stellar.expert/explorer/public/account/#address",
     601: "https://stellar.expert/explorer/testnet/account/#address",
@@ -1132,6 +1206,8 @@ class _DefaultAppCoins {
     107: "https://arbitrum.blockscout.com/tx/#txid",
     108: "https://base.blockscout.com/tx/#txid",
     109: "https://optimistic.etherscan.io/tx/#txid",
+    111: "https://moonscan.io/tx/#txid",
+    112: "https://moonriver.moonscan.io/tx/#txid",
     200: "https://ping.pub/cosmos/tx/#txid",
     201: "https://explorer.polypore.xyz/provider/tx/#txid",
     202: "https://www.mayascan.org/tx/#txid",
@@ -1157,6 +1233,8 @@ class _DefaultAppCoins {
     463: "https://astar.subscan.io/extrinsic/#txid",
     464: "https://centrifuge.subscan.io/extrinsic/#txid",
     465: "https://acala.subscan.io/extrinsic/#txid",
+    468: "https://hydration.subscan.io/extrinsic/#txid",
+    469: "https://bifrost.subscan.io/extrinsic/#txid",
     600: "https://stellar.expert/explorer/public/tx/#txid",
     601: "https://stellar.expert/explorer/testnet/tx/#txid",
     700: "https://xmrchain.net/tx/#txid",
@@ -1178,8 +1256,6 @@ class ChainConst {
 
   static const int importedNetworkStartId = 2000;
   static const int maxAccountTokens = 1000;
-  static const int cfTestnetNetworkId = 466;
-  static const int polkadotMainnetId = 400;
   static final Map<int, WalletNetwork> defaultCoins =
       Map<int, WalletNetwork>.unmodifiable({
     0: WalletBitcoinNetwork(0, _DefaultAppCoins.bitcoinMainnet),
@@ -1215,6 +1291,8 @@ class ChainConst {
     108: WalletEthereumNetwork(108, _DefaultAppCoins.base),
     109: WalletEthereumNetwork(109, _DefaultAppCoins.optimism),
     110: WalletEthereumNetwork(110, _DefaultAppCoins.arbitrumTestnet),
+    111: WalletEthereumNetwork(111, _DefaultAppCoins.moonbeamEthereum),
+    112: WalletEthereumNetwork(112, _DefaultAppCoins.moonRiveEthereum),
     200: WalletCosmosNetwork(200, _DefaultAppCoins.cosmos),
     201: WalletCosmosNetwork(201, _DefaultAppCoins.cosmosTestnet),
     202: WalletCosmosNetwork(202, _DefaultAppCoins.maya),
@@ -1241,6 +1319,9 @@ class ChainConst {
     464: WalletSubstrateNetwork(464, _DefaultAppCoins.centrifuge),
     465: WalletSubstrateNetwork(465, _DefaultAppCoins.acala),
     466: WalletSubstrateNetwork(466, _DefaultAppCoins.cf),
+    467: WalletSubstrateNetwork(467, _DefaultAppCoins.cfAssetHub),
+    468: WalletSubstrateNetwork(468, _DefaultAppCoins.hydration),
+    469: WalletSubstrateNetwork(469, _DefaultAppCoins.bifrost),
 
     ///
     600: WalletStellarNetwork(600, _DefaultAppCoins.stellarMainnet),
@@ -1282,7 +1363,6 @@ class ChainConst {
     if (network == null) return defaultNetwork;
     return defaultNetwork.copyWith(
       coinParam: defaultNetwork.coinParam.updateParams(
-        updateProviders: network.coinParam.providers,
         token: network.coinParam.token
             .copyWith(assetLogo: defaultNetwork.coinParam.token.assetLogo),
         addressExplorer: network.coinParam.addressExplorer,
@@ -1302,6 +1382,7 @@ class ChainConst {
       case NetworkType.sui:
       case NetworkType.ton:
       case NetworkType.ethereum:
+      case NetworkType.substrate:
         return ["services", "tokens", "activity"];
       default:
         return ["services", "activity"];

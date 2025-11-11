@@ -1,11 +1,12 @@
 import 'package:flutter/widgets.dart';
 import 'package:on_chain_wallet/app/models/models/typedef.dart'
     show NullStringString;
+import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+
 import 'button.dart';
 import 'paste_icon_widget.dart';
 import 'text_field.dart';
 import 'widget_constant.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 
 class StringWriterView extends StatefulWidget {
   const StringWriterView(
@@ -93,18 +94,14 @@ class _StringWriterViewState extends State<StringWriterView> with SafeState {
           widget.title,
           WidgetConstant.height20,
           AppTextField(
-            label: widget.label,
-            minlines: widget.minLines,
-            maxLines: widget.maxLines,
-            initialValue: text,
-            validator: widget.customForm ?? validator,
-            suffixIcon: PasteTextIcon(
-              onPaste: onPaste,
-              isSensitive: false,
-            ),
-            onChanged: onChange,
-            key: textFieldKey,
-          ),
+              label: widget.label,
+              minlines: widget.minLines,
+              maxLines: widget.maxLines,
+              initialValue: text,
+              validator: widget.customForm ?? validator,
+              suffixIcon: PasteTextIcon(onPaste: onPaste, isSensitive: false),
+              onChanged: onChange,
+              key: textFieldKey),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

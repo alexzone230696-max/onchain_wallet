@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
@@ -16,7 +17,7 @@ mixin Web3StatePageController<WEB3REQUEST extends Web3Request>
   Widget widgetBuilder(BuildContext context);
   Widget onPageBuilder(BuildContext context) {
     return APPStreamBuilder(
-        value: notifier, builder: (context, value) => widgetBuilder(context));
+        value: notifier, builder: (_, value) => widgetBuilder(context));
   }
 
   bool get web3Closed => request.info.isClosed;

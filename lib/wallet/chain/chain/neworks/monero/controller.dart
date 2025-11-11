@@ -28,6 +28,14 @@ base mixin MoneroChainController
   MoneroWalletClient? _walletClient;
   bool get syncIsActive => _syncChain.chain == network.coinParam.chainType;
   StreamSubscription? _blockSubscribe;
+  @override
+  Future<void> _onWalletPing() async {
+    await _onUpdateAccountBalance.get(onFetch: () async {
+      await init();
+      await updateAccountBalance();
+      _trackTxes();
+    });
+  }
 
   @override
   Future<void> _onConnectionStatusChange(bool isOnline) async {
@@ -358,7 +366,7 @@ base mixin MoneroChainController
           return true;
         },
         type: DefaultChainNotify.address,
-        saveAccount: true);
+        saveAccount: (_) => true);
   }
 
   void hideStatus() {
@@ -551,6 +559,17 @@ base mixin MoneroChainController
       await _saveUtxos();
     }
     return utxos;
+  }
+
+  @override
+  Future<void> setProvider(ProviderIdentifier service,
+      {Duration? requestTimeout}) async {
+    final currentService = _service;
+    await super.setProvider(service, requestTimeout: requestTimeout);
+    if (currentService != _service) {
+      _stopSyncBlock();
+      _syncBlock();
+    }
   }
 
   @override

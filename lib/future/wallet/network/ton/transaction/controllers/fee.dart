@@ -1,3 +1,4 @@
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/wallet/network/ton/transaction/controllers/provider.dart';
 import 'package:on_chain_wallet/future/wallet/network/ton/transaction/types/types.dart';
@@ -6,7 +7,7 @@ import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart'
 mixin TonTransactionFeeController on TonTransactionApiController {
   final Cancelable _cancelable = Cancelable();
   WalletTonNetwork get network;
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
 
   late final TonTransactionFeeData txFee = TonTransactionFeeData(
       select: TonTransactionFee.init(network.token), feeToken: network.token);
@@ -22,6 +23,7 @@ mixin TonTransactionFeeController on TonTransactionApiController {
     final estimate = await client.getTransactionFee(
         address: transaction.address.networkAddress,
         message: transaction.message,
+        messages: transaction.messages,
         network: network);
     final success =
         estimate.success && estimate.internalMessages.every((e) => e.success);
@@ -33,19 +35,20 @@ mixin TonTransactionFeeController on TonTransactionApiController {
                   (e) => !e.success && e.resultDescription != null)
               ?.resultDescription;
     }
+
     return TonTransactionFee(
         storageFee: estimate.storageFee,
         gasFee: estimate.gasFee,
         resultDescription: result,
         actionPhase: estimate.actionPhase,
-        fee: estimate.fee,
+        fee: estimate.totalFee,
         isEstimated: estimate.isEstimated,
         success: success);
   }
 
   Future<void> estimateFee() async {
     _cancelable.cancel();
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       txFee.setPending();
       final fee = await MethodUtils.call(() async => await simulateFee());
       if (fee.isCancel) return;

@@ -1,16 +1,18 @@
 import 'dart:async';
+
 import 'package:blockchain_utils/crypto/crypto/crypto.dart';
 import 'package:blockchain_utils/crypto/quick_crypto.dart';
 import 'package:blockchain_utils/helper/extensions/extensions.dart';
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:blockchain_utils/utils/binary/utils.dart';
 import 'package:blockchain_utils/uuid/uuid.dart';
 import 'package:on_chain_bridge/platform_interface.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/crypto/worker.dart';
 import 'package:on_chain_wallet/future/wallet/web3/types/types.dart';
 import 'package:on_chain_wallet/wallet/models/others/models/wallet.dart';
 import 'package:on_chain_wallet/wallet/provider/wallet_provider.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
-import 'package:on_chain_wallet/crypto/worker.dart';
 
 typedef ONUPDATEWEB3PERMISSION = void Function(
     Web3UpdatePermissionRequest?, ONWEB3PERMISSIONUPDATED);
@@ -102,7 +104,7 @@ mixin Web3RequestControllerImpl on CryptoWokerImpl {
   WalletCore get walletCore;
   final StreamValue<LastWeb3ActiveClient> latestClient =
       StreamValue(const LastWeb3ActiveClient());
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   List<Web3ActiveClient> get clients => _keys.values.toList();
   final Map<String, Web3ActiveClient> _keys = {};
   final Map<String, List<Web3RequestApplicationInformation>> _clientsRequests =
@@ -228,7 +230,7 @@ mixin Web3RequestControllerImpl on CryptoWokerImpl {
       required String? title,
       required String? image,
       required Completer<WalletEvent?> completer}) async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       Web3ActiveClient key;
       Web3MessageCore? message;
       Web3ClientInfo? client;

@@ -1,12 +1,10 @@
+import 'package:blockchain_utils/bip/bip.dart';
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:on_chain_wallet/app/error/exception.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
-import 'package:on_chain_wallet/wallet/api/provider/provider.dart';
-
+import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/params/params.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
-import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
-import 'package:blockchain_utils/bip/bip.dart';
 
 enum SolanaNetworkType {
   mainnet(
@@ -35,7 +33,7 @@ enum SolanaNetworkType {
   }
 }
 
-class SolanaNetworkParams extends NetworkCoinParams<SolanaAPIProvider> {
+class SolanaNetworkParams extends NetworkCoinParams {
   final int chainId;
   final SolanaNetworkType type;
 
@@ -46,10 +44,6 @@ class SolanaNetworkParams extends NetworkCoinParams<SolanaAPIProvider> {
 
     return SolanaNetworkParams(
         token: Token.deserialize(obj: values.elementAsCborTag(2)),
-        providers: values
-            .elementAsListOf<CborTagValue>(3)
-            .map((e) => SolanaAPIProvider.fromCborBytesOrObject(obj: e))
-            .toList(),
         chainType: ChainType.fromValue(values.elementAs(4)),
         chainId: values.elementAs(6),
         type: SolanaNetworkType.fromValue(values.elementAs(7)),
@@ -58,7 +52,6 @@ class SolanaNetworkParams extends NetworkCoinParams<SolanaAPIProvider> {
   }
   SolanaNetworkParams(
       {required super.token,
-      required super.providers,
       required super.chainType,
       required this.chainId,
       required this.type,
@@ -72,8 +65,7 @@ class SolanaNetworkParams extends NetworkCoinParams<SolanaAPIProvider> {
           const CborNullValue(),
           const CborNullValue(),
           token.toCbor(),
-          CborSerializable.fromDynamic(
-              providers.map((e) => e.toCbor()).toList()),
+          CborNullValue(),
           chainType.name,
           const CborNullValue(),
           chainId,
@@ -85,16 +77,14 @@ class SolanaNetworkParams extends NetworkCoinParams<SolanaAPIProvider> {
   }
 
   @override
-  NetworkCoinParams<SolanaAPIProvider> updateParams(
-      {List<APIProvider>? updateProviders,
-      Token? token,
+  NetworkCoinParams updateParams(
+      {Token? token,
       String? transactionExplorer,
       String? addressExplorer,
       int? bip32CoinType}) {
     return SolanaNetworkParams(
         token: NetworkCoinParams.validateUpdateParams(
             token: this.token, updateToken: token),
-        providers: updateProviders?.cast<SolanaAPIProvider>() ?? providers,
         chainType: chainType,
         chainId: chainId,
         type: type,

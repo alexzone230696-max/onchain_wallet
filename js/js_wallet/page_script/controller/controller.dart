@@ -8,14 +8,14 @@ abstract class JSBasePageController {
   late final _walletStandardController =
       JSPageWalletStandardController(requestController);
 
-  SynchronizedLock? _lock = SynchronizedLock();
+  SafeAtomicLock? _lock = SafeAtomicLock();
   Completer<void>? _wait = Completer();
   String? _walletId;
   void postMessage(PageMessage message);
   void initClients(String clientId);
 
   Future<void> _waitForActivation() async {
-    return await _lock?.synchronized(() async {
+    return await _lock?.run(() async {
       try {
         return await _wait?.future;
       } finally {

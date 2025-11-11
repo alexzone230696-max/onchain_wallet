@@ -26,8 +26,9 @@ class Web3EthereumImportNetworkStateController
   Future<Web3RequestResponseData<String>> getResponse() async {
     final result = await MethodUtils.call(() async {
       final params = await form.buildNetwork();
-      final newNetwork = WalletEthereumNetwork(-1, params!);
-      await walletProvider.wallet.updateImportNetwork(newNetwork);
+      final newNetwork = WalletEthereumNetwork(-1, params!.$1);
+      await walletProvider.wallet
+          .importNewNetwork(network: newNetwork, providers: [params.$2]);
       return Web3RequestResponseData<String>(
           response: newNetwork.coinParam.chainId.toRadix16);
     });

@@ -31,7 +31,7 @@ class JsonRpcWebSocketService {
   }
 
   final Map<int, SocketRequestCompleter> _requests = {};
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   PlatformWebScoket? _socket;
   // WcRpcSocketStatus _status = WcRpcSocketStatus.dispose;
   StreamSubscription<String>? _subscription;
@@ -42,7 +42,7 @@ class JsonRpcWebSocketService {
 
   void _onClose() {
     _cancelable.cancel();
-    _lock.synchronized(() {
+    _lock.run(() {
       if (status.value == WcRpcSocketStatus.connect) {
         status.value = WcRpcSocketStatus.disconnect;
       }
@@ -94,7 +94,7 @@ class JsonRpcWebSocketService {
   }
 
   Future<void> _connect() async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       if (!status.value.allowReconnect) return;
       final url = await () async {
         try {
@@ -152,7 +152,7 @@ class JsonRpcWebSocketService {
   }
 
   Future<void> init() async {
-    return _lock.synchronized(() {
+    return _lock.run(() {
       if (status.value != WcRpcSocketStatus.dispose) return;
       status.value = WcRpcSocketStatus.disconnect;
       _connectivityStream?.cancel();
@@ -164,7 +164,7 @@ class JsonRpcWebSocketService {
   }
 
   Future<void> dispose() {
-    return _lock.synchronized(() {
+    return _lock.run(() {
       _connectivityStream?.cancel();
       _connectivityStream = null;
       status.value = WcRpcSocketStatus.dispose;
@@ -173,7 +173,7 @@ class JsonRpcWebSocketService {
   }
 
   Future<void> close() {
-    return _lock.synchronized(() {
+    return _lock.run(() {
       _connectivityStream?.cancel();
       _connectivityStream = null;
       _onClose();

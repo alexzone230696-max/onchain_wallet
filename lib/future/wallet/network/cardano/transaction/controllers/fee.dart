@@ -1,13 +1,15 @@
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/wallet/network/cardano/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
+
 import 'provider.dart';
 
 mixin ADATransactionFeeController
     on BaseADATransactionController, ADATransactionApiController {
   final Cancelable _cancelable = Cancelable();
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   @override
   late final ADATransactionFeeData txFee = ADATransactionFeeData(
       select: ADATransactionFee(
@@ -27,7 +29,7 @@ mixin ADATransactionFeeController
   @override
   Future<void> estimateFee() async {
     _cancelable.cancel();
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       txFee.setPending();
 
       final fee = await MethodUtils.call(() async => await simulateFee());

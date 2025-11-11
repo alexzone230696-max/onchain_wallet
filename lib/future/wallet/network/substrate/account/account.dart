@@ -3,6 +3,8 @@ import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/substrate.dart';
+import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/operations/multisig_operation.dart';
+import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/operations/xcm_transfer.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
@@ -13,6 +15,16 @@ class SubstrateAccountPageView extends StatelessWidget {
   Widget build(BuildContext context) {
     return TabBarView(physics: WidgetConstant.noScrollPhysics, children: [
       _SubstrateServices(chainAccount),
+      AccountTokensView<SubstrateToken, ISubstrateAddress>(
+        account: chainAccount,
+        transferBuilder: (token) {
+          return SubstrateTransactionTransferOperation(
+              walletProvider: context.wallet,
+              account: chainAccount,
+              address: chainAccount.address,
+              transferToken: token);
+        },
+      ),
       AccountTransactionActivityView<ISubstrateAddress,
               SubstrateWalletTransaction>(
           account: chainAccount, address: chainAccount.address)
@@ -30,6 +42,31 @@ class _SubstrateServices extends StatelessWidget {
       AccountManageProviderIcon(service: account.service),
       SliverToBoxAdapter(
         child: Column(children: [
+          ConditionalWidget(
+              enable: account.network.coinParam.xcmTransferEnabled,
+              onActive: (context) => AppListTile(
+                    title: Text("xcm_transfer".tr),
+                    subtitle: Text("xcm_transfer_desc".tr),
+                    trailing: const Icon(Icons.arrow_forward),
+                    onTap: () {
+                      final operation =
+                          SubstrateTransactionXCMTransferOperation(
+                              walletProvider: context.wallet,
+                              account: account,
+                              address: account.address);
+                      context.to(PageRouter.transaction, argruments: operation);
+                    },
+                  )),
+          ConditionalWidget(
+              enable: account.address.multiSigAccount,
+              onActive: (context) => AppListTile(
+                    title: Text("multisig_transactions".tr),
+                    subtitle: Text("substrate_multisig_transaction_desc".tr),
+                    trailing: const Icon(Icons.arrow_forward),
+                    onTap: () {
+                      context.to(PageRouter.substrateMultisigTransaction);
+                    },
+                  )),
           AppListTile(
             title: Text("constants".tr),
             subtitle: Text("access_network_constants".tr),
@@ -78,6 +115,21 @@ class _SubstrateServices extends StatelessWidget {
               context.to(PageRouter.transaction, argruments: operation);
             },
           ),
+          ConditionalWidget(
+              enable: !account.address.multiSigAccount,
+              onActive: (context) => AppListTile(
+                    title: Text("multisig_operations".tr),
+                    subtitle:
+                        Text("substrate_multisig_operations_create_desc".tr),
+                    trailing: const Icon(Icons.arrow_forward),
+                    onTap: () {
+                      final operation = SubstrateTransactionMultisigOperation(
+                          walletProvider: context.wallet,
+                          account: account,
+                          address: account.address);
+                      context.to(PageRouter.transaction, argruments: operation);
+                    },
+                  )),
         ]),
       )
     ]);

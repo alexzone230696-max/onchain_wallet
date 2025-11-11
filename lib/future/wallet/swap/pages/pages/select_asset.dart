@@ -1,9 +1,9 @@
-import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/future/wallet/swap/controller/controller/controller.dart';
-import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/wallet/swap/controller/controller/controller.dart';
+import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
+import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/swap/swap/models.dart';
 
 class SwapSelectAssetView extends StatefulWidget {
@@ -35,6 +35,7 @@ class _AsseetsState extends State<SwapSelectAssetView>
       _assets = widget.controller.destinationAssets;
     }
     networks = _assets.keys.toList();
+    if (networks.isEmpty) return;
     onDestinationSelected(0);
   }
 
@@ -85,94 +86,107 @@ class _AsseetsState extends State<SwapSelectAssetView>
               border: OutlineInputBorder(borderSide: BorderSide.none)),
         ),
       ),
-      body: Row(children: [
-        Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                      maxWidth: APPConst.naviationRailWidth),
-                  child: IntrinsicHeight(
-                    child: NavigationRail(
-                        useIndicator: true,
-                        onDestinationSelected: onDestinationSelected,
-                        labelType: NavigationRailLabelType.none,
-                        destinations: List.generate(networks.length, (index) {
-                          final network = networks[index];
-                          return _NavigationRailDestination(
-                              network: network, disabled: false);
-                        }),
-                        selectedIndex: selectedIndex),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        Expanded(
-            child: APPAnimated(
-                isActive: true,
-                onActive: (context) => CustomScrollView(
-                      key: ValueKey(assets.length),
-                      slivers: [
-                        EmptyItemSliverWidgetView(
-                          isEmpty: assets.isEmpty,
-                          icon: Icons.token,
-                          subject: 'no_token_found'.tr,
-                          itemBuilder: (context) {
-                            return SliverList.builder(
-                              itemBuilder: (context, index) {
-                                final asset = assets.elementAt(index);
-                                final url = asset.asset.assetUrl();
-                                return ContainerWithBorder(
-                                  onRemoveIcon: ConditionalWidget(
-                                      enable: url != null,
-                                      onActive: (context) => LaunchBrowserIcon(
-                                          url: url,
-                                          color: context.onPrimaryContainer)),
-                                  onRemove: () => onSelectAsset(asset),
-                                  child: Row(children: [
-                                    Stack(
-                                      children: [
-                                        CircleTokenImageView(asset.token,
-                                            radius: APPConst.circleRadius25),
-                                        Align(
-                                            alignment: Alignment.bottomRight,
-                                            child: CircleTokenImageView(
-                                                asset.network.token,
-                                                radius: 10))
-                                      ],
-                                    ),
-                                    WidgetConstant.width8,
-                                    Expanded(
-                                        child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                          Text(asset.asset.symbol,
-                                              style: context.onPrimaryTextTheme
-                                                  .titleMedium),
-                                          Text(asset.asset.fullName ?? '',
-                                              style: context.onPrimaryTextTheme
-                                                  .bodySmall),
-                                        ])),
-                                  ]),
-                                );
-                              },
-                              // separatorBuilder: (context, index) => WidgetConstant.divider,
-                              itemCount: assets.length,
-                              addAutomaticKeepAlives: false,
-                              addRepaintBoundaries: false,
-                              addSemanticIndexes: false,
-                            );
-                          },
+      body: EmptyItemWidgetView(
+          isEmpty: networks.isEmpty,
+          itemBuilder: () => Row(children: [
+                Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                              maxWidth: APPConst.naviationRailWidth),
+                          child: IntrinsicHeight(
+                            child: NavigationRail(
+                                useIndicator: true,
+                                onDestinationSelected: onDestinationSelected,
+                                labelType: NavigationRailLabelType.none,
+                                destinations:
+                                    List.generate(networks.length, (index) {
+                                  final network = networks[index];
+                                  return _NavigationRailDestination(
+                                      network: network, disabled: false);
+                                }),
+                                selectedIndex: selectedIndex),
+                          ),
                         ),
-                        WidgetConstant.sliverPaddingVertial40,
-                      ],
+                      ),
                     ),
-                onDeactive: (context) => WidgetConstant.sizedBox))
-      ]),
+                  ],
+                ),
+                Expanded(
+                    child: APPAnimated(
+                        isActive: true,
+                        onActive: (context) => CustomScrollView(
+                              key: ValueKey(assets.length),
+                              slivers: [
+                                EmptyItemSliverWidgetView(
+                                  isEmpty: assets.isEmpty,
+                                  icon: Icons.token,
+                                  subject: 'no_token_found'.tr,
+                                  itemBuilder: (context) {
+                                    return SliverList.builder(
+                                      itemBuilder: (context, index) {
+                                        final asset = assets.elementAt(index);
+                                        final url = asset.asset.assetUrl();
+                                        return ContainerWithBorder(
+                                          onRemoveIcon: ConditionalWidget(
+                                              enable: url != null,
+                                              onActive: (context) =>
+                                                  LaunchBrowserIcon(
+                                                      url: url,
+                                                      color: context
+                                                          .onPrimaryContainer)),
+                                          onRemove: () => onSelectAsset(asset),
+                                          child: Row(children: [
+                                            Stack(
+                                              children: [
+                                                CircleTokenImageView(
+                                                    asset.token,
+                                                    radius: APPConst
+                                                        .circleRadius25),
+                                                Align(
+                                                    alignment:
+                                                        Alignment.bottomRight,
+                                                    child: CircleTokenImageView(
+                                                        asset.network.token,
+                                                        radius: 10))
+                                              ],
+                                            ),
+                                            WidgetConstant.width8,
+                                            Expanded(
+                                                child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                  Text(asset.asset.symbol,
+                                                      style: context
+                                                          .onPrimaryTextTheme
+                                                          .titleMedium),
+                                                  Text(
+                                                      asset.asset.fullName ??
+                                                          '',
+                                                      style: context
+                                                          .onPrimaryTextTheme
+                                                          .bodySmall),
+                                                ])),
+                                          ]),
+                                        );
+                                      },
+                                      // separatorBuilder: (context, index) => WidgetConstant.divider,
+                                      itemCount: assets.length,
+                                      addAutomaticKeepAlives: false,
+                                      addRepaintBoundaries: false,
+                                      addSemanticIndexes: false,
+                                    );
+                                  },
+                                ),
+                                WidgetConstant.sliverPaddingVertial40,
+                              ],
+                            ),
+                        onDeactive: (context) => WidgetConstant.sizedBox))
+              ])),
     );
   }
 }

@@ -1,6 +1,6 @@
 part of 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 
-final class EncryptedCustomKey with Equatable, CborSerializable {
+final class EncryptedCustomKey with Equality, CborSerializable {
   final String publicKey;
   final String id;
   final CryptoCoins coin;

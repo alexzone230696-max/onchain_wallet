@@ -18,7 +18,7 @@ enum TonAccountContextType {
   }
 }
 
-abstract class TonAccountContext with CborSerializable, Equatable {
+abstract class TonAccountContext with CborSerializable, Equality {
   final TonAccountContextType type;
   final WalletVersion version;
   final bool bouncable;

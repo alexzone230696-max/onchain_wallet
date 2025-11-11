@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:flutter/material.dart';
@@ -6,8 +7,8 @@ import 'package:on_chain_wallet/crypto/utils/bitcoin_cash/bitcoin_cash_utils.dar
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/transaction/controllers/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/transaction/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/network/bitcoin/transaction/widgets/transfer.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/transaction/widgets/transaction_ordering_view.dart';
+import 'package:on_chain_wallet/future/wallet/network/bitcoin/transaction/widgets/transfer.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
@@ -95,7 +96,9 @@ class BitcoinTransactionTransferOperation
 
   @override
   Future<void> estimateFee() async {
-    if (!fieldsReady) return;
+    if (!fieldsReady || !recipients.value.every((e) => e.status.isReady)) {
+      return;
+    }
     await super.estimateFee();
   }
 
@@ -383,7 +386,13 @@ class BitcoinTransactionTransferOperation
   }
 
   @override
-  Future<void> signAndSendTransaction({BuildContext? context}) async {
+  Future<void> signAndSendTransaction({
+    BuildContext? context,
+    Future<IBitcoinTransaction?> Function(IBitcoinTransaction)?
+        onTransactionCreated,
+    Future<IBitcoinSignedTransaction?> Function(IBitcoinSignedTransaction)?
+        onTransactionSigned,
+  }) async {
     assert(context != null);
     if (ordering.value == TransactionOrdering.manually) {
       if (context == null) return;

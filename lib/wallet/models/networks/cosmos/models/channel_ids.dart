@@ -1,9 +1,10 @@
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:blockchain_utils/helper/extensions/extensions.dart';
+import 'package:blockchain_utils/utils/equatable/equatable.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 
-class CosmosIBCChannelId with CborSerializable, Equatable {
+class CosmosIBCChannelId with CborSerializable, Equality {
   final String name;
   final String channelId;
   const CosmosIBCChannelId({required this.name, required this.channelId});

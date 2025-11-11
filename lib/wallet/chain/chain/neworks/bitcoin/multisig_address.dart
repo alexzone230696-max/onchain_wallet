@@ -5,7 +5,7 @@ mixin BitcoinMultiSigBase {
 }
 
 class BitcoinMultiSigSignerDetais
-    with Equatable, CborSerializable
+    with Equality, CborSerializable
     implements MultiSignatureSigner {
   BitcoinMultiSigSignerDetais._(
       {required this.publicKey, required this.weight, required this.keyIndex});

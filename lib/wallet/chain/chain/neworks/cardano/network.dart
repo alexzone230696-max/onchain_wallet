@@ -1,7 +1,7 @@
 part of 'package:on_chain_wallet/wallet/chain/chain/chain.dart';
 
 class ADANetworkController extends NetworkController<ICardanoAddress, ADAChain,
-    Web3ADAChainAccount, Web3InternalADAChain> {
+    Web3ADAChainAccount, Web3InternalADAChain, ChainConfig> {
   ADANetworkController({
     super.networks,
     required super.id,
@@ -11,7 +11,7 @@ class ADANetworkController extends NetworkController<ICardanoAddress, ADAChain,
   Future<(ADAChain, List<ICardanoAddress>)?> getWeb3AuthenticatedAccounts(
       Web3ApplicationAuthentication app,
       List<Web3ADAChainAccount> web3Accounts) async {
-    final internalChain = await getWeb3InternalChainAuthenticated(app);
+    final internalChain = await _getWeb3InternalChainAuthenticated(app);
     if (web3Accounts.isEmpty) {
       return (
         _networks[internalChain.defaultChain] ?? _networks.values.first,
@@ -49,7 +49,7 @@ class ADANetworkController extends NetworkController<ICardanoAddress, ADAChain,
   }
 
   @override
-  Future<Web3InternalADAChain> getWeb3InternalChainAuthenticated(
+  Future<Web3InternalADAChain> _getWeb3InternalChainAuthenticated(
       Web3ApplicationAuthentication app) async {
     final data = await _storage.queryChainStorage(
         storage: DefaultChainStorageId.web3, key: app.applicationId);
@@ -82,7 +82,7 @@ class ADANetworkController extends NetworkController<ICardanoAddress, ADAChain,
   Future<Web3ADAChainAuthenticated> createWeb3ChainAuthenticated(
     Web3ApplicationAuthentication app,
   ) async {
-    final internalNetwork = await getWeb3InternalChainAuthenticated(app);
+    final internalNetwork = await _getWeb3InternalChainAuthenticated(app);
     final web3Networks = _networks.values
         .map((e) => Web3ADAChainIdnetifier(
             id: e.network.value,

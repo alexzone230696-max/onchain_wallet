@@ -1,6 +1,9 @@
 import 'package:blockchain_utils/helper/extensions/extensions.dart';
+import 'package:blockchain_utils/utils/equatable/equatable.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
 abstract class TransactionOperations {
@@ -108,7 +111,7 @@ enum TxFeeTypes {
   const TxFeeTypes(this.value);
 }
 
-abstract class TransactionFee with Equatable {
+abstract class TransactionFee with Equality {
   final String? error;
   final String? description;
   final TxFeeTypes type;
@@ -316,3 +319,18 @@ abstract class TransactionResourceRequirement<T extends Object?> {
   const TransactionResourceRequirement(
       {required this.value, required this.status, this.error});
 }
+
+typedef TRANSACTIONSTATECONTROLLERFEE<FEE extends TransactionFeeData>
+    = TransactionStateController<
+        TokenCore,
+        ChainAccount,
+        NetworkClient,
+        WalletNetwork,
+        APPCHAINACCOUNTCLIENTNETWORK<ChainAccount, NetworkClient,
+            WalletNetwork>,
+        ITransactionData,
+        ITransaction<ITransactionData, ChainAccount>,
+        ISignedTransaction<ITransaction, Object>,
+        ChainTransaction,
+        SubmitTransactionSuccess<ISignedTransaction>,
+        FEE>;

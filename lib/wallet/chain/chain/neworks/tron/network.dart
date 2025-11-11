@@ -1,7 +1,7 @@
 part of 'package:on_chain_wallet/wallet/chain/chain/chain.dart';
 
 class TronNetworkController extends NetworkController<ITronAddress, TronChain,
-    Web3TronChainAccount, Web3InternalDefaultChain> {
+    Web3TronChainAccount, Web3InternalDefaultChain, ChainConfig> {
   TronNetworkController({
     super.networks,
     required super.id,
@@ -11,20 +11,21 @@ class TronNetworkController extends NetworkController<ITronAddress, TronChain,
   Future<Web3TronChainAuthenticated> createWeb3ChainAuthenticated(
     Web3ApplicationAuthentication app,
   ) async {
-    final internalNetwork = await getWeb3InternalChainAuthenticated(app);
+    final internalNetwork = await _getWeb3InternalChainAuthenticated(app);
 
-    final web3Networks = _networks.values.map((e) {
-      final tron = APIUtils.findNetworkProvider<TronAPIProvider>(e.network,
-          identifier: e.serviceIdentifier, allowInWeb3: true);
+    final web3Networks = await Future.wait(_networks.values.map((e) async {
+      final provoders = await e.getProvider(allowInWeb3: true);
+      final provider = provoders?.firstOrNull ??
+          ProvidersConst.getTronDefaultProvider(e.network.tronNetworkType);
       return Web3TronChainIdnetifier(
         id: e.network.value,
         chainId: e.network.tronNetworkType.genesisBlockNumber,
-        solidityNode: tron!.solidityProvider.callUrl,
-        fullNode: tron.callUrl,
+        solidityNode: provider.solidityProvider.callUrl,
+        fullNode: provider.callUrl,
         wsIdentifier: e.network.wsIdentifier,
         caip2: e.network.caip,
       );
-    }).toList();
+    }).toList());
     List<Web3TronChainAccount> web3Accounts = [];
     for (final i in internalNetwork.networks) {
       final network = _networks[i.networkId];

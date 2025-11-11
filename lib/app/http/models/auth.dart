@@ -3,7 +3,6 @@ import 'package:blockchain_utils/utils/utils.dart';
 import 'package:on_chain_wallet/app/constant/global/serialization.dart';
 import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
-import 'package:on_chain_wallet/app/euqatable/equatable.dart';
 import 'package:on_chain_wallet/app/serialization/cbor/cbor.dart';
 
 enum ProviderAuthType {
@@ -29,7 +28,7 @@ enum ProviderAuthType {
   bool get isDigest => this == ProviderAuthType.digest;
 }
 
-abstract class ProviderAuthenticated with CborSerializable, Equatable {
+abstract class ProviderAuthenticated with CborSerializable, Equality {
   final ProviderAuthType type;
   const ProviderAuthenticated({required this.type});
   Uri toUri(Uri uri);

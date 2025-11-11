@@ -7,11 +7,13 @@ mixin WalletManager on _WalletController {
   Future<List<Web3ApplicationAuthentication>> _getAllWeb3Authenticated();
 
   final Map<String, WalletCredentialResponseVerify> _credentials = {};
-  void _getCachedCredPassword(WalletCredentialResponseVerify id) {
-    final cred = _credentials.remove(id.id);
+  void _getCachedCredPassword(WalletCredentialResponseVerify id,
+      {bool remove = true}) {
+    final cred = _credentials[id.id];
     if (cred == null || !identical(id, cred)) {
       throw WalletExceptionConst.authFailed;
     }
+    if (remove) _credentials.remove(id.id);
   }
 
   /// emit unlocking walllet
@@ -179,7 +181,7 @@ mixin WalletManager on _WalletController {
     if (type.isWalletBackup) {
       throw WalletExceptionConst.invalidBackupOptions;
     }
-    _getCachedCredPassword(credential);
+    _getCachedCredPassword(credential, remove: false);
     return _callWalletInternal(
       (masterKey, memoryKey) async {
         final encrypt = await crypto.walletArgs(
@@ -201,7 +203,7 @@ mixin WalletManager on _WalletController {
   Future<String> _generateWalletBackup(
       {required WalletCredentialResponseVerify credential,
       required GenerateWalletBackupOptions options}) async {
-    _getCachedCredPassword(credential);
+    _getCachedCredPassword(credential, remove: false);
     final checksum = QuickCrypto.generateRandom();
     final encrypt = await _callWalletInternal(
       (masterKey, memoryKey) async {
@@ -441,8 +443,15 @@ mixin WalletManager on _WalletController {
 
   /// update or import new network to wallet
   /// -[network]: new or updated network
-  Future<void> _updateImportNetwork(WalletNetwork network) async {
-    await _appChains.updateImportNetwork(network);
+  Future<void> _updateNetwork(WalletNetwork network) async {
+    await _appChains.updateNetwork(network);
+  }
+
+  /// import new network to wallet
+  /// -[network]: new or updated network
+  Future<void> _importNewNetwork(
+      WalletNetwork network, List<APIProvider> providers) async {
+    await _appChains.importNewNetwork(network, providers);
   }
 
   /// remove network from wallet

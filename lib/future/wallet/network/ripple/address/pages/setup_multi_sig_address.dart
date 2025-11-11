@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/crypto/utils/ripple/ripple.dart';
 import 'package:on_chain_wallet/future/constant/constant.dart';
+import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/account/pages/account_controller.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
-import 'package:on_chain_wallet/crypto/utils/ripple/ripple.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 
 enum _MultiSigPage { account, info }
 
@@ -450,6 +450,7 @@ class _SignerListFeatureView extends StatelessWidget {
           final signerEntries = signers.keys.toList();
           return CustomizedContainer(
             onTapStackIcon: () {},
+            enableTap: false,
             onStackWidget: APPCheckBox(
                 backgroundColor: context.primaryContainer,
                 color: context.onPrimaryContainer,

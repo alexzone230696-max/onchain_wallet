@@ -1,7 +1,7 @@
 import 'package:blockchain_utils/helper/extensions/extensions.dart';
-import 'package:polkadot_dart/polkadot_dart.dart';
 import 'package:blockchain_utils/utils/numbers/rational/big_rational.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
+import 'package:polkadot_dart/polkadot_dart.dart';
 
 class SubstrateFeeInfos {
   final IntegerBalance baseFee;
@@ -27,8 +27,7 @@ class SubstrateFeeInfos {
         calculated: false);
   }
   factory SubstrateFeeInfos.fromFeeDetails(
-      {required QueryFeeInfoFrame fee,
-      required WalletSubstrateNetwork network}) {
+      {required QueryFeeDetails fee, required WalletSubstrateNetwork network}) {
     if (fee.inclusionFee == null) return SubstrateFeeInfos.zero(network);
     final inclusionFee = fee.inclusionFee!;
     final BigRational totalFee = BigRational(inclusionFee.adjustedWeightFee +

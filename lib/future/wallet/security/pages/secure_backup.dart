@@ -2,9 +2,9 @@ import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_bridge/models/models.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/wallet/models/access/wallet_access.dart';
 import 'package:on_chain_wallet/wallet/models/wallet/models/backup.dart';
 
@@ -66,32 +66,40 @@ class _SecureBackupViewState extends State<GenerateBackupView>
     }
   }
 
-  final GlobalKey<StreamWidgetState> buttonState = GlobalKey();
-  String? _shareError;
+  final GlobalKey<StreamWidgetState> shareState = GlobalKey();
+  final GlobalKey<StreamWidgetState> saveState = GlobalKey();
+  // String? _shareError;
 
   Future<void> share() async {
     if (backup == null) return;
-    if (_shareError != null) {
-      _shareError = null;
-      setState(() {});
-    }
-    buttonState.process();
+
+    shareState.process();
     final result = await MethodUtils.call(() async {
       final name = "credentials_${StrUtils.toFileName(DateTime.now())}.txt";
       final toFile = await PlatformUtils.writeString(backup!, name);
-      return await ShareUtils.shareFile(
-        toFile,
-        name,
-        subject: "account credentials",
-        mimeType: FileMimeTypes.textPlain,
-      );
+      return await ShareUtils.shareFile(toFile, name,
+          subject: "account credentials", mimeType: FileMimeTypes.textPlain);
     });
     if (result.hasError || !result.result) {
-      buttonState.error();
-      _shareError = result.localizationErrorOrNull;
-      setState(() {});
+      shareState.error();
     } else {
-      buttonState.success();
+      shareState.success();
+    }
+  }
+
+  Future<void> save() async {
+    if (backup == null) return;
+    saveState.process();
+    final result = await MethodUtils.call(() async {
+      final name = "credentials_${StrUtils.toFileName(DateTime.now())}.txt";
+      final toFile = await PlatformUtils.writeString(backup!, name);
+      return await PlatformUtils.saveFile(filePath: toFile);
+    });
+    if (result.hasError) {
+      saveState.error();
+      context.showAlert("file_save_failed".tr);
+    } else {
+      saveState.success();
     }
   }
 
@@ -159,23 +167,27 @@ class _SecureBackupViewState extends State<GenerateBackupView>
                           widget: OneLineTextWidget(viewText!, maxLine: 2),
                         ),
                       ),
-                      WidgetConstant.height40,
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           ButtonProgress(
-                            child: (context) => FilledButton.icon(
-                                onPressed: share,
-                                icon: const Icon(Icons.share),
-                                label: Text("share_as_file".tr)),
+                            child: (context) => IconButton(
+                              onPressed: share,
+                              icon: const Icon(Icons.share),
+                            ),
                             backToIdle: APPConst.oneSecoundDuration,
-                            key: buttonState,
+                            key: shareState,
                           ),
+                          WidgetConstant.width8,
+                          ButtonProgress(
+                              child: (context) => IconButton(
+                                    onPressed: save,
+                                    icon: const Icon(Icons.save),
+                                  ),
+                              backToIdle: APPConst.oneSecoundDuration,
+                              key: saveState),
                         ],
                       ),
-                      ErrorTextContainer(
-                          error: _shareError,
-                          margin: WidgetConstant.paddingVertical10)
                     ],
                   ))
       ],

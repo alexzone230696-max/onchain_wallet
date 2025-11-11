@@ -22,7 +22,7 @@ enum MoneroChainNotify implements ChainNotify {
   const MoneroChainNotify(this.value);
 }
 
-class MoneroSyncChain with CborSerializable, Equatable {
+class MoneroSyncChain with CborSerializable, Equality {
   final int value;
   final ChainType? chain;
   const MoneroSyncChain._(this.value, this.chain);
@@ -87,10 +87,13 @@ class MoneroChainStorageId extends DefaultChainStorageId {
 class MoneroNetworkConfig extends DefaultNetworkConfig<MoneroNetworkStorageId> {
   MoneroNetworkConfig(
       {MoneroChainStatus status = MoneroChainStatus.none,
-      bool showInitializeAlert = true})
+      bool showInitializeAlert = true,
+      super.supportToken = false,
+      super.supportNft = false,
+      super.supportWeb3 = true,
+      super.enableProvider = true})
       : _status = status,
-        _showInitializeAlert = showInitializeAlert,
-        super(supportToken: false, supportNft: false, supportWeb3: true);
+        _showInitializeAlert = showInitializeAlert;
   factory MoneroNetworkConfig.deserialize(
       {List<int>? bytes, CborObject? object, String? hex}) {
     final CborListValue values = CborSerializable.cborTagValue(
@@ -99,18 +102,33 @@ class MoneroNetworkConfig extends DefaultNetworkConfig<MoneroNetworkStorageId> {
         hex: hex,
         tags: CborTagsConst.moneroChainConfig);
     return MoneroNetworkConfig(
-        status: MoneroChainStatus.fromValue(values.elementAs(0)),
-        showInitializeAlert: values.elementAs<bool?>(1) ?? true);
+      status: MoneroChainStatus.fromValue(values.elementAs(0)),
+      showInitializeAlert: values.elementAs<bool?>(1) ?? true,
+      supportToken: values.valueAs<bool?>(2) ?? true,
+      supportNft: values.valueAs<bool?>(3) ?? false,
+      supportWeb3: values.valueAs<bool?>(4) ?? true,
+      enableProvider: values.valueAs<bool?>(5) ?? true,
+    );
   }
   MoneroChainStatus _status;
 
   MoneroChainStatus get status => _status;
 
+  @override
   MoneroNetworkConfig copyWith(
-      {MoneroChainStatus? status, bool? showInitializeAlert}) {
+      {MoneroChainStatus? status,
+      bool? showInitializeAlert,
+      bool? supportToken,
+      bool? supportNft,
+      bool? supportWeb3,
+      bool? enableProvider}) {
     return MoneroNetworkConfig(
         showInitializeAlert: showInitializeAlert ?? this.showInitializeAlert,
-        status: status ?? this.status);
+        status: status ?? this.status,
+        supportToken: supportToken ?? this.supportToken,
+        supportNft: supportNft ?? this.supportNft,
+        supportWeb3: supportWeb3 ?? this.supportWeb3,
+        enableProvider: enableProvider ?? this.enableProvider);
   }
 
   @override
@@ -124,7 +142,14 @@ class MoneroNetworkConfig extends DefaultNetworkConfig<MoneroNetworkStorageId> {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborSerializable.fromDynamic([_status.value, _showInitializeAlert]),
+        CborSerializable.fromDynamic([
+          _status.value,
+          _showInitializeAlert,
+          supportToken,
+          supportNft,
+          supportWeb3,
+          enableProvider,
+        ]),
         CborTagsConst.moneroChainConfig);
   }
 

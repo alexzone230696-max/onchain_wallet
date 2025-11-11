@@ -1,12 +1,11 @@
+import 'package:blockchain_utils/bip/bip.dart';
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
-import 'package:on_chain_wallet/wallet/api/provider/provider.dart';
-import 'package:blockchain_utils/bip/bip.dart';
+import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/params/params.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
-import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 
-class TronNetworkParams extends NetworkCoinParams<TronAPIProvider> {
+class TronNetworkParams extends NetworkCoinParams {
   factory TronNetworkParams.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
     final CborListValue values = CborSerializable.cborTagValue(
@@ -14,17 +13,12 @@ class TronNetworkParams extends NetworkCoinParams<TronAPIProvider> {
 
     return TronNetworkParams(
         token: Token.deserialize(obj: values.elementAsCborTag(2)),
-        providers: values
-            .elementAsListOf<CborTagValue>(3)
-            .map((e) => TronAPIProvider.fromCborBytesOrObject(obj: e))
-            .toList(),
         chainType: ChainType.fromValue(values.elementAs(5)),
         addressExplorer: values.elementAs(7),
         transactionExplorer: values.elementAs(8));
   }
   TronNetworkParams(
       {required super.token,
-      required super.providers,
       required super.chainType,
       super.addressExplorer,
       super.transactionExplorer});
@@ -36,8 +30,7 @@ class TronNetworkParams extends NetworkCoinParams<TronAPIProvider> {
           const CborNullValue(),
           const CborNullValue(),
           token.toCbor(),
-          CborSerializable.fromDynamic(
-              providers.map((e) => e.toCbor()).toList()),
+          CborNullValue(),
           const CborNullValue(),
           chainType.name,
           const CborNullValue(),
@@ -48,16 +41,14 @@ class TronNetworkParams extends NetworkCoinParams<TronAPIProvider> {
   }
 
   @override
-  NetworkCoinParams<TronAPIProvider> updateParams(
-      {List<APIProvider>? updateProviders,
-      Token? token,
+  NetworkCoinParams updateParams(
+      {Token? token,
       String? transactionExplorer,
       String? addressExplorer,
       int? bip32CoinType}) {
     return TronNetworkParams(
         token: NetworkCoinParams.validateUpdateParams(
             token: this.token, updateToken: token),
-        providers: updateProviders?.cast<TronAPIProvider>() ?? providers,
         chainType: chainType,
         addressExplorer: addressExplorer,
         transactionExplorer: transactionExplorer);

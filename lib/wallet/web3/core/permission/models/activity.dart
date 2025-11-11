@@ -1,9 +1,8 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
-import 'package:on_chain_wallet/app/euqatable/equatable.dart';
 import 'package:on_chain_wallet/app/serialization/cbor/cbor.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 
-class Web3AccountAcitvity with CborSerializable, Equatable {
+class Web3AccountAcitvity with CborSerializable, Equality {
   final String requestId;
   final String method;
   final DateTime date;

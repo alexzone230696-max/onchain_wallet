@@ -1,6 +1,10 @@
 import 'dart:async';
 
 import 'package:blockchain_utils/exception/exception/rpc_error.dart';
+import 'package:on_chain/ethereum/src/rpc/core/methods.dart'
+    show EthereumMethods;
+import 'package:on_chain/ethereum/src/rpc/methds/dynamic.dart';
+import 'package:on_chain/ethereum/src/rpc/provider/provider.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/app/error/exception/exception.dart'
     show ApiProviderException;
@@ -14,10 +18,6 @@ import 'package:on_chain_wallet/wallet/api/services/networks/websocket/services/
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/exception/exception.dart'
     show Web3RequestException;
-import 'package:on_chain/ethereum/src/rpc/core/methods.dart'
-    show EthereumMethods;
-import 'package:on_chain/ethereum/src/rpc/methds/dynamic.dart';
-import 'package:on_chain/ethereum/src/rpc/provider/provider.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ethereum/constant/exception.dart';
 
 typedef ONETHSubsribe = void Function(EthereumSubscribeResult);
@@ -123,7 +123,7 @@ class JSEthereumClient {
 
   void close() {
     final completers = _completers.keys;
-    service.disposeService();
+    service.dispose();
     for (final i in completers) {
       final completer = _completers.remove(i);
       if (completer == null || completer.isCompleted) continue;

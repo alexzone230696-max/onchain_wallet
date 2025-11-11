@@ -1,5 +1,6 @@
 import 'package:blockchain_utils/bip/bip/bip32/bip32_key_data.dart';
 import 'package:blockchain_utils/bip/bip/conf/core/coin_conf.dart';
+import 'package:blockchain_utils/helper/extensions/extensions.dart';
 import 'package:blockchain_utils/utils/numbers/rational/big_rational.dart';
 import 'package:blockchain_utils/utils/utils.dart';
 import 'package:cosmos_sdk/cosmos_sdk.dart';
@@ -289,7 +290,53 @@ class CosmosAddNewChainFrom
     _chains = await loadChains();
   }
 
-  CosmosNetworkParams? _buildCoinParams(ChainType chainType) {
+  Future<List<CosmosKeysAlgs>?> _validateKeyAlgorithm(
+      {required TendermintProvider provider,
+      required List<CosmosKeysAlgs> selected,
+      bool isUnknownKeyAlgorithm = false}) async {
+    List<CosmosKeysAlgs> currentAlgs = selected.clone();
+    if (selected.contains(CosmosKeysAlgs.ethsecp256k1) ||
+        selected.contains(CosmosKeysAlgs.comosEthsecp256k1) ||
+        selected.contains(CosmosKeysAlgs.injectiveEthsecp256k1)) {
+      currentAlgs = [
+        ...selected,
+        CosmosKeysAlgs.ethsecp256k1,
+        CosmosKeysAlgs.comosEthsecp256k1,
+        CosmosKeysAlgs.injectiveEthsecp256k1
+      ];
+    }
+    // try {
+    Set<CosmosKeysAlgs> supported = {};
+    int retry = 0;
+    List<int>? latestKey;
+    while (retry <= 5) {
+      retry++;
+      final result = await MethodUtils.call(() async => await provider.request(
+          TendermintRequestAbciQuery(
+              request: QueryTryAccountsRequest(
+                  pagination:
+                      PageRequest(limit: BigInt.from(50), key: latestKey)))));
+      if (result.hasError) continue;
+      final accounts = result.resultOrNull?.accounts ?? [];
+      final types = accounts
+          .map((e) => e.baseAccount.pubKey?.typeUrl.typeUrl)
+          .whereType<String>();
+      if (isUnknownKeyAlgorithm && types.isEmpty && accounts.isNotEmpty) {
+        return selected.nullOnEmoty;
+      }
+      final algs = types
+          .map((e) => CosmosKeysAlgs.fromTypeUrl(e))
+          .whereType<CosmosKeysAlgs>()
+          .toList();
+      supported.addAll(algs);
+      latestKey = result.result.pagination?.nextKey;
+    }
+
+    return currentAlgs.where((e) => supported.contains(e)).toList().nullOnEmoty;
+  }
+
+  (CosmosNetworkParams, CosmosAPIProvider, bool)? _buildCoinParams(
+      ChainType chainType) {
     final rpc = rpcUrl;
     if (nativeToken == null || feeTokens.isEmpty || rpc == null) return null;
     List<CosmosKeysAlgs> supportedAlgs = [];
@@ -308,14 +355,11 @@ class CosmosAddNewChainFrom
     }
     if (supportedAlgs.isEmpty) return null;
 
-    return CosmosNetworkParams(
+    final network = CosmosNetworkParams(
         token: nativeToken!.token,
-        providers: [
-          CosmosAPIProvider(
-              uri: rpc.url,
-              identifier: APIUtils.getProviderIdentifier(),
-              auth: rpc.auth)
-        ],
+        // providers: [
+
+        // ],
         chainType: chainType,
         hrp: hrp,
         denom: nativeToken!.denom,
@@ -331,6 +375,11 @@ class CosmosAddNewChainFrom
             ? explorerTransaction.nullOnEmpty
             : null,
         chainRegisteryName: networkName);
+    final provider = CosmosAPIProvider(
+        uri: rpc.url,
+        identifier: APIUtils.getProviderIdentifier(),
+        auth: rpc.auth);
+    return (network, provider, unknowKeyAlg);
   }
 
   RPCURL? getRpcUrl() {
@@ -339,9 +388,10 @@ class CosmosAddNewChainFrom
     return rpcUrl;
   }
 
-  Future<CosmosNetworkParams> _buildNetwork(
+  Future<(CosmosNetworkParams, CosmosAPIProvider)> _buildNetwork(
       {required CosmosAPIProvider provider,
-      required CosmosNetworkParams param}) async {
+      required CosmosNetworkParams param,
+      required bool unKnownKeyAlgorithm}) async {
     final service = CosmosClient(
         provider: TendermintProvider(TendermintHTTPService(
             provider: provider, isolate: APPIsolate.separate)),
@@ -358,6 +408,7 @@ class CosmosAddNewChainFrom
       }
       hrp = bech32.result;
     }
+
     final nativeToken = await MethodUtils.call(() => service.provider.request(
         TendermintRequestAbciQuery(
             request: QueryDenomMetadataRequest(denom: param.denom))));
@@ -375,19 +426,29 @@ class CosmosAddNewChainFrom
     if (isEthermint) {
       networkTypes = CosmosNetworkTypes.ethermint;
     }
+    final keyAlgorithms = await _validateKeyAlgorithm(
+        provider: service.provider,
+        selected: param.keysAlgs,
+        isUnknownKeyAlgorithm: unKnownKeyAlgorithm);
+    if (keyAlgorithms == null || keyAlgorithms.isEmpty) {
+      throw AppException("unsupported_network_key_alg");
+    }
     param = param.copyWith(
         chainId: chainId,
         hrp: hrp,
-        providers: [provider],
-        networkType: networkTypes);
-    return param;
+        networkType: networkTypes,
+        keysAlgs: keyAlgorithms);
+    return (param, provider);
   }
 
-  Future<CosmosNetworkParams?> createNetwork({ChainType? chainType}) async {
+  Future<(CosmosNetworkParams, CosmosAPIProvider)?> createNetwork(
+      {ChainType? chainType}) async {
     final param =
         _buildCoinParams(chainType ?? _chainType ?? ChainType.mainnet);
     if (param == null) return null;
-    return await _buildNetwork(provider: param.providers.first, param: param);
+
+    return await _buildNetwork(
+        provider: param.$2, param: param.$1, unKnownKeyAlgorithm: param.$3);
   }
 }
 

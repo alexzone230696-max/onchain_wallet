@@ -21,20 +21,20 @@ class _RestoreBackupViewState extends State<RestoreBackupView> with SafeState {
   final GlobalKey<FormState> form =
       GlobalKey(debugLabel: "_RestoreBackupViewState_2");
   bool showContet = false;
-  String backup = "";
+  // String backup = "";
   String password = "";
 
   _Pages page = _Pages.restore;
-  final GlobalKey<AppTextFieldState> backupTextField =
-      GlobalKey<AppTextFieldState>(debugLabel: "_RestoreBackupViewState");
+  final GlobalKey<BackupDataPickerViewState> backupKey =
+      GlobalKey(debugLabel: "_RestoreBackupViewState.backupKey");
   String? restored;
-  void onChange(String v) {
-    backup = v;
-  }
+  // void onChange(String v) {
+  //   backup = v;
+  // }
 
-  void onPaseBackupText(String v) {
-    backupTextField.currentState?.updateText(v);
-  }
+  // void onPaseBackupText(String v) {
+  //   // backupTextField.currentState?.updateText(v);
+  // }
 
   void onChangePassword(String v) {
     password = v;
@@ -62,14 +62,17 @@ class _RestoreBackupViewState extends State<RestoreBackupView> with SafeState {
     return null;
   }
 
-  void onRestore() async {
+  Future<void> onRestore() async {
     if (!form.ready()) return;
+    final backup = backupKey.currentState?.getDataString();
+    if (backup == null) return;
     progressKey.progressText("restoring_backup_please_wait".tr);
     final wallet = context.watch<WalletProvider>(StateConst.main);
     final result = await MethodUtils.call(() async => await wallet.wallet
         .restoreWalletBackup(password: password, backup: backup));
     if (result.hasError) {
-      progressKey.errorText(result.localizationError);
+      progressKey.errorText(result.localizationError,
+          backToIdle: false, showBackButton: true);
     } else {
       final keyType = result.result.type;
       bool isCorrectKey = true;
@@ -78,10 +81,13 @@ class _RestoreBackupViewState extends State<RestoreBackupView> with SafeState {
             keyType.isPrivateKey && widget.accepted!.isPrivateKey);
       }
       if (!isCorrectKey) {
-        progressKey.errorText("invalid_backup_type_desc"
-            .tr
-            .replaceOne(widget.accepted!.value.tr)
-            .replaceTwo(keyType.value.tr));
+        progressKey.errorText(
+            "invalid_backup_type_desc"
+                .tr
+                .replaceOne(widget.accepted!.value.tr)
+                .replaceTwo(keyType.value.tr),
+            backToIdle: false,
+            showBackButton: true);
       } else {
         restored = result.result.key;
         page = _Pages.content;
@@ -166,19 +172,8 @@ class _RestoreBackupRestorePage extends StatelessWidget {
           PageTitleSubtitle(
               title: "restore_encrypted_backup".tr,
               body: Text("restore_backup_desc".tr)),
-          AppTextField(
-            label: "enter_backup".tr,
-            validator: state.bcakupForm,
-            onChanged: state.onChange,
-            key: state.backupTextField,
-            minlines: 3,
-            maxLines: 5,
-            initialValue: state.backup,
-            suffixIcon: PasteTextIcon(
-              onPaste: state.onPaseBackupText,
-              isSensitive: false,
-            ),
-          ),
+          BackupDataPickerView(key: state.backupKey),
+          WidgetConstant.height20,
           AppTextField(
               label: "input_backup_password".tr,
               validator: state.passwordForm,

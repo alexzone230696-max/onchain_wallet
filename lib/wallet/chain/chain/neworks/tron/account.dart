@@ -13,15 +13,48 @@ class TronNetworkStorageId extends DefaultNetworkStorageId {
 }
 
 class TronChainConfig extends DefaultNetworkConfig<TronNetworkStorageId> {
-  TronChainConfig()
-      : super(supportToken: true, supportNft: false, supportWeb3: true);
   @override
   List<DefaultNetworkStorageId> get storageKeys => TronNetworkStorageId.values;
+
+  TronChainConfig(
+      {super.supportToken = true,
+      super.supportNft = false,
+      super.supportWeb3 = true,
+      super.enableProvider = true});
+  factory TronChainConfig.deserialize(
+      {List<int>? cborBytes, String? cborHex, CborObject? cborObject}) {
+    final values = CborSerializable.cborTagValue(
+        cborBytes: cborBytes, hex: cborHex, object: cborObject);
+    return TronChainConfig(
+      supportToken: values.valueAs<bool?>(0) ?? true,
+      supportNft: values.valueAs<bool?>(1) ?? false,
+      supportWeb3: values.valueAs<bool?>(2) ?? true,
+      enableProvider: values.valueAs<bool?>(3) ?? true,
+    );
+  }
+  @override
+  TronChainConfig copyWith(
+      {bool? supportToken,
+      bool? supportNft,
+      bool? supportWeb3,
+      bool? enableProvider}) {
+    return TronChainConfig(
+        supportToken: supportToken ?? this.supportToken,
+        supportNft: supportNft ?? this.supportNft,
+        supportWeb3: supportWeb3 ?? this.supportWeb3,
+        enableProvider: enableProvider ?? this.enableProvider);
+  }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborSerializable.fromDynamic([]), CborTagsConst.tronChainConfig);
+        CborSerializable.fromDynamic([
+          supportToken,
+          supportNft,
+          supportWeb3,
+          enableProvider,
+        ]),
+        CborTagsConst.tronChainConfig);
   }
 }
 
@@ -42,17 +75,17 @@ final class TronChain extends Chain<
       {required super.network,
       required super.addressIndex,
       required super.id,
-      TronChainConfig? config,
-      required super.client,
+      required super.config,
+      required super.service,
       required super.addresses,
       super.totalBalance})
-      : super._(config: config ?? TronChainConfig());
+      : super._();
   @override
   TronChain copyWith(
       {WalletTronNetwork? network,
       List<ChainAccount>? addresses,
       int? addressIndex,
-      TronClient? client,
+      ProviderIdentifier? service,
       String? id,
       TronChainConfig? config,
       BigInt? totalBalance}) {
@@ -60,7 +93,7 @@ final class TronChain extends Chain<
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
         addresses: addresses?.cast<ITronAddress>() ?? _addresses,
-        client: client ?? _client,
+        service: service ?? _serviceIdentifier,
         id: id ?? this.id,
         config: config ?? this.config,
         totalBalance: totalBalance ?? this.totalBalance.value.balance);
@@ -69,18 +102,17 @@ final class TronChain extends Chain<
   factory TronChain.setup(
       {required WalletTronNetwork network,
       required String id,
-      TronClient? client}) {
+      ProviderIdentifier? service}) {
     return TronChain._(
         network: network,
         addressIndex: 0,
         id: id,
-        client: client,
-        addresses: []);
+        service: service,
+        addresses: [],
+        config: TronChainConfig());
   }
   factory TronChain.deserialize(
-      {required WalletTronNetwork network,
-      required CborListValue cbor,
-      TronClient? client}) {
+      {required WalletTronNetwork network, required CborListValue cbor}) {
     final int networkId = cbor.elementAs(0);
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
@@ -91,14 +123,22 @@ final class TronChain extends Chain<
         .map((e) => ITronAddress.deserialize(network, obj: e))
         .toList();
     final int addressIndex = cbor.elementAs(4);
+    final TronChainConfig config =
+        TronChainConfig.deserialize(cborObject: cbor.indexAs(5));
+    final ProviderIdentifier? service = MethodUtils.nullOnException(() {
+      final CborTagValue? identifier = cbor.elementAs(6);
+      if (identifier == null) return null;
+      return ProviderIdentifier.deserialize(cbor: identifier);
+    });
     final BigInt? totalBalance = cbor.elementAs<BigInt?>(7);
     return TronChain._(
         network: network,
         addresses: accounts,
         addressIndex: addressIndex,
-        client: client,
+        service: service,
         id: id,
-        totalBalance: totalBalance);
+        totalBalance: totalBalance,
+        config: config);
   }
 
   @override

@@ -7,6 +7,7 @@ import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/widgets/widgets/assets_image.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart'
     show APPToken, BalanceCore, IntegerBalance;
+
 import 'tooltip/widgets/tooltip.dart';
 import 'widget_constant.dart';
 
@@ -47,6 +48,7 @@ class CoinAndMarketPriceView extends StatefulWidget {
     this.disableTooltip = false,
     this.showTokenImage = false,
     this.enableMarketPrice = true,
+    this.isExpanded = false,
   });
 
   final BalanceCore balance;
@@ -55,6 +57,7 @@ class CoinAndMarketPriceView extends StatefulWidget {
   final bool disableTooltip;
   final bool showTokenImage;
   final bool enableMarketPrice;
+  final bool isExpanded;
 
   @override
   State<CoinAndMarketPriceView> createState() => _CoinAndMarketPriceViewState();
@@ -98,7 +101,7 @@ class _CoinAndMarketPriceViewState extends State<CoinAndMarketPriceView>
   @override
   void didUpdateWidget(covariant CoinAndMarketPriceView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.balance != widget.balance || balance.price != price) {
+    if (balance != widget.balance || balance.price != price) {
       _marketAmountSubscription?.cancel();
       _marketAmountSubscription = null;
       init();
@@ -130,7 +133,8 @@ class _CoinAndMarketPriceViewState extends State<CoinAndMarketPriceView>
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize:
+                  widget.isExpanded ? MainAxisSize.max : MainAxisSize.min,
               children: [
                 if (widget.showTokenImage) ...[
                   CircleTokenImageView(balance.token, radius: 10),
@@ -172,11 +176,13 @@ class CoinPriceView extends StatelessWidget {
       required this.balance,
       this.symbolColor,
       this.style,
-      this.disableTooltip = false});
+      this.disableTooltip = false,
+      this.isExpanded = false});
   final IntegerBalance? balance;
   final TextStyle? style;
   final Color? symbolColor;
   final bool disableTooltip;
+  final bool isExpanded;
   @override
   Widget build(BuildContext context) {
     final balance = this.balance;
@@ -189,7 +195,7 @@ class CoinPriceView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: isExpanded ? MainAxisSize.max : MainAxisSize.min,
               children: [
                 Flexible(
                   child: RichText(
@@ -283,7 +289,8 @@ class CoinAndMarketLivePriceView extends StatefulWidget {
       this.symbolColor,
       this.disableTooltip = false,
       this.showTokenImage = false,
-      this.enableMarketPrice = true});
+      this.enableMarketPrice = true,
+      this.isExpanded = false});
 
   final StreamValue<BalanceCore> liveBalance;
   final TextStyle? style;
@@ -291,6 +298,7 @@ class CoinAndMarketLivePriceView extends StatefulWidget {
   final bool disableTooltip;
   final bool showTokenImage;
   final bool enableMarketPrice;
+  final bool isExpanded;
 
   @override
   State<CoinAndMarketLivePriceView> createState() =>
@@ -356,8 +364,7 @@ class _CoinAndMarketLivePriceViewState extends State<CoinAndMarketLivePriceView>
   @override
   void didUpdateWidget(covariant CoinAndMarketLivePriceView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.liveBalance.value != widget.liveBalance.value ||
-        balance.price != price) {
+    if (widget.liveBalance.value != balance || balance.price != price) {
       _amountSubscription?.cancel();
       _marketAmountSubscription?.cancel();
       _amountSubscription = null;
@@ -393,7 +400,8 @@ class _CoinAndMarketLivePriceViewState extends State<CoinAndMarketLivePriceView>
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize:
+                  widget.isExpanded ? MainAxisSize.max : MainAxisSize.min,
               children: [
                 if (widget.showTokenImage) ...[
                   CircleTokenImageView(balance.token, radius: 10),

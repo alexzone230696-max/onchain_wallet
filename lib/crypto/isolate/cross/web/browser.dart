@@ -72,7 +72,7 @@ class BrowserCryptoWorker extends IsolateCryptoWoker {
 typedef _OnIsolateError = Function(MessageEvent error, WorkerMode id);
 
 class _WorkerConnector {
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   int connectorId = 0;
   _WorkerConnection? mainIsolate;
   final Map<WorkerMode, _WorkerConnection> _syncWorkers = {};
@@ -83,14 +83,14 @@ class _WorkerConnector {
   }
 
   void _onDoneIsolate(MessageEvent event, WorkerMode mode) {
-    _lock.synchronized(() {
+    _lock.run(() {
       final isolate = _syncWorkers.remove(mode);
       isolate?.close();
     });
   }
 
   Future<_WorkerConnection> getConnector(WorkerMode mode) async {
-    return await _lock.synchronized(() async {
+    return await _lock.run(() async {
       _syncWorkers[mode] ??= await _WorkerConnection._init(
           onDone: _onDoneIsolate, onStreamRespone: onStreamRespone, mode: mode);
       return _syncWorkers[mode]!;
@@ -102,7 +102,7 @@ class _WorkerConnection {
   final Map<int, WorkerMessageCompleter> _requests = {};
   final ChaCha20Poly1305 chacha;
   final web.Worker worker;
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   int _requestId = 0;
   final WorkerMode mode;
   final StreamController<MessageArgsStreamResponse> onStreamRespone;
@@ -260,7 +260,7 @@ class _WorkerConnection {
   }
 
   Future<int> _getRequestId() {
-    return _lock.synchronized(() {
+    return _lock.run(() {
       _requestId++;
       final id = WorkerMessageCompleter(_requestId);
       _requests[id.id] = id;
@@ -390,7 +390,7 @@ class _SyncWorkerConnection extends _WorkerConnection {
       {required RequestableMessage args,
       List<int>? encryptPart,
       Duration? timeout}) async {
-    return await _lock.synchronized(() async {
+    return await _lock.run(() async {
       try {
         status = IsolateStatus.busy;
         return await super

@@ -2,7 +2,7 @@ part of 'package:on_chain_wallet/wallet/provider/wallet_provider.dart';
 
 mixin WalletMoneroImpl on WalletManager {
   StreamSubscription<ChainEvent>? _listener;
-  final _moneeroSyncLocker = SynchronizedLock();
+  final _moneeroSyncLocker = SafeAtomicLock();
 
   void _onMoneroNetworkEvent(MoneroChain chain, ChainEvent notify) {
     final type = notify.type;
@@ -32,7 +32,7 @@ mixin WalletMoneroImpl on WalletManager {
   Future<List<MoneroUnlockedPaymentRequestDetails>> _moneroUpdatePendingTxes(
       {required MoneroChain account,
       List<MoneroAccountPendingTxes>? txIds}) async {
-    return _moneeroSyncLocker.synchronized(() async {
+    return _moneeroSyncLocker.run(() async {
       final txids = txIds ?? account.getAccountsPendingTxes();
       if (txids.isEmpty) return [];
       final client = await account.client();

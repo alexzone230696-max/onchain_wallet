@@ -1,13 +1,14 @@
 import 'dart:async';
 
-import 'package:blockchain_utils/utils/binary/utils.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:blockchain_utils/signer/types/eth_signature.dart';
+import 'package:blockchain_utils/utils/binary/utils.dart';
+import 'package:flutter/material.dart';
+import 'package:on_chain/on_chain.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/models/models/signing.dart';
+import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/ethereum/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
-import 'package:on_chain/on_chain.dart';
 
 import 'fee.dart';
 import 'memo.dart';
@@ -143,10 +144,16 @@ abstract class EthereumTransactionStateController<
   @override
   List<LiveFormField<Object?, Object>> get fields => [receipt, amount, memo];
   @override
-  Future<void> initForm(EthereumClient client,
-      {bool updateAccount = true}) async {
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required EthereumClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
     await initFee();
-    await super.initForm(client, updateAccount: updateAccount);
+    await super.initForm(
+        context: context, client: client, updateAccount: updateAccount);
+    return this;
   }
 
   @override

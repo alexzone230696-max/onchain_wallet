@@ -1,14 +1,15 @@
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:on_chain/sui/src/transaction/const/constant.dart';
 import 'package:on_chain/sui/src/transaction/types/types.dart';
-import 'package:on_chain_wallet/app/synchronized/basic_lock.dart';
 import 'package:on_chain_wallet/app/utils/method/utiils.dart';
 import 'package:on_chain_wallet/future/wallet/network/sui/transaction/types/types.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
+
 import 'provider.dart';
 
 mixin SuiTransactionFeeController on SuiTransactionApiController {
   final Cancelable _cancelable = Cancelable();
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   WalletSuiNetwork get network;
 
   late final SuiTransactionFeeData txFee = SuiTransactionFeeData(
@@ -35,7 +36,7 @@ mixin SuiTransactionFeeController on SuiTransactionApiController {
 
   Future<void> estimateFee() async {
     _cancelable.cancel();
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       setDefaultFee();
       txFee.setPending();
       final fee = await MethodUtils.call(() async => await simulateFee());

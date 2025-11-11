@@ -47,6 +47,9 @@ class APPConst {
   static final APPImage moonriver =
       APPImage.local("assets/image/moonriver.png");
   static final APPImage astar = APPImage.local("assets/image/astar.png");
+  static final APPImage hydration =
+      APPImage.local("assets/image/hydration.png");
+  static final APPImage bifrost = APPImage.local("assets/image/bifrost.png");
   static final APPImage cf = APPImage.local("assets/image/cf.png");
   static final APPImage centrifuge = APPImage.local("assets/image/cfg.png");
   static final APPImage acala = APPImage.local("assets/image/acala.png");
@@ -112,4 +115,5 @@ class APPConst {
   static const double largeCircleRadius120 = 120;
 
   static const double disabledOpacity = 0.3;
+  static const double defaultOpacity = 1;
 }

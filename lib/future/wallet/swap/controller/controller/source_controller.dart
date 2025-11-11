@@ -1,13 +1,15 @@
 import 'dart:async';
+
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
+import 'package:on_chain_swap/on_chain_swap.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/text_field/input_formaters.dart';
 import 'package:on_chain_wallet/marketcap/prices/live_currency.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
-import 'package:on_chain_swap/on_chain_swap.dart';
 
 typedef ONSELECTSOURCEACCOUNTS = Future<ChainAccount?> Function(Chain);
 mixin SwapSourceController on StreamStateController {
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   StreamValue<IntegerBalance?> inputPrice = StreamValue(null);
   final Cancelable _cancelable = Cancelable();
   List<Chain> get chains;
@@ -37,7 +39,7 @@ mixin SwapSourceController on StreamStateController {
   }
 
   Future<void> _updateBalance() async {
-    _lock.synchronized(() async {
+    _lock.run(() async {
       _balance = null;
       _checkBalance();
       final asset = sourceAsset?.asset;
@@ -76,6 +78,8 @@ mixin SwapSourceController on StreamStateController {
   SwapAmount? getInputAmount() {
     final decimals = _sourceAsset?.asset.decimal;
     if (decimals == null) return null;
+    final amount = amountController.getText();
+    if (amount.trim().isEmpty) return null;
     return MethodUtils.nullOnException(
         () => SwapAmount.fromString(amountController.getText(), decimals));
   }
@@ -96,7 +100,7 @@ mixin SwapSourceController on StreamStateController {
     if (sChain == null) return;
     final account = await onSelectAddress(sChain);
     if (account == null || account.network != sChain.network.value) return;
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       _cancelable.cancel();
       if (_allowMultipleAccountSpent) {
         _sourceAddresses = {..._sourceAddresses, account}.toList();
@@ -139,7 +143,7 @@ mixin SwapSourceController on StreamStateController {
   }
 
   Future<void> updateSourceAsset(APPSwapAssets asset) async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       _cancelable.cancel();
       _sourceAsset = asset;
       _sourceChain =
@@ -158,6 +162,7 @@ mixin SwapSourceController on StreamStateController {
       _allowAddSource = _allowMultipleAccountSpent || _sourceAddresses.isEmpty;
       onAmountChanged();
       _updateBalance();
+      _sourceChain?.init();
     });
   }
 

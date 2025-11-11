@@ -1,3 +1,4 @@
+import 'package:blockchain_utils/utils/equatable/equatable.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/wallet/web3/core/messages/models/models/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/permission/models/authenticated.dart';
@@ -51,7 +52,7 @@ enum Web3ErrorCode {
   }
 }
 
-class Web3RequestException with Equatable implements Exception {
+class Web3RequestException with Equality implements Exception {
   final String message;
   final int? errorCode;
   final String? data;

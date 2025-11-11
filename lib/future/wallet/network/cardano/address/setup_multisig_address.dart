@@ -372,7 +372,7 @@ class _CredentialView extends StatelessWidget {
                                   )
                                   .then(onSetupPublicKey);
                             },
-                            icon: Icon(Icons.add)),
+                            icon: Icon(Icons.add_box)),
                       ],
                     ),
                     child: Text("tap_to_chose_or_create_public_key".tr),
@@ -437,7 +437,7 @@ class _SelectedPubkeysView extends StatelessWidget {
   }
 }
 
-class _CardanoMultisigPublicKeys with Equatable {
+class _CardanoMultisigPublicKeys with Equality {
   final PublicKeyDerivationWithMode? publicKey;
   final ICardanoAddress? address;
   final String key;

@@ -1,17 +1,18 @@
 import 'dart:async';
 
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_bridge/on_chain_bridge.dart';
 import 'package:on_chain_bridge/platform_interface.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/crypto/impl/worker_impl.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/core/observer.dart';
 import 'package:on_chain_wallet/future/wallet/web3/controller/web3_request_controller.dart';
 import 'package:on_chain_wallet/future/wallet/webview/controller/controller/tab_controller.dart';
 import 'package:on_chain_wallet/future/wallet/webview/repository/webview_repository.dart';
 import 'package:on_chain_wallet/future/wallet/webview/view/native_view.dart';
-import 'package:on_chain_wallet/crypto/impl/worker_impl.dart';
 import 'package:on_chain_wallet/wallet/web3/core/core.dart';
 
 class WebViewStateControllerConst {
@@ -79,7 +80,7 @@ mixin WebViewTabImpl on CryptoWokerImpl, WebViewListener {
     webViewController.openUrl(viewType: viewType!, url: url);
   }
 
-  final _tabLocker = SynchronizedLock();
+  final _tabLocker = SafeAtomicLock();
   final PlatformWebView webViewController = PlatformInterface.instance.webView;
   final WebViewRepository _storage = WebViewRepository();
   final Map<String, WebViewTabController> tabsAuthenticated = {};
@@ -108,7 +109,7 @@ mixin WebViewTabImpl on CryptoWokerImpl, WebViewListener {
   bool get isHide => _page == WebViewTabPage.hide;
 
   void removeHistory(WebViewTab tab) async {
-    _tabLocker.synchronized(() async {
+    _tabLocker.run(() async {
       await _storage.removeHistory(tab);
       if (histories.isEmpty) {
         backToBorwser();
@@ -124,14 +125,14 @@ mixin WebViewTabImpl on CryptoWokerImpl, WebViewListener {
   }
 
   void clearHistory() {
-    _tabLocker.synchronized(() async {
+    _tabLocker.run(() async {
       await _storage.clearHistory();
     });
     backToBorwser();
   }
 
   void removeBookmars(WebViewTab tab) async {
-    await _tabLocker.synchronized(() async {
+    await _tabLocker.run(() async {
       await _storage.removeBookmark(tab);
     });
     controller.setBookmark(tab, false);
@@ -143,7 +144,7 @@ mixin WebViewTabImpl on CryptoWokerImpl, WebViewListener {
   }
 
   void clearBookmark() {
-    _tabLocker.synchronized(() async {
+    _tabLocker.run(() async {
       await _storage.clearBookmark();
     });
 
@@ -306,7 +307,7 @@ mixin WebViewTabImpl on CryptoWokerImpl, WebViewListener {
   }
 
   Future<void> newTab(IntVoid reachedLimit) async {
-    await _tabLocker.synchronized(() async {
+    await _tabLocker.run(() async {
       if (tabsAuthenticated.length > WebViewStateControllerConst.maxTabLength) {
         reachedLimit(WebViewStateControllerConst.maxTabLength);
         return;
@@ -319,7 +320,7 @@ mixin WebViewTabImpl on CryptoWokerImpl, WebViewListener {
   }
 
   Future<void> switchTab(WebViewTabController controller) async {
-    await _tabLocker.synchronized(() async {
+    await _tabLocker.run(() async {
       if (controller.viewId == viewType) {
         backToBorwser();
         return;
@@ -353,7 +354,7 @@ mixin WebViewTabImpl on CryptoWokerImpl, WebViewListener {
         LastWeb3ActiveClient(identifier: event.viewId, url: event.url);
     if (url == null) return;
     textController.text = url;
-    _tabLocker.synchronized(() async {
+    _tabLocker.run(() async {
       final WebViewTab tab = _eventToTab(event);
       final inBokmark = _storage.inBokmark(tab);
       controller.setTab(tab, inBokmark);

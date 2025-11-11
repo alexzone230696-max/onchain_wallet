@@ -90,17 +90,15 @@ class _BarcodeImageViewState extends State<BarcodeImageView>
                         duration: APPConst.animationDuraion,
                         child: QrImageView(
                           data: widget.data,
-                          backgroundColor: context.colors.onSurface,
+                          backgroundColor: Colors.white,
+                          embeddedImage: AssetImage(APPConst.logo.uri),
                           errorStateBuilder: (context, error) =>
                               WidgetConstant.errorIcon,
                           eyeStyle: QrEyeStyle(
-                            eyeShape: QrEyeShape.circle,
-                            color: context.theme.colorScheme.surface,
-                          ),
+                              eyeShape: QrEyeShape.circle, color: Colors.black),
                           dataModuleStyle: QrDataModuleStyle(
-                            dataModuleShape: QrDataModuleShape.circle,
-                            color: context.theme.colorScheme.surface,
-                          ),
+                              dataModuleShape: QrDataModuleShape.circle,
+                              color: Colors.black),
                         ),
                       ),
                       Positioned.fill(

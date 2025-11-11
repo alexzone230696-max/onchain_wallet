@@ -23,21 +23,86 @@ abstract class StorageId {
 abstract class ChainStorageId extends StorageId {}
 
 abstract class NetworkConfig<STORAGE extends StorageId>
-    with CborSerializable, Equatable {
+    with CborSerializable, Equality {
   double get appbarHeight => 0;
   bool get hasAction => false;
   final bool supportToken;
   final bool supportNft;
   final bool supportWeb3;
+  final bool enableProvider;
 
   List<StorageId> get storageKeys;
   const NetworkConfig(
       {required this.supportToken,
       required this.supportNft,
-      required this.supportWeb3});
+      required this.supportWeb3,
+      required this.enableProvider});
 
   @override
   List get variabels => [storageKeys, hasAction];
+}
+
+class DefaultNetworkConfig<T extends DefaultNetworkStorageId>
+    extends NetworkConfig<T> {
+  const DefaultNetworkConfig(
+      {required super.supportToken,
+      required super.supportNft,
+      required super.supportWeb3,
+      required super.enableProvider});
+  factory DefaultNetworkConfig.deserialize(
+      {List<int>? cborBytes, String? cborHex, CborObject? cborObject}) {
+    final values = CborSerializable.cborTagValue(
+        cborBytes: cborBytes,
+        hex: cborHex,
+        object: cborObject,
+        tags: CborTagsConst.defaultNetworkConfig);
+    return DefaultNetworkConfig(
+      supportToken:
+          values.indexMaybeAs<bool, CborBoleanValue>(0, (e) => e.value) ?? true,
+      supportNft:
+          values.indexMaybeAs<bool, CborBoleanValue>(1, (e) => e.value) ??
+              false,
+      supportWeb3:
+          values.indexMaybeAs<bool, CborBoleanValue>(2, (e) => e.value) ?? true,
+      enableProvider:
+          values.indexMaybeAs<bool, CborBoleanValue>(3, (e) => e.value) ?? true,
+    );
+  }
+  // DefaultNetworkConfig.deserialize({String?  cbor,
+  // List<int>? bytes,CborObject?object})
+  static const DefaultNetworkConfig defaultConfig = DefaultNetworkConfig(
+      supportNft: false,
+      supportToken: true,
+      supportWeb3: true,
+      enableProvider: true);
+
+  DefaultNetworkConfig copyWith(
+      {bool? supportToken,
+      bool? supportNft,
+      bool? supportWeb3,
+      bool? enableProvider}) {
+    return DefaultNetworkConfig(
+        supportToken: supportToken ?? this.supportToken,
+        supportNft: supportNft ?? this.supportNft,
+        supportWeb3: supportWeb3 ?? this.supportWeb3,
+        enableProvider: enableProvider ?? this.enableProvider);
+  }
+
+  @override
+  CborTagValue toCbor() {
+    return CborTagValue(
+        CborSerializable.fromDynamic([
+          supportToken,
+          supportNft,
+          supportWeb3,
+          enableProvider,
+        ]),
+        CborTagsConst.defaultNetworkConfig);
+  }
+
+  @override
+  List<DefaultNetworkStorageId> get storageKeys =>
+      DefaultNetworkStorageId.values;
 }
 
 /// maximum value 999
@@ -48,6 +113,7 @@ class DefaultNetworkStorageId implements StorageId {
   static const DefaultNetworkStorageId nft = DefaultNetworkStorageId(3);
   static const DefaultNetworkStorageId web3 = DefaultNetworkStorageId(4);
   static const DefaultNetworkStorageId address = DefaultNetworkStorageId(5);
+  static const DefaultNetworkStorageId providers = DefaultNetworkStorageId(6);
   static const DefaultNetworkStorageId account = DefaultNetworkStorageId(1000);
   static const List<DefaultNetworkStorageId> values = [
     contacts,
@@ -64,30 +130,12 @@ class DefaultNetworkStorageId implements StorageId {
 
 class DefaultChainStorageId implements ChainStorageId {
   static const DefaultChainStorageId web3 = DefaultChainStorageId(2);
+  static const DefaultChainStorageId config = DefaultChainStorageId(3);
   @override
   final int storageId;
   const DefaultChainStorageId(this.storageId);
 
-  static const List<DefaultChainStorageId> values = [web3];
-}
-
-class DefaultNetworkConfig<T extends DefaultNetworkStorageId>
-    extends NetworkConfig<T> {
-  const DefaultNetworkConfig(
-      {required super.supportToken,
-      required super.supportNft,
-      required super.supportWeb3});
-  static const DefaultNetworkConfig defaultConfig = DefaultNetworkConfig(
-      supportNft: false, supportToken: true, supportWeb3: true);
-  @override
-  CborTagValue toCbor() {
-    return CborTagValue(
-        CborSerializable.fromDynamic([]), CborTagsConst.defaultChainConfig);
-  }
-
-  @override
-  List<DefaultNetworkStorageId> get storageKeys =>
-      DefaultNetworkStorageId.values;
+  static const List<DefaultChainStorageId> values = [web3, config];
 }
 
 abstract final class BaseChain<
@@ -107,7 +155,12 @@ abstract final class BaseChain<
   abstract final NETWORK network;
   abstract final InternalStreamValue<IntegerBalance> totalBalance;
   abstract final String id;
-  abstract CLIENT? _client;
+  abstract ProviderIdentifier? _serviceIdentifier;
+  abstract CLIENT? _service;
+
+  abstract NodeClientStatus _clientStatus;
+  NetworkServiceProtocol? get service => _service?.service;
+  NodeClientStatus get serviceStatus => _clientStatus;
 
   abstract List<ADDRESS> _addresses;
   abstract int _addressIndex;
@@ -117,16 +170,11 @@ abstract final class BaseChain<
   ADDRESS get address => _addresses.elementAt(_addressIndex);
   abstract CONFIG _config;
   CONFIG get config => _config;
-  abstract final SynchronizedLock _lock;
+  abstract final SafeAtomicLock _lock;
 
   abstract final NetworkStorageManager _storage;
 
-  abstract NodeClientStatus _clientStatus;
-  NetworkServiceProtocol? get service => _client?.service;
-
-  NodeClientStatus get serviceStatus => _clientStatus;
-
-  ProviderIdentifier? get serviceIdentifier => _client?.serviceIdentifier;
+  ProviderIdentifier? get serviceIdentifier => _serviceIdentifier;
 
   late final StreamController<ChainEvent> _controller =
       StreamController.broadcast();
@@ -151,14 +199,20 @@ enum DefaultChainNotify implements ChainNotify {
   contacts(4),
   transaction(5),
   token(6),
-  nft(7);
+  nft(7),
+  updateProvider(8);
 
   @override
   final int value;
   const DefaultChainNotify(this.value);
 }
 
-enum ChainNotifyStatus { progress, complete }
+enum ChainNotifyStatus {
+  progress,
+  complete;
+
+  bool get isComplete => this == complete;
+}
 
 class ChainEvent {
   final ChainNotify type;
@@ -275,7 +329,6 @@ final class InternalStreamValue<T> implements StreamValue<T> {
 
   @override
   void dispose() {
-    assert(_allowDispose, "dispose not allowed.");
     if (!_allowDispose) return;
     final callBack = _disposeCallback;
     if (callBack != null) {
@@ -285,5 +338,35 @@ final class InternalStreamValue<T> implements StreamValue<T> {
       return;
     }
     _disposeInternal();
+  }
+}
+
+abstract class ChainConfig with CborSerializable, Equality {
+  const ChainConfig();
+  NetworkType get network;
+  @override
+  List get variabels => [];
+  factory ChainConfig.deserialize(
+      {List<int>? cborBytes, String? cborHex, CborObject? cborObject}) {
+    final CborTagValue tag = CborSerializable.decode(
+        cborBytes: cborBytes, hex: cborHex, object: cborObject);
+    final network = NetworkType.fromTag(tag.tags);
+    return switch (network) {
+      NetworkType.substrate =>
+        SubstrateChainConfig.deserialize(cborObject: tag),
+      _ => throw WalletExceptionConst.internalError("ChainConfig.deserialize")
+    };
+  }
+  factory ChainConfig.create(NetworkType network) {
+    return switch (network) {
+      NetworkType.substrate => SubstrateChainConfig(),
+      _ => throw WalletExceptionConst.internalError("ChainConfig.deserialize")
+    };
+  }
+  T cast<T extends ChainConfig>() {
+    if (this is! T) {
+      throw WalletExceptionConst.internalError("ChainConfig.cast");
+    }
+    return this as T;
   }
 }

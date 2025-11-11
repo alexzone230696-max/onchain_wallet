@@ -4,11 +4,8 @@ import 'package:on_chain_wallet/app/http/models/auth.dart';
 import 'package:on_chain_wallet/wallet/api/provider/core/provider.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/cosmos.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/custom.dart';
-import 'package:on_chain_wallet/wallet/constant/chain/const.dart';
 
 class APPSwapConstants {
-  static const int cfTestnetNetworkId = ChainConst.cfTestnetNetworkId;
-  static const int polkadotMainnetId = ChainConst.polkadotMainnetId;
   static final Map<SwapServiceType, Map<ChainType, List<APIProvider>>>
       _swapProviders = {
     SwapServiceType.chainFlip: {
@@ -56,6 +53,6 @@ class APPSwapConstants {
 
   static T? getProvider<T extends APIProvider>(SwapServiceType service,
       {ChainType chainType = ChainType.mainnet}) {
-    return _swapProviders[service]?[chainType]?.firstOrNull?.toProvider<T>();
+    return _swapProviders[service]?[chainType]?.firstOrNull?.cast<T>();
   }
 }

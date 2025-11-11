@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 
 typedef PageProgressStatus = StreamWidgetStatus;
 
@@ -52,18 +52,27 @@ class PageProgressChildWidget extends StatelessWidget {
   final Widget statusWidget;
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: ConstraintsBoxView(
+    return Center(
+      child: CustomScrollView(
+        shrinkWrap: true,
+        slivers: [
+          SliverConstraintsBoxView(
             padding: WidgetConstant.paddingHorizontal20,
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [statusWidget]),
-          ),
-        ),
-      ],
+            sliver: SliverToBoxAdapter(
+                child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [statusWidget],
+                  ),
+                ),
+              ],
+            )),
+          )
+        ],
+      ),
     );
   }
 }

@@ -20,8 +20,9 @@ class Web3CosmosImportNetworkStateController extends Web3CosmosStateController<
     if (networkParams == null) {
       throw AppException("some_required_field_not_filled");
     }
+    final newNetwork = WalletCosmosNetwork(-1, networkParams.$1);
     await walletProvider.wallet
-        .updateImportNetwork(WalletCosmosNetwork(-1, networkParams));
+        .importNewNetwork(network: newNetwork, providers: [networkParams.$2]);
     return Web3RequestResponseData(response: true);
   }
 

@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:blockchain_utils/utils/string/string.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain/tron/tron.dart';
@@ -12,6 +13,7 @@ import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/networks/tron.dart';
+
 import 'transfer.dart';
 
 abstract class TronTransactionBaseTransferTokenOperation<
@@ -56,8 +58,14 @@ abstract class TronTransactionBaseTransferTokenOperation<
   }
 
   @override
-  Future<void> initForm(TronClient client, {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: false);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required TronClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super
+        .initForm(context: context, client: client, updateAccount: false);
     if (!address.tokens.contains(token)) {
       await account.updateTokenBalance(address: address, tokens: [token]);
     } else {
@@ -65,6 +73,7 @@ abstract class TronTransactionBaseTransferTokenOperation<
     }
     _tokenBalanceListener =
         token.streamBalance.stream.listen((_) => onStateUpdated());
+    return this;
   }
 
   @override
@@ -266,9 +275,16 @@ class TronTransactionTransferTRC20TokenOperation
   }
 
   @override
-  Future<void> initForm(TronClient client, {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: updateAccount);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required TronClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super.initForm(
+        context: context, client: client, updateAccount: updateAccount);
     _listener = feeLimit.live.stream.listen(_onFeeLimitUpdated);
+    return this;
   }
 
   @override

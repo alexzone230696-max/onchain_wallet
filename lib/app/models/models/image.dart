@@ -1,6 +1,6 @@
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:on_chain_wallet/app/constant/global/serialization.dart';
-import 'package:on_chain_wallet/app/euqatable/equatable.dart';
+import 'package:blockchain_utils/utils/equatable/equatable.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
 import 'package:on_chain_wallet/app/utils/string/utils.dart';
 import 'content_type.dart';
@@ -9,12 +9,12 @@ import 'content_type.dart';
 typedef OnLoadUrl = Future<String> Function();
 typedef OnLoadCacheKey = Future<String> Function();
 
-abstract class APPImageInfo with Equatable {
+abstract class APPImageInfo with Equality {
   abstract final OnLoadUrl loadUrl;
   abstract final ContentType type;
 }
 
-class LazyAPPImage with Equatable implements APPImageInfo {
+class LazyAPPImage with Equality implements APPImageInfo {
   final String identifier;
   @override
   final ContentType type = ContentType.lazy;
@@ -26,7 +26,7 @@ class LazyAPPImage with Equatable implements APPImageInfo {
   List get variabels => [identifier];
 }
 
-class APPImage with CborSerializable, Equatable implements APPImageInfo {
+class APPImage with CborSerializable, Equality implements APPImageInfo {
   @override
   final ContentType type;
   final String uri;

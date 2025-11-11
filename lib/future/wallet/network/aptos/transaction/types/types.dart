@@ -7,8 +7,8 @@ import 'package:on_chain/aptos/src/provider/models/fullnode/types.dart';
 import 'package:on_chain/aptos/src/transaction/constants/const.dart';
 import 'package:on_chain/aptos/src/transaction/types/types.dart';
 import 'package:on_chain/bcs/move/types/types.dart';
-import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 typedef TRANSACTIONSTATECONTROLLERBUILDER = void Function();
 
@@ -71,6 +71,7 @@ class AptosTransactionFeeData
 
 abstract class BaseAptosTransactionController<T extends IAptosTransactionData>
     extends TransactionStateController<
+        AptosFATokens,
         IAptosAddress,
         AptosClient,
         WalletAptosNetwork,
@@ -79,7 +80,8 @@ abstract class BaseAptosTransactionController<T extends IAptosTransactionData>
         IAptosTransaction<T>,
         IAptosSignedTransaction<T>,
         AptosWalletTransaction,
-        SubmitTransactionSuccess<IAptosSignedTransaction<T>>> {
+        SubmitTransactionSuccess<IAptosSignedTransaction<T>>,
+        AptosTransactionFeeData> {
   BaseAptosTransactionController(
       {required super.walletProvider,
       required super.account,

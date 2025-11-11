@@ -1,7 +1,7 @@
 part of 'package:on_chain_wallet/wallet/chain/chain/chain.dart';
 
 class XRPNetworkController extends NetworkController<IXRPAddress, XRPChain,
-    Web3XRPChainAccount, Web3InternalDefaultChain> {
+    Web3XRPChainAccount, Web3InternalDefaultChain, ChainConfig> {
   XRPNetworkController({
     super.networks,
     required super.id,
@@ -10,7 +10,7 @@ class XRPNetworkController extends NetworkController<IXRPAddress, XRPChain,
   @override
   Future<Web3XRPChainAuthenticated> createWeb3ChainAuthenticated(
       Web3ApplicationAuthentication app) async {
-    final internalNetwork = await getWeb3InternalChainAuthenticated(app);
+    final internalNetwork = await _getWeb3InternalChainAuthenticated(app);
 
     final web3Networks = _networks.values
         .map((e) => Web3ChainDefaultIdnetifier(

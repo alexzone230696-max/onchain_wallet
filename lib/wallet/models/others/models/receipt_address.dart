@@ -1,8 +1,8 @@
-import 'package:on_chain_wallet/app/euqatable/equatable.dart';
+import 'package:blockchain_utils/utils/equatable/equatable.dart';
 import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/contact/core/contract_core.dart';
 
-class ReceiptAddress<NETWORKADDRESS> with Equatable {
+class ReceiptAddress<NETWORKADDRESS> with Equality {
   ReceiptAddress(
       {required this.view,
       this.type,

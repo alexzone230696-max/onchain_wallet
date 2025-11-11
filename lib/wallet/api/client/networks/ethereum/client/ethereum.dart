@@ -1,16 +1,17 @@
 import 'dart:async';
+
 import 'package:blockchain_utils/exception/exceptions.dart';
+import 'package:on_chain/on_chain.dart';
+import 'package:on_chain/solidity/address/core.dart';
+import 'package:on_chain_swap/on_chain_swap.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/ethereum/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/ethereum.dart';
 import 'package:on_chain_wallet/wallet/api/services/service.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
-import 'package:on_chain_wallet/crypto/types/networks.dart';
-import 'package:on_chain/on_chain.dart';
-import 'package:on_chain/solidity/address/core.dart';
-import 'package:on_chain_swap/on_chain_swap.dart';
 import 'package:on_chain_wallet/wallet/chain/account.dart';
+import 'package:on_chain_wallet/wallet/models/models.dart';
 
 class EthereumClient extends NetworkClient<
     EthWalletTransaction,
@@ -85,6 +86,7 @@ class EthereumClient extends NetworkClient<
     try {
       final decimal = await provider.request(RPCERC20Decimal(contractAddress,
           blockNumber: BlockTagOrNumber.latest));
+      Logg.log("decimals $decimal");
       if (decimal == null) return null;
       String? name;
       String? symbol;
@@ -147,11 +149,11 @@ class EthereumClient extends NetworkClient<
       required ETHAddress owner,
       required ETHAddress spender}) async {
     final function = EthereumAbiCons.getAllowance;
-    final result = await provider.request(EthereumRequestCall.fromMethod(
+    final result = await provider.request(EthereumRequestFunctionCall(
         contractAddress: contract.address,
         function: function,
         params: [owner, spender]));
-    return (result as List)[0];
+    return result[0];
   }
 
   @override
@@ -231,17 +233,6 @@ class EthereumClient extends NetworkClient<
   Stream<List<EthereumNetworkToken>> getAccountTokensStream(
       ETHAddress address) {
     final controller = StreamController<List<EthereumNetworkToken>>();
-    // void add(List<ETHERC20Token> erc20Tokens) {
-    //   final tokens =
-    //       erc20Tokens.map((e) => EthereumNetworkToken(token: e)).toList();
-    //   if (!controller.isClosed) {
-    //     controller.add(tokens);
-    //   }
-    // }
-
-    // void error(Object err) {
-    //   if (!controller.isClosed) controller.addError(err);
-    // }
 
     void close() {
       if (!controller.isClosed) controller.close();

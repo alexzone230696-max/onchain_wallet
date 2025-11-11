@@ -131,9 +131,10 @@ class __CosmosImportNetworkViewState extends State<_CosmosImportNetworkView>
       progressKey.errorText("some_required_field_not_filled".tr);
       return;
     }
-    final newNetwork = WalletCosmosNetwork(-1, network);
+    final newNetwork = WalletCosmosNetwork(-1, network.$1);
     final result = await MethodUtils.call(() async {
-      return wallet.wallet.updateImportNetwork(newNetwork);
+      return wallet.wallet
+          .importNewNetwork(network: newNetwork, providers: [network.$2]);
     });
     if (result.hasError) {
       progressKey.errorText(result.localizationError,

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:on_chain_bridge/models/files/picked_file_data.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/address_details.dart';
 import 'package:on_chain_wallet/future/wallet/setup/controller/form.dart';
@@ -42,21 +43,23 @@ class _MnemonicViewState extends State<RestoreWalletBackupView>
       appBar: AppBar(
         title: Text("restore_backup".tr),
       ),
-      body: StreamPageProgress(
-        controller: controller.pageController,
-        builder: (context) => CustomScrollView(
-          slivers: [
-            SliverConstraintsBoxView(
-                padding: WidgetConstant.padding20,
-                sliver: APPSliverAnimatedSwitcher(
-                    enable: controller.page,
-                    widgets: {
-                      WalletBackupPage.backup: (context) =>
-                          _SetupBackupView(controller),
-                      WalletBackupPage.review: (context) =>
-                          _BackupVerifyReview(controller.backupData!),
-                    }))
-          ],
+      body: UnfocusableChild(
+        child: StreamPageProgress(
+          controller: controller.pageController,
+          builder: (context) => CustomScrollView(
+            slivers: [
+              SliverConstraintsBoxView(
+                  padding: WidgetConstant.padding20,
+                  sliver: APPSliverAnimatedSwitcher(
+                      enable: controller.page,
+                      widgets: {
+                        WalletBackupPage.backup: (context) =>
+                            _SetupBackupView(controller),
+                        WalletBackupPage.review: (context) =>
+                            _BackupVerifyReview(controller.backupData!),
+                      }))
+            ],
+          ),
         ),
       ),
     );
@@ -76,18 +79,10 @@ class _SetupBackupView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text("backup".tr, style: context.textTheme.titleMedium),
-            Text("paste_your_backup_here".tr),
             WidgetConstant.height8,
-            AppTextField(
-                key: controller.backupTextFieldKey,
-                onChanged: controller.onChangeBackup,
-                validator: controller.onValidateBackup,
-                initialValue: controller.backup,
-                label: "backup".tr,
-                pasteIcon: true,
-                hint: "paste_your_backup_here".tr,
-                minlines: 1,
-                maxLines: 4),
+            BackupDataPickerView(
+                encoding: PickFileContentEncoding.hex,
+                key: controller.backupKey),
             WidgetConstant.height20,
             Text("password".tr, style: context.textTheme.titleMedium),
             Text("input_backup_password".tr),
@@ -131,6 +126,13 @@ class _SetupBackupView extends StatelessWidget {
                               focusNode: controller.nextFocus,
                               validator: controller.onValidatePassphrase),
                         ])),
+            WidgetConstant.height20,
+            AppCheckListTile(
+                contentPadding: EdgeInsets.zero,
+                value: controller.verifyBackupContent,
+                title: Text("verify_backup".tr),
+                subtitle: Text("verify_backup_desc".tr),
+                onChanged: controller.onChangeVerifyBackup),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               FixedElevatedButton(
                   padding: WidgetConstant.paddingVertical40,

@@ -123,6 +123,7 @@ class CosmosTransactionFeeData
 
 abstract class BaseCosmosTransactionController
     extends TransactionStateController<
+        CW20Token,
         ICosmosAddress,
         CosmosClient,
         WalletCosmosNetwork,
@@ -131,7 +132,8 @@ abstract class BaseCosmosTransactionController
         ICosmosTransaction,
         ICosmosSignedTransaction,
         CosmosWalletTransaction,
-        SubmitTransactionSuccess<ICosmosSignedTransaction>> {
+        SubmitTransactionSuccess<ICosmosSignedTransaction>,
+        CosmosTransactionFeeData> {
   bool get isThorChain =>
       network.coinParam.networkType == CosmosNetworkTypes.thorAndForked;
   BaseCosmosTransactionController(

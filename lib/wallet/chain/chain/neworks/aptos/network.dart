@@ -1,14 +1,14 @@
 part of 'package:on_chain_wallet/wallet/chain/chain/chain.dart';
 
 class AptosNetworkController extends NetworkController<IAptosAddress,
-    AptosChain, Web3AptosChainAccount, Web3InternalDefaultChain> {
+    AptosChain, Web3AptosChainAccount, Web3InternalDefaultChain, ChainConfig> {
   AptosNetworkController({super.networks, required super.id})
       : super(type: NetworkType.aptos);
 
   @override
   Future<Web3AptosChainAuthenticated> createWeb3ChainAuthenticated(
       Web3ApplicationAuthentication app) async {
-    final internalNetwork = await getWeb3InternalChainAuthenticated(app);
+    final internalNetwork = await _getWeb3InternalChainAuthenticated(app);
     final web3Networks = _networks.values
         .map((e) => Web3AptosChainIdnetifier(
             id: e.network.value,

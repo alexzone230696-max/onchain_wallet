@@ -134,8 +134,12 @@ class ChainsHandler {
     return _networks.values.expand((e) => e.getChains()).toList();
   }
 
-  NetworkController controller(NetworkType type) {
-    return _networks[type]!;
+  T controller<T extends NetworkController>(NetworkType type) {
+    final controller = _networks[type];
+    if (controller == null) {
+      throw WalletExceptionConst.internalError("ChainsHandler.controller");
+    }
+    return controller.cast<T>();
   }
 
   Future<bool> switchNetwork(Chain network) async {
@@ -147,7 +151,7 @@ class ChainsHandler {
     }
     final currentChain = chain;
     _chain = network;
-    await currentChain.disposeClient();
+    await currentChain.closeClient();
     await chain.init();
     final emit = ChainWalletChainChangeEvent(prv: currentChain, current: chain);
     await _emitChainChanged(emit);
@@ -155,50 +159,57 @@ class ChainsHandler {
     return true;
   }
 
-  Future<Chain> updateImportNetwork(WalletNetwork network) async {
+  Future<Chain> updateNetwork(WalletNetwork network) async {
     final controller = _networks[network.type];
-    if (controller == null) {
+    if (controller == null || !network.isWalletNetwork) {
       throw WalletExceptionConst.networkDoesNotExist;
     }
     int networkId = network.value;
     Chain? existChain = controller._networks[networkId];
-    if (!network.isWalletNetwork) {
-      if (!network.supportImportNetwork) {
-        throw WalletExceptionConst.invalidNetworkInformation;
-      }
-      final chains = controller.getChains();
-      if (chains.any((e) => e.network.identifier == network.identifier)) {
-        throw WalletExceptionConst.networkAlreadyExist;
-      }
-      final ids = _networks.values.expand((e) => e._networks.keys).toList();
-      networkId = StrUtils.findFirstMissingNumber(ids,
-          start: ChainConst.importedNetworkStartId);
-      if (networkId > ChainConst.maxNetworkId) {
-        throw WalletExceptionConst.toManyNetworkImported;
-      }
-      network = network.copyWith(value: networkId);
-      if (network.value != networkId) {
-        throw WalletExceptionConst.invalidNetworkInformation;
-      }
-    } else {
-      if (existChain == null) {
-        throw WalletExceptionConst.invalidNetworkInformation;
-      }
+    if (existChain == null) {
+      throw WalletExceptionConst.invalidNetworkInformation;
     }
-    if (existChain != null) {
-      existChain.dispose();
-      existChain = existChain.copyWith(network: network);
-      existChain = Chain.deserialize(bytes: existChain.toCbor().encode());
-    } else {
-      existChain = Chain.setup(network: network, id: id);
-    }
-    await existChain._saveAccountInternal();
+    existChain.dispose();
+    existChain = existChain.copyWith(network: network);
+    existChain = Chain.deserialize(bytes: existChain.toCbor().encode());
     controller._updateNetwork(existChain);
     if (existChain.network.value == chain.network.value) {
       _chain = existChain;
       await _chain.init();
     }
     return existChain;
+  }
+
+  Future<Chain> importNewNetwork(
+      WalletNetwork network, List<APIProvider> providers) async {
+    final controller = _networks[network.type];
+    if (controller == null ||
+        network.isWalletNetwork ||
+        !network.supportImportNetwork) {
+      throw WalletExceptionConst.invalidNetworkInformation;
+    }
+    final chains =
+        controller.getChains().where((e) => e.network.type == network.type);
+    if (chains.any((e) => e.network.identifier == network.identifier)) {
+      throw WalletExceptionConst.networkAlreadyExist;
+    }
+    int networkId = network.value;
+    final ids = _networks.values.expand((e) => e._networks.keys).toList();
+    networkId = StrUtils.findFirstMissingNumber(ids,
+        start: ChainConst.importedNetworkStartId);
+    if (networkId > ChainConst.maxNetworkId) {
+      throw WalletExceptionConst.toManyNetworkImported;
+    }
+    network = network.copyWith(value: networkId);
+    if (network.value != networkId) {
+      throw WalletExceptionConst.invalidNetworkInformation;
+    }
+    final newChain = Chain.setup(network: network, id: id);
+    await newChain._removeAccount();
+    await newChain._saveAccountInternal();
+    await Future.wait(providers.map((e) => newChain.updateProvider(e)));
+    controller._updateNetwork(newChain);
+    return newChain;
   }
 
   Future<void> removeChain(Chain removeChain) async {
@@ -228,15 +239,15 @@ class ChainsHandler {
       Web3ApplicationAuthentication authenticated,
       {List<NetworkType>? networks}) {
     networks ??= NetworkType.values;
-    return Future.wait(networks.map(
-        (e) => _networks[e]!.getWeb3InternalChainAuthenticated(authenticated)));
+    return Future.wait(networks.map((e) =>
+        _networks[e]!._getWeb3InternalChainAuthenticated(authenticated)));
   }
 
   Future<void> disconnectWeb3Chain(Web3ApplicationAuthentication app,
       {List<NetworkType>? networks}) async {
     networks ??= NetworkType.values;
     await Future.wait(
-        networks.map((e) => _networks[e]!.disconnectWeb3Chain(app)));
+        networks.map((e) => _networks[e]!._disconnectWeb3Chain(app)));
   }
 
   Future<Web3APPData> createAuth(Web3ApplicationAuthentication app,
@@ -258,10 +269,10 @@ class ChainsHandler {
       required String masterKey,
       List<Web3ApplicationAuthentication> web3Applications = const []}) async {
     final networkBackups = await Future.wait(_networks.values.map((e) =>
-        e.getNetworksBackup(
+        e._getNetworksBackup(
             options.chains.where((c) => c.network.type == e.type).toList())));
     final chainBackups = await Future.wait(_networks.values
-        .map((e) => e.getChainBackup(web3Applications: web3Applications)));
+        .map((e) => e._getChainBackup(web3Applications: web3Applications)));
     return WalletBackup(
         wallet: _wallet,
         key: masterKey,
@@ -270,11 +281,11 @@ class ChainsHandler {
   }
 
   Future<void> restoreBackup(WalletRestoreV2 backup) async {
-    await Future.wait(_networks.values.map((e) => e.restoreNetworksBackup(backup
-        .networks
-        .where((c) => c.chain.network.type == e.type)
-        .toList())));
-    await Future.wait(_networks.values.map((e) => e.restoreChainBackup(
+    await Future.wait(_networks.values.map((e) => e._restoreNetworksBackup(
+        backup.networks
+            .where((c) => c.chain.network.type == e.type)
+            .toList())));
+    await Future.wait(_networks.values.map((e) => e._restoreChainBackup(
         backup.chains.where((c) => c.chainID == e.type.id).toList())));
     final chains = this.chains();
     await Future.wait(chains.map((e) => e._saveAddresses(e.addresses)));
@@ -285,10 +296,10 @@ class ChainsHandler {
       required List<Web3InternalChain> chains}) async {
     if (app.active) {
       await Future.wait(chains.map((e) =>
-          _networks[e.type]!.updateWeb3InternalChain(app: app, web3Chain: e)));
+          _networks[e.type]!._updateWeb3InternalChain(app: app, web3Chain: e)));
     } else {
       await Future.wait(
-          _networks.values.map((e) => e.disconnectWeb3Chain(app)));
+          _networks.values.map((e) => e._disconnectWeb3Chain(app)));
     }
   }
 
@@ -321,6 +332,7 @@ class ChainsHandler {
   Future<void> init() async {
     await chain.init();
     assert(_networkStream == null && _ping == null);
+    if (appLogger.mode.isDev) return;
     _networkStream =
         AppNativeMethods.platform.onNetworkStatus.listen(_onConnectionStatus);
     _ping = Stream.periodic(const Duration(minutes: 10)).listen(_onPing);

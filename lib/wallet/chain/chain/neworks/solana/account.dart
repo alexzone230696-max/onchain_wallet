@@ -17,17 +17,17 @@ final class SolanaChain extends Chain<
       {required super.network,
       required super.addressIndex,
       required super.id,
-      DefaultNetworkConfig? config,
-      required super.client,
+      required super.config,
+      required super.service,
       required super.addresses,
       super.totalBalance})
-      : super._(config: config ?? DefaultNetworkConfig.defaultConfig);
+      : super._();
   @override
   SolanaChain copyWith(
       {WalletSolanaNetwork? network,
       List<ChainAccount>? addresses,
       int? addressIndex,
-      SolanaClient? client,
+      ProviderIdentifier? service,
       String? id,
       DefaultNetworkConfig? config,
       BigInt? totalBalance}) {
@@ -35,7 +35,7 @@ final class SolanaChain extends Chain<
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
         addresses: addresses?.cast<ISolanaAddress>() ?? _addresses,
-        client: client ?? _client,
+        service: service ?? _serviceIdentifier,
         id: id ?? this.id,
         config: config ?? this.config,
         totalBalance: totalBalance ?? this.totalBalance._value.balance);
@@ -44,19 +44,18 @@ final class SolanaChain extends Chain<
   factory SolanaChain.setup(
       {required WalletSolanaNetwork network,
       required String id,
-      SolanaClient? client}) {
+      ProviderIdentifier? service}) {
     return SolanaChain._(
         network: network,
         id: id,
         addressIndex: 0,
-        client: client,
-        addresses: []);
+        service: service,
+        addresses: [],
+        config: DefaultNetworkConfig.defaultConfig);
   }
 
   factory SolanaChain.deserialize(
-      {required WalletSolanaNetwork network,
-      required CborListValue cbor,
-      SolanaClient? client}) {
+      {required WalletSolanaNetwork network, required CborListValue cbor}) {
     final int networkId = cbor.elementAs(0);
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
@@ -67,14 +66,22 @@ final class SolanaChain extends Chain<
         .map((e) => ISolanaAddress.deserialize(network, obj: e))
         .toList();
     final int addressIndex = cbor.elementAs(4);
+    final DefaultNetworkConfig config =
+        DefaultNetworkConfig.deserialize(cborObject: cbor.indexAs(5));
+    final ProviderIdentifier? service = MethodUtils.nullOnException(() {
+      final CborTagValue? identifier = cbor.elementAs(6);
+      if (identifier == null) return null;
+      return ProviderIdentifier.deserialize(cbor: identifier);
+    });
     final BigInt? totalBalance = cbor.elementAs<BigInt?>(7);
     return SolanaChain._(
         network: network,
         addresses: accounts,
         addressIndex: addressIndex,
-        client: client,
+        service: service,
         id: id,
-        totalBalance: totalBalance);
+        totalBalance: totalBalance,
+        config: config);
   }
 
   @override

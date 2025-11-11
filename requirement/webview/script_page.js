@@ -5295,7 +5295,7 @@
     },
     Equatable: function Equatable() {
     },
-    SynchronizedLock: function SynchronizedLock() {
+    SafeAtomicLock: function SafeAtomicLock() {
       this.last = null;
     },
     SynchronizedLock_synchronized_complete: function SynchronizedLock_synchronized_complete(t0, t1) {
@@ -5755,7 +5755,7 @@
           switch ($async$goto) {
             case 0:
               // Function start
-              client = new A.JSWithWorkerPageController(new A.SynchronizedLock(), new A._AsyncCompleter(new A._Future($.Zone__current, type$._Future_void), type$._AsyncCompleter_void));
+              client = new A.JSWithWorkerPageController(new A.SafeAtomicLock(), new A._AsyncCompleter(new A._Future($.Zone__current, type$._Future_void), type$._AsyncCompleter_void));
               client._initControllers$0();
               t1 = init.G;
               if (type$.nullable_JSObject._as(t1.onChain) == null)
@@ -9018,12 +9018,12 @@
       return A.HashCodeGenerator_generateHashCode([this.code, this.message]);
     }
   };
-  A.SynchronizedLock.prototype = {
+  A.SafeAtomicLock.prototype = {
     synchronized$1$1(func, $T) {
       var timeout = null;
-      return this.synchronized$body$SynchronizedLock($T._eval$1("0/()")._as(func), $T, $T);
+      return this.synchronized$body$SafeAtomicLock($T._eval$1("0/()")._as(func), $T, $T);
     },
-    synchronized$body$SynchronizedLock(func, $T, $async$type) {
+    synchronized$body$SafeAtomicLock(func, $T, $async$type) {
       var $async$goto = 0,
         $async$completer = A._makeAsyncAwaitCompleter($async$type),
         $async$returnValue, $async$handler = 2, $async$errorStack = [], $async$next = [], $async$self = this, result, complete, t1, timeout, prev, completer;
@@ -11440,7 +11440,7 @@
       _inherit = hunkHelpers.inherit,
       _inheritMany = hunkHelpers.inheritMany;
     _inherit(A.Object, null);
-    _inheritMany(A.Object, [A.JS_CONST, J.Interceptor, J.ArrayIterator, A.Iterable, A.CastIterator, A.Error, A.SentinelValue, A.ListIterator, A.MappedIterator, A.FixedLengthListMixin, A._Record, A.TypeErrorDecoder, A.NullThrownFromJavaScriptException, A.ExceptionAndStackTrace, A._StackTrace, A.Closure, A.MapBase, A.LinkedHashMapCell, A.LinkedHashMapKeyIterator, A.LinkedHashMapEntryIterator, A._UnmodifiableNativeByteBufferView, A.Rti, A._FunctionParameters, A._Type, A._TimerImpl, A._AsyncAwaitCompleter, A.AsyncError, A.TimeoutException, A._Completer, A._FutureListener, A._Future, A._AsyncCallbackEntry, A._StreamIterator, A._Zone, A._HashMapKeyIterator, A.ListBase, A.Codec, A.Converter, A.DateTime, A.Duration, A._Enum, A.OutOfMemoryError, A.StackOverflowError, A._Exception, A.FormatException, A.MapEntry, A.Null, A._StringStackTrace, A.StringBuffer, A._Uri, A.UriData, A._SimpleUri, A.NullRejectionException, A._JSSecureRandom, A.OnChainBridgeException, A.WalletEvent, A.Equatable, A.SynchronizedLock, A._Web3RequestException_Object_Equatable, A.PageRequestCompleter, A.ProxyMethodHandler, A.JSBasePageController, A.JSPageWalletStandardController, A.WalletStandardPageController, A.PageRequestController]);
+    _inheritMany(A.Object, [A.JS_CONST, J.Interceptor, J.ArrayIterator, A.Iterable, A.CastIterator, A.Error, A.SentinelValue, A.ListIterator, A.MappedIterator, A.FixedLengthListMixin, A._Record, A.TypeErrorDecoder, A.NullThrownFromJavaScriptException, A.ExceptionAndStackTrace, A._StackTrace, A.Closure, A.MapBase, A.LinkedHashMapCell, A.LinkedHashMapKeyIterator, A.LinkedHashMapEntryIterator, A._UnmodifiableNativeByteBufferView, A.Rti, A._FunctionParameters, A._Type, A._TimerImpl, A._AsyncAwaitCompleter, A.AsyncError, A.TimeoutException, A._Completer, A._FutureListener, A._Future, A._AsyncCallbackEntry, A._StreamIterator, A._Zone, A._HashMapKeyIterator, A.ListBase, A.Codec, A.Converter, A.DateTime, A.Duration, A._Enum, A.OutOfMemoryError, A.StackOverflowError, A._Exception, A.FormatException, A.MapEntry, A.Null, A._StringStackTrace, A.StringBuffer, A._Uri, A.UriData, A._SimpleUri, A.NullRejectionException, A._JSSecureRandom, A.OnChainBridgeException, A.WalletEvent, A.Equatable, A.SafeAtomicLock, A._Web3RequestException_Object_Equatable, A.PageRequestCompleter, A.ProxyMethodHandler, A.JSBasePageController, A.JSPageWalletStandardController, A.WalletStandardPageController, A.PageRequestController]);
     _inheritMany(J.Interceptor, [J.JSBool, J.JSNull, J.JavaScriptObject, J.JavaScriptBigInt, J.JavaScriptSymbol, J.JSNumber, J.JSString]);
     _inheritMany(J.JavaScriptObject, [J.LegacyJavaScriptObject, J.JSArray, A.NativeByteBuffer, A.NativeTypedData]);
     _inheritMany(J.LegacyJavaScriptObject, [J.PlainJavaScriptObject, J.UnknownJavaScriptObject, J.JavaScriptFunction]);

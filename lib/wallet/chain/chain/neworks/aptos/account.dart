@@ -18,7 +18,7 @@ final class AptosChain extends Chain<
       required super.addressIndex,
       required super.id,
       DefaultNetworkConfig? config,
-      required super.client,
+      required super.service,
       required super.addresses,
       super.totalBalance})
       : super._(config: config ?? DefaultNetworkConfig.defaultConfig);
@@ -27,7 +27,7 @@ final class AptosChain extends Chain<
       {WalletAptosNetwork? network,
       List<ChainAccount>? addresses,
       int? addressIndex,
-      AptosClient? client,
+      ProviderIdentifier? service,
       String? id,
       DefaultNetworkConfig? config,
       BigInt? totalBalance}) {
@@ -35,7 +35,7 @@ final class AptosChain extends Chain<
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
         addresses: addresses?.cast<IAptosAddress>() ?? _addresses,
-        client: client ?? _client,
+        service: service ?? _serviceIdentifier,
         id: id ?? this.id,
         config: config ?? this.config,
         totalBalance: totalBalance ?? this.totalBalance.value._balance);
@@ -44,19 +44,17 @@ final class AptosChain extends Chain<
   factory AptosChain.setup(
       {required WalletAptosNetwork network,
       required String id,
-      AptosClient? client}) {
+      ProviderIdentifier? service}) {
     return AptosChain._(
         network: network,
         id: id,
         addressIndex: 0,
-        client: client,
+        service: service,
         addresses: []);
   }
 
   factory AptosChain.deserialize(
-      {required WalletAptosNetwork network,
-      required CborListValue cbor,
-      AptosClient? client}) {
+      {required WalletAptosNetwork network, required CborListValue cbor}) {
     final int networkId = cbor.elementAs(0);
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
@@ -68,12 +66,17 @@ final class AptosChain extends Chain<
         .toList();
 
     int addressIndex = cbor.elementAs(4);
+    final AptosProviderIdentifier? service = MethodUtils.nullOnException(() {
+      final CborTagValue? identifier = cbor.elementAs(6);
+      if (identifier == null) return null;
+      return AptosProviderIdentifier.deserialize(cbor: identifier);
+    });
     BigInt? totalBalance = cbor.elementAs(7);
     return AptosChain._(
         network: network,
         addresses: accounts,
         addressIndex: addressIndex,
-        client: client,
+        service: service,
         id: id,
         totalBalance: totalBalance);
   }

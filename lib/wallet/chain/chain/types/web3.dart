@@ -1,6 +1,6 @@
 part of 'package:on_chain_wallet/wallet/chain/chain/chain.dart';
 
-abstract class Web3InternalNetworkAccount with CborSerializable, Equatable {
+abstract class Web3InternalNetworkAccount with CborSerializable, Equality {
   final AddressDerivationIndex keyIndex;
   final String identifier;
   const Web3InternalNetworkAccount(
@@ -8,7 +8,7 @@ abstract class Web3InternalNetworkAccount with CborSerializable, Equatable {
 }
 
 abstract class Web3InternalNetwork<ACCOUNT extends Web3InternalNetworkAccount>
-    with CborSerializable, Equatable {
+    with CborSerializable, Equality {
   final List<ACCOUNT> accounts;
   final ACCOUNT? defaultAccount;
   final int networkId;
@@ -20,7 +20,7 @@ abstract class Web3InternalNetwork<ACCOUNT extends Web3InternalNetworkAccount>
 }
 
 abstract class Web3InternalChain<T extends Web3InternalNetwork>
-    with CborSerializable, Equatable {
+    with CborSerializable, Equality {
   final List<T> networks;
   final int defaultChain;
   final NetworkType type;

@@ -1,19 +1,20 @@
+import 'package:bitcoin_base/bitcoin_base.dart';
+import 'package:cosmos_sdk/cosmos_sdk.dart';
 import 'package:monero_dart/monero_dart.dart';
-import 'package:on_chain_wallet/app/isolate/types.dart';
-import 'package:on_chain_wallet/app/utils/method/utiils.dart';
+import 'package:on_chain/on_chain.dart';
+import 'package:on_chain_bridge/platform_interface.dart';
+import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/api/client/client.dart';
+import 'package:on_chain_wallet/wallet/api/constant/constant.dart';
 import 'package:on_chain_wallet/wallet/api/provider/provider.dart';
 import 'package:on_chain_wallet/wallet/api/services/service.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
-import 'package:on_chain_wallet/crypto/types/networks.dart';
-import 'package:on_chain/on_chain.dart';
 import 'package:polkadot_dart/polkadot_dart.dart';
 import 'package:stellar_dart/stellar_dart.dart';
 import 'package:ton_dart/ton_dart.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
-import 'package:bitcoin_base/bitcoin_base.dart';
-import 'package:cosmos_sdk/cosmos_sdk.dart';
 
 class APIUtils {
   static BitcoinExplorerApiProvider _buildBlockCypherOrMempolProvider({
@@ -42,13 +43,14 @@ class APIUtils {
         network: network);
   }
 
-  static EthereumProvider _buildEthereumRPC({
+  static EthereumProvider buildEthereumRPC({
     required EthereumAPIProvider provider,
     APPIsolate isolate = APPIsolate.separate,
     Duration? requestTimeout,
   }) {
     if (provider.protocol == ServiceProtocol.websocket) {
-      return EthereumProvider(EthereumWebsocketService(provider: provider));
+      return EthereumProvider(EthereumWebsocketService(
+          provider: provider, requestTimeout: requestTimeout));
     }
     return EthereumProvider(EthereumHTTPService(
         provider: provider, isolate: isolate, requestTimeout: requestTimeout));
@@ -85,7 +87,7 @@ class APIUtils {
       APPIsolate isolate = APPIsolate.separate,
       Duration? requestTimeout}) {
     return EthereumClient(
-        provider: _buildEthereumRPC(
+        provider: buildEthereumRPC(
             provider: provider,
             isolate: isolate,
             requestTimeout: requestTimeout),
@@ -221,168 +223,241 @@ class APIUtils {
         network: network);
   }
 
-  static List<APIProvider> _findProviders(
-      {ProviderIdentifier? identifier,
+  static List<APIProvider>? _findProviders(
+      {required ProviderIdentifier identifier,
       required List<APIProvider> providers,
       required NetworkType type}) {
-    if (providers.isEmpty) return [];
+    if (providers.isEmpty) return null;
     switch (type) {
       case NetworkType.aptos:
         final aptosProviders = providers.cast<AptosAPIProvider>();
-        final AptosProviderIdentifier? aptosProviderIdentifier =
-            identifier?.cast<AptosProviderIdentifier>();
-        final grapQl = MethodUtils.nullOnException(() {
-          final graphQlProviders = aptosProviders
-              .where((e) => e.type == AptosAPIProviderType.graphQl);
-          return graphQlProviders.firstWhere(
-              (e) => e.identifier == aptosProviderIdentifier?.graphQlIdentifier,
-              orElse: () => graphQlProviders.first);
-        });
-        final fullnode = MethodUtils.nullOnException(() {
-          final fullnodeProviders = aptosProviders
-              .where((e) => e.type == AptosAPIProviderType.fullnode);
-          return fullnodeProviders.firstWhere(
-              (e) =>
-                  e.identifier == aptosProviderIdentifier?.fullNodeIdentifier,
-              orElse: () => fullnodeProviders.first);
-        });
-        if (fullnode == null || grapQl == null) return [];
+        final AptosProviderIdentifier aptosProviderIdentifier =
+            identifier.cast<AptosProviderIdentifier>();
+        final grapQl = aptosProviders
+            .where((e) => e.type == AptosAPIProviderType.graphQl)
+            .firstWhereOrNull((e) =>
+                e.identifier == aptosProviderIdentifier.graphQlIdentifier);
+        final fullnode = aptosProviders
+            .where((e) => e.type == AptosAPIProviderType.fullnode)
+            .firstWhereOrNull((e) =>
+                e.identifier == aptosProviderIdentifier.fullNodeIdentifier);
+        if (fullnode == null || grapQl == null) return null;
         return [fullnode, grapQl];
       default:
-        final defaultIdentifier = identifier?.cast<DefaultProviderIdentifier>();
-        final provider = providers.firstWhere(
-            (e) => e.identifier == defaultIdentifier?.identifier,
-            orElse: () => providers.first);
+        final defaultIdentifier = identifier.cast<DefaultProviderIdentifier>();
+        final provider = providers.firstWhereOrNull(
+            (e) => e.identifier == defaultIdentifier.identifier);
+        if (provider == null) return null;
         return [provider];
     }
   }
 
-  static T? findNetworkProvider<T extends APIProvider>(WalletNetwork network,
-      {ProviderIdentifier? identifier, bool allowInWeb3 = false}) {
-    List<APIProvider> providers = network.getAllProviders();
-    if (allowInWeb3) {
-      providers = providers.where((e) => e.allowInWeb3).toList();
+  static List<List<T>>? _getProviders<T extends APIProvider>(
+      {required List<T> providers, required NetworkType type}) {
+    if (providers.isEmpty) return null;
+    switch (type) {
+      case NetworkType.aptos:
+        final aptosProviders = providers.cast<AptosAPIProvider>();
+        final grapQl = aptosProviders
+            .where((e) => e.type == AptosAPIProviderType.graphQl)
+            .toList();
+        final fullnode = aptosProviders
+            .where((e) => e.type == AptosAPIProviderType.fullnode)
+            .toList();
+        if (grapQl.isEmpty || fullnode.isEmpty) return null;
+        return ListUtils.combineLists<T>(fullnode.cast<T>(), grapQl.cast<T>());
+      default:
+        return providers.map((e) => <T>[e]).toList();
     }
-    assert(identifier == null || identifier.network == network.type,
-        "Invalid provider identifier network.");
-    List<APIProvider> serviceProvider = MethodUtils.nullOnException(() =>
-            _findProviders(
-                identifier: identifier,
-                providers: providers,
-                type: network.type)) ??
-        providers;
-    if (serviceProvider.isEmpty) return null;
-    return serviceProvider.first.toProvider();
   }
 
-  static T? createApiClient<T extends NetworkClient>(WalletNetwork network,
-      {ProviderIdentifier? identifier,
+  static T? findClient<T extends NetworkClient>(
+      {required WalletNetwork network,
+      required List<APIProvider> providers,
+      required ProviderIdentifier identifier,
       Duration? requestTimeut,
       bool allowInWeb3 = false,
       APPIsolate isolate = APPIsolate.separate}) {
-    List<APIProvider> providers = network.getAllProviders();
+    final defaultProviders = ProvidersConst.getDefaultProvider(network);
+    List<APIProvider> allProviders = [...providers, ...defaultProviders]
+        .where(
+            (e) => e.protocol.platforms.contains(PlatformInterface.appPlatform))
+        .toList();
     if (allowInWeb3) {
-      providers = providers.where((e) => e.allowInWeb3).toList();
+      allProviders = allProviders.where((e) => e.allowInWeb3).toList();
     }
-    assert(identifier == null || identifier.network == network.type,
-        "Invalid provider identifier network.");
-    List<APIProvider> serviceProvider = MethodUtils.nullOnException(() =>
-            _findProviders(
-                identifier: identifier,
-                providers: providers,
-                type: network.type)) ??
-        providers;
-    if (serviceProvider.isEmpty) return null;
+    List<APIProvider>? serviceProvider = _findProviders(
+        identifier: identifier, providers: allProviders, type: network.type);
+    if (serviceProvider == null) return null;
+    return createClient<T>(
+        network: network,
+        providers: serviceProvider,
+        requestTimeut: requestTimeut,
+        isolate: isolate);
+  }
+
+  static T createClient<T extends NetworkClient>(
+      {required WalletNetwork network,
+      required List<APIProvider> providers,
+      Duration? requestTimeut,
+      APPIsolate isolate = APPIsolate.separate}) {
     NetworkClient? client;
     switch (network.type) {
       case NetworkType.bitcoinAndForked:
       case NetworkType.bitcoinCash:
         client = buildBitcoinApiPorivder(
-            provider: serviceProvider.first,
+            provider: providers.first,
             network: network.toNetwork(),
             isolate: isolate);
         break;
       case NetworkType.cardano:
         client = buildCardanoProvider(
-            provider: serviceProvider.first.toProvider(),
+            provider: providers.first.cast(),
             network: network.toNetwork(),
             isolate: isolate);
         break;
       case NetworkType.cosmos:
         client = buildTendermintProvider(
-            provider: serviceProvider.first.toProvider(),
+            provider: providers.first.cast(),
             network: network.toNetwork(),
             isolate: isolate);
         break;
       case NetworkType.ethereum:
         client = buildEthereumProvider(
-            provider: serviceProvider.first.toProvider(),
+            provider: providers.first.cast(),
             network: network,
             requestTimeout: requestTimeut,
             isolate: isolate);
         break;
       case NetworkType.xrpl:
         client = buildRippleProvider(
-            provider: serviceProvider.first.toProvider(),
+            provider: providers.first.cast(),
             network: network.toNetwork(),
             isolate: isolate);
         break;
       case NetworkType.solana:
         client = buildSoalanaProvider(
-            provider: serviceProvider.first.toProvider(),
+            provider: providers.first.cast(),
             network: network.toNetwork(),
             isolate: isolate);
         break;
       case NetworkType.stellar:
         client = buildStellarClient(
-            provider: serviceProvider.first.toProvider(),
+            provider: providers.first.cast(),
             network: network.toNetwork(),
             isolate: isolate);
         break;
       case NetworkType.tron:
         client = buildTronProvider(
-            httpProviderService: serviceProvider.first.toProvider(),
+            httpProviderService: providers.first.cast(),
             network: network.toNetwork(),
             isolate: isolate);
         break;
       case NetworkType.ton:
         client = buildTonApiProvider(
-            provider: serviceProvider.first.toProvider(),
+            provider: providers.first.cast(),
             network: network.toNetwork(),
             isolate: isolate);
         break;
       case NetworkType.monero:
         client = buildMoneroClient(
-            provider: serviceProvider.first.toProvider(),
+            provider: providers.first.cast(),
             network: network.toNetwork(),
             isolate: isolate);
         break;
       case NetworkType.substrate:
         client = buildsubstrateClient(
-            provider: serviceProvider.first.toProvider(),
+            provider: providers.first.cast(),
             network: network.toNetwork(),
             isolate: isolate);
         break;
       case NetworkType.sui:
         client = buildSuiProvider(
-            provider: serviceProvider.first.toProvider(),
+            provider: providers.first.cast(),
             network: network.toNetwork(),
             isolate: isolate);
         break;
       case NetworkType.aptos:
         client = buildAptosProvider(
-            provider: serviceProvider.cast(),
+            provider: providers.cast(),
             network: network.toNetwork(),
             isolate: isolate);
         break;
       default:
-        assert(false, "invalid network");
-        return null;
+        throw WalletExceptionConst.internalError("createClient");
     }
 
     if (client is! T) {
-      return null;
+      throw WalletExceptionConst.internalError("createClient");
     }
     return client;
+  }
+
+  static List<T>? getClients<T extends NetworkClient>(
+      {required WalletNetwork network,
+      required List<APIProvider> providers,
+      Duration? requestTimeut,
+      bool allowInWeb3 = false,
+      APPIsolate isolate = APPIsolate.separate}) {
+    final defaultProviders = ProvidersConst.getDefaultProvider(network);
+    List<APIProvider> allProviders = [...providers, ...defaultProviders]
+        .where(
+            (e) => e.protocol.platforms.contains(PlatformInterface.appPlatform))
+        .toList();
+    if (allowInWeb3) {
+      allProviders = allProviders.where((e) => e.allowInWeb3).toList();
+    }
+
+    List<List<APIProvider>>? serviceProvider =
+        _getProviders(providers: allProviders, type: network.type);
+    if (serviceProvider == null) return null;
+    return serviceProvider
+        .map((e) => createClient<T>(
+            network: network,
+            providers: e,
+            isolate: isolate,
+            requestTimeut: requestTimeut))
+        .toList();
+  }
+
+  static List<T>? findProvider<T extends APIProvider>({
+    required WalletNetwork network,
+    required List<T> providers,
+    ProviderIdentifier? identifier,
+    bool allowInWeb3 = false,
+  }) {
+    final defaultProviders = ProvidersConst.getDefaultProvider<T>(network);
+    List<T> allProviders = [...providers, ...defaultProviders]
+        .where(
+            (e) => e.protocol.platforms.contains(PlatformInterface.appPlatform))
+        .toList();
+    if (allowInWeb3) {
+      allProviders = allProviders.where((e) => e.allowInWeb3).toList();
+    }
+
+    if (identifier != null) {
+      final providers = _findProviders(
+          identifier: identifier, providers: allProviders, type: network.type);
+      if (providers != null) return providers.cast<T>();
+    }
+
+    List<List<T>>? serviceProvider =
+        _getProviders<T>(providers: allProviders, type: network.type);
+    return serviceProvider?.firstOrNull;
+  }
+
+  static List<T> getAllProviders<T extends APIProvider>(
+      {required WalletNetwork network,
+      required List<T> providers,
+      bool allowInWeb3 = false}) {
+    final defaultProviders = ProvidersConst.getDefaultProvider<T>(network);
+    List<T> allProviders = [...providers, ...defaultProviders]
+        .where(
+            (e) => e.protocol.platforms.contains(PlatformInterface.appPlatform))
+        .toList();
+    if (allowInWeb3) {
+      allProviders = allProviders.where((e) => e.allowInWeb3).toList();
+    }
+    return allProviders;
   }
 }

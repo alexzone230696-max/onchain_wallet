@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/core/observer.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
@@ -29,7 +30,7 @@ enum WalletPage {
 }
 
 mixin WalletProviderTabController on StateController {
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   final LiveCurrencies currency = LiveCurrencies();
   WebViewController? _webviewController;
   SwapStateController? _swap;
@@ -91,7 +92,7 @@ mixin WalletProviderTabController on StateController {
     _enableWebview = !_enableWebview;
     updateWalletSetting(
         appSetting.walletSetting.copyWith(enableWebView: _enableWebview));
-    _lock.synchronized(() async {
+    _lock.run(() async {
       if (!_enableWebview) {
         await _webviewController?.dispose();
         _webviewController = null;
@@ -108,7 +109,7 @@ mixin WalletProviderTabController on StateController {
     _enableSwap = !_enableSwap;
     updateWalletSetting(
         appSetting.walletSetting.copyWith(enableSwap: _enableSwap));
-    _lock.synchronized(() async {
+    _lock.run(() async {
       if (!_enableSwap) {
         _swap?.dispose();
         _swap = null;
@@ -157,7 +158,7 @@ mixin WalletProviderTabController on StateController {
   }
 
   Future<void> _initTabs() async {
-    _lock.synchronized(() async {
+    _lock.run(() async {
       final webView = await _initWebView();
       final swap = await _initSwap();
       final multipleTab = _enableSwap || _enableWebview;
@@ -169,7 +170,7 @@ mixin WalletProviderTabController on StateController {
   }
 
   Future<void> _dispose() async {
-    _lock.synchronized(() async {
+    _lock.run(() async {
       _swap?.dispose();
       _swap = null;
       _enableSwap = false;

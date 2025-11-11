@@ -17,17 +17,17 @@ final class StellarChain extends Chain<
       {required super.network,
       required super.addressIndex,
       required super.id,
-      DefaultNetworkConfig? config,
-      required super.client,
+      required super.config,
+      required super.service,
       required super.addresses,
       super.totalBalance})
-      : super._(config: config ?? DefaultNetworkConfig.defaultConfig);
+      : super._();
   @override
   StellarChain copyWith({
     WalletStellarNetwork? network,
     List<ChainAccount>? addresses,
     int? addressIndex,
-    StellarClient? client,
+    ProviderIdentifier? service,
     String? id,
     DefaultNetworkConfig? config,
     BigInt? totalBalance,
@@ -36,7 +36,7 @@ final class StellarChain extends Chain<
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
         addresses: addresses?.cast<IStellarAddress>() ?? _addresses,
-        client: client ?? _client,
+        service: service ?? _serviceIdentifier,
         id: id ?? this.id,
         config: config ?? this.config,
         totalBalance: totalBalance ?? this.totalBalance._value.balance);
@@ -45,19 +45,18 @@ final class StellarChain extends Chain<
   factory StellarChain.setup(
       {required WalletStellarNetwork network,
       required String id,
-      StellarClient? client}) {
+      ProviderIdentifier? service}) {
     return StellarChain._(
         network: network,
         id: id,
         addressIndex: 0,
-        client: client,
-        addresses: []);
+        service: service,
+        addresses: [],
+        config: DefaultNetworkConfig.defaultConfig);
   }
 
   factory StellarChain.deserialize(
-      {required WalletStellarNetwork network,
-      required CborListValue cbor,
-      StellarClient? client}) {
+      {required WalletStellarNetwork network, required CborListValue cbor}) {
     final int networkId = cbor.elementAs(0);
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
@@ -69,14 +68,22 @@ final class StellarChain extends Chain<
         .toList();
 
     final int addressIndex = cbor.elementAs(4);
+    final DefaultNetworkConfig config =
+        DefaultNetworkConfig.deserialize(cborObject: cbor.indexAs(5));
+    final ProviderIdentifier? service = MethodUtils.nullOnException(() {
+      final CborTagValue? identifier = cbor.elementAs(6);
+      if (identifier == null) return null;
+      return ProviderIdentifier.deserialize(cbor: identifier);
+    });
     final BigInt? totalBalance = cbor.elementAs<BigInt?>(7);
     return StellarChain._(
         network: network,
         addresses: accounts,
         addressIndex: addressIndex,
-        client: client,
+        service: service,
         id: id,
-        totalBalance: totalBalance);
+        totalBalance: totalBalance,
+        config: config);
   }
 
   @override

@@ -1,10 +1,9 @@
 import 'package:flutter/widgets.dart';
-import 'package:on_chain_wallet/app/constant/global/app.dart';
-import 'package:on_chain_wallet/app/utils/method/utiils.dart';
+import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/platform_methods/cross/methods.dart';
 import 'package:on_chain_wallet/crypto/types/credential.dart';
-import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/models/wallet/models/hd_wallet.dart';
 
 typedef OnUpdateWidget = void Function(WalletUpdateInfosData);
@@ -26,7 +25,6 @@ class UpdateWalletInfosWidget extends StatefulWidget {
 
 class _UpdateWalletInfosWidgetState extends State<UpdateWalletInfosWidget>
     with SafeState<UpdateWalletInfosWidget> {
-  List<String> walletIds = [];
   bool supportPlatformCredential = true;
   final GlobalKey<FormState> formKey =
       GlobalKey<FormState>(debugLabel: "SetupWalletPassword");
@@ -57,9 +55,6 @@ class _UpdateWalletInfosWidgetState extends State<UpdateWalletInfosWidget>
   String? onValidateWalletName(String? v) {
     if (v == null || v.trim().isEmpty || v.length < 3 || v.length > 15) {
       return "wallet_name_validator".tr;
-    }
-    if (walletIds.contains(v)) {
-      return "wallet_name_validator2".tr;
     }
     return null;
   }
@@ -108,8 +103,6 @@ class _UpdateWalletInfosWidgetState extends State<UpdateWalletInfosWidget>
   Future<void> init() async {
     platformCredential =
         ShimmerAction(object: widget.wallet.platformCredential);
-    walletIds = context.wallet.wallet.wallets.map((e) => e.name).toList();
-    walletIds.remove(widget.wallet.name);
     if (platformCredential.object == null) {
       supportPlatformCredential =
           await PlatformCryptoMethods.supportPlatformCredential();

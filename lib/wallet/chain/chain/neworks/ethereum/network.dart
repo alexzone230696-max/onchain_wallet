@@ -1,7 +1,11 @@
 part of 'package:on_chain_wallet/wallet/chain/chain/chain.dart';
 
-class EthereumNetworkController extends NetworkController<IEthAddress,
-    EthereumChain, Web3EthereumChainAccount, Web3InternalDefaultChain> {
+class EthereumNetworkController extends NetworkController<
+    IEthAddress,
+    EthereumChain,
+    Web3EthereumChainAccount,
+    Web3InternalDefaultChain,
+    ChainConfig> {
   EthereumNetworkController({
     super.networks,
     required super.id,
@@ -11,7 +15,7 @@ class EthereumNetworkController extends NetworkController<IEthAddress,
   Future<Web3EthereumChainAuthenticated> createWeb3ChainAuthenticated(
     Web3ApplicationAuthentication app,
   ) async {
-    final internalNetwork = await getWeb3InternalChainAuthenticated(app);
+    final internalNetwork = await _getWeb3InternalChainAuthenticated(app);
     final web3Networks = _networks.values
         .map((e) => Web3EthereumChainIdnetifier(
               id: e.network.value,
@@ -45,15 +49,12 @@ class EthereumNetworkController extends NetworkController<IEthAddress,
               )));
     }
     final currentNetwork = _networks[internalNetwork.defaultChain]!;
-    final provider = APIUtils.findNetworkProvider<EthereumAPIProvider>(
-        currentNetwork.network,
-        identifier: currentNetwork.serviceIdentifier,
-        allowInWeb3: true);
+    final provider = await currentNetwork.getProvider();
     return Web3EthereumChainAuthenticated(
         accounts: web3Accounts,
         networks: web3Networks,
         currentNetwork: web3Networks
             .firstWhere((e) => e.id == internalNetwork.defaultChain),
-        serviceIdentifier: provider);
+        serviceIdentifier: provider?.firstOrNull);
   }
 }

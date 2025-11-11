@@ -1,15 +1,14 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
-import 'package:on_chain_wallet/app/euqatable/equatable.dart';
+import 'package:on_chain_swap/on_chain_swap.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
-import 'package:on_chain_swap/on_chain_swap.dart';
 
 class APPSwapSettingsConst {
   static const double minTelerance = 0;
   static const double maxTolerance = 100;
 }
 
-class APPSwapSettings with CborSerializable, Equatable {
+class APPSwapSettings with CborSerializable, Equality {
   APPSwapSettings._(
       {required this.chainType,
       required List<SwapServiceProvider> swapProviders,

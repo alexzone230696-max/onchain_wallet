@@ -16,7 +16,7 @@ base mixin BaseChainWeb3Controller<
     on
         BaseChain<PROVIDER, NETWORKPARAMS, NETWORKADDRESS, TOKEN, NFT, ADDRESS,
             NETWORK, CLIENT, CONFIG, TRANSACTION, CONTACT, ADDRESSPARAM>,
-        ChainRepository<ADDRESS, NETWORK, CLIENT, CONFIG, TOKEN, NFT,
+        ChainRepository<PROVIDER, ADDRESS, NETWORK, CLIENT, CONFIG, TOKEN, NFT,
             TRANSACTION, CONTACT, ADDRESSPARAM> {
   Web3InternalDefaultNetwork buildWeb3InternalNetwork(
       Web3InternalDefaultNetwork web3Chain) {

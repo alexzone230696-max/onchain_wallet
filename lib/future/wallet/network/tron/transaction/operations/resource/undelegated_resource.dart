@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:on_chain/on_chain.dart';
 import 'package:on_chain_wallet/app/core.dart';
@@ -6,8 +7,8 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/controllers/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/widgets/widgets/undelegate_resource.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class TronTransactionUnDelegateResourceContractOperation
@@ -66,7 +67,7 @@ class TronTransactionUnDelegateResourceContractOperation
 
   Future<void> fetchAccountDelegateInfo(
       TransactionResourceRequirementTronDelegatedResource to) async {
-    await to.lock.synchronized(() async {
+    await to.lock.run(() async {
       if (!to.status.canRetry || to.closed) return;
       to.setPendig();
       final result = await MethodUtils.call(() async {
@@ -114,8 +115,15 @@ class TronTransactionUnDelegateResourceContractOperation
       TransactionContractType.unDelegateResourceContract;
 
   @override
-  Future<void> initForm(TronClient client, {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: updateAccount);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required TronClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super.initForm(
+        context: context, client: client, updateAccount: updateAccount);
+    // walletProvider.wallet.currentChain
     final delegated = await client.getDelegatedResourceAddresses(address);
     _resourceAddresses = delegated
         .map((e) => TransactionResourceRequirementTronDelegatedResource(
@@ -129,6 +137,7 @@ class TronTransactionUnDelegateResourceContractOperation
     final resource = _resourceAddresses.first;
     resourceInf0.setValue(resource);
     fetchAccountDelegateInfo(resource);
+    return this;
   }
 
   @override

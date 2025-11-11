@@ -84,10 +84,9 @@ class _UpdateNetworkViewState extends State<_UpdateNetworkView>
                 assetLogo: network.coinParam.logo,
                 market: network.coinParam.token.market),
             addressExplorer: explorerAddressLink.nullOnEmpty,
-            transactionExplorer: explorerTransaction.nullOnEmpty,
-            updateProviders: network.coinParam.providers));
+            transactionExplorer: explorerTransaction.nullOnEmpty));
     final update = await MethodUtils.call(
-        () async => wallet.wallet.updateImportNetwork(updateNetwork));
+        () async => wallet.wallet.updateNetwork(updateNetwork));
     if (update.hasError) {
       progressKey.errorText(update.localizationError,
           backToIdle: false, showBackButton: true);

@@ -42,7 +42,7 @@ enum MoneroParsingBlockStatus {
   bool get isFailed => this == failed;
 }
 
-class MoneroBlockTrackingFailed with CborSerializable, Equatable {
+class MoneroBlockTrackingFailed with CborSerializable, Equality {
   final int startHeight;
   int _endHeight;
   int get endHeight => _endHeight;
@@ -104,7 +104,7 @@ enum MoneroBlockTrackerType {
   bool get isDefaultTracker => this == defaultTracker;
 }
 
-abstract class MoneroBlockTrackingInfo with CborSerializable, Equatable {
+abstract class MoneroBlockTrackingInfo with CborSerializable, Equality {
   final MoneroBlockTrackerType type;
   const MoneroBlockTrackingInfo._({required this.type});
 
@@ -403,7 +403,7 @@ class MoneroAccountBlocksTracker with CborSerializable {
 
   List<MoneroRequestBlockTrackingInfo> _requestOffsets;
   List<MoneroRequestBlockTrackingInfo> get requestOffsets => _requestOffsets;
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   bool get synced => _status.isSynced;
   // final DateTime created;
   int _startHeight;
@@ -492,7 +492,7 @@ class MoneroAccountBlocksTracker with CborSerializable {
     required int endHeight,
     required List<MoneroSyncAccountsInfos> accounts,
   }) async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       for (final i in accounts) {
         if (!_accounts.contains(i)) {
           throw WalletExceptionConst.accountDoesNotFound;
@@ -608,7 +608,7 @@ class MoneroAccountBlocksTracker with CborSerializable {
   }
 
   Future<void> resetTracker() async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       _startHeight = 0;
       _endHeight = 0;
       _currentHeight = 0;
@@ -618,7 +618,7 @@ class MoneroAccountBlocksTracker with CborSerializable {
   }
 
   Future<void> updateDefaultTrackerHeight(int endHeight) async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       assert(isStart || endHeight >= this.endHeight,
           "invalid update track height.");
       if (!isStart && this.endHeight > endHeight) {
@@ -720,7 +720,7 @@ class MoneroAccountBlocksTracker with CborSerializable {
           onRequest,
       required void Function() onTrackerUpdated,
       int totalThread = 2}) async {
-    return await _lock.synchronized(() async {
+    return await _lock.run(() async {
       List<MoneroDefaultBlockTrackingInfo> offsets = _getPendingOffsets();
       if (offsets.isEmpty) return null;
       Timer? timer;
@@ -797,7 +797,7 @@ class MoneroAccountBlocksTracker with CborSerializable {
 
   Future<MoneroRequestBlockTrackingInfo?> removeSyncRequest(
       int requestId) async {
-    return _lock.synchronized(() async {
+    return _lock.run(() async {
       final request =
           _requestOffsets.firstWhereOrNull((e) => e.requestId == requestId);
       assert(request != null, "unknow request id. request does not exists.");
@@ -878,7 +878,7 @@ class MoneroChainAccountTranckerInfo with CborSerializable {
   }
 }
 
-class MoneroViewPrimaryAccountDetails with CborSerializable, Equatable {
+class MoneroViewPrimaryAccountDetails with CborSerializable, Equality {
   final List<int> viewPrivateKey;
   final List<int> spendPublicKey;
   final MoneroNetwork network;
@@ -945,7 +945,7 @@ class MoneroViewPrimaryAccountDetails with CborSerializable, Equatable {
   }
 }
 
-class MoneroViewAccountDetails with Equatable, CborSerializable {
+class MoneroViewAccountDetails with Equality, CborSerializable {
   final MoneroViewPrimaryAccountDetails viewKey;
   final MoneroAccountIndex index;
   bool get isPrimary => !index.isSubaddress;
@@ -1077,7 +1077,7 @@ enum MoneroUnlockPaymentRequestOutputStatus {
   bool get isSpent => this == spent;
 }
 
-class MoneroOutputDetails with CborSerializable, Equatable {
+class MoneroOutputDetails with CborSerializable, Equality {
   final MoneroLockedOutput lockedOutput;
   final String txId;
   final String keyImage;
@@ -1356,7 +1356,7 @@ class MoneroAddressUtxos with CborSerializable {
 
   BigInt getAddressBalance(MoneroViewAccountDetails address) {
     assert(_utxos.containsKey(address.viewKey.primaryAddress),
-        "address does not exist");
+        "address does not exist. ${address.viewKey.primaryAddress.address} ${_utxos.keys.join(", ")}");
     final utxos = (_utxos[address.viewKey.primaryAddress] ?? {})
         .where((e) => e.index == address.index);
     return utxos.fold<BigInt>(BigInt.zero, (p, c) => p + c.amount);
@@ -1600,7 +1600,7 @@ class MoneroChainTrackerResponse with CborSerializable {
   }
 }
 
-class MoneroAccountPendingTxes with CborSerializable, Equatable {
+class MoneroAccountPendingTxes with CborSerializable, Equality {
   final MoneroViewPrimaryAccountDetails primaryAddress;
   final Set<MoneroAccountIndexTxes> indexes;
   final Bip32AddressIndex accountIndex;
@@ -1721,7 +1721,7 @@ class MoneroSyncAccountsRequestInfos with CborSerializable {
   }
 }
 
-class MoneroSyncAccountsInfos with CborSerializable, Equatable {
+class MoneroSyncAccountsInfos with CborSerializable, Equality {
   final MoneroViewPrimaryAccountDetails primaryAccount;
   Set<MoneroSyncAccountIndexInfo> _indexes;
   Set<MoneroSyncAccountIndexInfo> get indexes => _indexes;
@@ -1831,7 +1831,7 @@ class MoneroSyncAccountsInfos with CborSerializable, Equatable {
   List get variabels => [primaryAccount];
 }
 
-class MoneroSyncAccountIndexInfo with CborSerializable, Equatable {
+class MoneroSyncAccountIndexInfo with CborSerializable, Equality {
   final MoneroAccountIndex index;
   final int startHeight;
   Set<String> _pendingTxes;
@@ -1895,7 +1895,7 @@ class MoneroSyncAccountIndexInfo with CborSerializable, Equatable {
   }
 }
 
-class MoneroAccountIndexTxes with CborSerializable, Equatable {
+class MoneroAccountIndexTxes with CborSerializable, Equality {
   final MoneroAccountIndex index;
   final Set<String> txes;
 

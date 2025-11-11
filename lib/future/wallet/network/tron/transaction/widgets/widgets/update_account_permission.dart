@@ -3,12 +3,13 @@ import 'package:on_chain/tron/src/address/tron_address.dart';
 import 'package:on_chain/tron/src/models/contract/base_contract/transaction_type.dart';
 import 'package:on_chain_wallet/app/constant/global/app.dart';
 import 'package:on_chain_wallet/crypto/utils/tron/tron.dart';
-import 'package:on_chain_wallet/future/wallet/global/global.dart';
-import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/wallet/global/global.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/operations/account/account_permission_update.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
+import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/models/networks/tron/models/tron_account_info.dart';
+
 import 'fee.dart';
 
 class TronTransactionAccountPermissionUpdateContractWidget
@@ -58,7 +59,7 @@ class TronTransactionAccountPermissionUpdateContractWidget
                                     crossAxisAlignment:
                                         CrossAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.add),
+                                      Icon(Icons.add_box),
                                       WidgetConstant.width8,
                                       Text("new_active_permission".tr,
                                           style: context.textTheme.bodySmall)

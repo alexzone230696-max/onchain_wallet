@@ -1,12 +1,13 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/controllers/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/types/transfer.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/widgets/ibc.dart';
-import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class CosmosTransactionIbcTransferOperation
     extends CosmosTransactionStateController2 {
@@ -112,9 +113,14 @@ class CosmosTransactionIbcTransferOperation
       CosmosTransactionOperations.ibcTransfer;
 
   @override
-  Future<void> initForm(CosmosClient client,
-      {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: updateAccount);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required CosmosClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super.initForm(
+        context: context, client: client, updateAccount: updateAccount);
     _ibcDestinationChains = walletProvider.wallet
         .getChains<CosmosChain>()
         .where((e) =>
@@ -122,6 +128,7 @@ class CosmosTransactionIbcTransferOperation
             e.network.coinParam.ibcEnabled &&
             e.network.coinParam.chainType == network.coinParam.chainType)
         .toList();
+    return this;
   }
 
   @override

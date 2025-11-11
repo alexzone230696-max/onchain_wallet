@@ -1,7 +1,7 @@
 part of 'package:on_chain_wallet/wallet/chain/chain/chain.dart';
 
 class SuiNetworkController extends NetworkController<ISuiAddress, SuiChain,
-    Web3SuiChainAccount, Web3InternalDefaultChain> {
+    Web3SuiChainAccount, Web3InternalDefaultChain, ChainConfig> {
   SuiNetworkController({
     super.networks,
     required super.id,
@@ -11,7 +11,7 @@ class SuiNetworkController extends NetworkController<ISuiAddress, SuiChain,
   Future<Web3SuiChainAuthenticated> createWeb3ChainAuthenticated(
     Web3ApplicationAuthentication app,
   ) async {
-    final internalNetwork = await getWeb3InternalChainAuthenticated(app);
+    final internalNetwork = await _getWeb3InternalChainAuthenticated(app);
     final web3Networks = _networks.values
         .map((e) => Web3ChainDefaultIdnetifier(
               id: e.network.value,

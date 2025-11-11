@@ -35,51 +35,82 @@ class CircleAPPImageView extends StatelessWidget {
       this.radius = 120,
       super.key,
       this.onNull = "U",
-      this.imageColor});
+      this.backgroundColor,
+      this.reverseColor
+      // this.imageColor,
+      });
   final APPImageInfo? image;
   final double radius;
   final String? onNull;
   final FuncWidgetContext? onProgress;
   final FuncWidgetContext? onError;
-  final Color? imageColor;
+  final Color? backgroundColor;
+  final Color? reverseColor;
 
   @override
   Widget build(BuildContext context) {
     final name = onNull ?? "U";
-    if (image == null) {
-      return _CircleAPPImageView(
-          radius: radius, onNull: name, child: onError?.call(context));
-    }
-    return ClipOval(
-      child: Image(
-          color: imageColor,
-          fit: BoxFit.cover,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress != null && onProgress != null) {
-              return onProgress!.call(context);
-            }
-            if (loadingProgress == null) {
-              return _CircleAPPImageView(
-                  radius: radius, onNull: name, child: child);
-            }
-            return _CircleAPPImageView(
-                radius: radius, onNull: name, child: null);
-          },
-          image: CacheMemoryImageProvider(image!),
-          errorBuilder: (context, error, stackTrace) {
-            return _CircleAPPImageView(
-                radius: radius, onNull: name, child: onError?.call(context));
-          }),
+    return ConditionalWidget(
+      enable: image != null,
+      onActive: (context) {
+        return ClipOval(
+          child: Image(
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress != null && onProgress != null) {
+                  return onProgress!.call(context);
+                }
+                if (loadingProgress == null) {
+                  return _CircleAPPImageView(
+                    radius: radius,
+                    onNull: name,
+                    backgroundColor: backgroundColor,
+                    reverseColor: reverseColor,
+                    child: child,
+                  );
+                }
+                return _CircleAPPImageView(
+                  radius: radius,
+                  onNull: name,
+                  child: null,
+                  backgroundColor: backgroundColor,
+                  reverseColor: reverseColor,
+                );
+              },
+              image: CacheMemoryImageProvider(image!),
+              errorBuilder: (context, error, stackTrace) {
+                return _CircleAPPImageView(
+                  radius: radius,
+                  onNull: name,
+                  backgroundColor: backgroundColor,
+                  reverseColor: reverseColor,
+                  child: onError?.call(context),
+                );
+              }),
+        );
+      },
+      onDeactive: (context) => _CircleAPPImageView(
+          radius: radius,
+          onNull: name,
+          backgroundColor: backgroundColor,
+          reverseColor: reverseColor,
+          child: onError?.call(context)),
     );
   }
 }
 
 class _CircleAPPImageView extends StatelessWidget {
   const _CircleAPPImageView(
-      {this.child, required this.radius, required this.onNull});
+      {this.child,
+      required this.radius,
+      this.reverseColor,
+      this.backgroundColor,
+      required this.onNull});
   final double radius;
   final String onNull;
   final Widget? child;
+  final Color? backgroundColor;
+  final Color? reverseColor;
 
   @override
   Widget build(BuildContext context) {
@@ -89,16 +120,22 @@ class _CircleAPPImageView extends StatelessWidget {
         decoration: BoxDecoration(
             color: child != null
                 ? context.colors.transparent
-                : context.colors.primaryContainer,
+                : (backgroundColor ?? context.colors.primaryContainer),
             shape: BoxShape.circle),
         width: size,
         height: size,
         child: Center(
-          child: child ??
-              Text(
-                onNull,
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: radius),
-              ),
+          child: ConditionalWidget(
+            enable: child != null,
+            onActive: (context) => child!,
+            onDeactive: (context) => Text(
+              onNull,
+              style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: radius,
+                  color: reverseColor ?? context.colors.onPrimaryContainer),
+            ),
+          ),
         ),
       ),
     );
@@ -106,14 +143,23 @@ class _CircleAPPImageView extends StatelessWidget {
 }
 
 class CircleTokenImageView extends StatelessWidget {
-  const CircleTokenImageView(this.token, {this.radius = 120, super.key});
+  const CircleTokenImageView(this.token,
+      {this.backgroundColor, this.reverseColor, this.radius = 120, super.key});
   final APPToken token;
   final double radius;
+  final Color? backgroundColor;
+  final Color? reverseColor;
 
   @override
   Widget build(BuildContext context) {
     String symbol = (token.symbol.nullOnEmpty?[0] ?? 'U').toUpperCase();
-    return CircleAPPImageView(token.assetLogo, onNull: symbol, radius: radius);
+    return CircleAPPImageView(
+      token.assetLogo,
+      onNull: symbol,
+      radius: radius,
+      backgroundColor: backgroundColor,
+      reverseColor: reverseColor,
+    );
   }
 }
 

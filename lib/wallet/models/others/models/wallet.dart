@@ -1,5 +1,5 @@
 import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
-import 'package:on_chain_wallet/app/euqatable/equatable.dart';
+import 'package:blockchain_utils/utils/equatable/equatable.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 
 enum WStatus {
@@ -74,7 +74,7 @@ enum WalletActionEventStatus {
   bool get isSuccess => this == success;
 }
 
-final class WalletActionEvent with Equatable {
+final class WalletActionEvent with Equality {
   factory WalletActionEvent.init() {
     return WalletActionEvent(
         walletStatus: WStatus.init,

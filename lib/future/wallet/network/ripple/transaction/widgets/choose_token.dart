@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
 import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 
 class RipplePickToken extends StatefulWidget {
   final String? title;
@@ -249,7 +249,7 @@ class _CreateRippleTokenViewState extends State<CreateRippleTokenView>
                     },
                     onRemoveIcon: currency != null
                         ? const Icon(Icons.edit)
-                        : const Icon(Icons.add),
+                        : const Icon(Icons.add_box),
                     validate: currency != null,
                     child: Text(currency ?? "tap_to_enter_currency_code".tr),
                   ),

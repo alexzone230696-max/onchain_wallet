@@ -1,7 +1,11 @@
 part of 'package:on_chain_wallet/wallet/chain/chain/chain.dart';
 
-class SolanaNetworkController extends NetworkController<ISolanaAddress,
-    SolanaChain, Web3SolanaChainAccount, Web3InternalDefaultChain> {
+class SolanaNetworkController extends NetworkController<
+    ISolanaAddress,
+    SolanaChain,
+    Web3SolanaChainAccount,
+    Web3InternalDefaultChain,
+    ChainConfig> {
   SolanaNetworkController({
     super.networks,
     required super.id,
@@ -11,7 +15,7 @@ class SolanaNetworkController extends NetworkController<ISolanaAddress,
   Future<Web3SolanaChainAuthenticated> createWeb3ChainAuthenticated(
     Web3ApplicationAuthentication app,
   ) async {
-    final internalNetwork = await getWeb3InternalChainAuthenticated(app);
+    final internalNetwork = await _getWeb3InternalChainAuthenticated(app);
     final web3Networks = _networks.values
         .map((e) => Web3ChainDefaultIdnetifier(
               id: e.network.value,

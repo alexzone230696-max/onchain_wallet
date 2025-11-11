@@ -4,7 +4,6 @@ import 'package:blockchain_utils/helper/extensions/extensions.dart';
 import 'package:blockchain_utils/utils/utils.dart';
 import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 import 'package:on_chain_wallet/app/serialization/cbor/cbor.dart';
-import 'package:on_chain_wallet/app/synchronized/basic_lock.dart';
 import 'package:on_chain_wallet/app/utils/list/extension.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/crypto/types/credential.dart';
@@ -18,7 +17,7 @@ final class HDWalletsConst {
 }
 
 final class HDWallets with CborSerializable {
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   Map<String, MainWallet> _wallets;
   Map<String, MainWallet> get wallets => _wallets;
   String? _currentWallet;
@@ -68,7 +67,7 @@ final class HDWallets with CborSerializable {
   }
 
   Future<MainWallet> getInitializeWallet({String? key}) async {
-    return _lock.synchronized(() async {
+    return _lock.run(() async {
       final wallet = _getInitializeWallet(key: key);
       _currentWallet = wallet.key;
       return wallet;
@@ -76,7 +75,7 @@ final class HDWallets with CborSerializable {
   }
 
   Future<void> removeWallet(MainWallet wallet) async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       if (_wallets.containsKey(wallet.key)) {
         final wallets = Map<String, MainWallet>.from(_wallets);
         wallets.remove(wallet.key);
@@ -88,7 +87,7 @@ final class HDWallets with CborSerializable {
   }
 
   Future<void> updateWallet(MainWallet wallet) async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       _wallets.values.firstWhere((element) => element.key == wallet.key,
           orElse: () => throw WalletExceptionConst.walletDoesNotExists);
       final wallets = Map<String, MainWallet>.from(_wallets);
@@ -98,7 +97,7 @@ final class HDWallets with CborSerializable {
   }
 
   Future<void> setupNewWallet(MainWallet newWallet) async {
-    return _lock.synchronized(() async {
+    return _lock.run(() async {
       final updateWallet = newWallet._updateCreated();
       if (updateWallet.data.isEmpty) {
         throw WalletExceptionConst.verificationWalletDataFailed;
@@ -178,6 +177,10 @@ final class MainWallet {
   final DateTime created;
   final List<SubWallet> subWallets;
   final WalletPlatformCredential? platformCredential;
+
+  bool hasSubwallet(int id) {
+    return subWallets.any((e) => e.id == id);
+  }
 
   MainWallet.__({
     required this.id,
@@ -366,7 +369,7 @@ final class MainWallet {
       network: network ?? this.network,
       locktime: update.lockTime,
       created: created,
-      protectWallet: protectWallet,
+      protectWallet: update.protectWallet,
       subWallets: subWallets,
       id: id,
       platformCredential: update.platformCredential,

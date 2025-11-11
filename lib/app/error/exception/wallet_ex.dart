@@ -36,8 +36,10 @@ class WalletExceptionConst {
       WalletException._("network_chain_id_already_exist");
   static const WalletException invalidBitcoinAddressType =
       WalletException._("invalid_bitcoin_address_type");
-  static const WalletException invalidBackup =
+  static const WalletException invalidBackupData =
       WalletException._("invalid_wallet_backup");
+  static const WalletException failedToRestoreBackup =
+      WalletException._("invalid_backup_content");
   static const WalletException invalidBackupOptions =
       WalletException._("invalid_backup_options");
   static const WalletException invalidBackupChecksum =
@@ -173,6 +175,8 @@ class AppCryptoExceptionConst {
 
   static const AppCryptoException invalidPrivateKey =
       AppCryptoException("private_key_invalid");
+  static const AppCryptoException invalidPublicKey =
+      AppCryptoException("publick_key_invalid");
   static const AppCryptoException invalidExtendedKey =
       AppCryptoException("extended_key_invalid");
   static const AppCryptoException invalidWifKey =
@@ -206,4 +210,16 @@ class AppExceptionConst {
       AppException("invalid_price_format");
   static const AppException fileDoesNotExists =
       AppException("file_does_not_exist");
+
+  static const AppException invalidFileFormat =
+      AppException("invalid_file_content_desc");
+  static const AppException failedToReadFileContent =
+      AppException("failed_to_read_content");
+  static const AppException fileSaveFailed = AppException("file_save_failed");
+
+  static const AppException transactionStateNotReady =
+      AppException("transaction_state_not_ready");
+
+  static const AppException unsupportedNetworkFeature =
+      AppException("unsupported_current_network_feature");
 }

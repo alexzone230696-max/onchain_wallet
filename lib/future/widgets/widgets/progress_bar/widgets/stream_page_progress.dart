@@ -1,6 +1,8 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/app/live_listener/progress_bar.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 
@@ -12,19 +14,17 @@ class StreamPageProgressController extends StreamValue<PageProgressStatus> {
       : super(initialStatus);
   final Duration idleTimeout;
 
-  PageProgressStatus? get status => value;
+  bool _shimmer = false;
+
+  PageProgressStatus get status => value;
   bool get isSuccess => value == PageProgressStatus.success;
   bool get hasError => value == PageProgressStatus.error;
   bool get inProgress => value == PageProgressStatus.progress;
-
-  Widget? _current;
+  final Map<PageProgressStatus, Widget?> _widgets = {};
+  // Widget? _current;
 
   Widget? getWidget() {
-    try {
-      return _current;
-    } finally {
-      _current = null;
-    }
+    return _widgets[status];
   }
 
   void _listen(PageProgressStatus status) async {
@@ -40,7 +40,10 @@ class StreamPageProgressController extends StreamValue<PageProgressStatus> {
       {Widget? progressWidget, bool backToIdle = true}) {
     if (isClosed) return;
     silent = status;
-    _current = progressWidget;
+    _widgets[status] = progressWidget;
+    if (status == PageProgressStatus.idle) {
+      _shimmer = false;
+    }
     notify();
     if (backToIdle) {
       _listen(status);
@@ -48,7 +51,8 @@ class StreamPageProgressController extends StreamValue<PageProgressStatus> {
   }
 
   void setInitialState() {
-    _current = null;
+    _widgets.clear();
+    _shimmer = false;
     silent = initialStatus;
   }
 
@@ -56,12 +60,16 @@ class StreamPageProgressController extends StreamValue<PageProgressStatus> {
     _updateStream(StreamWidgetStatus.progress, progressWidget: progressWidget);
   }
 
-  void progressText(String text, {Widget? bottomWidget, Widget? icon}) {
+  void progressText(String text,
+      {Widget? bottomWidget,
+      Widget? icon,
+      LivePercentProgressBar? progressBar}) {
     _updateStream(StreamWidgetStatus.progress,
         progressWidget: ProgressWithTextView(
           text: text,
           bottomWidget: bottomWidget,
           icon: icon,
+          progressBar: progressBar,
         ));
   }
 
@@ -73,10 +81,12 @@ class StreamPageProgressController extends StreamValue<PageProgressStatus> {
     _updateStream(StreamWidgetStatus.idle);
   }
 
-  void errorText(String text,
-      {bool backToIdle = true,
-      bool showBackButton = false,
-      DynamicVoid? onTapBackButton}) {
+  void errorText(
+    String text, {
+    bool backToIdle = true,
+    bool showBackButton = false,
+    DynamicVoid? onTapBackButton,
+  }) {
     _updateStream(StreamWidgetStatus.error,
         progressWidget: StreamPageProgressErrorView(
           text: text,
@@ -91,18 +101,17 @@ class StreamPageProgressController extends StreamValue<PageProgressStatus> {
         progressWidget: progressWidget, backToIdle: backToIdle);
   }
 
-  void successProgress({Widget? progressWidget, bool backToIdle = true}) {
-    _updateStream(StreamWidgetStatus.success,
-        progressWidget: progressWidget ?? const CircularProgressIndicator(),
-        backToIdle: backToIdle);
-  }
-
   void successText(String text, {bool backToIdle = true}) {
     _updateStream(StreamWidgetStatus.success,
         progressWidget: SuccessWithTextView(
           text: text,
         ),
         backToIdle: backToIdle);
+  }
+
+  void shimmer() {
+    _shimmer = true;
+    notify();
   }
 }
 
@@ -125,6 +134,7 @@ class _StreamPageProgressState extends State<StreamPageProgress>
   StreamPageProgressController get controller => widget.controller;
   StreamSubscription<StreamWidgetStatus>? _listener;
   StreamWidgetStatus status = StreamWidgetStatus.idle;
+  bool get shimmer => controller._shimmer;
   Widget? child;
   Widget? currentWidget;
 
@@ -158,18 +168,20 @@ class _StreamPageProgressState extends State<StreamPageProgress>
 
   @override
   Widget build(BuildContext context) {
-    return APPAnimatedSwitcher(
-      duration: APPConst.animationDuraion,
-      enable: status,
-      widgets: {
-        PageProgressStatus.idle: (c) => widget.builder(c),
-        PageProgressStatus.success: (c) => PageProgressChildWidget(
-            currentWidget ?? WidgetConstant.checkCircleLarge),
-        PageProgressStatus.error: (c) => PageProgressChildWidget(
-            currentWidget ?? WidgetConstant.errorIconLarge),
-        PageProgressStatus.progress: (c) => PageProgressChildWidget(
-            currentWidget ?? const CircularProgressIndicator()),
-      },
-    );
+    return Shimmer(
+        onActive: (enable, context) => APPAnimatedSwitcher(
+              duration: APPConst.animationDuraion,
+              enable: status,
+              widgets: {
+                PageProgressStatus.idle: (c) => widget.builder(c),
+                PageProgressStatus.success: (c) => PageProgressChildWidget(
+                    currentWidget ?? WidgetConstant.checkCircleLarge),
+                PageProgressStatus.error: (c) => PageProgressChildWidget(
+                    currentWidget ?? WidgetConstant.errorIconLarge),
+                PageProgressStatus.progress: (c) => PageProgressChildWidget(
+                    currentWidget ?? const CircularProgressIndicator()),
+              },
+            ),
+        enable: !shimmer);
   }
 }

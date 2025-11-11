@@ -46,7 +46,7 @@ class APPSwapUtils {
   }
 }
 
-class APPSwapAssets with Equatable {
+class APPSwapAssets with Equality {
   final BaseSwapAsset asset;
   // final IntegerBalance amount;
   final WalletNetwork network;

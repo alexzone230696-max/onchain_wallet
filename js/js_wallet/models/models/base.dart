@@ -1,5 +1,8 @@
 import 'dart:js_interop';
+
 import 'package:on_chain_bridge/web/api/core/js.dart';
+import 'package:on_chain_wallet/app/core.dart';
+
 import 'networks.dart';
 
 @JS("onChain")
@@ -13,18 +16,31 @@ external set onChain(JSAny onChain);
 
 @JS("ethereum")
 external set ethereum(Proxy<EIP1193>? ethereum);
+@JS("ethereum")
+external set ethereum2(EIP1193? ethereum);
 
 @JSExport()
 class ProxyMethodHandler<T> {
   final String? debugKey;
   final T object;
+  static const List<String> disableKeys = ["isDapper"];
+  List<String> probs = [];
   ProxyMethodHandler(this.object, {this.debugKey});
 
   @JSExport("set")
   bool set(JSAny object, JSAny? prop, JSAny? value, JSAny? receiver) {
     try {
       final r = Reflect.get(object, prop, receiver);
-      if (r.isUndefined) {
+      bool allowAdd = r.isUndefined;
+      if (prop?.isDefinedAndNotNull ?? false) {
+        if (prop.isA<JSString>()) {
+          final propStr = (prop as JSString).toDart;
+          Logg.log("come set $prop");
+          if (r.isUndefined) probs.add(propStr);
+          allowAdd |= probs.contains(propStr);
+        }
+      }
+      if (allowAdd) {
         return Reflect.set(object, prop, value, receiver);
       }
       return false;
@@ -38,10 +54,7 @@ class ProxyMethodHandler<T> {
     if (prop?.isDefinedAndNotNull ?? false) {
       if (prop.isA<JSString>()) {
         final pr = prop.dartify() as String;
-        if (debugKey != null) {
-          // Logg.log("$debugKey$pr");
-        }
-        if (pr.startsWith("is")) {
+        if (pr.startsWith("is") && !disableKeys.contains(pr)) {
           final r = Reflect.get(object, prop, receiver);
           if (r.isDefinedAndNotNull) return r;
           return true.toJS;

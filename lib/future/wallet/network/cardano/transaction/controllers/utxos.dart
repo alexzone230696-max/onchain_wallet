@@ -29,7 +29,7 @@ mixin ADATransactionUtxosController on ADATransactionApiController {
       {List<ADAAccountFetchedUtxos>? accountUtxos}) async {
     accountUtxos ??= this.accountUtxos.value;
     await Future.wait(accountUtxos.map((e) {
-      return e.lock.synchronized(() async {
+      return e.lock.run(() async {
         try {
           if (e.isSuccess) return;
           e.setPending();

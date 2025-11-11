@@ -1,21 +1,19 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
-import 'package:on_chain_bridge/platform_interface.dart';
 import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
-import 'package:on_chain_wallet/app/euqatable/equatable.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
 import 'package:on_chain_wallet/app/utils/extensions/numbers.dart';
-import 'package:on_chain_wallet/wallet/api/api.dart';
 import 'package:on_chain_wallet/crypto/coins/custom_coins/coins.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/constant/chain/const.dart';
-import 'package:on_chain_wallet/wallet/models/network/network.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
+import 'package:on_chain_wallet/wallet/models/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/networks/tron/models/chain_type.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
-import 'package:on_chain_wallet/crypto/types/networks.dart';
+import 'package:polkadot_dart/polkadot_dart.dart';
 
 abstract class WalletNetwork<PARAMS extends NetworkCoinParams>
-    with Equatable, CborSerializable {
+    with Equality, CborSerializable {
   const WalletNetwork();
   abstract final int value;
   abstract final PARAMS coinParam;
@@ -47,24 +45,6 @@ abstract class WalletNetwork<PARAMS extends NetworkCoinParams>
 
   String? getTransactionExplorer(String txId) {
     return txExplorer?.replaceAll(NetworkCoinParamsConst.txIdArgs, txId);
-  }
-
-  T? getProvider<T extends APIProvider>(
-      {String? identifier, bool allowInWeb3 = false}) {
-    Iterable<T> supportedProviders = coinParam.providers.whereType<T>().where(
-        (element) => element.protocol
-            .supportOnThisPlatform(PlatformInterface.appPlatform));
-    if (allowInWeb3) {
-      supportedProviders = supportedProviders.where((e) => e.allowInWeb3);
-    }
-    if (supportedProviders.isEmpty) return null;
-
-    if (identifier == null) {
-      return supportedProviders.first;
-    }
-    return supportedProviders.firstWhere(
-        (element) => element.identifier == identifier,
-        orElse: () => supportedProviders.first);
   }
 
   T toNetwork<T extends WalletNetwork>() {
@@ -110,13 +90,13 @@ abstract class WalletNetwork<PARAMS extends NetworkCoinParams>
     }
   }
 
-  List<APIProvider> getAllProviders() {
-    return [
-      ...ProvidersConst.getDefaultProvider(this),
-      ...coinParam.providers.where((element) =>
-          element.protocol.platforms.contains(PlatformInterface.appPlatform)),
-    ];
-  }
+  // List<APIProvider> getAllProviders() {
+  //   return [
+  // ...ProvidersConst.getDefaultProvider(this),
+  // ...coinParam.providers.where((element) =>
+  //     element.protocol.platforms.contains(PlatformInterface.appPlatform)),
+  //   ];
+  // }
 }
 
 class WalletBitcoinNetwork extends WalletNetwork<BitcoinParams> {
@@ -356,7 +336,6 @@ class WalletEthereumNetwork extends WalletNetwork<EthereumNetworkParams> {
           addressExplorer: null,
           defaultNetwork: false,
           token: Token(name: "", symbol: "", decimal: 18),
-          providers: [],
           chainId: BigInt.zero,
           supportEIP1559: false,
           chainType: ChainType.testnet),
@@ -696,18 +675,28 @@ class WalletSubstrateNetwork extends WalletNetwork<SubstrateNetworkParams> {
 
   @override
   List<CryptoCoins> get coins {
-    return [
-      SubstrateCoins.genericEd25519,
-      SubstrateCoins.genericSecp256k1,
-      SubstrateCoins.genericSr25519,
-      if (coinParam.mainnet) ...[
-        Bip44Coins.polkadotEd25519Slip,
-        Bip44Coins.ethereum
-      ] else ...[
-        Bip44Coins.polkadotTestnetEd25519Slip,
-        Bip44Coins.ethereumTestnet
-      ]
-    ];
+    List<CryptoCoins> coins = [];
+    for (final i in coinParam.keyAlgorithms) {
+      final List<CryptoCoins> keys = switch (i) {
+        SubstrateKeyAlgorithm.ecdsa => [SubstrateCoins.genericSecp256k1],
+        SubstrateKeyAlgorithm.ed25519 => [
+            SubstrateCoins.genericEd25519,
+            if (coinParam.mainnet)
+              Bip44Coins.polkadotEd25519Slip
+            else
+              Bip44Coins.polkadotTestnetEd25519Slip,
+          ],
+        SubstrateKeyAlgorithm.sr25519 => [SubstrateCoins.genericSr25519],
+        SubstrateKeyAlgorithm.ethereum => [
+            if (coinParam.mainnet)
+              Bip44Coins.ethereum
+            else
+              Bip44Coins.ethereumTestnet,
+          ],
+      };
+      coins.addAll(keys);
+    }
+    return coins;
   }
 
   @override

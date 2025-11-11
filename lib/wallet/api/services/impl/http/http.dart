@@ -1,10 +1,12 @@
+import 'dart:async';
+
 import 'package:blockchain_utils/service/service.dart';
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/app/http/isolate/models/message.dart';
 import 'package:on_chain_wallet/wallet/api/provider/core/provider.dart';
 import 'package:on_chain_wallet/wallet/api/services/core/base_service.dart';
 import 'package:on_chain_wallet/wallet/api/services/core/tracker.dart';
-import 'package:on_chain_wallet/app/http/isolate/models/message.dart';
-import 'dart:async';
 import 'package:on_chain_wallet/wallet/api/services/models/models.dart';
 
 abstract class HTTPService<P extends APIProvider>
@@ -20,7 +22,7 @@ abstract class HTTPService<P extends APIProvider>
   final APIServiceTracker tracker = APIServiceTracker();
   final Duration timeout;
 
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
 
   Future<HTTPCallerResponse> _callSynchronized<T>(
     Future<HTTPCallerResponse> Function() t, {
@@ -29,7 +31,7 @@ abstract class HTTPService<P extends APIProvider>
     if (requestTimeout == null) {
       return _onException<T>(t, allowStatus: allowStatus);
     }
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       await Future.delayed(requestTimeout!);
     });
     return _onException<T>(t, allowStatus: allowStatus);
@@ -42,7 +44,7 @@ abstract class HTTPService<P extends APIProvider>
     if (requestTimeout == null) {
       return _onServiceException<T>(t, allowStatus: allowStatus);
     }
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       await Future.delayed(requestTimeout!);
     });
     return _onServiceException<T>(t, allowStatus: allowStatus);
@@ -55,8 +57,9 @@ abstract class HTTPService<P extends APIProvider>
   }
 
   @override
-  void disposeService() {}
-
+  void close() {}
+  @override
+  void dispose() {}
   Future<HTTPCallerResponse> providerPOST<T>(String url, Object? params,
       {List<int> allowStatus = const [200],
       Duration? timeout,

@@ -194,8 +194,8 @@ final class WalletMasterKeys with CborSerializable {
         BytesUtils.bytesEqual(checksum, wallet.checksum),
         backupChecksum
       );
-    } catch (e) {
-      throw WalletExceptionConst.invalidBackup;
+    } catch (_) {
+      throw WalletExceptionConst.invalidBackupData;
     }
   }
 

@@ -8,6 +8,7 @@ import 'package:on_chain_wallet/future/wallet/network/bitcoin/transaction/types/
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
+
 import 'cash_token.dart';
 import 'select_utxos.dart';
 
@@ -61,6 +62,7 @@ class BitcoinTransactionTransferTokenWidget extends StatelessWidget {
               onStackIcon: Icons.remove_circle,
               onTapStackIcon: () => form.onRemoveRecipients(value),
               validate: value.isReady,
+              enableTap: false,
               validateText: value.status.error,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,6 +97,7 @@ class BitcoinTransactionTransferTokenWidget extends StatelessWidget {
                   APPAnimated(
                     isActive: value.hasToken,
                     onActive: (context) => CustomizedContainer(
+                      enableTap: false,
                       backgroundColor: context.colors.onPrimaryContainer,
                       reverseColor: context.colors.primaryContainer,
                       validate: value.token!.isReady,

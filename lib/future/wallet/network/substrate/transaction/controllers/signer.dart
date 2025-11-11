@@ -1,4 +1,4 @@
-import 'package:on_chain_wallet/app/live_listener/live.dart';
+import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/models/models/signing.dart';
 import 'package:on_chain_wallet/crypto/utils/substrate/substrate.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';

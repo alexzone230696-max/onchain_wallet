@@ -2,12 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
+import 'package:on_chain_wallet/future/wallet/network/substrate/tokens/tokens.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
 import 'package:on_chain_wallet/wallet/chain/account.dart';
+import 'package:on_chain_wallet/wallet/models/nfts/core/core.dart';
 import 'package:on_chain_wallet/wallet/models/token/network/token.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 
 class ManageAccountTokenView extends StatefulWidget {
   const ManageAccountTokenView({super.key});
@@ -21,8 +26,16 @@ class _ManageAccountTokenViewState extends State<ManageAccountTokenView> {
   Widget build(BuildContext context) {
     return NetworkAccountControllerView<NetworkClient, ChainAccount, Chain>(
         childBulder: (wallet, account, client, address, onAccountChanged) {
-          return _ManageAccountToken(
-              account: account, client: client, address: address);
+          switch (account.network.type) {
+            case NetworkType.substrate:
+              return ManageSubstrateAccountToken(
+                  account: account.cast(),
+                  address: address.cast(),
+                  client: client.cast());
+            default:
+              return _ManageAccountToken(
+                  account: account, client: client, address: address);
+          }
         },
         addressRequired: true,
         clientRequired: true);
@@ -41,10 +54,33 @@ class _ManageAccountToken extends StatefulWidget {
 }
 
 class __ManageAccountTokenState extends State<_ManageAccountToken>
-    with SafeState<_ManageAccountToken> {
+    with
+        SafeState<_ManageAccountToken>,
+        ManageAccountTokenState<
+            _ManageAccountToken,
+            NetworkClient,
+            TokenCore,
+            ChainAccount<dynamic, TokenCore, NFTCore, ChainTransaction>,
+            Chain> {
+  @override
+  Chain get account => widget.account;
+
+  @override
+  NetworkClient get client => widget.client;
+}
+
+mixin ManageAccountTokenState<
+        W extends StatefulWidget,
+        CL extends NetworkClient,
+        TOKEN extends TokenCore,
+        ACCOUNT extends ChainAccount<dynamic, TOKEN, NFTCore, ChainTransaction>,
+        CHAIN extends APPCHAINNETWORKTOKENACCOUNT<TOKEN, CL, ACCOUNT>>
+    on SafeState<W> {
+  CHAIN get account;
+  CL get client;
   late WalletProvider wallet;
   StreamSubscription<List<BaseNetworkToken>>? listener;
-  ChainAccount get address => widget.address;
+  ACCOUNT get address => account.address;
   List<BaseNetworkToken> tokens = [];
   final StreamPageProgressController progressKey =
       StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
@@ -68,21 +104,22 @@ class __ManageAccountTokenState extends State<_ManageAccountToken>
 
   Future<void> onTap(BaseNetworkToken token) async {
     if (address.tokens.contains(token.token)) {
-      await widget.account.removeToken(token: token.token, address: address);
+      await account.removeToken(token: token.token as TOKEN, address: address);
       return;
     }
+
     if (token.status.isFailed) {
       Token? updated;
       await context.openSliverBottomSheet<bool>("update_token".tr,
           bodyBuilder: (scrollController) => UpdateTokenDetailsView(
               token: token.token.token,
-              account: widget.account,
+              account: account,
               title: PageTitleSubtitle(
                   title: "update_token_information".tr,
                   body: AlertTextContainer(
                       message: "update_unknown_token_metadata_desc".tr,
                       enableTap: false)),
-              address: widget.address,
+              address: account.address,
               onUpdateToken: (context, updatedToken) {
                 context.pop();
                 updated = updatedToken;
@@ -93,16 +130,22 @@ class __ManageAccountTokenState extends State<_ManageAccountToken>
         token.updaetTokenMetadata(updated!);
       }
     }
-    await widget.account.addNewToken(token: token.token, address: address);
+    await account.addNewToken(token: token.token as TOKEN, address: address);
+  }
+
+  void init() {
+    listener = client.getAccountTokensStream(address.networkAddress).listen(
+        onNewToken,
+        onError: onError,
+        onDone: onDone,
+        cancelOnError: true);
+    wallet = context.wallet;
   }
 
   @override
   void onInitOnce() {
     super.onInitOnce();
-    listener = widget.client
-        .getAccountTokensStream(widget.address.networkAddress)
-        .listen(onNewToken, onError: onError, onDone: onDone);
-    wallet = context.wallet;
+    init();
   }
 
   @override
@@ -125,7 +168,7 @@ class __ManageAccountTokenState extends State<_ManageAccountToken>
         initialWidget:
             ProgressWithTextView(text: 'fetching_account_token_please_wait'.tr),
         builder: (context) => ChainStreamBuilder(
-          account: widget.account,
+          account: account,
           allowNotify: [DefaultChainNotify.token],
           builder: (context, value, _) => CustomScrollView(
             slivers: [

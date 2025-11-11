@@ -1,4 +1,5 @@
 import 'package:on_chain_wallet/wallet/wallet.dart';
+import 'package:on_chain_wallet/wallet/web3/core/permission/types/account.dart';
 
 typedef APPCHAINNETWORK<NETWORKADDRESS> = Chain<
     APIProvider,
@@ -14,6 +15,36 @@ typedef APPCHAINNETWORK<NETWORKADDRESS> = Chain<
     ContactCore,
     NewAccountParams>;
 
+typedef APPCHAINNETWORKTOKENACCOUNT<
+        TOKEN extends TokenCore,
+        CLIENT extends NetworkClient,
+        ACCOUNT extends ChainAccount<dynamic, TOKEN, NFTCore, ChainTransaction>>
+    = Chain<
+        APIProvider,
+        NetworkCoinParams,
+        dynamic,
+        TOKEN,
+        NFTCore,
+        ACCOUNT,
+        WalletNetwork,
+        CLIENT,
+        DefaultNetworkConfig,
+        ChainTransaction,
+        ContactCore,
+        NewAccountParams>;
+typedef APPCHAINPROVIDER<APIPROVIDER extends APIProvider> = Chain<
+    APIPROVIDER,
+    NetworkCoinParams,
+    dynamic,
+    TokenCore,
+    NFTCore,
+    ChainAccount<dynamic, TokenCore, NFTCore, ChainTransaction>,
+    WalletNetwork,
+    NetworkClient,
+    DefaultNetworkConfig,
+    ChainTransaction,
+    ContactCore,
+    NewAccountParams>;
 typedef APPCHAINACCOUNT<CHAINACCOUNT extends ChainAccount> = Chain<
     APIProvider,
     NetworkCoinParams,
@@ -89,6 +120,26 @@ typedef APPCHAINACCOUNTCLIENTNETWORK<CHAINACCOUNT extends ChainAccount,
         ChainTransaction,
         ContactCore,
         NewAccountParams>;
+
+typedef APPCHAINTOKENACCOUNTCLIENTNETWORK<
+        TOKEN extends TokenCore,
+        CHAINACCOUNT extends ChainAccount<dynamic, TOKEN, NFTCore,
+            ChainTransaction>,
+        CL extends NetworkClient,
+        NETWORK extends WalletNetwork>
+    = Chain<
+        APIProvider,
+        NetworkCoinParams,
+        dynamic,
+        TokenCore,
+        NFTCore,
+        CHAINACCOUNT,
+        NETWORK,
+        CL,
+        DefaultNetworkConfig,
+        ChainTransaction,
+        ContactCore,
+        NewAccountParams>;
 typedef APPCHAINACCOUNTNETWORK<CHAINACCOUNT extends ChainAccount,
         NETWORK extends WalletNetwork>
     = Chain<
@@ -122,3 +173,8 @@ typedef APPCHAINADDRESSACCOUNTCLIENTNETWORK<
         ChainTransaction,
         ContactCore,
         NewAccountParams>;
+
+typedef APPCHAINNETWORKCONTROLLERCONFIG<ACCOUNT extends Chain,
+        CONFIG extends ChainConfig>
+    = NetworkController<ChainAccount, ACCOUNT, Web3ChainAccount,
+        Web3InternalChain, CONFIG>;

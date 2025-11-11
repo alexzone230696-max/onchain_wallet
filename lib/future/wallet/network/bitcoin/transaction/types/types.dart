@@ -113,7 +113,7 @@ class BitcoinPsbtInputWithAccount {
   }
 }
 
-class BitcoinUtxoInfo with Equatable {
+class BitcoinUtxoInfo with Equality {
   BitcoinUtxoInfo({
     required this.utxo,
     required WalletBitcoinNetwork network,
@@ -368,6 +368,7 @@ class BitcoinTransactionFeeData
 
 abstract class BaseBitcoinTransactionController
     extends TransactionStateController<
+        TokenCore,
         IBitcoinAddress,
         BitcoinClient,
         WalletBitcoinNetwork,
@@ -376,7 +377,8 @@ abstract class BaseBitcoinTransactionController
         IBitcoinTransaction,
         IBitcoinSignedTransaction,
         BitcoinWalletTransaction,
-        SubmitTransactionSuccess<IBitcoinSignedTransaction>> {
+        SubmitTransactionSuccess<IBitcoinSignedTransaction>,
+        BitcoinTransactionFeeData> {
   BaseBitcoinTransactionController(
       {required super.walletProvider,
       required super.account,
@@ -435,8 +437,8 @@ class IBitcoinSignedTransaction
 enum BitcoinAccountUtxosStatus { failed, success, pending }
 
 class BitcoinAccountFetchedUtxos
-    with DisposableMixin, Equatable, StreamStateController {
-  final lock = SynchronizedLock();
+    with DisposableMixin, Equality, StreamStateController {
+  final lock = SafeAtomicLock();
   final IBitcoinAddress address;
   BitcoinAccountFetchedUtxos({required this.address});
   BitcoinAccountUtxosStatus status = BitcoinAccountUtxosStatus.pending;

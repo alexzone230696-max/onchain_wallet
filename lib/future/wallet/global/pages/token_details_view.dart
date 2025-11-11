@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/chain/account.dart';
-import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 import 'package:on_chain_wallet/wallet/models/token/token.dart';
 
 class AccountTokenDetailsView extends StatelessWidget {
@@ -62,7 +62,6 @@ class TokenDetailsView extends StatelessWidget {
     this.onSelectIcon,
     this.textColor,
     this.radius = APPConst.circleRadius25,
-    this.showBalance = true,
     this.enableTap = true,
     this.error,
   });
@@ -75,7 +74,6 @@ class TokenDetailsView extends StatelessWidget {
   // final Color? backgroundColor;
   final Color? textColor;
   final double radius;
-  final bool showBalance;
   final bool enableTap;
   @override
   Widget build(BuildContext context) {

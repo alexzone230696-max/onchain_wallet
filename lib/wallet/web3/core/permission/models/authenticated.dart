@@ -1,9 +1,10 @@
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:blockchain_utils/helper/helper.dart';
+import 'package:blockchain_utils/utils/equatable/equatable.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 import 'package:on_chain_wallet/wallet/web3/core/permission/types/account.dart';
-import 'package:on_chain_wallet/crypto/types/networks.dart';
 
 abstract class Web3RequestAuthentication with CborSerializable {
   final String applicationId;
@@ -147,7 +148,7 @@ class Web3APPData with CborSerializable {
   }
 }
 
-class Web3ClientInfo with Equatable {
+class Web3ClientInfo with Equality {
   final APPImage? image;
   final String url;
   final String identifier;

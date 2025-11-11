@@ -1,3 +1,4 @@
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain/on_chain.dart';
 import 'package:on_chain_wallet/app/core.dart';
@@ -5,14 +6,14 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/solana/transaction/controllers/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/solana/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/solana/transaction/widgets/mint_to.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class SolanaTransactionMintToOperation
     extends SolanaTransactionStateController {
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   final Cancelable _cancelable = Cancelable();
   SolanaTransactionMintToOperation(
       {required super.walletProvider,
@@ -68,7 +69,7 @@ class SolanaTransactionMintToOperation
     _cancelable.cancel();
     final value = mint.value;
     if (value == null) return;
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       if (value.status.isSuccess) return;
       mint.setValue(TransactionResourceRequirementMintAccount(
           value: value.value,

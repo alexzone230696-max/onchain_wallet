@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:blockchain_utils/utils/utils.dart';
-import 'package:on_chain_wallet/app/synchronized/basic_lock.dart';
 import 'package:on_chain_wallet/app/utils/method/utiils.dart';
-import 'package:on_chain_wallet/wallet/api/services/core/tracker.dart';
 import 'package:on_chain_wallet/wallet/api/provider/core/provider.dart';
+import 'package:on_chain_wallet/wallet/api/services/core/tracker.dart';
 import 'package:on_chain_wallet/wallet/api/services/impl/socket/core/socket_provider.dart';
 import 'package:on_chain_wallet/wallet/api/services/models/models/protocols.dart';
 import 'package:on_chain_wallet/wallet/api/services/models/models/request_completer.dart';
@@ -17,35 +15,30 @@ class TCPService<T extends APIProvider> extends BaseSocketService<T> {
   final T provider;
   @override
   final APIServiceTracker tracker = APIServiceTracker();
-
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   Socket? _socket;
   SocketStatus _status = SocketStatus.disconnect;
   StreamSubscription<List<int>>? _subscription;
   @override
   bool get isConnected => _status == SocketStatus.connect;
-  List<int> _toRequest(List<int> params) {
-    return params + '\n'.codeUnits;
-  }
-
-  final Map<int, SocketRequestCompleter> _requests = {};
-  void _add(List<int> message) {
-    _socket?.add(message);
-  }
-
-  void _onClose() {
-    _status = SocketStatus.disconnect;
-    _socket?.close().catchError((e) => null);
-    _subscription?.cancel().catchError((e) {});
-    _subscription = null;
-    _socket = null;
-  }
-
   @override
-  void disposeService() => _onClose();
+  void addMessage(SocketRequestCompleter message) {
+    _socket?.add(message.params + '\n'.codeUnits);
+  }
+
+  void _onClose({SocketStatus status = SocketStatus.disconnect}) {
+    _lock.run(() {
+      _status = status;
+      _socket?.close().catchError((e) => null);
+      _subscription?.cancel().catchError((e) {});
+      _subscription = null;
+      _socket = null;
+    });
+  }
 
   List<int> _remainBytes = [];
   void _onMessge(List<int> event) {
+    startTimer();
     assert(event.isNotEmpty, "data is empty");
     if (event.isEmpty) return;
     assert(event[0] == 0x7b || _remainBytes.isNotEmpty, "unexpected bytes.");
@@ -75,7 +68,7 @@ class TCPService<T extends APIProvider> extends BaseSocketService<T> {
       }
       if (decode.containsKey("id")) {
         final int id = int.parse(decode["id"]!.toString());
-        final request = _requests.remove(id);
+        final request = getRequest(id);
         request?.completer.complete(decode);
       }
     }
@@ -83,12 +76,19 @@ class TCPService<T extends APIProvider> extends BaseSocketService<T> {
 
   @override
   Future<void> connect(Duration timeout) async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       if (_status != SocketStatus.disconnect) return;
       final result = await MethodUtils.call(() async {
         final result = provider.callUrl.split(":");
-        final socket = await Socket.connect(result.first, int.parse(result[1]),
-            timeout: timeout);
+        final socket = switch (protocol) {
+          ServiceProtocol.tcp => await Socket.connect(
+              result.first, int.parse(result[1]),
+              timeout: timeout),
+          _ => await SecureSocket.connect(result.first, int.parse(result[1]),
+              onBadCertificate: (certificate) => true,
+              context: SecurityContext.defaultContext,
+              timeout: timeout)
+        };
         return socket;
       });
       if (result.hasResult) {
@@ -101,23 +101,11 @@ class TCPService<T extends APIProvider> extends BaseSocketService<T> {
     });
   }
 
-  Future<Map<String, dynamic>> post(
-      SocketRequestCompleter message, Duration timeout) async {
-    try {
-      return providerCaller(
-          t: () async {
-            _requests[message.id] = message;
-            _add(_toRequest(message.params));
-            final result = await message.completer.future.timeout(timeout);
-            return result;
-          },
-          param: message,
-          timeout: timeout);
-    } finally {
-      _requests.remove(message.id);
-    }
-  }
-
   @override
   ServiceProtocol get protocol => ServiceProtocol.tcp;
+
+  @override
+  void close() => _onClose();
+  @override
+  void dispose() => _onClose(status: SocketStatus.dispose);
 }

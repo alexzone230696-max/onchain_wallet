@@ -197,6 +197,7 @@ class Localization {
           "multi_sig_desc4":
               "The loss of private keys associated with added addresses will lead to a loss of funds.",
           "list_of_public_keys": "List of Public Keys",
+          "list_of_signers": "List of signers",
           "multi_sig_desc5":
               "By selecting the 'add' option from your accounts, you can obtain the public key of the chosen account to create the address.",
           "public_key_already_exist": "Public key already exist",
@@ -261,6 +262,7 @@ class Localization {
           "import_account_desc2":
               "Please enter your private key, extended key, or Wallet Import Format (WIF) to proceed.",
           "private_key_invalid": "The provided private key is not valid.",
+          "publick_key_invalid": "The provided public key is not valid.",
           "extended_key_invalid": "The provided extended key is not valid.",
           "wif_key_invalid": "Invalid WIF: incorrect key or wrong coin type.",
           "key_type": "key type",
@@ -311,7 +313,7 @@ class Localization {
           "delete_wallet": "Delete Wallet",
           "delete_wallet_desc":
               "Deleting the wallet will irreversibly erase all associated data. To regain access, you'll need either the mnemonic or the account's private key. Make certain you have a secure backup in place before initiating this irreversible process.",
-          "delete_wallet_confirmation": "Wallet Deletion Confirmation",
+          // "delete_wallet_confirmation": "Wallet Deletion Confirmation",
           "deleting_wallet": "Deleting wallet. Please wait.",
           "wallet_deleted_success": "Wallet Deleted Successfully",
           "export_security_phrase": "Export and backup Seed Phrase",
@@ -984,8 +986,7 @@ class Localization {
           "network_waiting_for_response": "Awaiting a reply. please wait.",
           "network_verify_server_status": "Verify server status.",
           "network_update_node_provider": "Update node provider",
-          "network_security_title":
-              "Ensuring wallet security: tips for adding node providers",
+          "securely_add_providers": "Securely Add Node Providers",
           "network_security_desc":
               "Ensuring the security of your wallet is paramount. When adding a new provider, it's crucial to verify the RPC endpoint's accuracy to prevent potential security compromises. Before integration, double-check the RPC URL for correctness. Take an additional layer of caution by cross-referencing the current server header with a trusted block explorer or other reliable sources. These measures enhance security, providing confidence that the provider added to your wallet is secure and free from any malicious intent.",
 
@@ -1851,6 +1852,8 @@ class Localization {
               "Certain transactions appear to be missing. Please ensure they are valid and accessible.",
           "page_required_address":
               "At least one active address is required to access the requested page.",
+          "page_required_multisig_address":
+              "Multi-signature address is required to access the requested page.",
           "duplicate_transaction_ids_detected":
               "Duplicate transaction IDs detected.",
           "invalid_daemon_repsone": "Invalid daemon response",
@@ -2094,7 +2097,7 @@ class Localization {
           "json_rpc_solidity_url": "JSON RPC URL(EVM)",
           "network_title_http_wss_url":
               "Please provide the HTTP or Websocket address, including the http or ws prefix. If applicable, include the port number. For example, https://example.com:8080",
-          "paste_your_backup_here": "Paste the backup of your wallet here",
+          "paste_your_backup_here": "Paste your backup data here",
           "constants": "Constants",
           "access_network_constants": "Access network constants.",
           "retrieving_constants_please_wait":
@@ -2735,7 +2738,167 @@ class Localization {
           "no_biometric_enrolled": "No biometric enrolled",
           "no_error_found": "No error found.",
           "transaction_state_warning_desc":
-              "There are warnings with this transaction. Do you want to continue?"
+              "There are warnings with this transaction. Do you want to continue?",
+          "invalid_file_content_desc":
+              "The file appears to be invalid or corrupted.",
+          "failed_to_read_content": "Failed to read file content.",
+          "tab_to_choose_backup_file": "Tab to select backup file",
+          "file_save_failed": "File save failed.",
+          "invalid_backup_content":
+              "Invalid backup. wrong password or corrupted backup",
+          "verify_backup_desc": "Regenerating each address for verification.",
+          "verify_backup": "Verify backup",
+          "create_network_please_wait": "Create network. Please wait",
+          "multisig_account": "Multi Signature account",
+          "please_choose_a_multisig_account":
+              "Please choose a multi-signature account",
+          "multisig_call_data": "Multisig Call Data",
+          "multisig_call_hash": "Multisig Call Hash",
+          "multisig_call_data_desc":
+              "Encoded call information for multisig execution",
+          "multisig_call_hash_desc":
+              "Unique hash identifying the multisig call payload",
+          "timepoint": "Timepoint",
+          "transaction_timepoint": "Transaction timepoint",
+          "substrate_timepoint_desc": "Timepoint of the initial approval call.",
+          "transaction_weight": "Transaction weight",
+          "transaction_weight_const": "Transaction weight cost",
+          "ref_time": "Ref time",
+          "weight_ref_time_desc": "Estimated execution time",
+          "proof_size": "Proof Size",
+          "weight_proof_size_desc": "Storage proof data size",
+          "setup_weight": "Setup weight",
+          "type_of_call_data": "Type of call data",
+          "failed_to_decode_call_data": "Failed to decode call data",
+          "call": "Call",
+          "hash": "Hash",
+          "call_data": "Call data",
+          "call_data_desc": "Multisig call hash or encoded payload",
+          "transaction_not_ready_for_execution":
+              "Transaction is not ready for ___1__ execution.",
+          "your_account_approved_transaction":
+              "Your account has already approved this transaction.",
+          "transaction_ready_for_execution":
+              "Transaction is ready for ___1__ execution.",
+          "choose_signer_address": "Choose a signer",
+          "transaction_state_not_ready": "Transaction state is not ready.",
+          "invalid_multisig_transaction_data":
+              "Invalid multi-signature transaction data",
+          "substrate_chose_signer_desc":
+              "Choose a signer, and make sure the address you select isn’t a multisig one.",
+          "retrieving_transacton_condition":
+              "Retrieving transaction condition. Please Wait.",
+          "multisig_transactions": "Multi-signature transactions",
+          "multisig_transaction": "Multi-signature transaction",
+          "n_approvals_required": "As ___1__ approvals are required",
+          "ready_for_execution": "Ready for execution",
+          "substrate_multisig_deposit_desc":
+              "Minimum funds locked for this multisig approval.",
+          "account_not_found_in_connected_wallet":
+              "Account not found in your connected wallet",
+          "substrate_select_multisig_operation_desc":
+              "Select an action you’d like to take for this transaction.",
+          "choose_a_signer_to_continue": "Please choose a signer to continue.",
+          "new_transaction": "New transaction",
+          "latest_operation": "Latest operation",
+          "multisig_operations": "Multi-signature operation",
+          "substrate_multisig_operations_create_desc":
+              "Operations for creating and approving multisig transactions.",
+          "substrate_multisig_transaction_desc":
+              "Manage multisig approvals and signatures in Substrate transactions.",
+          "unsupported_current_network_feature":
+              "This feature is not available on the current network.",
+          "unsupported_multisig_account_operation":
+              "The ___1__ operation is not supported for this multisig account.",
+          "aprrove_transaction": "Approve transaction",
+          "client_is_not_initialized": "Client is not initialized.",
+          "transaction_fee_token": "Transaction fee token",
+          "choose_token_for_fee_payment": "Choose token for fee payment.",
+          "transaction_dry_run_failed": "Transaction dry run execution failed.",
+          "convert_fee_amount_failed_to_token":
+              "Unable to convert fee amount to ___1__ token.",
+          "total_number_of_signers_must_reach_threshold":
+              "The number of signers must reach the threshold.",
+          "no_xcm_available_route_desc":
+              "No available XCM routes between the current network and any wallet networks.",
+          "no_transfable_asset_found": "No transferable assets found.",
+          "tap_to_choose_destination": "Tap to choose a destination",
+          "destination_network": "Destination network",
+          "choose_network_transfer_to_desc":
+              "Choose the network you want to transfer to",
+          "transfers": "Transfers",
+          "transfer_multiple_reserve_chains_not_allowed":
+              "Transferring assets with multiple reserve chains is not allowed.",
+          "destination_fee": "Destination fee",
+          "choose_token_for_fee_on_destination_desc":
+              "Choose the token you want to pay fees with on the destination chain",
+          "no_tokens_available_for_paying_fees_destination_desc":
+              "No tokens available for paying fees on the destination chain.",
+          "failed_to_calculate_destination_fee":
+              "Failed to calculate destination fee.",
+          "dry_run_local_destination_desc":
+              "Dry-run results for local and destination transaction execution.",
+          "unknown_token": "Unknown token",
+          "unknown_network": "Unknown network",
+          "unsupport_simulation":
+              "Transaction simulation is not supported on this network",
+          "xcm_deliveries_fee": "XCM Deliveries fee",
+          "xcm_simulation_failed_desc":
+              "XCM simulation failed to complete successfully.",
+          "enable_disable_service_provider_desc":
+              "Enable or disable the service provider for the current network.",
+          "toggle_between_available_protocols":
+              "Toggle between available service protocols (HTTP, WSS, etc.)",
+          "available_network_providers": "Available network providers",
+          "import_provider": "Import provider",
+          "unavailable_token_management_on_this_network":
+              "Token management unavailable on this network",
+          "eth_chain_not_found_send_transaction_desc":
+              "___1__ Ethereum chain not found. Please add it to your wallet before sending transaction.",
+          "missing_ethereum_account":
+              "Account missing on ___1__ chain. Verify your current address is on Ethereum.",
+          "xcm_transfer": "XCM Transfer",
+          "transaction_not_detected_on_the_destination_network_desc":
+              "Transaction not detected on the destination network within the monitoring period.",
+          "transaction_execution_failed_on_destination_network":
+              "Transaction execution failed on the destination network.",
+          "transaction_execution_successfully_on_destination_network":
+              "Transaction executed successfully on the destination network.",
+          "tracking_transaction_on_destination_network_please_wait":
+              "Tracking transaction on the destination network. Please wait.",
+          "transaction_tracking_failed_on_destination_network":
+              "Transaction tracking failed on the destination network due to an unexpected error",
+          "account_requires_min_n_balance":
+              "Account requires a minimum balance of ___1__",
+          "local_asset_transfer_disabled_desc":
+              "Local asset transfers are currently disabled for this network.",
+          "before_you_continue": "Before You Continue",
+          "xcm_condition_dryrun_required_desc":
+              "If your selected network supports a Dry Run, please make sure all connected chains pass the Dry Run successfully before submitting.",
+          "xcm_condition_no_dryrun_desc":
+              "If the destination chain doesn’t support Dry Run or you’re unsure, try sending a small test amount first before transferring more.",
+          "xcm_condition_token_inactive_desc":
+              "Check that your token is available and active on the destination network.",
+          "xcm_condition_partial_validation_desc":
+              "While we do our best to verify transaction details, not everything can be fully validated automatically.",
+          "xcm_condition_network_uncertainty_desc":
+              "Network conditions and token states can change — we can’t guarantee every transfer will succeed.",
+          "create_xcm_transaction": "Create XCM transaction",
+          "got_it_dont_show_again": "Got it, don’t show again",
+          "xcm_transfer_desc":
+              "Transfer assets between parachains using Cross-Consensus Messaging (XCM)",
+
+          "substrate_multisig_same_network_desc":
+              "All signers must belong to the same Substrate network to generate a valid multisig address.",
+          "substrate_multisig_eth_incompatible_desc":
+              "If your Substrate network uses an Ethereum-style backup or mirror, this multisig address cannot be used on the Ethereum side.",
+
+          "substrate_multisig_cannot_validate_all_desc":
+              "While we verify most details, not all configurations can be validated automatically. Please double-check your signer list and threshold.",
+
+          "substrate_multisig_network_uncertainty_desc":
+              "Make sure the selected network supports multisig operations compatible with Substrate’s default multisig behavior.",
+          "switching_account_please_wait": "Switching account. Please wait."
         }
       };
 }

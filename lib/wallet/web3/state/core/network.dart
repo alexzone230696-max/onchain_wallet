@@ -8,7 +8,7 @@ abstract class Web3StateAddress<
     NETWORKADDRESS,
     CHAINACCOUNT extends Web3ChainAccount,
     STATEADDRESS,
-    NETWORK extends Web3ChainIdnetifier> with Equatable {
+    NETWORK extends Web3ChainIdnetifier> with Equality {
   final CHAINACCOUNT chainaccount;
   final STATEADDRESS jsAccount;
   final NETWORK networkIdentifier;
@@ -344,7 +344,7 @@ abstract class Web3StateHandler<
   NetworkType get networkType;
   List<Web3NetworkEvent> get events =>
       [Web3NetworkEvent.change, Web3NetworkEvent.accountsChanged];
-  final SynchronizedLock lock = SynchronizedLock();
+  final SafeAtomicLock lock = SafeAtomicLock();
   final SENDINTERNALWALLETMESSAGE sendInternalMessage;
   Web3WalletResponseMessage createResponse([Object? result]) {
     return Web3WalletResponseMessage(result: result, network: networkType);

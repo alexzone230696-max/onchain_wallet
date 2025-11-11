@@ -5,8 +5,8 @@ import 'package:on_chain/tron/src/models/contract/transaction/transaction_raw.da
 import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/messages/types/message.dart';
-import 'package:on_chain_wallet/wallet/web3/state/core/network.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/tron/tron.dart';
+import 'package:on_chain_wallet/wallet/web3/state/core/network.dart';
 import 'package:on_chain_wallet/wallet/web3/utils/web3_validator_utils.dart';
 
 mixin TronWeb3StateHandler<
@@ -72,6 +72,10 @@ mixin TronWeb3StateHandler<
       },
           error: Web3RequestExceptionConst.invalidAddressArgrument(
               key: "address", network: networkType.name));
+      if (account.keyIndex.isMultiSig) {
+        throw Web3RequestExceptionConst.unsuportedSigningMessageAccount(
+            account.addressStr);
+      }
       final message = StringUtils.toBytes(data["message"]);
       return Web3TronSignMessageV2(
           accessAccount: account,

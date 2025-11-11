@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain/on_chain.dart';
@@ -8,8 +9,8 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/controllers/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/widgets/widgets/update_account_permission.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class TronTransactionAccountPermissionUpdateContractOperation
@@ -122,13 +123,20 @@ class TronTransactionAccountPermissionUpdateContractOperation
   List<LiveFormField<Object?, Object>> get fields => [permission];
 
   @override
-  Future<void> initForm(TronClient client, {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: updateAccount);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required TronClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super.initForm(
+        context: context, client: client, updateAccount: updateAccount);
     _permissions = address.accountInfo!.permissions
         .map((e) => e.clone())
         .cast<AccountPermission>()
         .map((e) => TronPermissionBuilder(e))
         .toList();
+    return this;
   }
 
   @override

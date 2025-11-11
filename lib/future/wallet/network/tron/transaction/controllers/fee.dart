@@ -1,3 +1,4 @@
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:blockchain_utils/utils/binary/utils.dart';
 import 'package:on_chain/tron/tron.dart';
 import 'package:on_chain_wallet/app/core.dart';
@@ -12,7 +13,7 @@ import 'provider.dart';
 mixin TronTransactionFeeController on TronTransactionApiController {
   final Cancelable _cancelable = Cancelable();
   WalletTronNetwork get network;
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   bool _isManualFeeLimit = false;
 
   late final LiveFormField<IntegerBalance, IntegerBalance> feeLimit =
@@ -105,7 +106,7 @@ mixin TronTransactionFeeController on TronTransactionApiController {
 
   Future<void> estimateFee() async {
     _cancelable.cancel();
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       txFee.setFee(_defaultFee);
       txFee.setPending();
       final fee = await MethodUtils.call(() async => await simulateFee(),

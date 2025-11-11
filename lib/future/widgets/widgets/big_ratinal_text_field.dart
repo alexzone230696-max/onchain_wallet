@@ -1,9 +1,10 @@
 import 'package:blockchain_utils/utils/utils.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/text_field/input_formaters.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
 import 'paste_icon_widget.dart';
 import 'widget_constant.dart';
 
@@ -104,25 +105,23 @@ class BigRationalTextFieldState extends State<BigRationalTextField>
     super.dispose();
   }
 
-  // void updateWidget() {
-
-  // }
-
-  void updateScale(
-      {required int? maxScale,
-      required BigRational min,
-      required BigRational max}) {
-    this.maxScale = maxScale;
-    this.min = min;
-    this.max = max;
-    allowSign = min.isNegative;
-    showDecimal = this.maxScale != null;
-    updateState();
+  @override
+  void didUpdateWidget(covariant BigRationalTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.maxScale != widget.maxScale ||
+        oldWidget.min != widget.min ||
+        oldWidget.max != widget.max) {
+      maxScale = widget.maxScale;
+      allowSign = widget.min.isNegative;
+      showDecimal = maxScale != null;
+      min = widget.min;
+      max = widget.max;
+    }
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void onInitOnce() {
+    super.onInitOnce();
     maxScale = widget.maxScale;
     allowSign = widget.min.isNegative;
     showDecimal = maxScale != null;

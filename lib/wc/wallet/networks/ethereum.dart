@@ -4,12 +4,12 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/ethereum/client/ethereum.dart';
 import 'package:on_chain_wallet/wallet/api/utils/utils.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
-import 'package:on_chain_wallet/wc/wallet/core/network.dart';
-import 'package:on_chain_wallet/wc/wallet/types/types.dart';
-import 'package:on_chain_wallet/wc/core/types/types.dart';
+import 'package:on_chain_wallet/wallet/web3/core/core.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ethereum/etherum.dart';
 import 'package:on_chain_wallet/wallet/web3/state/state.dart';
-import 'package:on_chain_wallet/wallet/web3/core/core.dart';
+import 'package:on_chain_wallet/wc/core/types/types.dart';
+import 'package:on_chain_wallet/wc/wallet/core/network.dart';
+import 'package:on_chain_wallet/wc/wallet/types/types.dart';
 
 class EthereumWalletConnectAddress extends WalletConnectAddress {
   EthereumWalletConnectAddress(
@@ -211,7 +211,7 @@ class EthereumWeb3WalletConnectStateHandler
       events.add(networkAccounts);
     }
     if (networkChanged) {
-      previousState.client?.dispose();
+      previousState.client?.close();
       final chain = currentState.defaultChain;
       if (chain != null) {
         final chainChanged = WalletConnectEthereumEIPChainChanged(

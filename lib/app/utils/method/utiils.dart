@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:blockchain_utils/exception/exceptions.dart';
 import 'package:on_chain_wallet/app/dev/logger.dart';
 import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
@@ -23,7 +24,8 @@ class MethodUtils {
       {final Cancelable? cancelable,
       final Duration? delay,
       final Duration? timeout,
-      final Duration? waitAtError}) async {
+      final Duration? waitAtError,
+      bool logOnError = true}) async {
     try {
       if (delay != null) {
         await Future.delayed(delay);
@@ -99,10 +101,16 @@ class MethodUtils {
     }
   }
 
-  static T? nullOnException<T>(T? Function() t, {T? defaultValue}) {
+  static T? nullOnException<T>(T? Function() t,
+      {T? defaultValue, bool logOnError = true}) {
     try {
       return t();
-    } catch (e) {
+    } catch (e, s) {
+      appLogger.error(
+          functionName: "nullOnException",
+          msg: e,
+          trace: s,
+          when: () => logOnError);
       return defaultValue;
     }
   }
@@ -114,7 +122,7 @@ class MethodResult<T> {
       return exception.message;
     }
     if (exception is BlockchainUtilsException) {
-      return exception.message;
+      return exception.toString();
     }
     if (exception is ApiProviderException) {
       return exception.message;
@@ -174,7 +182,8 @@ class MethodResult<T> {
 
   T get result {
     if (hasError) {
-      throw exception!;
+      if (trace == null) throw exception!;
+      throw Error.throwWithStackTrace(exception!, trace!);
     }
     return _result;
   }
@@ -215,7 +224,6 @@ class Cancelable<T> {
       final result = await r;
       completer?.complete(result);
     } catch (e, stackTrace) {
-      // assert(completer?.isCompleted != true, "should not be complete!");
       MethodUtils.nullOnException(
           () => completer?.completeError(e, stackTrace));
     } finally {

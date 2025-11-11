@@ -97,7 +97,9 @@ class _SecureContentView2State extends State<SecureContentView>
                   opacity: opacity,
                   duration: APPConst.animationDuraion,
                   child: SelectableText(widget.content,
-                      style: context.onPrimaryTextTheme.bodyMedium),
+                      style: context.onPrimaryTextTheme.bodyMedium,
+                      minLines: 1,
+                      maxLines: 5),
                 ),
                 Positioned.fill(
                   child: APPAnimatedSwitcher(enable: show, widgets: {

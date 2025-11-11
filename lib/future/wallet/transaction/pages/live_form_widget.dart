@@ -15,21 +15,27 @@ typedef STREAMBUILERWITHFIELD<T, E> = Widget Function(
 
 class LiveFormWidget<T extends Object?, E extends Object?>
     extends StatelessWidget {
+  final String? title;
+  final String? subtitle;
   final LiveFormField<T, E> field;
   final STREAMBUILERWITHFIELD<T, E> builder;
   final Color? color;
   const LiveFormWidget(
-      {required this.field, required this.builder, this.color, super.key});
+      {required this.field,
+      required this.builder,
+      this.title,
+      this.subtitle,
+      this.color,
+      super.key});
 
   @override
   Widget build(BuildContext context) {
-    final subtitle = field.subtitle;
+    final s = subtitle ?? field.subtitle;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(field.title,
+      Text(title ?? field.title,
           style: context.textTheme.titleMedium?.copyWith(color: color)),
-      if (subtitle != null)
-        Text(subtitle,
-            style: context.textTheme.bodyMedium?.copyWith(color: color)),
+      if (s != null)
+        Text(s, style: context.textTheme.bodyMedium?.copyWith(color: color)),
       WidgetConstant.height8,
       APPStreamBuilder(
           value: field.live,
@@ -250,7 +256,7 @@ class LiveFormWidgetReceiverAddress<NETWORKADDRESS> extends StatelessWidget {
           Text(field.title, style: context.textTheme.titleMedium),
           if (subtitle != null) Text(subtitle),
           WidgetConstant.height8,
-          CustomizedContainer(
+          ContainerWithBorder(
             validate: !field.hasError,
             onRemove: onUpdateAddress == null
                 ? null
@@ -379,13 +385,17 @@ class LiveFormWidgetMemo extends StatelessWidget {
 
 typedef LIVEFORMLISTENTRYBUILDER<T extends Object> = Widget Function(
     BuildContext context, LiveFormFields<T> field, T value);
-typedef ONCREATENEWFIELDWIDGET<T extends Object> = Widget? Function(
+typedef FORMLISTENTRYBUILDER<T extends Object> = Widget Function(
+    BuildContext context, T value);
+typedef ONCREATENEWLIVEFIELDWIDGET<T extends Object> = Widget? Function(
     BuildContext context, LiveFormFields<T> field);
+typedef ONCREATENEWFIELDWIDGET<T extends Object> = Widget? Function(
+    BuildContext context);
 
 class LiveFormWidgetList<T extends Object> extends StatelessWidget {
   final LiveFormFields<T> field;
   final LIVEFORMLISTENTRYBUILDER<T> builder;
-  final ONCREATENEWFIELDWIDGET<T>? onCreate;
+  final ONCREATENEWLIVEFIELDWIDGET<T>? onCreate;
 
   const LiveFormWidgetList(
       {required this.field, required this.builder, this.onCreate, super.key});
@@ -417,6 +427,46 @@ class LiveFormWidgetList<T extends Object> extends StatelessWidget {
               onDeactive: (context) => WidgetConstant.sizedBox);
         },
       )
+    ]);
+  }
+}
+
+class FormWidgetList<T extends Object> extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final List<T> values;
+  final FORMLISTENTRYBUILDER<T> builder;
+  final ONCREATENEWFIELDWIDGET<T>? onCreate;
+
+  const FormWidgetList({
+    required this.title,
+    this.subtitle,
+    required this.values,
+    required this.builder,
+    this.onCreate,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final onCreateWidget = onCreate?.call(context);
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(title, style: context.textTheme.titleMedium),
+      if (subtitle != null) Text(subtitle!),
+      WidgetConstant.height8,
+      APPAnimatedSize(
+          isActive: true,
+          onActive: (context) => ListView(
+                shrinkWrap: true,
+                physics: WidgetConstant.noScrollPhysics,
+                children: [
+                  ...List.generate(values.length, (index) {
+                    return builder(context, values[index]);
+                  }),
+                  if (onCreateWidget != null) onCreateWidget
+                ],
+              ),
+          onDeactive: (context) => WidgetConstant.sizedBox)
     ]);
   }
 }
@@ -533,24 +583,34 @@ class LiveFormWidgetString extends StatelessWidget {
   final LiveFormField<String?, String> field;
   final String fieldName;
   final Widget? title;
+  final String? fieldTitle;
+  final String? fieldSubtitle;
   final int? minLength;
   final int? maxLength;
   final ONUPDATESTRING onUpdateValue;
   final bool removable;
+  final NullStringString? validator;
   const LiveFormWidgetString(
       {required this.onUpdateValue,
       this.removable = false,
       required this.field,
       super.key,
       required this.fieldName,
+      this.validator,
       this.title,
       this.minLength,
-      this.maxLength});
+      this.maxLength,
+      this.fieldTitle,
+      this.fieldSubtitle});
 
   @override
   Widget build(BuildContext context) {
+    final fTitle = fieldTitle ?? field.title.tr;
+    final fSubtitle = fieldSubtitle ?? field.subtitle?.tr;
     return LiveFormWidget(
       field: field,
+      title: fieldTitle,
+      subtitle: fieldSubtitle,
       builder: (context, field, value) {
         return ContainerWithBorder(
           validate: field.complete,
@@ -566,18 +626,18 @@ class LiveFormWidgetString extends StatelessWidget {
                     defaultValue: field.value,
                     maxLength: maxLength,
                     minLength: minLength,
+                    customForm: validator,
                     title: title ??
                         PageTitleSubtitle(
-                            title: field.title.tr,
+                            title: fTitle,
                             body: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (field.subtitle != null)
-                                  Text(field.subtitle!.tr),
+                                if (fSubtitle != null) Text(fSubtitle),
                               ],
                             )),
                     buttonText: "setup_input".tr,
-                    label: field.title.tr,
+                    label: fTitle,
                   ),
                 )
                 .then(onUpdateValue);
@@ -594,6 +654,90 @@ class LiveFormWidgetString extends StatelessWidget {
                       maxLines: 3,
                       style: context.onPrimaryTextTheme.bodyMedium))),
         );
+      },
+    );
+  }
+}
+
+typedef ONUPDATEACCOUNT<ACCOUNT extends ChainAccount> = void Function(
+    ACCOUNT? address);
+
+class LiveFormWidgetAccount<ACCOUNT extends ChainAccount>
+    extends StatelessWidget {
+  final bool visibleOnNull;
+  final bool removable;
+  final bool showMultisigAccount;
+  final LiveFormField<ACCOUNT?, ACCOUNT> field;
+  final APPCHAINACCOUNT<ACCOUNT> account;
+  final ONUPDATEACCOUNT<ACCOUNT>? onUpdateAddress;
+  final OnSelectAccountFilter<ACCOUNT>? onFilterAccount;
+  const LiveFormWidgetAccount({
+    this.onUpdateAddress,
+    required this.field,
+    required this.account,
+    this.onFilterAccount,
+    this.visibleOnNull = true,
+    this.removable = false,
+    this.showMultisigAccount = true,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final subtitle = field.subtitle;
+    return APPStreamBuilder(
+      value: field.live,
+      builder: (context, value) {
+        if (!visibleOnNull && value == null) return WidgetConstant.sizedBox;
+        final address = value;
+        bool hasAddress = address != null;
+        final onUpdateAddress = this.onUpdateAddress;
+        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(field.title, style: context.textTheme.titleMedium),
+          if (subtitle != null) Text(subtitle),
+          WidgetConstant.height8,
+          CustomizedContainer(
+            validate: !field.hasError,
+            onRemove: onUpdateAddress == null
+                ? null
+                : () {
+                    if (removable && value != null) {
+                      onUpdateAddress(null);
+                      return;
+                    }
+                    context
+                        .selectOrSwitchAccount<ACCOUNT>(
+                            account: account,
+                            filter: onFilterAccount,
+                            showMultiSig: showMultisigAccount)
+                        .then(
+                      (value) {
+                        onUpdateAddress(value);
+                      },
+                    );
+                  },
+            onRemoveIcon: ConditionalWidget(
+                enable: removable,
+                onActive: (context) => AddOrRemoveIconWidget(hasAddress),
+                onDeactive: (context) => AddOrEditIconWidget(hasAddress)),
+            child: APPAnimated(
+              isActive: true,
+              onActive: (context) => ConditionalWidget(
+                  key: ValueKey(address),
+                  enable: hasAddress,
+                  onDeactive: (context) => FullWidthWrapper(
+                        child: Text("tap_to_choose_address".tr,
+                            style: context.onPrimaryTextTheme.bodyMedium),
+                      ),
+                  onActive: (context) => FullWidthWrapper(
+                        child: AddressDetailsView(
+                          address: address!,
+                          color: context.onPrimaryContainer,
+                        ),
+                      )),
+            ),
+          )
+        ]);
       },
     );
   }

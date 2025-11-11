@@ -13,16 +13,46 @@ class ADANetworkConfig extends DefaultNetworkConfig<ADANetworkStorageId> {
   ADANetworkConfig(
       {super.supportToken = false,
       super.supportNft = false,
-      super.supportWeb3 = true});
-
+      super.supportWeb3 = true,
+      super.enableProvider = true});
+  factory ADANetworkConfig.deserialize(
+      {List<int>? cborBytes, String? cborHex, CborObject? cborObject}) {
+    final values = CborSerializable.cborTagValue(
+        cborBytes: cborBytes, hex: cborHex, object: cborObject);
+    return ADANetworkConfig(
+      supportToken: values.valueAs<bool?>(0) ?? false,
+      supportNft: values.valueAs<bool?>(1) ?? false,
+      supportWeb3: values.valueAs<bool?>(2) ?? true,
+      enableProvider: values.valueAs<bool?>(3) ?? true,
+    );
+  }
   @override
-  List<DefaultNetworkStorageId> get storageKeys => ADANetworkStorageId.values;
+  ADANetworkConfig copyWith(
+      {bool? supportToken,
+      bool? supportNft,
+      bool? supportWeb3,
+      bool? enableProvider}) {
+    return ADANetworkConfig(
+        supportToken: supportToken ?? this.supportToken,
+        supportNft: supportNft ?? this.supportNft,
+        supportWeb3: supportWeb3 ?? this.supportWeb3,
+        enableProvider: enableProvider ?? this.enableProvider);
+  }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborSerializable.fromDynamic([]), CborTagsConst.cardanoChainConfig);
+        CborSerializable.fromDynamic([
+          supportToken,
+          supportNft,
+          supportWeb3,
+          enableProvider,
+        ]),
+        CborTagsConst.cardanoChainConfig);
   }
+
+  @override
+  List<DefaultNetworkStorageId> get storageKeys => ADANetworkStorageId.values;
 }
 
 final class ADAChain extends Chain<
@@ -43,7 +73,7 @@ final class ADAChain extends Chain<
     required super.addressIndex,
     required super.id,
     required super.config,
-    required super.client,
+    required super.service,
     required super.addresses,
     super.totalBalance,
   }) : super._();
@@ -52,7 +82,7 @@ final class ADAChain extends Chain<
     WalletCardanoNetwork? network,
     List<ChainAccount>? addresses,
     int? addressIndex,
-    ADAClient? client,
+    ProviderIdentifier? service,
     String? id,
     ADANetworkConfig? config,
     BigInt? totalBalance,
@@ -61,7 +91,7 @@ final class ADAChain extends Chain<
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
         addresses: addresses?.cast<ICardanoAddress>() ?? _addresses,
-        client: client ?? _client,
+        service: service ?? _serviceIdentifier,
         id: id ?? this.id,
         config: config ?? this.config,
         totalBalance: totalBalance ?? this.totalBalance._value.balance);
@@ -70,20 +100,18 @@ final class ADAChain extends Chain<
   factory ADAChain.setup(
       {required WalletCardanoNetwork network,
       required String id,
-      ADAClient? client}) {
+      ProviderIdentifier? service}) {
     return ADAChain._(
         network: network,
         addressIndex: 0,
         id: id,
-        client: client,
+        service: service,
         addresses: [],
         config: ADANetworkConfig());
   }
 
   factory ADAChain.deserialize(
-      {required WalletCardanoNetwork network,
-      required CborListValue cbor,
-      ADAClient? client}) {
+      {required WalletCardanoNetwork network, required CborListValue cbor}) {
     final int networkId = cbor.elementAs(0);
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
@@ -94,14 +122,21 @@ final class ADAChain extends Chain<
         .map((e) => ICardanoAddress.deserialize(network, obj: e))
         .toList();
     final int addressIndex = cbor.elementAs(4);
+    final ADANetworkConfig config =
+        ADANetworkConfig.deserialize(cborObject: cbor.indexAs(5));
+    final ProviderIdentifier? service = MethodUtils.nullOnException(() {
+      final CborTagValue? identifier = cbor.elementAs(6);
+      if (identifier == null) return null;
+      return ProviderIdentifier.deserialize(cbor: identifier);
+    });
     final BigInt? totalBalance = cbor.elementAs<BigInt?>(7);
     return ADAChain._(
         network: network,
         addresses: accounts,
         addressIndex: addressIndex,
-        client: client,
+        service: service,
         id: id,
-        config: ADANetworkConfig(),
+        config: config,
         totalBalance: totalBalance);
   }
 

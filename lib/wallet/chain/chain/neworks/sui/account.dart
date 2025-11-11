@@ -17,17 +17,17 @@ final class SuiChain extends Chain<
     required super.network,
     required super.addressIndex,
     required super.id,
-    DefaultNetworkConfig? config,
-    required super.client,
+    required super.config,
+    required super.service,
     required super.addresses,
     super.totalBalance,
-  }) : super._(config: config ?? DefaultNetworkConfig.defaultConfig);
+  }) : super._();
   @override
   SuiChain copyWith(
       {WalletSuiNetwork? network,
       List<ChainAccount>? addresses,
       int? addressIndex,
-      SuiClient? client,
+      ProviderIdentifier? service,
       String? id,
       DefaultNetworkConfig? config,
       BigInt? totalBalance}) {
@@ -35,7 +35,7 @@ final class SuiChain extends Chain<
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
         addresses: addresses?.cast<ISuiAddress>() ?? _addresses,
-        client: client ?? _client,
+        service: service ?? _serviceIdentifier,
         id: id ?? this.id,
         config: config ?? this.config,
         totalBalance: totalBalance ?? totalBalance);
@@ -44,19 +44,18 @@ final class SuiChain extends Chain<
   factory SuiChain.setup(
       {required WalletSuiNetwork network,
       required String id,
-      SuiClient? client}) {
+      ProviderIdentifier? service}) {
     return SuiChain._(
         network: network,
         id: id,
         addressIndex: 0,
-        client: client,
-        addresses: []);
+        service: service,
+        addresses: [],
+        config: DefaultNetworkConfig.defaultConfig);
   }
 
   factory SuiChain.deserialize(
-      {required WalletSuiNetwork network,
-      required CborListValue cbor,
-      SuiClient? client}) {
+      {required WalletSuiNetwork network, required CborListValue cbor}) {
     final int networkId = cbor.elementAs(0);
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
@@ -67,13 +66,21 @@ final class SuiChain extends Chain<
         .map((e) => ISuiAddress.deserialize(network, obj: e))
         .toList();
     final int addressIndex = cbor.elementAs(4);
+    final DefaultNetworkConfig config =
+        DefaultNetworkConfig.deserialize(cborObject: cbor.indexAs(5));
+    final ProviderIdentifier? service = MethodUtils.nullOnException(() {
+      final CborTagValue? identifier = cbor.elementAs(6);
+      if (identifier == null) return null;
+      return ProviderIdentifier.deserialize(cbor: identifier);
+    });
     final BigInt? totalBalance = cbor.elementAs<BigInt?>(7);
     return SuiChain._(
         network: network,
         addresses: accounts,
         addressIndex: addressIndex,
-        client: client,
+        service: service,
         id: id,
+        config: config,
         totalBalance: totalBalance);
   }
 

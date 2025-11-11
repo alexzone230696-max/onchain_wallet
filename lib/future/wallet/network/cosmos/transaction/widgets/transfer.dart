@@ -8,8 +8,8 @@ import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/types/t
 import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/widgets/pick_token.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/constant/networks/cosmos.dart';
 import 'package:on_chain_wallet/wallet/chain/account.dart';
+import 'package:on_chain_wallet/wallet/constant/networks/cosmos.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 
 class CosmosTransactionTransferWidget extends StatelessWidget {

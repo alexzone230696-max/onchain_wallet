@@ -1,17 +1,18 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/messages/messages.dart';
 import 'package:on_chain_wallet/wallet/web3/core/methods/methods.dart';
+import 'package:on_chain_wallet/wallet/web3/core/permission/permission.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/aptos/params/core/request.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/params/core/request.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin_cash/params/core/request.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/cardano/params/params.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/cosmos/params/core/request.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ethereum/params/core/request.dart';
-import 'package:on_chain_wallet/wallet/web3/core/permission/permission.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/global/global.dart';
-import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/monero/params/core/request.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ripple/params/core/request.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/solana/solana.dart';
@@ -20,8 +21,8 @@ import 'package:on_chain_wallet/wallet/web3/networks/substrate/params/core/reque
 import 'package:on_chain_wallet/wallet/web3/networks/sui/params/core/request.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ton/ton.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/tron/tron.dart';
+
 import 'web_request.dart';
-import 'package:on_chain_wallet/wallet/chain/account.dart';
 
 abstract class Web3WalletRequestParams<RESPONSE> extends Web3MessageCore {
   abstract final Web3RequestMethods method;
@@ -85,7 +86,8 @@ typedef WEB3REQUESTPARAMSRESPONSE<RESPONSE> = Web3RequestParams<RESPONSE,
     dynamic, Chain, NETWORKCHAINACCOUNT<dynamic>, Web3ChainAccount>;
 typedef WEB3REQUESTNETWORKCONTROLLER<WALLETACCOUNT extends ChainAccount,
         CHAIN extends Chain, CHAINACCOUNT extends Web3ChainAccount>
-    = NetworkController<WALLETACCOUNT, CHAIN, CHAINACCOUNT, Web3InternalChain>;
+    = NetworkController<WALLETACCOUNT, CHAIN, CHAINACCOUNT, Web3InternalChain,
+        ChainConfig>;
 
 abstract class Web3RequestParams<
         RESPONSE,

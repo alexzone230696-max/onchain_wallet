@@ -1,10 +1,13 @@
 import 'dart:async';
+
+import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'package:xrpl_dart/xrpl_dart.dart';
-import 'fee.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
+import 'package:xrpl_dart/xrpl_dart.dart';
+
+import 'fee.dart';
 import 'memo.dart';
 import 'provider.dart';
 import 'signer.dart';
@@ -119,7 +122,12 @@ abstract class RippleTransactionStateController<
   }
 
   @override
-  Future<void> initForm(XRPClient client, {bool updateAccount = true}) async {
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required XRPClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
     await checkAccountPermission(address);
     int multiSigner = 0;
     if (address.multiSigAccount) {
@@ -130,6 +138,8 @@ abstract class RippleTransactionStateController<
       }
     }
     await initFee(multiSigner: multiSigner, type: transactionType);
-    await super.initForm(client, updateAccount: updateAccount);
+    await super.initForm(
+        client: client, context: context, updateAccount: updateAccount);
+    return this;
   }
 }

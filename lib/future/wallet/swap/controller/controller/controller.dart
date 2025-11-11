@@ -51,7 +51,7 @@ class SwapStateController
       {required this.liveCurrencies, required List<Chain> chains})
       : _chains = chains.immutable;
   late AppSwapServiceApi _api;
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   final Cancelable _cancelable = Cancelable();
   APPSwapRoutes? _currentRoute;
   APPSwapRoutes? get currentRoute => _currentRoute;
@@ -79,7 +79,7 @@ class SwapStateController
   void _onRouteTimeout(dynamic _) {
     _timeout.value--;
     if (_timeout.value <= 0) {
-      _lock.synchronized(() {
+      _lock.run(() {
         switch (_walletPage) {
           case WalletPage.swap:
             _resetTimeout();
@@ -218,7 +218,7 @@ class SwapStateController
       String? destinationAddress}) async {
     sourceAddress ??= sourceAddresses.firstOrNull?.address.address;
     destinationAddress ??= this.destinationAddress?.view;
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       _cleanRoute();
       final r = await MethodUtils.call(() async {
         _status = SwapRouteStatus.pending;
@@ -308,7 +308,7 @@ class SwapStateController
     _txError = null;
     _page = SwapPage.review;
     notify();
-    final r = await _lock.synchronized(() async {
+    final r = await _lock.run(() async {
       return MethodUtils.call(() async {
         final transaction = await _api.builSwapTransaction(
             sourceAddress: sourceAddress.first.address.address,
@@ -364,7 +364,7 @@ class SwapStateController
 
   Future<void> initSwap() async {
     amountController.addListener(_listenChangeAmount);
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       _settings = await _readSwapSettings();
       final networks = _chains.map((e) => e.network).toList();
       switch (_settings.chainType) {

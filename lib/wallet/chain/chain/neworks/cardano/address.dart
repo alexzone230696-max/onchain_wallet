@@ -171,8 +171,8 @@ final class ICardanoAddress
   }
 
   @override
-  Future<void> _init() async {
-    await super._init();
+  Future<void> init() async {
+    await super.init();
     await _getUtxos();
     _updateAddressBalance(_utxos.totalLovelace);
   }

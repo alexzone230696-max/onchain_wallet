@@ -1,8 +1,10 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:on_chain/ethereum/src/transaction/eth_transaction.dart';
 import 'package:on_chain_wallet/crypto/utils/solidity/solidity.dart';
 import 'package:on_chain_wallet/future/wallet/network/ethereum/transaction/controllers/controller.dart';
+import 'package:on_chain_wallet/future/wallet/network/ethereum/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/ethereum/transaction/widgets/transfer_token.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/ethereum/client/ethereum.dart';
@@ -10,7 +12,6 @@ import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/networks/ethereum.dart';
-import 'package:on_chain_wallet/future/wallet/network/ethereum/transaction/types/types.dart';
 
 class EthereumTransactionTransferTokenOperation
     extends EthereumTransactionStateController<
@@ -139,9 +140,14 @@ class EthereumTransactionTransferTokenOperation
       EthereumTransactionOperations.tokenTransfer;
 
   @override
-  Future<void> initForm(EthereumClient client,
-      {bool updateAccount = true}) async {
-    await super.initForm(client, updateAccount: false);
+  Future<TransactionStateController> initForm({
+    required BuildContext context,
+    required EthereumClient client,
+    bool updateAccount = true,
+    bool updateTokens = false,
+  }) async {
+    await super
+        .initForm(context: context, client: client, updateAccount: false);
     if (!address.tokens.contains(token)) {
       await account.updateTokenBalance(address: address, tokens: [token]);
     } else {
@@ -149,6 +155,7 @@ class EthereumTransactionTransferTokenOperation
     }
     _tokenBalanceListener =
         token.streamBalance.stream.listen((_) => onStateUpdated());
+    return this;
   }
 
   @override

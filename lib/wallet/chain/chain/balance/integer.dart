@@ -89,8 +89,9 @@ class IntegerBalance implements BalanceCore<BigInt, Token> {
   IntegerBalance._(
       this._token, this.showDecimal, this.immutable, this.allowNegative);
 
-  IntegerBalance clone({bool? immutable, bool? allowNegative}) {
-    return IntegerBalance.token(balance, token,
+  IntegerBalance clone(
+      {BigInt? balance, bool? immutable, bool? allowNegative}) {
+    return IntegerBalance.token(balance ?? this.balance, token,
         immutable: immutable ?? this.immutable,
         allowNegative: allowNegative ?? this.allowNegative);
   }

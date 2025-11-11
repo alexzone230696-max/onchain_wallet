@@ -3,8 +3,8 @@ import 'package:on_chain/aptos/src/address/address/address.dart';
 import 'package:on_chain/aptos/src/provider/models/fullnode/types.dart';
 import 'package:on_chain/aptos/src/transaction/types/types.dart';
 import 'package:on_chain_wallet/app/live_listener/live.dart';
+import 'package:on_chain_wallet/app/utils/sync/cached_object.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/aptos/aptos.dart';
-import 'package:on_chain_wallet/wallet/models/others/models/cached_object.dart';
 
 mixin AptosTransactionApiController on DisposableMixin {
   int? _chainId;

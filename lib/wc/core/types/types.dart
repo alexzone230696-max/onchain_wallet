@@ -120,7 +120,7 @@ class WcRedirect with CborSerializable {
   }
 }
 
-class WCChainNamespace with Equatable, CborSerializable {
+class WCChainNamespace with Equality, CborSerializable {
   final String identifier;
   final WCNamespace namespace;
   const WCChainNamespace({required this.identifier, required this.namespace});
@@ -152,7 +152,7 @@ class WCChainNamespace with Equatable, CborSerializable {
   }
 }
 
-class WCSessionNamespaces with Equatable, CborSerializable {
+class WCSessionNamespaces with Equality, CborSerializable {
   final List<WCChainNamespace> namespaces;
   WCSessionNamespaces._(List<WCChainNamespace> namespaces)
       : namespaces = namespaces.immutable;
@@ -277,7 +277,7 @@ class WCSessionNamespaces with Equatable, CborSerializable {
   List get variabels => [namespaces];
 }
 
-class WCNamespace with Equatable, CborSerializable {
+class WCNamespace with Equality, CborSerializable {
   final List<String> chains;
   final List<String> accounts;
   final List<String> methods;
@@ -878,7 +878,7 @@ class RelayClientDisconnectResponse extends RelayClientResponse {
       : super(type: RelayClientResponseType.disconnect);
 }
 
-class RelayClientSubscribeResponse extends RelayClientResponse with Equatable {
+class RelayClientSubscribeResponse extends RelayClientResponse with Equality {
   final String topic;
   final String message;
   final int id;

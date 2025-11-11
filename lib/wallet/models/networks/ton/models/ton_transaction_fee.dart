@@ -1,8 +1,10 @@
+import 'package:blockchain_utils/utils/numbers/rational/big_rational.dart';
 import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:ton_dart/ton_dart.dart';
 
 class TonTransactionFeeDetails {
+  static final feeRate = BigRational.parseDecimal("1.1");
   final IntegerBalance storageFee;
   final IntegerBalance gasFee;
   final IntegerBalance actionPhase;
@@ -39,7 +41,7 @@ class TonTransactionFeeDetails {
       bool isEstimated = true}) {
     final IntegerBalance actionPhaseP = IntegerBalance.token(
         actionPhase, network.token,
-        immutable: true, decimalPlaces: 2);
+        immutable: true, decimalPlaces: 8);
     final IntegerBalance storageFeeP = IntegerBalance.token(
         storageFee, network.token,
         immutable: true, decimalPlaces: 2);
@@ -50,16 +52,18 @@ class TonTransactionFeeDetails {
         immutable: true, decimalPlaces: 2);
     final internalFess = internalMessages.fold(BigInt.zero,
         (previousValue, element) => previousValue + element.total.balance);
+
+    final finalFee = (BigRational(internalFess + fee.balance) *
+            TonTransactionFeeDetails.feeRate)
+        .toBigInt();
     final IntegerBalance totalFees = IntegerBalance.token(
-        internalFess + fee.balance, network.token,
+        finalFee, network.token,
         immutable: true, decimalPlaces: 2);
 
-    /// 0.06718794 0.06 0.09568163 0.16
-    /// 2.016930
     return TonTransactionFeeDetails._(
         storageFee: storageFeeP,
         gasFee: gasFeeP,
-        fee: fee,
+        fee: totalFees,
         isEstimated: isEstimated,
         actionPhase: actionPhaseP,
         internalMessages: internalMessages,

@@ -22,7 +22,10 @@ mixin SafeState<T extends StatefulWidget> on State<T> {
     _closed = true;
     try {
       safeDispose();
-    } catch (_) {}
+    } catch (e, s) {
+      appLogger.error(
+          functionName: "safeDispose", runtime: runtimeType, msg: e, trace: s);
+    }
     super.dispose();
   }
 
@@ -42,7 +45,6 @@ mixin SafeState<T extends StatefulWidget> on State<T> {
 }
 
 mixin ProgressMixin<T extends StatefulWidget> on SafeState<T> {
-  // final GlobalKey<PageProgressState> progressKey = GlobalKey();
   final StreamPageProgressController progressKey =
       StreamPageProgressController();
   @override

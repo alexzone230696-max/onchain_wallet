@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:on_chain_wallet/app/models/models/typedef.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/extension/app_extensions/context.dart'
     show QuickContextAccsess;
-import 'package:on_chain_wallet/app/models/models/typedef.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 
 class ContainerWithBorder extends StatelessWidget {
@@ -212,12 +212,13 @@ class CustomizedContainer extends StatelessWidget {
     final backgroundColor =
         this.backgroundColor ?? context.colors.primaryContainer;
     final reverseColor = this.reverseColor ?? context.colors.onPrimaryContainer;
-    final tap = enableTap && onRemove != null;
+    final tap = enableTap && (onRemove != null || onTapStackIcon != null);
+    final bool hasTapStack = onTapStackIcon != null;
     return Stack(
       children: [
         InkWell(
           borderRadius: borderRadius ?? WidgetConstant.border8,
-          onTap: tap ? onRemove : null,
+          onTap: tap ? onRemove ?? onTapStackIcon : null,
           mouseCursor: tap ? SystemMouseCursors.click : null,
           hoverColor: hoverColor,
           focusColor: focusColor,
@@ -250,17 +251,20 @@ class CustomizedContainer extends StatelessWidget {
                     crossAxisAlignment: iconAlginment,
                     children: [
                       Expanded(child: child!),
-                      if (onRemove != null)
-                        Row(
-                          children: [
-                            WidgetConstant.width8,
-                            onRemoveWidget ??
-                                IconButton(
-                                    onPressed: onRemove,
-                                    icon: onRemoveIcon ??
-                                        Icon(Icons.remove_circle))
-                          ],
-                        )
+                      ConditionalWidget(
+                          enable: onRemove != null,
+                          onActive: (context) => Row(
+                                children: [
+                                  WidgetConstant.width8,
+                                  onRemoveWidget ??
+                                      IconButton(
+                                          onPressed: onRemove,
+                                          icon: onRemoveIcon ??
+                                              Icon(Icons.remove_circle)),
+                                  if (hasTapStack) WidgetConstant.width20,
+                                ],
+                              ))
+                      // if (onRemove != null)
                     ],
                   ),
                 ),

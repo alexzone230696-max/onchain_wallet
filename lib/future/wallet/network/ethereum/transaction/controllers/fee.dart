@@ -1,8 +1,10 @@
 import 'dart:async';
+
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/utils/ethereum/utils.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/ethereum/transaction/types/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/ethereum/client/ethereum.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 
@@ -10,7 +12,7 @@ mixin EthereumTransactionFeeController on DisposableMixin {
   WalletEthereumNetwork get network;
   EthereumClient get client;
   StreamSubscription<EthereumTransactionGasInfo>? _listener;
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
 
   late final EthereumTransactionFeeData txFee = EthereumTransactionFeeData(
       select: EthereumTransactionFee.init(
@@ -71,7 +73,7 @@ mixin EthereumTransactionFeeController on DisposableMixin {
   int? get fixedGasLimit => null;
 
   Future<void> estimateFee() async {
-    _lock.synchronized(() {
+    _lock.run(() {
       _listener?.cancel();
       _listener = null;
       final txJson = buildEstimateTx();

@@ -17,18 +17,18 @@ final class TonChain extends Chain<
     required super.network,
     required super.addressIndex,
     required super.id,
-    DefaultNetworkConfig? config,
-    required super.client,
+    required super.config,
+    required super.service,
     required super.addresses,
     super.totalBalance,
-  }) : super._(config: config ?? DefaultNetworkConfig.defaultConfig);
+  }) : super._();
   @override
   TonChain copyWith({
     WalletTonNetwork? network,
     List<ChainAccount>? addresses,
     List<ContactCore<TonAddress>>? contacts,
     int? addressIndex,
-    TonClient? client,
+    ProviderIdentifier? service,
     String? id,
     DefaultNetworkConfig? config,
     BigInt? totalBalance,
@@ -37,7 +37,7 @@ final class TonChain extends Chain<
         network: network ?? this.network,
         addressIndex: addressIndex ?? _addressIndex,
         addresses: addresses?.cast<ITonAddress>() ?? _addresses,
-        client: client ?? _client,
+        service: service ?? _serviceIdentifier,
         id: id ?? this.id,
         config: config ?? this.config,
         totalBalance: totalBalance ?? this.totalBalance.value.balance);
@@ -46,19 +46,18 @@ final class TonChain extends Chain<
   factory TonChain.setup(
       {required WalletTonNetwork network,
       required String id,
-      TonClient? client}) {
+      ProviderIdentifier? service}) {
     return TonChain._(
         network: network,
         id: id,
         addressIndex: 0,
-        client: client,
-        addresses: []);
+        service: service,
+        addresses: [],
+        config: DefaultNetworkConfig.defaultConfig);
   }
 
   factory TonChain.deserialize(
-      {required WalletTonNetwork network,
-      required CborListValue cbor,
-      TonClient? client}) {
+      {required WalletTonNetwork network, required CborListValue cbor}) {
     final int networkId = cbor.elementAs(0);
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
@@ -69,14 +68,22 @@ final class TonChain extends Chain<
         .map((e) => ITonAddress.deserialize(network, obj: e))
         .toList();
     final int addressIndex = cbor.elementAs(4);
+    DefaultNetworkConfig config =
+        DefaultNetworkConfig.deserialize(cborObject: cbor.indexAs(5));
+    final ProviderIdentifier? service = MethodUtils.nullOnException(() {
+      final CborTagValue? identifier = cbor.elementAs(6);
+      if (identifier == null) return null;
+      return ProviderIdentifier.deserialize(cbor: identifier);
+    });
     final BigInt? totalBalance = cbor.elementAs<BigInt?>(7);
     return TonChain._(
         network: network,
         addresses: accounts,
         addressIndex: addressIndex,
-        client: client,
+        service: service,
         id: id,
-        totalBalance: totalBalance);
+        totalBalance: totalBalance,
+        config: config);
   }
 
   @override

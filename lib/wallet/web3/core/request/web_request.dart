@@ -1,10 +1,13 @@
 import 'dart:async';
-import 'package:on_chain_wallet/wallet/chain/account.dart';
+
+import 'package:blockchain_utils/utils/equatable/equatable.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/exception/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/messages/types/message.dart';
 import 'package:on_chain_wallet/wallet/web3/core/permission/permission.dart';
+
 import 'params.dart';
 
 enum Web3RequestCompleterEventType {
@@ -34,7 +37,7 @@ class Web3RequestCompleterEvent {
   const Web3RequestCompleterEvent({required this.type, this.message});
 }
 
-abstract class Web3RequestInformation with Equatable {
+abstract class Web3RequestInformation with Equality {
   final Web3ClientInfo? client;
   Web3RequestInformation({this.client});
   bool get isClosed => _controller.isClosed;

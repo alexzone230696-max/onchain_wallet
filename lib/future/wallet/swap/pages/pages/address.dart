@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
+import 'package:on_chain_wallet/future/wallet/swap/controller/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/swap/pages/pages/review_transaction.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/future/wallet/swap/controller/controller/controller.dart';
 import 'package:on_chain_wallet/wallet/chain/account.dart';
 
 class SwapAddressesView extends StatelessWidget {
@@ -44,6 +44,7 @@ class SwapAddressesView extends StatelessWidget {
           APPAnimatedSize(
               isActive: controller.allowAddSource,
               onActive: (context) => ContainerWithBorder(
+                    validate: controller.sourceAddresses.isNotEmpty,
                     onRemoveIcon:
                         Icon(Icons.add_box, color: context.onPrimaryContainer),
                     child: Text("tap_to_select_account".tr,

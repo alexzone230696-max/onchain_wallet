@@ -1,12 +1,15 @@
 import 'dart:async';
+
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/worker.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
 import 'package:on_chain_wallet/wc/core/types/exception.dart';
+import 'package:on_chain_wallet/wc/core/types/types.dart';
 import 'package:on_chain_wallet/wc/wallet/core/network.dart';
 import 'package:on_chain_wallet/wc/wallet/types/types.dart';
 import 'package:on_chain_wallet/wc/wc.dart';
-import 'package:on_chain_wallet/wc/core/types/types.dart';
+
 import 'session.dart';
 
 typedef SENDWEB3WALLETCONNECTREQUEST = Future<Web3MessageCore> Function(
@@ -23,7 +26,7 @@ class Web3WalletConnectHandler {
   final Map<String, Web3RequestWalletConnectApplicationInformation> __requests =
       {};
   final WalletConnectStorage _storage;
-  final SynchronizedLock _lock = SynchronizedLock();
+  final SafeAtomicLock _lock = SafeAtomicLock();
 
   Web3WalletConnectHandler({
     required this.sendRequest,
@@ -262,7 +265,7 @@ class Web3WalletConnectHandler {
   }
 
   Future<void> _onSessionRequest(SessionRequest request) async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       final session = await _getInternalSession(request.session.topic);
       final timeout = request.timout();
       if (timeout == null) return;
@@ -390,7 +393,7 @@ class Web3WalletConnectHandler {
   }
 
   Future<void> connect() async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       await _storage.init();
       final sessions = _storage.getActiveSessions();
       final messages = _storage.getPendingMessages();
@@ -399,19 +402,19 @@ class Web3WalletConnectHandler {
   }
 
   Future<void> dispose() async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       await walletConnectCore.dispose();
     }, lockId: LockId.three);
   }
 
   Future<void> init() async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       await _storage.init();
     }, lockId: LockId.three);
   }
 
   Future<void> close() async {
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       await walletConnectCore.close();
       await _storage.close();
     }, lockId: LockId.three);

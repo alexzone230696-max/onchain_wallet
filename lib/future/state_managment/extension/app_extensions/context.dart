@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:on_chain_wallet/app/constant/constant.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/core/observer.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/theme/theme.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
-
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 
 extension CustomColorsSchame on ColorScheme {
@@ -155,7 +153,10 @@ extension QuickContextAccsess on BuildContext {
       List<Widget> Function(BuildContext context)? appbarActions,
       List<Widget> slivers = const [],
       double initiaalExtend = 0.9,
-      bool centerContent = true}) async {
+      bool centerContent = true,
+      bool useNavigatorContext = false}) async {
+    assert(mounted, "context is not ready");
+
     if (!mounted) return null;
     return await showModalBottomSheet<T>(
       context: this,

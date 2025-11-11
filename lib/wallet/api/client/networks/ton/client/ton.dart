@@ -8,11 +8,11 @@ import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/ton/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/ton.dart';
 import 'package:on_chain_wallet/wallet/api/services/service.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/constant/networks/ton.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ton/params/params.dart';
 import 'package:ton_dart/ton_dart.dart';
-import 'package:on_chain_wallet/wallet/chain/account.dart';
 
 class TonClient extends NetworkClient<TonWalletTransaction, TonAPIProvider,
     TonNetworkToken, TonAddress> with HttpImpl {
@@ -21,14 +21,30 @@ class TonClient extends NetworkClient<TonWalletTransaction, TonAPIProvider,
   @override
   final WalletTonNetwork network;
   TonApiType get apiType => provider.rpc.api;
+  final _msgForwardPrices = CachedObject<MsgForwardPricesResponse>(
+      interval: const Duration(hours: 1));
+  final _gasLimitPrices =
+      CachedObject<GasLimitPricesResponse>(interval: const Duration(hours: 1));
 
+  final _storagePrices =
+      CachedObject<List<BlockchainConfig18StoragePricesItem>>(
+          interval: const Duration(hours: 1));
   @override
   NetworkServiceProtocol<TonAPIProvider> get service =>
       provider.rpc as NetworkServiceProtocol<TonAPIProvider>;
 
   Future<BigInt> getAccountBalance(TonAddress address) async {
-    return await provider
+    final balance = await provider
         .request(TonRquestGetBalance(address: address, api: apiType));
+    if (balance.isNegative) return BigInt.zero;
+    return balance;
+  }
+
+  Future<BlockchainRawAccountResponse?> getRawAccountReponse(
+      TonAddress address) async {
+    if (provider.isTonCenter) return null;
+    return await provider
+        .request(TonApiGetBlockchainRawAccount(address.toFriendlyAddress()));
   }
 
   Future<AccountStateResponse> getStaticState(TonAddress address) async {
@@ -67,20 +83,48 @@ class TonClient extends NetworkClient<TonWalletTransaction, TonAPIProvider,
     return result.balance;
   }
 
-  Future<MsgForwardPricesResponse> getMsgFrowardPricesConfing(
-      {bool isMasterChain = true}) async {
-    return await provider.request(TonRquestGetMsgForwardPricesConfig(apiType,
-        isMasterChan: isMasterChain));
+  Future<MsgForwardPricesResponse> getMsgFrowardPricesConfig() async {
+    return _msgForwardPrices.get(
+      onFetch: () async {
+        return await provider.request(
+            TonRquestGetMsgForwardPricesConfig(apiType, isMasterChan: true));
+      },
+    );
   }
 
-  Future<TonTransactionFeeDetails> getTransactionFee(
-      {required TonAddress address,
-      required Message message,
-      required WalletTonNetwork network,
-      MsgForwardPricesResponse? forwardPrice,
-      bool isMasterChain = true}) async {
+  Future<GasLimitPricesResponse> getGasLimitPricesConfig() async {
+    return _gasLimitPrices.get(
+      onFetch: () async {
+        return await provider.request(
+            TonRquestGetMsgForwardGasLimitPrice(apiType, isMasterChan: true));
+      },
+    );
+  }
+
+  Future<List<BlockchainConfig18StoragePricesItem>> getStoragePrices(
+      {bool isMasterChain = true}) async {
+    return _storagePrices.get(
+      onFetch: () async {
+        return await provider.request(TonRquestGetMsgForwardStoragePrices(
+            apiType,
+            isMasterChan: isMasterChain));
+      },
+    );
+    // return ;
+  }
+
+  Future<TonTransactionFeeDetails> getTransactionFee({
+    required TonAddress address,
+    required Message message,
+    required WalletTonNetwork network,
+    required List<OutActionSendMsg> messages,
+  }) async {
     return await provider.request(TonRquestGetFee(
-        message: message, address: address, api: apiType, network: network));
+        message: message,
+        address: address,
+        messages: messages,
+        api: apiType,
+        network: network));
   }
 
   Future<(String, bool)> submitBoc({required Cell boc}) async {
@@ -367,6 +411,10 @@ class TonClient extends NetworkClient<TonWalletTransaction, TonAPIProvider,
       if (!controller.isClosed) controller.close();
     }
 
+    void addErr(Object err) {
+      if (!controller.isClosed) controller.addError(err);
+    }
+
     Future<void> fetchToken() async {
       try {
         void add(List<TonAccountJettonResponse> tokens) {
@@ -433,6 +481,8 @@ class TonClient extends NetworkClient<TonWalletTransaction, TonAPIProvider,
               jettonWalletAddress: e.walletAddress.address);
         }).toList();
         add(tokens);
+      } catch (e) {
+        addErr(e);
       } finally {
         close();
       }

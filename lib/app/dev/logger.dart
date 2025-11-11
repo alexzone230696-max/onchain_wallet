@@ -1,10 +1,18 @@
 // ignore_for_file: avoid_print
 
-enum LoggerMode { dev, silent }
+import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:on_chain_wallet/app/error/exception/exception.dart';
+
+enum LoggerMode {
+  dev,
+  silent;
+
+  bool get isDev => this == dev;
+}
 
 enum LogType { debug, warning, error }
 
-const appLogger = _APPLogger(mode: LoggerMode.silent);
+const appLogger = _APPLogger(mode: LoggerMode.dev);
 
 typedef LOGWHEN = bool Function();
 
@@ -44,7 +52,7 @@ class _APPLogger {
           className: runtime?.toString(),
           functionName: functionName?.toString(),
           type: LogType.error,
-          message: msg?.toString(),
+          message: msg,
           stackTrace: trace,
           when: when);
   void _log(
@@ -64,11 +72,22 @@ class _APPLogger {
           output.write("[${className ?? ''}.${functionName ?? ''}]");
         }
         if (message != null) {
-          output.write(" $message");
+          String msg;
+          if (message is List || message is Map) {
+            msg = StringUtils.fromJson(message, toStringEncodable: true);
+          } else {
+            msg = message.toString();
+          }
+          output.write(" $msg");
         }
+
         if (type == LogType.error && stackTrace != null) {
-          final traceInfo = StackTraceInfo.parseStackTrace(stackTrace);
-          if (traceInfo != null) output.writeln('\n$traceInfo');
+          final String? error = switch (message) {
+            final ApiProviderException _ => null,
+            _ => "$stackTrace"
+          };
+          // final traceInfo = StackTraceInfo.parseStackTrace(stackTrace);
+          if (error != null) output.writeln('\n$error');
         }
         final finalMessage = output.toString();
 

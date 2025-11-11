@@ -118,6 +118,11 @@ mixin BaseRepository {
     return await AppNativeMethods.platform.removeDb(statement);
   }
 
+  Future<bool> removeStorages(
+      {required List<ITableRemoveStructA> statements}) async {
+    return await AppNativeMethods.platform.removeAllDb(statements);
+  }
+
   Future<void> removeAllStorage(List<ITableRemoveStructA> items) async {
     await AppNativeMethods.platform.removeAllDb(items);
   }

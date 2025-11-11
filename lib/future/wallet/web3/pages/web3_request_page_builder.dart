@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/types/networks.dart';
+import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/address_details.dart';
 import 'package:on_chain_wallet/future/wallet/network/aptos/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/web3/types/types.dart';
@@ -21,7 +22,6 @@ import 'package:on_chain_wallet/future/wallet/web3/pages/appbar_action.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/client_info.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/widgets/parogress.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/wallet/models/access/wallet_access.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
 

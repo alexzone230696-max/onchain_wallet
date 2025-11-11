@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:js_interop';
+
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_bridge/database/database.dart';
 import 'package:on_chain_bridge/models/events/models/wallet_event.dart';
@@ -7,6 +8,7 @@ import 'package:on_chain_bridge/web/web.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
+
 import '../js_crypto_utils.dart';
 import '../js_wallet/constant/constant.dart';
 
@@ -19,7 +21,7 @@ class _JSBackgroundHandler
     with JSExtensionBackgroudStorageHandler, JSExtensionBackgroudHandler {
   @override
   final IDatabseInterfaceJS storage;
-  final lock = SynchronizedLock();
+  final lock = SafeAtomicLock();
   _JSBackgroundHandler._(this.storage);
 
   Future<void> send(WalletEvent? event, int? tabId) async {
@@ -87,7 +89,7 @@ class _JSBackgroundHandler
   }
 
   Future<WalletEvent> openPopup(WalletEvent event) async {
-    return await lock.synchronized(() async {
+    return await lock.run(() async {
       final WalletEvent? windowIdResponse = await extension.runtime
           .sendMessage_(
               message: event.copyWith(target: WalletEventTarget.background))

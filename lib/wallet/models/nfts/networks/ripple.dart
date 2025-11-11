@@ -2,7 +2,7 @@ import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/wallet/models/nfts/core/core.dart';
 
-class RippleNFToken with Equatable implements NFTCore {
+class RippleNFToken with Equality implements NFTCore {
   factory RippleNFToken.deserialize({List<int>? bytes, CborObject? obj}) {
     final CborListValue cbor = CborSerializable.cborTagValue(
         cborBytes: bytes, object: obj, tags: NFTType.ripple.tag);

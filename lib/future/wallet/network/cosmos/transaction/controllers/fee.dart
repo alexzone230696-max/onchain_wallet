@@ -1,3 +1,4 @@
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:blockchain_utils/utils/numbers/rational/big_rational.dart';
 import 'package:cosmos_sdk/cosmos_sdk.dart';
 import 'package:on_chain_wallet/app/core.dart';
@@ -9,7 +10,7 @@ import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 
 mixin CosmosTransactionFeeController on BaseCosmosTransactionController {
   final Cancelable _cancelable = Cancelable();
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
 
   @override
   late final CosmosTransactionFeeData txFee = CosmosTransactionFeeData(
@@ -106,7 +107,7 @@ mixin CosmosTransactionFeeController on BaseCosmosTransactionController {
   @override
   Future<void> estimateFee() async {
     _cancelable.cancel();
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       _setupFees(txFee.denom);
       txFee.setPending();
       final fee = await MethodUtils.call(() async => await simulateFee());
@@ -165,7 +166,7 @@ mixin CosmosTransactionFeeController on BaseCosmosTransactionController {
   void setManualFee(CosmosTransactionFee? fee) {
     if (fee == null) return;
     _cancelable.cancel();
-    _lock.synchronized(() async {
+    _lock.run(() async {
       _setupFees(fee.denom);
       txFee.setManualFee(fee);
     });

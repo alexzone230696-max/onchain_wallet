@@ -1,3 +1,4 @@
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/utils/ripple/ripple.dart';
 import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/types/types.dart';
@@ -11,7 +12,7 @@ import 'provider.dart';
 mixin RippleTransactionFeeController
     on DisposableMixin, XRPTransactionApiController {
   WalletXRPNetwork get network;
-  final _lock = SynchronizedLock();
+  final _lock = SafeAtomicLock();
   final Cancelable _cancelable = Cancelable();
   FeeResult? _feeRate;
   String? _fulfillment;
@@ -73,7 +74,7 @@ mixin RippleTransactionFeeController
 
   Future<void> estimateFee() async {
     _cancelable.cancel();
-    await _lock.synchronized(() async {
+    await _lock.run(() async {
       txFee.setPending();
       final transaction =
           await MethodUtils.call(() async => await simulateFee());

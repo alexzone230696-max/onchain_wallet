@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/select_account.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/select_account_or_contact.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/setup_amount.dart';
+import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
 import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/others/others.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';

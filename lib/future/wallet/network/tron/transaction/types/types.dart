@@ -1,13 +1,13 @@
 import 'package:blockchain_utils/helper/extensions/extensions.dart';
+import 'package:blockchain_utils/utils/atomic/atomic.dart';
+import 'package:blockchain_utils/utils/equatable/equatable.dart';
 import 'package:on_chain/tron/tron.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/utils/tron/tron.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
-class TronTransactionOperations
-    with Equatable
-    implements TransactionOperations {
+class TronTransactionOperations with Equality implements TransactionOperations {
   factory TronTransactionOperations.fromTransactionType(
       TransactionContractType type) {
     return TronTransactionOperations._(type.name);
@@ -155,6 +155,7 @@ class TronTransactionFeeData
 
 abstract class BaseTronTransactionController<T extends ITronTransactionData>
     extends TransactionStateController<
+        TronToken,
         ITronAddress,
         TronClient,
         WalletTronNetwork,
@@ -163,7 +164,8 @@ abstract class BaseTronTransactionController<T extends ITronTransactionData>
         ITronTransaction<T>,
         ITronSignedTransaction<T>,
         TronWalletTransaction,
-        SubmitTransactionSuccess<ITronSignedTransaction<T>>> {
+        SubmitTransactionSuccess<ITronSignedTransaction<T>>,
+        TronTransactionFeeData> {
   TransactionContractType get transactionType;
   late final bool isTriggerSmartContract =
       transactionType == TransactionContractType.triggerSmartContract;
@@ -191,7 +193,7 @@ class TronSignedTransaction {
 class TransactionResourceRequirementTronDelegatedResource
     with DisposableMixin, StreamStateController
     implements TransactionResourceRequirement<DelegatedAccountResourceInfo?> {
-  final lock = SynchronizedLock();
+  final lock = SafeAtomicLock();
   final ReceiptAddress<TronAddress> address;
   TransactionResourceRequirementTronDelegatedResource(this.address);
   TransactionResourceRequirementFetchStatus _status =
