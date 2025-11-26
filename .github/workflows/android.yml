@@ -1,0 +1,37 @@
+name: Build OnChain Wallet APK
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Клонируем репозиторий
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Устанавливаем Flutter
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+
+      # 3. Устанавливаем зависимости
+      - name: Install dependencies
+        run: flutter pub get
+
+      # 4. Собираем APK
+      - name: Build APK
+        run: flutter build apk --release
+
+      # 5. Сохраняем APK как артефакт
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: onchain-wallet-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
