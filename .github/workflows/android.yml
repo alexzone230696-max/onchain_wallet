@@ -7,7 +7,6 @@ on:
 
 jobs:
   build:
-    name: Build Android APK
     runs-on: ubuntu-latest
 
     steps:
@@ -15,13 +14,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Устанавливаем Flutter
+      # 2. Устанавливаем Flutter с нужной версией
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v3
         with:
-          flutter-version: '3.20.6'
+          flutter-version: 3.20.6
 
-      # 3. Устанавливаем зависимости
+      # 3. Получаем зависимости
       - name: Install dependencies
         run: flutter pub get
 
@@ -29,7 +28,7 @@ jobs:
       - name: Build APK
         run: flutter build apk --release
 
-      # 5. Сохраняем APK как артефакт (v4!)
+      # 5. Загружаем APK как артефакт
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
